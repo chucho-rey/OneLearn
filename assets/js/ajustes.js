@@ -6,20 +6,23 @@
      AT.ajustes.set('escala', 1.15)    -> guarda, aplica y avisa a quien escuche
      AT.ajustes.on(function(todos){})  -> se llama tras cada cambio
    Cada ajuste se refleja en un atributo de <html> que usa base.css:
-     data-theme, data-contrast, data-fuente, data-interlineado, data-ancho, la clase side-collapsed
+     data-theme, data-contrast, data-fuente, data-interlineado, data-espaciado, data-ancho, la clase side-collapsed
      y el tamaño de letra raíz (todo el CSS está en rem). */
 (function(){
   'use strict';
   var AT=window.AT=window.AT||{};
   var KEY='aprende-tecnologia:ajustes';
   var root=document.documentElement;
-  var DEF={tema:'auto',contraste:'auto',escala:1,fuente:'normal',interlineado:'normal',ancho:'normal',barra:'abierta'};
+  var DEF={tema:'auto',contraste:'auto',escala:1,fuente:'normal',interlineado:'normal',espaciado:'normal',ancho:'normal',barra:'abierta'};
+  /* Los que se restablecen desde el panel Lectura (la barra lateral no es de lectura) */
+  var LECTURA=['tema','contraste','escala','fuente','interlineado','espaciado','ancho'];
   var OK={
     tema:['auto','light','dark'],
     contraste:['auto','normal','high'],
     escala:[0.9,1,1.15,1.3,1.5],
     fuente:['normal','atkinson','opendyslexic'],
     interlineado:['normal','amplio'],
+    espaciado:['normal','amplio'],
     ancho:['estrecho','normal','amplio'],
     barra:['abierta','cerrada']
   };
@@ -59,6 +62,7 @@
     attr('data-contrast',contrasteAlto()?'high':null);
     attr('data-fuente',a.fuente==='normal'?null:a.fuente);
     attr('data-interlineado',a.interlineado==='normal'?null:a.interlineado);
+    attr('data-espaciado',a.espaciado==='normal'?null:a.espaciado);
     attr('data-ancho',a.ancho==='normal'?null:a.ancho);
     root.style.fontSize=a.escala===1?'':(a.escala*100)+'%';
     root.classList.toggle('side-collapsed',a.barra==='cerrada');
@@ -80,7 +84,17 @@
       escribir(KEY,JSON.stringify(a));
       aplicar();avisar();
     },
+    /* Vuelve los ajustes de lectura a sus valores iniciales, en un solo cambio */
+    restablecer:function(){
+      var cambio=false;
+      LECTURA.forEach(function(k){if(a[k]!==DEF[k]){a[k]=DEF[k];cambio=true}});
+      if(!cambio)return;
+      escribir(KEY,JSON.stringify(a));
+      aplicar();avisar();
+    },
+    esInicial:function(){return LECTURA.every(function(k){return a[k]===DEF[k]})},
     contrasteAlto:contrasteAlto,
+    sistemaPideContraste:function(){return !!(mqContraste&&mqContraste.matches)},
     on:function(fn){oyentes.push(fn)}
   };
 

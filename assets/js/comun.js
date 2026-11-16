@@ -33,9 +33,6 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>'+
 '<symbol id="i-compress" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></symbol>'+
 '<symbol id="i-note" viewBox="0 0 24 24"><path d="M4 20l4-1L19.5 7.5a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14.5 6.5l3 3"/></symbol>'+
-'<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>'+
-'<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></symbol>'+
-'<symbol id="i-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor" stroke="none"/></symbol>'+
 '<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>'+
 '<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>'+
 '</svg>');
@@ -72,7 +69,7 @@ AT.leccion=actual;
     '<button class="icon-btn" id="menuBtn" type="button" aria-label="Abrir lecciones" aria-expanded="false" aria-controls="side">'+ico('menu')+'</button>'+
     '<nav class="crumbs" aria-label="Ruta">'+(grupo?'<span>'+esc(grupo)+'</span><span class="sep" aria-hidden="true">/</span>':'')+
     '<span class="cur" aria-current="page">'+esc(actual.titulo)+'</span></nav>'+
-    '<button class="theme-btn" id="themeBtn" type="button">'+ico('auto','','themeUse')+'</button>';
+    '<button class="aa-btn" id="aaBtn" type="button" aria-label="Lectura: tamaño de texto, tema y contraste" title="Lectura" aria-expanded="false" aria-controls="lectura">Aa</button>';
 
   var nx=$('#siguiente');
   if(nx){
@@ -105,27 +102,96 @@ AT.leccion=actual;
     '</section>');
 })();
 
-/* ---------- Tema: automático, claro u oscuro (guardado en AT.ajustes) ---------- */
+/* ---------- Panel Lectura: tamaño de texto, tema, contraste, fuente y espacios ----------
+   Los valores viven en AT.ajustes (assets/js/ajustes.js); este panel solo los muestra y los cambia. */
 (function(){
-  var aj=AT.ajustes,btn=$('#themeBtn'),use=$('#themeUse');
-  var order=['auto','light','dark'];
-  var info={
-    auto:{icon:'#i-auto',label:'Tema: automático. Cambiar a claro'},
-    light:{icon:'#i-sun',label:'Tema: claro. Cambiar a oscuro'},
-    dark:{icon:'#i-moon',label:'Tema: oscuro. Cambiar a automático'}
-  };
+  var aj=AT.ajustes,btn=$('#aaBtn'),ESC=aj.opciones.escala;
+  var GRUPOS=[
+    {k:'tema',t:'Tema',o:[['auto','Automático'],['light','Claro'],['dark','Oscuro']]},
+    {k:'contraste',t:'Contraste',o:[['auto','Según el sistema'],['normal','Normal'],['high','Alto']]},
+    {k:'fuente',t:'Fuente',o:[['normal','IBM Plex',"'IBM Plex Sans'"],['atkinson','Atkinson',"'Atkinson Hyperlegible'"],['opendyslexic','OpenDyslexic',"'OpenDyslexic'"]]},
+    {k:'espaciado',t:'Espacio entre letras',o:[['normal','Normal'],['amplio','Amplio']]},
+    {k:'interlineado',t:'Interlineado',o:[['normal','Normal'],['amplio','Amplio']]},
+    {k:'ancho',t:'Ancho de columna',o:[['estrecho','Estrecho'],['normal','Normal'],['amplio','Amplio']]}
+  ];
+  var h='<div class="lec-h"><h2 id="lecT">Lectura</h2><button class="lec-x" type="button" id="lecX" aria-label="Cerrar Lectura">'+ico('close')+'</button></div>'+
+    '<div class="lec-g"><span class="lec-l" id="lec-escala">Tamaño de texto</span>'+
+    '<div class="lec-size" role="group" aria-labelledby="lec-escala">'+
+      '<button type="button" data-paso="-1" aria-label="Texto más pequeño">A−</button>'+
+      '<output id="lecEsc" aria-live="polite"></output>'+
+      '<button type="button" data-paso="1" aria-label="Texto más grande">A+</button>'+
+    '</div></div>';
+  GRUPOS.forEach(function(g){
+    h+='<div class="lec-g"><span class="lec-l" id="lec-'+g.k+'">'+g.t+'</span>'+
+      '<div class="seg" role="group" aria-labelledby="lec-'+g.k+'" data-k="'+g.k+'">'+
+      g.o.map(function(o){
+        /* Cada botón de fuente se dibuja con su propia fuente, como muestra */
+        return '<button type="button" data-v="'+o[0]+'" aria-pressed="false"'+(o[2]?' style="font-family:'+o[2]+',sans-serif"':'')+'>'+o[1]+'</button>';
+      }).join('')+'</div>'+
+      (g.k==='contraste'?'<p class="lec-nota" id="lecCon"></p>':'')+
+      '</div>';
+  });
+  h+='<div class="lec-f"><p class="lec-nota">Se guarda en este dispositivo.</p><button class="btn" type="button" id="lecReset">Restablecer</button></div>';
+  var panel=document.createElement('div');
+  panel.className='lec';panel.id='lectura';panel.hidden=true;
+  panel.setAttribute('role','dialog');panel.setAttribute('aria-labelledby','lecT');
+  panel.innerHTML=h;
+  /* Justo después de la barra superior: con Tab, se llega al panel desde «Aa» */
+  $('#topbar').after(panel);
+  var menos=$('[data-paso="-1"]',panel),mas=$('[data-paso="1"]',panel),reset=$('#lecReset',panel),con=$('#lecCon',panel);
+
+  /* Los botones que no aplican se marcan con aria-disabled, no con disabled,
+     para que el foco no se pierda al llegar al límite */
+  function dis(b,v){b.setAttribute('aria-disabled',v?'true':'false')}
   function pintar(){
-    var cur=aj.get('tema');
-    use.setAttribute('href',info[cur].icon);
-    btn.setAttribute('aria-label',info[cur].label);
-    btn.setAttribute('title',info[cur].label);
-    btn.setAttribute('data-theme-state',cur);
+    var e=aj.get('escala'),i=ESC.indexOf(e);
+    $('#lecEsc',panel).textContent=Math.round(e*100)+'%';
+    dis(menos,i<=0);dis(mas,i>=ESC.length-1);
+    $$('.seg',panel).forEach(function(sg){
+      var v=aj.get(sg.getAttribute('data-k'));
+      $$('button',sg).forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false')});
+    });
+    con.hidden=aj.get('contraste')!=='auto';
+    con.textContent=aj.sistemaPideContraste()?'Tu sistema pide más contraste, así que el alto contraste está activo.':'El alto contraste se activa solo si tu sistema lo pide.';
+    dis(reset,aj.esInicial());
   }
-  btn.addEventListener('click',function(){
-    aj.set('tema',order[(order.indexOf(aj.get('tema'))+1)%order.length]);
+  panel.addEventListener('click',function(e){
+    var b=e.target.closest('button');
+    if(!b)return;
+    if(b.id==='lecX'){cerrar(true);return}
+    if(b.getAttribute('aria-disabled')==='true')return;
+    if(b===reset){aj.restablecer();return}
+    var paso=b.getAttribute('data-paso');
+    if(paso){aj.set('escala',ESC[ESC.indexOf(aj.get('escala'))+(+paso)]);return}
+    var sg=b.closest('.seg');
+    if(sg)aj.set(sg.getAttribute('data-k'),b.getAttribute('data-v'));
+  });
+  function abrir(){
+    setNav(false);
+    pintar();
+    panel.hidden=false;
+    btn.setAttribute('aria-expanded','true');
+    menos.focus({preventScroll:true});
+  }
+  function cerrar(devolverFoco){
+    if(panel.hidden)return;
+    panel.hidden=true;
+    btn.setAttribute('aria-expanded','false');
+    if(devolverFoco)btn.focus({preventScroll:true});
+  }
+  btn.addEventListener('click',function(){if(panel.hidden)abrir();else cerrar(false)});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!panel.hidden){cerrar(panel.contains(document.activeElement));e.stopPropagation()}
+  });
+  document.addEventListener('pointerdown',function(e){
+    if(!panel.hidden&&!panel.contains(e.target)&&!btn.contains(e.target))cerrar(false);
+  });
+  /* Es un panel no modal: si el foco llega a cualquier otra parte de la página, se cierra */
+  document.addEventListener('focusin',function(e){
+    if(!panel.hidden&&!panel.contains(e.target)&&e.target!==btn)cerrar(false);
   });
   aj.on(pintar);
-  pintar();
+  AT.lectura={abrir:abrir,cerrar:cerrar};
 })();
 
 /* ---------- Navegación y barra lateral ---------- */

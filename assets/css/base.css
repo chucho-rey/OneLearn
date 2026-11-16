@@ -90,7 +90,19 @@
   --c1:#b9c4c1; --c2:#7fbcff; --c3:#7fe0a6; --c4:#ffd166; --c5:#c3a8ff; --c6:#ff8fc4; --c7:#ffb27a;
   color-scheme:dark;
 }
+/* Fuentes de lectura alojadas en el sitio (licencia SIL OFL 1.1, ver assets/fonts/LICENSE-*).
+   El navegador solo las descarga cuando alguien las elige en Lectura. */
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;src:url("../fonts/atkinson-hyperlegible-latin-400-italic.woff2") format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("../fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2")}
+@font-face{font-family:"OpenDyslexic";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/opendyslexic-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"OpenDyslexic";font-style:italic;font-weight:400;font-display:swap;src:url("../fonts/opendyslexic-latin-400-italic.woff2") format("woff2")}
+@font-face{font-family:"OpenDyslexic";font-style:normal;font-weight:700;font-display:swap;src:url("../fonts/opendyslexic-latin-700-normal.woff2") format("woff2")}
+
 /* Ajustes de lectura que no son de color */
+:root[data-fuente="atkinson"]{--font-ui:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;--font-head:var(--font-ui)}
+:root[data-fuente="opendyslexic"]{--font-ui:"OpenDyslexic",ui-sans-serif,system-ui,sans-serif;--font-head:var(--font-ui)}
+:root[data-espaciado="amplio"] body{letter-spacing:.05em;word-spacing:.16em}
 :root[data-interlineado="amplio"]{--lh:1.85}
 :root[data-ancho="estrecho"]{--page-w:43rem}
 :root[data-ancho="amplio"]{--page-w:60rem}
@@ -146,8 +158,9 @@ button{font-family:inherit;color:inherit}
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;height:2.75rem;display:flex;align-items:center;gap:0.5rem;background:var(--bg);padding-left:max(1rem,env(safe-area-inset-left,0px));padding-right:max(1rem,env(safe-area-inset-right,0px))}
 .icon-btn{display:grid;place-items:center;width:2rem;height:2rem;margin-left:-0.375rem;border:0;border-radius:0.25rem;background:transparent;font-size:1.25rem;cursor:pointer}
 .icon-btn:hover{background:var(--hover)}
-.theme-btn{display:grid;place-items:center;flex:none;width:2rem;height:2rem;margin-left:auto;border:0;border-radius:0.25rem;background:transparent;color:var(--fg-2);font-size:1.125rem;cursor:pointer}
-.theme-btn:hover{background:var(--hover);color:var(--fg)}
+.aa-btn{display:grid;place-items:center;flex:none;min-width:2.25rem;height:2rem;margin-left:auto;padding:0 0.5rem;border:1px solid var(--line);border-radius:0.375rem;background:transparent;color:var(--fg);font-family:var(--font-head);font-size:0.9375rem;font-weight:600;letter-spacing:0;cursor:pointer}
+.aa-btn:hover,.aa-btn[aria-expanded="true"]{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-ink)}
+.aa-btn small{font-size:0.75em;font-weight:500}
 .crumbs{display:flex;gap:0.375rem;font-size:0.875rem;color:var(--fg-2);min-width:0;white-space:nowrap;overflow:hidden}
 .crumbs .cur{color:var(--fg);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .crumbs .sep{color:var(--fg-3)}
@@ -239,9 +252,10 @@ details.tg .tg-b p{margin:.3em 0}
 .btn.pri{background:var(--accent-solid);border-color:var(--accent-solid);color:var(--on-accent)}
 .btn.pri:hover:not(:disabled){background:var(--accent-solid);filter:brightness(1.1)}
 .btn.danger{background:var(--bad-bg);border-color:var(--bad);color:var(--bad-ink)}
-.btn:disabled{opacity:.5;cursor:default}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.5;cursor:default}
+.btn[aria-disabled="true"]:hover{background:var(--bg)}
 .seg{display:inline-flex;max-width:100%;border:1px solid var(--line-strong);border-radius:0.375rem;overflow:hidden}
-.seg button{min-width:0}
+.seg button{min-width:0;overflow-wrap:anywhere;hyphens:auto}
 .seg button{padding:0.3125rem 0.75rem;border:0;border-right:1px solid var(--line);background:var(--bg);font-size:0.875rem;color:var(--fg-2);cursor:pointer}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}
@@ -263,6 +277,42 @@ details.tg .tg-b p{margin:.3em 0}
 .leg span{display:inline-flex;align-items:center;gap:0.375rem}
 .leg i{width:0.625rem;height:0.625rem;border-radius:2px;display:inline-block}
 
+/* ---------- Panel Lectura ---------- */
+.lec{position:fixed;z-index:40;top:calc(env(safe-area-inset-top,0px) + 2.875rem);right:max(1rem,env(safe-area-inset-right,0px));width:min(23rem,calc(100vw - 2rem));max-height:calc(100vh - 8rem);max-height:calc(100dvh - 2.875rem - 3.5rem - 1.5rem - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;container-type:inline-size;overscroll-behavior:contain;padding:1rem 1.125rem 1.125rem;background:var(--bg);border:1px solid var(--line-strong);border-radius:0.75rem;box-shadow:0 0.75rem 2.5rem rgba(0,0,0,.18)}
+@media (min-width:900px){.lec{right:max(3rem,env(safe-area-inset-right,0px))}}
+.lec-h{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.25rem}
+.lec-h h2{margin:0;font-size:1.125rem;letter-spacing:0}
+.lec-x{display:grid;place-items:center;width:2rem;height:2rem;margin-right:-0.375rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);font-size:1.125rem;cursor:pointer}
+.lec-x:hover{background:var(--hover);color:var(--fg)}
+.lec-g{display:flex;flex-direction:column;gap:0.375rem;padding:0.75rem 0;border-top:1px solid var(--line)}
+.lec-h+.lec-g{border-top:0}
+.lec-l{font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
+.lec .seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%}
+.lec .seg button{padding:0.375rem 0.25rem;white-space:normal;line-height:1.25;hyphens:manual}
+/* Si el panel es angosto para el tamaño de letra, las opciones van una debajo de otra en lugar de partir palabras */
+@container (max-width:18em){
+  .lec .seg{grid-auto-flow:row;grid-auto-columns:auto}
+  .lec .seg button{border-right:0;border-bottom:1px solid var(--line);padding:0.5rem 0.75rem;text-align:left}
+  .lec .seg button:last-child{border-bottom:0}
+}
+/* OpenDyslexic y el espaciado amplio nunca caben en fila; las fuentes, que se muestran cada una con su letra, tampoco */
+[data-fuente="opendyslexic"] .lec .seg,[data-espaciado="amplio"] .lec .seg,.lec .seg[data-k="fuente"]{grid-auto-flow:row;grid-auto-columns:auto}
+[data-fuente="opendyslexic"] .lec .seg button,[data-espaciado="amplio"] .lec .seg button,.lec .seg[data-k="fuente"] button{border-right:0;border-bottom:1px solid var(--line);padding:0.5rem 0.75rem;text-align:left}
+[data-fuente="opendyslexic"] .lec .seg button:last-child,[data-espaciado="amplio"] .lec .seg button:last-child,.lec .seg[data-k="fuente"] button:last-child{border-bottom:0}
+[data-contrast="high"] .lec .seg button{border-bottom-color:var(--line-strong)}
+.lec-size{display:grid;grid-template-columns:2.75rem minmax(0,1fr) 2.75rem;align-items:center;border:1px solid var(--line-strong);border-radius:0.375rem;overflow:hidden}
+.lec-size button{height:2.25rem;border:0;background:var(--bg);font-family:var(--font-head);cursor:pointer}
+.lec-size button:first-child{border-right:1px solid var(--line);font-size:0.8125rem}
+.lec-size button:last-child{border-left:1px solid var(--line);font-size:1.125rem}
+.lec-size button:hover:not([aria-disabled="true"]){background:var(--hover)}
+.lec-size button[aria-disabled="true"]{color:var(--fg-3);cursor:default}
+.lec-size output{text-align:center;font-family:var(--font-mono);font-size:0.875rem;font-variant-numeric:tabular-nums}
+.lec-nota{margin:0;font-size:0.8125rem;color:var(--fg-2);max-width:none}
+.lec-f{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding-top:0.875rem;border-top:1px solid var(--line)}
+.lec-f .lec-nota{flex:1;min-width:0}
+[data-contrast="high"] .lec-size{border-color:var(--line-strong)}
+[data-contrast="high"] .lec-size button:first-child,[data-contrast="high"] .lec-size button:last-child{border-color:var(--line-strong)}
+
 /* ---------- Repaso ---------- */
 .q{margin:1.125rem 0}
 .q p{font-weight:600;margin:0 0 0.375rem}
@@ -275,6 +325,8 @@ details.tg .tg-b p{margin:.3em 0}
 
 /* Siguiente lección */
 .next{display:flex;align-items:center;gap:0.5rem;margin-top:1.75rem;padding:0.625rem 0.75rem;border:1px solid var(--line);border-radius:0.5rem;color:var(--fg-3);font-size:0.9375rem;text-decoration:none}
+.next{flex-wrap:wrap}
+.next span{min-width:0}
 .next em{margin-left:auto;font-style:normal;font-size:0.75rem}
 a.next{color:var(--fg)}
 a.next:hover{background:var(--hover)}

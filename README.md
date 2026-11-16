@@ -10,7 +10,8 @@ Es un sitio estático: no necesita compilación ni dependencias. Abre `index.htm
 index.html                  Portada: abre la primera lección
 assets/
   css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
-  js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño de texto, barra lateral); se carga en el <head> y expone AT.ajustes
+  js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
+  fonts/                    Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí; solo se descargan si alguien las elige
   js/catalogo.js            Temario: grupos y lecciones de la barra lateral
   js/comun.js               Arma la barra lateral, la barra superior y los apuntes; tema, navegación, repaso y utilidades (AT.*)
 lecciones/
