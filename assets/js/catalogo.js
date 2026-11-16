@@ -1,4 +1,4 @@
-/* Temario de Aprende Tecnología.
+/* Temario de OneLearn.
    Cada lección con `archivo` aparece como enlace; sin `archivo` se muestra como «Pronto».
    `id` es la clave de los apuntes guardados: no la cambies en una lección publicada,
    o sus apuntes dejarán de aparecer. Las rutas de `archivo` son relativas a lecciones/. */

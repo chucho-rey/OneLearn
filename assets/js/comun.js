@@ -1,4 +1,4 @@
-/* Aprende Tecnología: lógica compartida por todas las lecciones.
+/* OneLearn: lógica compartida por todas las lecciones.
    Arma la barra lateral, la barra superior y la hoja de apuntes a partir de AT.catalogo
    y del atributo data-leccion del <body>; maneja el tema y la navegación; y expone
    utilidades (AT.$, AT.fmt, AT.repaso, ...) para el script propio de cada lección.
@@ -25,7 +25,7 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-ram" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="11" rx="1.5"/><rect x="5" y="8" width="3.2" height="5" rx=".5" fill="currentColor" stroke="none"/><rect x="10.4" y="8" width="3.2" height="5" rx=".5" fill="currentColor" stroke="none"/><rect x="15.8" y="8" width="3.2" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M5 16v3M8 16v3M11 16v3M14 16v3M17 16v3M20 16v3"/></symbol>'+
 '<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M9 2v4M12 2v4M15 2v4M9 18v4M12 18v4M15 18v4M2 9h4M2 12h4M2 15h4M18 9h4M18 12h4M18 15h4"/></symbol>'+
 '<symbol id="i-page" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></symbol>'+
-'<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>'+
+'<symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>'+
 '<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>'+
 '<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8h.01"/></symbol>'+
 '<symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>'+
@@ -55,7 +55,7 @@ AT.leccion=actual;
 
 /* ---------- Estructura: barra lateral, barra superior, siguiente lección y apuntes ---------- */
 (function(){
-  var h='<div class="side-in"><div class="ws"><span class="ws-logo" aria-hidden="true">A</span><span class="ws-name">Aprende Tecnología</span>'+
+  var h='<div class="side-in"><div class="ws"><a class="brand" href="../index.html">One<b>Learn</b></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div><nav>';
   catalogo.forEach(function(g){
     h+='<div class="grp">'+esc(g.grupo)+'</div>';
@@ -105,43 +105,31 @@ AT.leccion=actual;
     '</section>');
 })();
 
-/* ---------- Tema: automático, claro u oscuro ---------- */
+/* ---------- Tema: automático, claro u oscuro (guardado en AT.ajustes) ---------- */
 (function(){
-  var KEY='aprende-tecnologia:tema';
-  var btn=$('#themeBtn'),use=$('#themeUse');
+  var aj=AT.ajustes,btn=$('#themeBtn'),use=$('#themeUse');
   var order=['auto','light','dark'];
   var info={
     auto:{icon:'#i-auto',label:'Tema: automático. Cambiar a claro'},
     light:{icon:'#i-sun',label:'Tema: claro. Cambiar a oscuro'},
     dark:{icon:'#i-moon',label:'Tema: oscuro. Cambiar a automático'}
   };
-  var cur='auto';
-  try{
-    var saved=localStorage.getItem(KEY);
-    if(saved==='light'||saved==='dark')cur=saved;
-  }catch(e){}
-  function apply(){
-    if(cur==='auto')document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme',cur);
+  function pintar(){
+    var cur=aj.get('tema');
     use.setAttribute('href',info[cur].icon);
     btn.setAttribute('aria-label',info[cur].label);
     btn.setAttribute('title',info[cur].label);
     btn.setAttribute('data-theme-state',cur);
   }
   btn.addEventListener('click',function(){
-    cur=order[(order.indexOf(cur)+1)%order.length];
-    try{
-      if(cur==='auto')localStorage.removeItem(KEY);
-      else localStorage.setItem(KEY,cur);
-    }catch(e){}
-    apply();
+    aj.set('tema',order[(order.indexOf(aj.get('tema'))+1)%order.length]);
   });
-  apply();
+  aj.on(pintar);
+  pintar();
 })();
 
 /* ---------- Navegación y barra lateral ---------- */
 var menuBtn=$('#menuBtn'),sideBtn=$('#sideBtn'),sideEl=$('#side'),mainEl=$('.main'),sheetEl=$('#sheet');
-var SIDE_KEY='aprende-tecnologia:barra';
 var deskMq=window.matchMedia('(min-width:900px)');
 function isDesk(){return deskMq.matches}
 function collapsed(){return document.documentElement.classList.contains('side-collapsed')}
@@ -174,17 +162,17 @@ function setNav(open){
   }
 }
 AT.setNav=setNav;
-function setSide(open,persist){
-  document.documentElement.classList.toggle('side-collapsed',!open);
-  if(persist){try{localStorage.setItem(SIDE_KEY,open?'abierta':'cerrada')}catch(e){}}
+function setSide(open){
+  AT.ajustes.set('barra',open?'abierta':'cerrada');
   syncMenu();
 }
+AT.ajustes.on(syncMenu);
 menuBtn.addEventListener('click',function(){
-  if(isDesk())setSide(collapsed(),true);
+  if(isDesk())setSide(collapsed());
   else setNav(!navOpen());
 });
 sideBtn.addEventListener('click',function(){
-  if(isDesk())setSide(false,true);
+  if(isDesk())setSide(false);
   else setNav(false);
 });
 $('#scrim').addEventListener('click',function(){setNav(false)});
@@ -246,7 +234,7 @@ AT.repaso=function(opt){
   var STATES=['closed','half','full'];
   var LABELS={closed:'Abrir apuntes',half:'Ver apuntes en pantalla completa',full:'Reducir apuntes a media página'};
   var ICONS={closed:'#i-up',half:'#i-expand',full:'#i-compress'};
-  var st='closed',layH=0,visH=0,kb=0,peek=56,drag=null;
+  var st='closed',layH=0,visH=0,kb=0,peek=57,drag=null;
 
   function lsGet(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
   function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
@@ -265,7 +253,7 @@ AT.repaso=function(opt){
       kb=Math.max(0,Math.round(layH-vv.height-vv.offsetTop));
       if(kb>layH*0.75){kb=0;visH=layH}
     }
-    peek=56+(parseFloat(getComputedStyle(probe).paddingBottom)||0);
+    peek=grab.offsetHeight+1+(parseFloat(getComputedStyle(probe).paddingBottom)||0);
   }
   function target(s){
     if(s==='closed')return peek;
@@ -341,6 +329,7 @@ AT.repaso=function(opt){
 
   function relayout(){if(drag)return;measure();apply(st,false)}
   window.addEventListener('resize',relayout);
+  AT.ajustes.on(function(){requestAnimationFrame(relayout)});
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',relayout);
     window.visualViewport.addEventListener('scroll',relayout);

@@ -1,4 +1,4 @@
-# OneLearn · Aprende Tecnología
+# OneLearn
 
 Lecciones interactivas de tecnología (hardware, electrónica, software y redes) en español, con demos, repaso y apuntes que se guardan solos.
 
@@ -9,8 +9,8 @@ Es un sitio estático: no necesita compilación ni dependencias. Abre `index.htm
 ```
 index.html                  Portada: abre la primera lección
 assets/
-  css/base.css              Estilos compartidos: colores y tema, barra lateral, página, bloques, demos, repaso y apuntes
-  js/tema-inicial.js        Aplica el tema y el estado de la barra lateral antes de pintar (va en el <head>)
+  css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
+  js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño de texto, barra lateral); se carga en el <head> y expone AT.ajustes
   js/catalogo.js            Temario: grupos y lecciones de la barra lateral
   js/comun.js               Arma la barra lateral, la barra superior y los apuntes; tema, navegación, repaso y utilidades (AT.*)
 lecciones/
@@ -21,6 +21,8 @@ lecciones/
 ```
 
 Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`.
+
+Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
 ## Cómo agregar una lección
 

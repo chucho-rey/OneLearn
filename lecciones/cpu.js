@@ -201,7 +201,7 @@ function segValue(sel,fn){
     var rows=plan(),t;
     T=0;
     rows.forEach(function(r){r.c.forEach(function(c){if(c.t>T)T=c.t})});
-    var h='<div class="pp" style="grid-template-columns:84px repeat('+T+',24px)"><span class="pp-l pp-h">Ciclo</span>';
+    var h='<div class="pp" style="grid-template-columns:5.25rem repeat('+T+',1.5rem)"><span class="pp-l pp-h">Ciclo</span>';
     for(t=1;t<=T;t++)h+='<span class="pp-h'+(t===cur?' now':'')+'">'+t+'</span>';
     rows.forEach(function(r){
       var map={};

@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Memoria RAM · Aprende Tecnología</title>
+<title>Memoria RAM · OneLearn</title>
 <meta name="description" content="Qué es la memoria RAM, cómo guarda cada bit y de qué depende su rendimiento, con demos interactivas.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
-<script src="../assets/js/tema-inicial.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<script src="../assets/js/ajustes.js"></script>
 <link rel="stylesheet" href="../assets/css/base.css">
 <link rel="stylesheet" href="ram.css">
 </head>
@@ -55,7 +55,7 @@
       <p>Piensa en el SSD como un archivero: guarda mucho, pero sacar un documento lleva tiempo. La RAM es el escritorio: cabe menos, pero todo lo que está encima se alcanza al instante. El procesador solo trabaja con lo que está sobre el escritorio.</p>
       <p>Un escritorio más grande no te hace trabajar más rápido. Te deja tener más cosas abiertas a la vez. Cuando se llena, el sistema empieza a mandar cosas al archivero, y ahí sí se nota.</p>
       <div class="demo">
-        <div class="demo-h"><b>Llena tu RAM</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Llena tu RAM</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Elige cuánta RAM tiene el equipo y abre programas. Los consumos son estimaciones típicas.</p>
           <div class="ctl" style="margin-top:0">
@@ -77,7 +77,7 @@
       <h2 id="s-jerarquia">La jerarquía de memoria</h2>
       <p>La memoria rápida es cara y pequeña; la memoria grande es barata y lenta. Por eso los equipos combinan varios niveles: lo que el procesador usa más se guarda cerca y lo demás se guarda más lejos. La RAM queda a la mitad.</p>
       <div class="demo">
-        <div class="demo-h"><b>¿Cuánto tarda cada nivel?</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>¿Cuánto tarda cada nivel?</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Toca un nivel para ver su detalle. Son tiempos típicos de acceso.</p>
           <div class="ctl" style="margin-top:0">
@@ -98,7 +98,7 @@
       <p>La RAM de una computadora es <b>DRAM</b> (<i>Dynamic RAM</i>). Cada bit vive en una celda de dos piezas: un <b>capacitor</b>, que es un depósito diminuto de carga eléctrica, y un <b>transistor</b>, la llave que lo conecta con el resto del chip. Con carga vale 1; sin carga vale 0.</p>
       <p>El capacitor se escapa solo. En pocos milisegundos pierde suficiente carga para que un 1 se confunda con un 0. Por eso se llama dinámica: el controlador lee y reescribe la memoria sin parar, un proceso llamado <b>refresco</b>. En módulos DDR3 y DDR4 cada celda se refresca al menos cada 64 ms; en DDR5, cada 32 ms.</p>
       <div class="demo">
-        <div class="demo-h"><b>Cuatro bytes de memoria</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Cuatro bytes de memoria</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Cada cuadro es un capacitor. Toca uno para escribir un bit. Apaga el refresco y observa. Aquí el tiempo se alarga para que se vea; en la realidad todo pasa en milisegundos.</p>
           <div class="bytes" id="dram"></div>
@@ -116,7 +116,7 @@
       <h2 id="s-acceso">Cómo se encuentra un dato</h2>
       <p>Las celdas se ordenan en una matriz de filas y columnas. Cada dirección de memoria se divide en dos partes: la fila y la columna. Leer un dato toma cuatro pasos, y la espera entre ellos son los números que aparecen en la etiqueta de un módulo, como CL16.</p>
       <div class="demo">
-        <div class="demo-h"><b>Leer una dirección</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Leer una dirección</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Elige una dirección (toca una celda o mueve el control) y pulsa Leer. Lee otra celda de la misma fila para ver qué se ahorra.</p>
           <div class="split">
@@ -160,10 +160,10 @@
         </table>
       </div>
       <p>Dentro de la DRAM hay varias familias según el dispositivo:</p>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>DDR (DIMM y SO-DIMM)</span></summary><div class="tg-b"><p>Módulos extraíbles para computadoras de escritorio (DIMM) y laptops (SO-DIMM, más corto). Es la memoria que puedes ampliar.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>LPDDR</span></summary><div class="tg-b"><p>Versión de bajo consumo para teléfonos y laptops delgadas. Casi siempre va soldada a la placa y no se puede cambiar.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>GDDR y HBM</span></summary><div class="tg-b"><p>Memorias de las tarjetas gráficas. Priorizan mover enormes cantidades de datos por segundo sobre la latencia.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>ECC</span></summary><div class="tg-b"><p>Memoria con bits extra que detectan y corrigen errores de un bit. Se usa en servidores y estaciones de trabajo.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>DDR (DIMM y SO-DIMM)</span></summary><div class="tg-b"><p>Módulos extraíbles para computadoras de escritorio (DIMM) y laptops (SO-DIMM, más corto). Es la memoria que puedes ampliar.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>LPDDR</span></summary><div class="tg-b"><p>Versión de bajo consumo para teléfonos y laptops delgadas. Casi siempre va soldada a la placa y no se puede cambiar.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>GDDR y HBM</span></summary><div class="tg-b"><p>Memorias de las tarjetas gráficas. Priorizan mover enormes cantidades de datos por segundo sobre la latencia.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>ECC</span></summary><div class="tg-b"><p>Memoria con bits extra que detectan y corrigen errores de un bit. Se usa en servidores y estaciones de trabajo.</p></div></details>
 
       <h2 id="s-ddr">Generaciones DDR y rendimiento</h2>
       <p>DDR significa <i>Double Data Rate</i>: el módulo transfiere datos en la subida y en la bajada de cada pulso del reloj, es decir, dos veces por ciclo. Por eso un módulo DDR4-3200 trabaja con un reloj de 1,600 MHz y hace 3,200 millones de transferencias por segundo (MT/s).</p>
@@ -181,7 +181,7 @@
       <h3>Calculadora de rendimiento</h3>
       <p>Cada transferencia mueve 8 bytes, porque el bus de un módulo es de 64 bits. De ahí salen dos fórmulas: el ancho de banda máximo es MT/s × 8 bytes × canales, y la latencia del primer dato es 2000 × CL ÷ MT/s.</p>
       <div class="demo">
-        <div class="demo-h"><b>Compara módulos</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Compara módulos</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Elige un módulo y la cantidad de canales. Los CL son valores típicos de venta.</p>
           <div class="chips" id="modChips" role="group" aria-label="Módulo"></div>
@@ -213,11 +213,11 @@
       </div></div>
 
       <h2 id="s-dudas">Dudas comunes</h2>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Más RAM hace más rápido mi equipo?</span></summary><div class="tg-b"><p>Solo si la que tienes se llena. Mientras sobre memoria, añadir más no cambia la velocidad. Cuando se llena, el sistema usa el disco como respaldo y todo se pone lento; ahí más RAM sí ayuda mucho.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Por qué el sistema muestra tanta RAM en uso?</span></summary><div class="tg-b"><p>Los sistemas operativos aprovechan la memoria libre para guardar archivos usados hace poco (caché), porque tener RAM vacía no sirve de nada. Cuando un programa pide memoria, el sistema la libera al instante.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿La RAM guarda mis archivos?</span></summary><div class="tg-b"><p>No. Lo que solo está en la RAM se pierde al apagar, por eso hay que guardar los documentos. La hibernación copia el contenido de la RAM al disco antes de apagar y lo restaura al encender.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué es la memoria virtual?</span></summary><div class="tg-b"><p>Cuando la RAM se llena, el sistema mueve a un archivo del disco los datos que hace rato no se usan (swap o archivo de paginación). Libera espacio, pero acceder a ese archivo es mucho más lento que acceder a la RAM.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Puedo mezclar módulos distintos?</span></summary><div class="tg-b"><p>Suele funcionar, pero todos trabajan a la velocidad y los tiempos del más lento. Para aprovechar el doble canal conviene instalar módulos iguales.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Más RAM hace más rápido mi equipo?</span></summary><div class="tg-b"><p>Solo si la que tienes se llena. Mientras sobre memoria, añadir más no cambia la velocidad. Cuando se llena, el sistema usa el disco como respaldo y todo se pone lento; ahí más RAM sí ayuda mucho.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Por qué el sistema muestra tanta RAM en uso?</span></summary><div class="tg-b"><p>Los sistemas operativos aprovechan la memoria libre para guardar archivos usados hace poco (caché), porque tener RAM vacía no sirve de nada. Cuando un programa pide memoria, el sistema la libera al instante.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿La RAM guarda mis archivos?</span></summary><div class="tg-b"><p>No. Lo que solo está en la RAM se pierde al apagar, por eso hay que guardar los documentos. La hibernación copia el contenido de la RAM al disco antes de apagar y lo restaura al encender.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Qué es la memoria virtual?</span></summary><div class="tg-b"><p>Cuando la RAM se llena, el sistema mueve a un archivo del disco los datos que hace rato no se usan (swap o archivo de paginación). Libera espacio, pero acceder a ese archivo es mucho más lento que acceder a la RAM.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Puedo mezclar módulos distintos?</span></summary><div class="tg-b"><p>Suele funcionar, pero todos trabajan a la velocidad y los tiempos del más lento. Para aprovechar el doble canal conviene instalar módulos iguales.</p></div></details>
 
       <h2 id="s-repaso">Repasa lo aprendido</h2>
       <div id="qz"></div>

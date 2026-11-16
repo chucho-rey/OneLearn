@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Procesador (CPU) · Aprende Tecnología</title>
+<title>Procesador (CPU) · OneLearn</title>
 <meta name="description" content="Cómo ejecuta instrucciones un procesador, qué significan los GHz, la segmentación, la caché y los núcleos, con demos interactivas.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
-<script src="../assets/js/tema-inicial.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<script src="../assets/js/ajustes.js"></script>
 <link rel="stylesheet" href="../assets/css/base.css">
 <link rel="stylesheet" href="cpu.css">
 </head>
@@ -72,7 +72,7 @@
       <h2 id="s-ciclo">El ciclo de instrucción</h2>
       <p>Con cada instrucción, el procesador repite tres pasos: <b>buscar</b> la instrucción en la memoria, <b>decodificar</b> qué pide y <b>ejecutarla</b>. Las instrucciones y los datos viven juntos en la misma memoria. Lo único que distingue a una instrucción es que el contador de programa apunta a ella.</p>
       <div class="demo">
-        <div class="demo-h"><b>Una CPU de juguete</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Una CPU de juguete</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Esta CPU no sabe multiplicar, así que el programa calcula x × y sumando x una y otra vez. Avanza paso a paso y sigue al contador de programa (PC).</p>
           <div class="ctl" style="margin-top:0">
@@ -132,7 +132,7 @@
       <p>El procesador avanza al ritmo de un reloj, una señal que oscila miles de millones de veces por segundo. Cada oscilación es un <b>ciclo</b>. Un procesador de 4 GHz (gigahercios) tiene 4,000 millones de ciclos por segundo, así que cada uno dura 0.25 nanosegundos.</p>
       <p>La frecuencia no lo es todo. Lo que cuenta es cuántas instrucciones se completan por segundo, y eso es la frecuencia multiplicada por las <b>instrucciones por ciclo</b> (IPC). Un núcleo actual completa varias instrucciones en cada ciclo.</p>
       <div class="demo">
-        <div class="demo-h"><b>Cuánto dura un ciclo</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Cuánto dura un ciclo</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Mueve la frecuencia y elige cuántas instrucciones completa el núcleo en cada ciclo.</p>
           <div class="ctl" style="margin-top:0">
@@ -165,7 +165,7 @@
       <h2 id="s-tuberia">Segmentación: varias instrucciones a la vez</h2>
       <p>En la CPU de juguete, cada instrucción espera a que termine la anterior. Los procesadores reales trabajan como una línea de montaje: mientras una instrucción se ejecuta, la siguiente se decodifica y otra más se busca. A esto se le llama <b>segmentación</b> o <i>pipeline</i>.</p>
       <div class="demo">
-        <div class="demo-h"><b>La línea de montaje</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>La línea de montaje</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Cada fila es una instrucción y cada columna, un ciclo. I3 es un salto: hasta ejecutarlo, el procesador no sabe con certeza qué instrucción sigue.</p>
           <div class="ctl" style="margin-top:0">
@@ -192,7 +192,7 @@
       <p>En la lección de <a href="ram.html">memoria RAM</a> viste que la RAM tarda unos 80 ns en responder: más de 300 ciclos en los que el procesador no avanza. La <b>caché</b> evita casi todas esas esperas. Es una memoria pequeña y muy rápida, dentro del procesador, que guarda copias de los datos usados hace poco.</p>
       <p>Si la caché tiene el dato, es un <b>acierto</b>. Si no, es un <b>fallo</b> y hay que traerlo de la RAM. En cada fallo no se trae un solo byte, sino un bloque completo (64 bytes en los procesadores reales), porque lo más probable es que pronto se necesiten los datos vecinos.</p>
       <div class="demo">
-        <div class="demo-h"><b>Aciertos y fallos</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Aciertos y fallos</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Elige un patrón de acceso y avanza. En esta caché caben 4 bloques de 4 direcciones, y cada bloque solo puede ir en una línea: el residuo de dividir su número entre 4. Un acierto tarda 1 ns y un fallo, 80 ns.</p>
           <div class="chips" id="cPat" role="group" aria-label="Patrón de acceso"></div>
@@ -221,7 +221,7 @@
       <p>Un <b>núcleo</b> es un procesador completo, con su unidad de control, sus ALU, sus registros y su caché L1. Los chips actuales traen varios núcleos (en una computadora personal, de 4 a más de 16) para ejecutar varias tareas al mismo tiempo.</p>
       <p>Pero más núcleos no siempre se notan. Solo aceleran la parte de un programa que se puede dividir en trozos independientes; el resto sigue avanzando en un solo núcleo. Esta idea se conoce como <b>ley de Amdahl</b>.</p>
       <div class="demo">
-        <div class="demo-h"><b>Reparte el trabajo</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-h"><b>Reparte el trabajo</b><span class="tag lab">Laboratorio</span></div>
         <div class="demo-b">
           <p class="hint">Elige cuántos núcleos hay y qué parte del programa se puede repartir entre ellos.</p>
           <div class="ctl" style="margin-top:0">
@@ -253,8 +253,8 @@
           <p class="msg" id="amMsg" aria-live="polite"></p>
         </div>
       </div>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué son los hilos?</span></summary><div class="tg-b"><p>Muchos núcleos pueden atender dos tareas a la vez (dos hilos) compartiendo sus piezas: cuando una tarea espera un dato, la otra aprovecha la ALU libre. Intel lo llama Hyper-Threading y AMD, SMT. Da algo de rendimiento extra, pero no el doble: los dos hilos comparten el mismo núcleo.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>Núcleos de rendimiento y de eficiencia</span></summary><div class="tg-b"><p>Muchos procesadores combinan núcleos grandes y rápidos con núcleos pequeños que consumen poco. El sistema manda las tareas pesadas a los grandes y las de fondo a los pequeños. Así funcionan casi todos los teléfonos y muchas laptops recientes.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Qué son los hilos?</span></summary><div class="tg-b"><p>Muchos núcleos pueden atender dos tareas a la vez (dos hilos) compartiendo sus piezas: cuando una tarea espera un dato, la otra aprovecha la ALU libre. Intel lo llama Hyper-Threading y AMD, SMT. Da algo de rendimiento extra, pero no el doble: los dos hilos comparten el mismo núcleo.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>Núcleos de rendimiento y de eficiencia</span></summary><div class="tg-b"><p>Muchos procesadores combinan núcleos grandes y rápidos con núcleos pequeños que consumen poco. El sistema manda las tareas pesadas a los grandes y las de fondo a los pequeños. Así funcionan casi todos los teléfonos y muchas laptops recientes.</p></div></details>
 
       <h2 id="s-arq">Arquitecturas: x86 y ARM</h2>
       <p>La <b>arquitectura</b> es el idioma del procesador: el conjunto de instrucciones que entiende. Un programa compilado para una arquitectura no corre directamente en otra; hay que volver a compilarlo o traducirlo.</p>
@@ -279,11 +279,11 @@
       </div></div>
 
       <h2 id="s-dudas">Dudas comunes</h2>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Más GHz siempre significa más rápido?</span></summary><div class="tg-b"><p>Solo entre procesadores de la misma familia y generación. Entre arquitecturas distintas cambian las instrucciones por ciclo, la caché y el número de núcleos, y eso pesa tanto como la frecuencia.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Para qué tantos núcleos si mi programa usa uno?</span></summary><div class="tg-b"><p>Aunque un programa use un solo núcleo, el sistema reparte las demás tareas en los otros: el navegador, la música, las descargas y los procesos del propio sistema. Para editar video, compilar código o renderizar, los programas sí usan todos.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué es un SoC?</span></summary><div class="tg-b"><p>Un sistema en un chip (<i>System on a Chip</i>): el procesador, la tarjeta gráfica, el controlador de memoria y otras piezas en un mismo chip. Es lo normal en teléfonos y en muchas laptops.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué significa que un procesador sea de 64 bits?</span></summary><div class="tg-b"><p>Que sus registros guardan números de 64 bits y que usa direcciones de 64 bits. Uno de 32 bits solo puede usar direcciones para 4 GB de memoria (2<sup>32</sup> bytes); uno de 64 bits no tiene ese límite en la práctica.</p></div></details>
-      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué quieren decir los «3 nm» o «5 nm»?</span></summary><div class="tg-b"><p>Es el nombre del proceso de fabricación. Un número menor indica una generación más nueva, con transistores más pequeños y eficientes, pero ya no mide ninguna pieza concreta del chip.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Más GHz siempre significa más rápido?</span></summary><div class="tg-b"><p>Solo entre procesadores de la misma familia y generación. Entre arquitecturas distintas cambian las instrucciones por ciclo, la caché y el número de núcleos, y eso pesa tanto como la frecuencia.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Para qué tantos núcleos si mi programa usa uno?</span></summary><div class="tg-b"><p>Aunque un programa use un solo núcleo, el sistema reparte las demás tareas en los otros: el navegador, la música, las descargas y los procesos del propio sistema. Para editar video, compilar código o renderizar, los programas sí usan todos.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Qué es un SoC?</span></summary><div class="tg-b"><p>Un sistema en un chip (<i>System on a Chip</i>): el procesador, la tarjeta gráfica, el controlador de memoria y otras piezas en un mismo chip. Es lo normal en teléfonos y en muchas laptops.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Qué significa que un procesador sea de 64 bits?</span></summary><div class="tg-b"><p>Que sus registros guardan números de 64 bits y que usa direcciones de 64 bits. Uno de 32 bits solo puede usar direcciones para 4 GB de memoria (2<sup>32</sup> bytes); uno de 64 bits no tiene ese límite en la práctica.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-mas"/></svg><span>¿Qué quieren decir los «3 nm» o «5 nm»?</span></summary><div class="tg-b"><p>Es el nombre del proceso de fabricación. Un número menor indica una generación más nueva, con transistores más pequeños y eficientes, pero ya no mide ninguna pieza concreta del chip.</p></div></details>
 
       <h2 id="s-repaso">Repasa lo aprendido</h2>
       <div id="qz"></div>
