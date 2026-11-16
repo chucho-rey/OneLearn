@@ -119,6 +119,8 @@ code{background:var(--bg-soft);color:var(--bad-ink);padding:1px 5px;border-radiu
 hr{border:0;border-top:1px solid var(--line);margin:18px 0}
 .link{border:0;background:none;padding:0;font:inherit;color:var(--accent-ink);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer;text-align:left}
 .link:hover{text-decoration-color:var(--accent-ink)}
+.page p a,.page li a{color:var(--accent-ink);text-decoration-color:var(--line-strong);text-underline-offset:3px}
+.page p a:hover,.page li a:hover{text-decoration-color:var(--accent-ink)}
 
 /* Propiedades */
 .props{margin:0;display:flex;flex-direction:column}
@@ -185,6 +187,8 @@ details.tg .tg-b p{margin:.3em 0}
 .lbl{font-size:13px;color:var(--fg-2)}
 .chk{display:inline-flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
 .chk input{width:16px;height:16px;accent-color:var(--accent-solid)}
+.chk:has(input:disabled){color:var(--fg-3);cursor:default}
+.slider{width:100%;max-width:320px;accent-color:var(--accent-solid)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{padding:5px 10px;border:1px solid var(--line-strong);border-radius:4px;background:var(--bg);font-size:13px;cursor:pointer}
 .chip:hover{background:var(--hover)}

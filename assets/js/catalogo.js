@@ -6,7 +6,7 @@ window.AT=window.AT||{};
 window.AT.catalogo=[
   {grupo:'Hardware',lecciones:[
     {id:'ram',titulo:'Memoria RAM',archivo:'ram.html',icono:'ram'},
-    {id:'cpu',titulo:'Procesador (CPU)'},
+    {id:'cpu',titulo:'Procesador (CPU)',archivo:'cpu.html',icono:'cpu'},
     {id:'almacenamiento',titulo:'Almacenamiento'},
     {id:'gpu',titulo:'Tarjeta gráfica'},
     {id:'placa-base',titulo:'Placa base'}

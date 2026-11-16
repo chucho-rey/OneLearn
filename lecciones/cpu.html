@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Procesador (CPU) · Aprende Tecnología</title>
+<meta name="description" content="Cómo ejecuta instrucciones un procesador, qué significan los GHz, la segmentación, la caché y los núcleos, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script src="../assets/js/tema-inicial.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="cpu.css">
+</head>
+<body data-leccion="cpu">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <div class="page-icon"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-cpu"/></svg></div>
+      <h1>Procesador (CPU)</h1>
+      <dl class="props">
+        <div><dt>Categoría</dt><dd><span class="tag">Hardware</span></dd></div>
+        <div><dt>Nivel</dt><dd><span class="tag green">Básico</span></dd></div>
+        <div><dt>Lectura</dt><dd>15 min</dd></div>
+        <div><dt>Incluye</dt><dd>5 demos y 4 preguntas de repaso</dd></div>
+      </dl>
+      <hr>
+      <ul class="toc" aria-label="Contenido">
+        <li><button class="link" type="button" data-go="s-que">¿Qué hace un procesador?</button></li>
+        <li><button class="link" type="button" data-go="s-partes">Las partes de un procesador</button></li>
+        <li><button class="link" type="button" data-go="s-ciclo">El ciclo de instrucción</button></li>
+        <li><button class="link" type="button" data-go="s-reloj">El reloj y los GHz</button></li>
+        <li><button class="link" type="button" data-go="s-tuberia">Segmentación: varias instrucciones a la vez</button></li>
+        <li><button class="link" type="button" data-go="s-cache">La caché: los datos a la mano</button></li>
+        <li><button class="link" type="button" data-go="s-nucleos">Núcleos e hilos</button></li>
+        <li><button class="link" type="button" data-go="s-arq">Arquitecturas: x86 y ARM</button></li>
+        <li><button class="link" type="button" data-go="s-calor">Calor y consumo</button></li>
+        <li><button class="link" type="button" data-go="s-dudas">Dudas comunes</button></li>
+        <li><button class="link" type="button" data-go="s-repaso">Repasa lo aprendido</button></li>
+      </ul>
+
+      <h2 id="s-que">¿Qué hace un procesador?</h2>
+      <p>El <b>procesador</b> o <b>CPU</b> (<i>Central Processing Unit</i>, unidad central de procesamiento) ejecuta los programas. Un programa es una lista de instrucciones muy simples: sumar dos números, copiar un dato, comparar, saltar a otra parte de la lista. El procesador las sigue una tras otra, miles de millones de veces por segundo.</p>
+      <div class="cols">
+        <div><b>Instrucciones simples</b><p>Cada instrucción hace muy poco. Todo lo que ves en pantalla sale de combinar millones de ellas.</p></div>
+        <div><b>Muy rápido</b><p>Un procesador a 4 GHz da 4,000 millones de pasos por segundo, y en cada paso puede avanzar varias instrucciones.</p></div>
+        <div><b>Hecho de transistores</b><p>Un chip actual tiene decenas de miles de millones de transistores, interruptores diminutos que forman todos sus circuitos.</p></div>
+      </div>
+
+      <h2 id="s-partes">Las partes de un procesador</h2>
+      <p>Dentro de cada núcleo hay piezas con trabajos distintos. Estas son las principales:</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Parte</th><th>Qué hace</th></tr></thead>
+          <tbody>
+            <tr><td>Unidad de control</td><td>Lee cada instrucción, la interpreta y le indica a las demás piezas qué hacer.</td></tr>
+            <tr><td>ALU</td><td>La unidad aritmético-lógica: suma, resta, compara y opera con bits.</td></tr>
+            <tr><td>Registros</td><td>Unas cuantas casillas con los datos que se están usando. Son la memoria más rápida que existe.</td></tr>
+            <tr><td>Contador de programa</td><td>Un registro especial (PC) con la dirección de la siguiente instrucción.</td></tr>
+            <tr><td>Caché</td><td>Copias de datos de la RAM guardadas dentro del chip, para no tener que esperarla.</td></tr>
+            <tr><td>Reloj</td><td>Una señal que marca el ritmo de todo el chip. Cada pulso es un ciclo.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="s-ciclo">El ciclo de instrucción</h2>
+      <p>Con cada instrucción, el procesador repite tres pasos: <b>buscar</b> la instrucción en la memoria, <b>decodificar</b> qué pide y <b>ejecutarla</b>. Las instrucciones y los datos viven juntos en la misma memoria. Lo único que distingue a una instrucción es que el contador de programa apunta a ella.</p>
+      <div class="demo">
+        <div class="demo-h"><b>Una CPU de juguete</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-b">
+          <p class="hint">Esta CPU no sabe multiplicar, así que el programa calcula x × y sumando x una y otra vez. Avanza paso a paso y sigue al contador de programa (PC).</p>
+          <div class="ctl" style="margin-top:0">
+            <span class="lbl">x</span>
+            <div class="seg" id="cpuX" role="group" aria-label="Valor de x">
+              <button type="button" data-v="2" aria-pressed="false">2</button>
+              <button type="button" data-v="3" aria-pressed="true">3</button>
+              <button type="button" data-v="4" aria-pressed="false">4</button>
+              <button type="button" data-v="5" aria-pressed="false">5</button>
+            </div>
+            <span class="lbl">y</span>
+            <div class="seg" id="cpuY" role="group" aria-label="Valor de y">
+              <button type="button" data-v="2" aria-pressed="false">2</button>
+              <button type="button" data-v="3" aria-pressed="false">3</button>
+              <button type="button" data-v="4" aria-pressed="true">4</button>
+              <button type="button" data-v="5" aria-pressed="false">5</button>
+            </div>
+          </div>
+          <div class="cpu">
+            <div>
+              <div class="phases" id="cpuPh">
+                <span class="phz" data-ph="buscar">1. Buscar</span>
+                <span class="phz" data-ph="decod">2. Decodificar</span>
+                <span class="phz" data-ph="ejec">3. Ejecutar</span>
+              </div>
+              <div class="regs">
+                <div class="reg" data-r="PC"><span>PC</span><b id="rPC"></b></div>
+                <div class="reg" data-r="A"><span>A</span><b id="rA"></b></div>
+                <div class="reg" data-r="B"><span>B</span><b id="rB"></b></div>
+                <div class="reg" data-r="Z"><span>Z (cero)</span><b id="rZ"></b></div>
+                <div class="reg wide" data-r="IR"><span>IR (instrucción actual)</span><b id="rIR"></b></div>
+                <div class="reg wide" data-r="ALU"><span>ALU</span><b id="rALU"></b></div>
+              </div>
+              <div class="callout cpu-msg"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-info"/></svg><div id="cpuMsg" aria-live="polite"></div></div>
+            </div>
+            <div>
+              <div class="tbl-wrap mem-wrap">
+                <table class="memt">
+                  <thead><tr><th>Dir.</th><th>Contenido</th><th>Qué es</th><th><span class="vh">Contador de programa</span></th></tr></thead>
+                  <tbody id="cpuMem"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="ctl">
+            <button class="btn pri" type="button" id="cpuStep">Siguiente paso</button>
+            <button class="btn" type="button" id="cpuInst">Instrucción completa</button>
+            <button class="btn" type="button" id="cpuRun">Correr</button>
+            <button class="btn" type="button" id="cpuReset">Reiniciar</button>
+            <span class="lbl" id="cpuCnt"></span>
+          </div>
+        </div>
+      </div>
+      <p>El salto es lo que le da poder a un programa: con una sola instrucción, el mismo bloque se repite las veces que haga falta. Los <i>if</i> y los ciclos de cualquier lenguaje de programación terminan convertidos en saltos como este.</p>
+
+      <h2 id="s-reloj">El reloj y los GHz</h2>
+      <p>El procesador avanza al ritmo de un reloj, una señal que oscila miles de millones de veces por segundo. Cada oscilación es un <b>ciclo</b>. Un procesador de 4 GHz (gigahercios) tiene 4,000 millones de ciclos por segundo, así que cada uno dura 0.25 nanosegundos.</p>
+      <p>La frecuencia no lo es todo. Lo que cuenta es cuántas instrucciones se completan por segundo, y eso es la frecuencia multiplicada por las <b>instrucciones por ciclo</b> (IPC). Un núcleo actual completa varias instrucciones en cada ciclo.</p>
+      <div class="demo">
+        <div class="demo-h"><b>Cuánto dura un ciclo</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-b">
+          <p class="hint">Mueve la frecuencia y elige cuántas instrucciones completa el núcleo en cada ciclo.</p>
+          <div class="ctl" style="margin-top:0">
+            <span class="lbl">Frecuencia</span>
+            <input class="slider" type="range" id="fq" min="10" max="60" value="40" aria-label="Frecuencia">
+            <b class="mono" id="fqVal"></b>
+          </div>
+          <div class="ctl">
+            <span class="lbl">Instrucciones por ciclo</span>
+            <div class="seg" id="ipcSeg" role="group" aria-label="Instrucciones por ciclo">
+              <button type="button" data-v="1" aria-pressed="false">1</button>
+              <button type="button" data-v="2" aria-pressed="true">2</button>
+              <button type="button" data-v="4" aria-pressed="false">4</button>
+            </div>
+          </div>
+          <div class="tk-h"><span>10 nanosegundos</span><span id="tkN"></span></div>
+          <div class="ticks" id="ticks" aria-hidden="true"></div>
+          <div class="kpis">
+            <div class="kpi"><span>Duración de un ciclo</span><b id="kCyc"></b></div>
+            <div class="kpi"><span>Lo que avanza la luz en un ciclo</span><b id="kLuz"></b></div>
+            <div class="kpi"><span>Ciclos esperando un dato de la RAM (80 ns)</span><b id="kRam"></b></div>
+            <div class="kpi"><span>Instrucciones por segundo</span><b id="kIps"></b></div>
+          </div>
+        </div>
+      </div>
+      <div class="callout info"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-info"/></svg><div>
+        <p>Un procesador de 3.5 GHz que completa 4 instrucciones por ciclo hace más trabajo que uno de 5 GHz que completa 2. Por eso los GHz solo sirven para comparar procesadores de la misma familia.</p>
+      </div></div>
+
+      <h2 id="s-tuberia">Segmentación: varias instrucciones a la vez</h2>
+      <p>En la CPU de juguete, cada instrucción espera a que termine la anterior. Los procesadores reales trabajan como una línea de montaje: mientras una instrucción se ejecuta, la siguiente se decodifica y otra más se busca. A esto se le llama <b>segmentación</b> o <i>pipeline</i>.</p>
+      <div class="demo">
+        <div class="demo-h"><b>La línea de montaje</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-b">
+          <p class="hint">Cada fila es una instrucción y cada columna, un ciclo. I3 es un salto: hasta ejecutarlo, el procesador no sabe con certeza qué instrucción sigue.</p>
+          <div class="ctl" style="margin-top:0">
+            <div class="seg" id="pipeSeg" role="group" aria-label="Modo">
+              <button type="button" data-v="0" aria-pressed="false">Sin segmentación</button>
+              <button type="button" data-v="1" aria-pressed="true">Con segmentación</button>
+            </div>
+            <label class="chk"><input type="checkbox" id="pipeMiss"> Predicción de salto equivocada</label>
+          </div>
+          <div class="pp-wrap"><div id="pipe" role="img"></div></div>
+          <div class="leg">
+            <span><i class="s-B"></i>B: buscar</span><span><i class="s-D"></i>D: decodificar</span><span><i class="s-E"></i>E: ejecutar</span><span><i class="s-G"></i>G: guardar el resultado</span><span><i class="s-X"></i>Descartada</span>
+          </div>
+          <p class="out" id="pipeOut" aria-live="polite"></p>
+          <p class="hint" id="pipeNote" style="margin:4px 0 0"></p>
+          <div class="ctl">
+            <button class="btn" type="button" id="pipePlay">Reproducir</button>
+          </div>
+        </div>
+      </div>
+      <p>Para no detenerse en cada salto, el procesador <b>predice</b> hacia dónde irá y sigue trabajando. Los predictores actuales aciertan más del 95% de las veces. Cuando fallan, hay que tirar el trabajo adelantado. En un procesador real la línea tiene más de diez etapas, así que cada error cuesta de 10 a 20 ciclos.</p>
+
+      <h2 id="s-cache">La caché: los datos a la mano</h2>
+      <p>En la lección de <a href="ram.html">memoria RAM</a> viste que la RAM tarda unos 80 ns en responder: más de 300 ciclos en los que el procesador no avanza. La <b>caché</b> evita casi todas esas esperas. Es una memoria pequeña y muy rápida, dentro del procesador, que guarda copias de los datos usados hace poco.</p>
+      <p>Si la caché tiene el dato, es un <b>acierto</b>. Si no, es un <b>fallo</b> y hay que traerlo de la RAM. En cada fallo no se trae un solo byte, sino un bloque completo (64 bytes en los procesadores reales), porque lo más probable es que pronto se necesiten los datos vecinos.</p>
+      <div class="demo">
+        <div class="demo-h"><b>Aciertos y fallos</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-b">
+          <p class="hint">Elige un patrón de acceso y avanza. En esta caché caben 4 bloques de 4 direcciones, y cada bloque solo puede ir en una línea: el residuo de dividir su número entre 4. Un acierto tarda 1 ns y un fallo, 80 ns.</p>
+          <div class="chips" id="cPat" role="group" aria-label="Patrón de acceso"></div>
+          <div class="strip" id="cStrip" aria-hidden="true"></div>
+          <div class="tbl-wrap">
+            <table class="ctab">
+              <thead><tr><th>Línea</th><th>Bloque guardado</th><th>Direcciones</th></tr></thead>
+              <tbody id="cTab"></tbody>
+            </table>
+          </div>
+          <div class="status" id="cStat" data-k="" aria-live="polite"><span class="dot"></span><span id="cMsg"></span></div>
+          <div class="kpis">
+            <div class="kpi"><span>Aciertos</span><b id="cHits"></b></div>
+            <div class="kpi"><span>Tiempo promedio por acceso</span><b id="cAvg"></b><div class="bar"><i id="cAvgBar"></i></div></div>
+          </div>
+          <div class="ctl">
+            <button class="btn pri" type="button" id="cStep">Paso</button>
+            <button class="btn" type="button" id="cRun">Correr todo</button>
+            <button class="btn" type="button" id="cReset">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+      <p>Los programas tienen dos costumbres que la caché aprovecha: vuelven a usar lo que acaban de usar (<b>localidad temporal</b>) y usan los datos vecinos de lo que acaban de usar (<b>localidad espacial</b>). Las cachés reales tienen tres niveles (L1, L2 y L3) y permiten que cada bloque vaya en varias líneas posibles, lo que reduce los choques.</p>
+
+      <h2 id="s-nucleos">Núcleos e hilos</h2>
+      <p>Un <b>núcleo</b> es un procesador completo, con su unidad de control, sus ALU, sus registros y su caché L1. Los chips actuales traen varios núcleos (en una computadora personal, de 4 a más de 16) para ejecutar varias tareas al mismo tiempo.</p>
+      <p>Pero más núcleos no siempre se notan. Solo aceleran la parte de un programa que se puede dividir en trozos independientes; el resto sigue avanzando en un solo núcleo. Esta idea se conoce como <b>ley de Amdahl</b>.</p>
+      <div class="demo">
+        <div class="demo-h"><b>Reparte el trabajo</b><span class="tag blue">Interactivo</span></div>
+        <div class="demo-b">
+          <p class="hint">Elige cuántos núcleos hay y qué parte del programa se puede repartir entre ellos.</p>
+          <div class="ctl" style="margin-top:0">
+            <span class="lbl">Núcleos</span>
+            <div class="seg" id="amN" role="group" aria-label="Núcleos">
+              <button type="button" data-v="1" aria-pressed="false">1</button>
+              <button type="button" data-v="2" aria-pressed="false">2</button>
+              <button type="button" data-v="4" aria-pressed="true">4</button>
+              <button type="button" data-v="8" aria-pressed="false">8</button>
+              <button type="button" data-v="16" aria-pressed="false">16</button>
+            </div>
+          </div>
+          <div class="ctl">
+            <span class="lbl">Parte que se puede repartir</span>
+            <input class="slider" type="range" id="amP" min="0" max="100" step="5" value="90" aria-label="Parte que se puede repartir">
+            <b class="mono" id="amPVal"></b>
+          </div>
+          <div class="am">
+            <div class="am-h"><span>Con 1 núcleo</span><span class="mono">100%</span></div>
+            <div class="abar" aria-hidden="true"><i class="s" id="am1s"></i><i class="p" id="am1p"></i></div>
+            <div class="am-h"><span id="amNl"></span><span class="mono" id="amT"></span></div>
+            <div class="abar" aria-hidden="true"><i class="s" id="amNs"></i><i class="p" id="amNp"></i></div>
+          </div>
+          <div class="leg"><span><i style="background:var(--c1)"></i>Parte que no se reparte</span><span><i style="background:var(--accent)"></i>Parte repartida entre los núcleos</span></div>
+          <div class="kpis">
+            <div class="kpi"><span>Aceleración</span><b id="amS"></b></div>
+            <div class="kpi"><span>Límite con núcleos infinitos</span><b id="amL"></b></div>
+          </div>
+          <p class="msg" id="amMsg" aria-live="polite"></p>
+        </div>
+      </div>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué son los hilos?</span></summary><div class="tg-b"><p>Muchos núcleos pueden atender dos tareas a la vez (dos hilos) compartiendo sus piezas: cuando una tarea espera un dato, la otra aprovecha la ALU libre. Intel lo llama Hyper-Threading y AMD, SMT. Da algo de rendimiento extra, pero no el doble: los dos hilos comparten el mismo núcleo.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>Núcleos de rendimiento y de eficiencia</span></summary><div class="tg-b"><p>Muchos procesadores combinan núcleos grandes y rápidos con núcleos pequeños que consumen poco. El sistema manda las tareas pesadas a los grandes y las de fondo a los pequeños. Así funcionan casi todos los teléfonos y muchas laptops recientes.</p></div></details>
+
+      <h2 id="s-arq">Arquitecturas: x86 y ARM</h2>
+      <p>La <b>arquitectura</b> es el idioma del procesador: el conjunto de instrucciones que entiende. Un programa compilado para una arquitectura no corre directamente en otra; hay que volver a compilarlo o traducirlo.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th></th><th>x86</th><th>ARM</th></tr></thead>
+          <tbody>
+            <tr><td>Quién la diseña</td><td>Intel y AMD</td><td>Arm, que la licencia a Apple, Qualcomm, MediaTek y otros</td></tr>
+            <tr><td>Instrucciones</td><td>Muchas y de largo variable</td><td>Más simples y de largo fijo</td></tr>
+            <tr><td>Dónde se usa</td><td>La mayoría de las PC y servidores</td><td>Casi todos los teléfonos, las Mac recientes y cada vez más laptops y servidores</td></tr>
+            <tr><td>Su fuerte</td><td>Compatibilidad con décadas de programas</td><td>Bajo consumo de energía</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>También existe <b>RISC-V</b>, una arquitectura abierta que cualquiera puede usar sin pagar licencia. Hoy aparece sobre todo en microcontroladores y en chips especializados.</p>
+
+      <h2 id="s-calor">Calor y consumo</h2>
+      <p>Cada vez que un transistor cambia de estado gasta un poco de energía, que termina convertida en calor. El consumo crece con la frecuencia y con el cuadrado del voltaje, y para subir la frecuencia casi siempre hay que subir el voltaje. Por eso duplicar los GHz costaría mucho más que el doble de energía.</p>
+      <p>Hasta mediados de los años 2000, cada generación subía la frecuencia. Desde entonces se estancó entre 3 y 6 GHz, y los fabricantes usan los transistores nuevos para poner más núcleos, más caché y núcleos que completan más instrucciones por ciclo.</p>
+      <div class="callout info"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-info"/></svg><div>
+        <p>El <b>turbo</b> sube la frecuencia por encima de la base mientras la temperatura y el consumo lo permitan. Si el procesador se calienta demasiado, baja la frecuencia para protegerse (<i>thermal throttling</i>). Por eso una buena refrigeración también es rendimiento.</p>
+      </div></div>
+
+      <h2 id="s-dudas">Dudas comunes</h2>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Más GHz siempre significa más rápido?</span></summary><div class="tg-b"><p>Solo entre procesadores de la misma familia y generación. Entre arquitecturas distintas cambian las instrucciones por ciclo, la caché y el número de núcleos, y eso pesa tanto como la frecuencia.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Para qué tantos núcleos si mi programa usa uno?</span></summary><div class="tg-b"><p>Aunque un programa use un solo núcleo, el sistema reparte las demás tareas en los otros: el navegador, la música, las descargas y los procesos del propio sistema. Para editar video, compilar código o renderizar, los programas sí usan todos.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué es un SoC?</span></summary><div class="tg-b"><p>Un sistema en un chip (<i>System on a Chip</i>): el procesador, la tarjeta gráfica, el controlador de memoria y otras piezas en un mismo chip. Es lo normal en teléfonos y en muchas laptops.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué significa que un procesador sea de 64 bits?</span></summary><div class="tg-b"><p>Que sus registros guardan números de 64 bits y que usa direcciones de 64 bits. Uno de 32 bits solo puede usar direcciones para 4 GB de memoria (2<sup>32</sup> bytes); uno de 64 bits no tiene ese límite en la práctica.</p></div></details>
+      <details class="tg"><summary><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg><span>¿Qué quieren decir los «3 nm» o «5 nm»?</span></summary><div class="tg-b"><p>Es el nombre del proceso de fabricación. Un número menor indica una generación más nueva, con transistores más pequeños y eficientes, pero ya no mide ninguna pieza concreta del chip.</p></div></details>
+
+      <h2 id="s-repaso">Repasa lo aprendido</h2>
+      <div id="qz"></div>
+      <div class="ctl"><span class="lbl" id="qzScore" aria-live="polite"></span><button class="btn" type="button" id="qzReset">Reiniciar</button></div>
+
+      <h2>Resumen</h2>
+      <div class="callout"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-info"/></svg><div><ul>
+        <li>El procesador ejecuta instrucciones simples con el ciclo buscar, decodificar y ejecutar.</li>
+        <li>El trabajo por segundo depende de la frecuencia (GHz) y de cuántas instrucciones completa por ciclo.</li>
+        <li>La segmentación avanza varias instrucciones a la vez; un salto mal predicho obliga a tirar trabajo.</li>
+        <li>La caché evita esperar a la RAM y rinde más cuando los datos se usan en orden y se reutilizan.</li>
+        <li>Más núcleos solo aceleran la parte del trabajo que se puede repartir.</li>
+      </ul></div></div>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/comun.js"></script>
+<script src="cpu.js"></script>
+</body>
+</html>

@@ -17,6 +17,7 @@ lecciones/
   ram.html                  Contenido de la lección «Memoria RAM»
   ram.css                   Estilos de sus demos
   ram.js                    Sus demos y las preguntas de repaso
+  cpu.html / .css / .js     Lección «Procesador (CPU)»
 ```
 
 Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`.
