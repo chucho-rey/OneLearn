@@ -471,7 +471,12 @@ if(!ES_INICIO)(function(){
     if(s!=='closed')setNav(false);
     apply(s,anim!==false);
     if(s==='closed'&&was!=='closed'){
-      if(sheet.contains(document.activeElement))mainBtn.focus({preventScroll:true});
+      if(sheet.contains(document.activeElement)){
+        /* El foco vuelve al botón de apuntes; si no se ve (modo zen), vuelve a la página,
+           para que el foco no quede atrapado en el cuadro de texto oculto */
+        if(mainBtn.getClientRects().length)mainBtn.focus({preventScroll:true});
+        else document.activeElement.blur();
+      }
       flush();
     }
   }

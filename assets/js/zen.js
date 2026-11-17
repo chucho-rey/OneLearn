@@ -31,7 +31,8 @@ barra.innerHTML=
   '<button type="button" data-z="ancho" aria-label="Ancho de columna">'+ico('ancho')+'</button>'+
   '<button type="button" data-z="nota" aria-label="Nota rápida (N)">'+ico('note')+'</button>'+
   '<button type="button" data-z="salir">Salir <kbd>Esc</kbd></button>';
-document.body.appendChild(barra);
+/* Al principio de la página: con Tab es lo primero a lo que se llega en el modo zen */
+document.body.insertBefore(barra,document.body.firstChild);
 
 function activo(){return root.classList.contains('zen')}
 var dormir=null;
@@ -77,6 +78,14 @@ function entrar(){
   if(activo())return;
   if(AT.setNav)AT.setNav(false);
   if(AT.lectura)AT.lectura.cerrar(false);
+  /* Si el foco estaba en algo que el modo zen oculta, vuelve al inicio de la página:
+     así el siguiente Tab llega a la barra del modo zen */
+  var a=document.activeElement;
+  if(a&&a.closest&&a.closest('.topbar,.side')){
+    document.body.setAttribute('tabindex','-1');
+    document.body.focus({preventScroll:true});
+    document.body.removeAttribute('tabindex');
+  }
   root.classList.add('zen');
   barra.hidden=false;
   despertar();progreso();sync();
@@ -139,7 +148,8 @@ var sideAtajos=$('#sideAtajos');
 if(sideAtajos)sideAtajos.addEventListener('click',function(){if(AT.setNav)AT.setNav(false);ayuda()});
 
 /* ---------- Teclado ---------- */
-function escribiendo(t){return t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))}
+/* Un campo oculto no cuenta como «escribiendo» */
+function escribiendo(t){return !!t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))&&t.getClientRects().length>0}
 document.addEventListener('keydown',function(e){
   /* Con Tab, la barra del modo zen aparece para poder llegar a ella sin ratón */
   if(e.key==='Tab'&&activo())despertar();
