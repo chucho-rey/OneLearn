@@ -19,7 +19,8 @@
 
 /* ¿Qué página sale? */
 .rp-w{margin-top:0.875rem}
-.rp{border-collapse:separate;border-spacing:2px;min-width:0;font-family:var(--font-mono);font-size:0.8125rem}
+.rp{border-collapse:separate;border-spacing:2px;min-width:max-content;font-family:var(--font-mono);font-size:0.8125rem}
+.rp th{text-transform:none;letter-spacing:0}
 .rp th,.rp td{padding:0;border:0;text-align:center}
 .rp thead th{width:1.625rem;height:1.5rem;font-weight:600;background:none}
 .rp thead th:first-child{width:auto}

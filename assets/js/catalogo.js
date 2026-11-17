@@ -19,13 +19,13 @@ window.AT.catalogo=[
     {id:'diodos',titulo:'Diodos y LEDs',archivo:'diodos.html',icono:'led'}
   ]},
   {grupo:'Software',lecciones:[
-    {id:'sistema-operativo',titulo:'Sistema operativo'},
-    {id:'memoria-virtual',titulo:'Memoria virtual'},
-    {id:'compiladores',titulo:'Compiladores'}
+    {id:'sistema-operativo',titulo:'Sistema operativo',archivo:'sistema-operativo.html',icono:'so'},
+    {id:'memoria-virtual',titulo:'Memoria virtual',archivo:'memoria-virtual.html',icono:'capas'},
+    {id:'compiladores',titulo:'Compiladores',archivo:'compiladores.html',icono:'compilar'}
   ]},
   {grupo:'Redes',lecciones:[
-    {id:'paquetes',titulo:'Cómo viaja un paquete'},
-    {id:'dns',titulo:'DNS y direcciones IP'}
+    {id:'paquetes',titulo:'Cómo viaja un paquete',archivo:'paquetes.html',icono:'paquete'},
+    {id:'dns',titulo:'DNS y direcciones IP',archivo:'dns.html',icono:'globo'}
   ]},
   {grupo:'Ciberseguridad',lecciones:[
     {id:'contrasenas',titulo:'Contraseñas y autenticación'},

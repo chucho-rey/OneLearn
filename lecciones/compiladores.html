@@ -1,0 +1,1534 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Compiladores · OneLearn</title>
+<meta name="description" content="Cómo un compilador traduce tu código: compilar, interpretar y JIT, análisis léxico, árbol de sintaxis, análisis semántico, optimización y generación de código, con un compilador interactivo.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="compiladores.css">
+</head>
+<body data-leccion="compiladores">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="co-lexico">
+<p class="hint">Escribe una línea de código. Variables disponibles: precio, cantidad, descuento, x y y.</p>
+<label class="lbl" for="lxIn">Código</label>
+<input class="campo mono" type="text" id="lxIn" value="total = precio * cantidad - descuento" spellcheck="false" autocomplete="off">
+<div class="tks" id="lxTok" aria-live="polite"></div>
+<div class="leg"><span><i class="tk-id"></i>Identificador</span><span><i class="tk-num"></i>Número</span><span><i class="tk-op"></i>Operador</span><span><i class="tk-sig"></i>Asignación o paréntesis</span></div>
+<div class="status" id="lxStat" data-k="" aria-live="polite"><span class="dot"></span><span id="lxMsg"></span></div>
+</template>
+<template data-lab="co-arbol">
+<p class="hint">Elige una expresión o escribe la tuya, y mira cómo queda el árbol.</p>
+<div class="chips" id="asPre" role="group" aria-label="Expresiones de ejemplo">
+  <button class="chip" type="button" data-v="2 + 3 * 4" aria-pressed="true">2 + 3 * 4</button>
+  <button class="chip" type="button" data-v="(2 + 3) * 4" aria-pressed="false">(2 + 3) * 4</button>
+  <button class="chip" type="button" data-v="10 - 4 - 3" aria-pressed="false">10 - 4 - 3</button>
+  <button class="chip" type="button" data-v="precio * cantidad - descuento" aria-pressed="false">precio * cantidad - descuento</button>
+</div>
+<label class="lbl as-l" for="asIn">Expresión</label>
+<input class="campo mono" type="text" id="asIn" value="2 + 3 * 4" spellcheck="false" autocomplete="off">
+<svg class="as-svg" id="asSvg" role="img" aria-label="Árbol de sintaxis"></svg>
+<div class="status" id="asStat" data-k="" aria-live="polite"><span class="dot"></span><span id="asMsg"></span></div>
+</template>
+<template data-lab="co-codigo">
+<p class="hint">El compilador recorre el árbol y genera instrucciones para una máquina de pila. Ejecútalas paso a paso.</p>
+<label class="lbl" for="cdIn">Código</label>
+<input class="campo mono" type="text" id="cdIn" value="total = precio * cantidad - descuento" spellcheck="false" autocomplete="off">
+<div class="ctl">
+  <label class="chk"><input type="checkbox" id="cdOpt"> Optimizar (plegado de constantes)</label>
+  <div class="chips" id="cdPre" role="group" aria-label="Ejemplos">
+    <button class="chip" type="button" data-v="total = precio * cantidad - descuento" aria-pressed="true">Precio total</button>
+    <button class="chip" type="button" data-v="segundos = 60 * 60 * 24" aria-pressed="false">Segundos en un día</button>
+  </div>
+</div>
+<div class="cd">
+  <div><p class="lbl">Instrucciones</p><ol class="cd-ins" id="cdIns"></ol></div>
+  <div><p class="lbl">Pila</p><div class="cd-pila" id="cdPila"></div><p class="lbl cd-v" id="cdVars"></p></div>
+</div>
+<div class="status" id="cdStat" data-k="" aria-live="polite"><span class="dot"></span><span id="cdMsg"></span></div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="cdSig">Siguiente instrucción</button>
+  <button class="btn" type="button" id="cdReset">Reiniciar</button>
+</div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "compiladores",
+ "titulo": "Compiladores",
+ "icono": "compilar",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Software",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "15 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-co001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-co002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué hace un compilador?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El "
+     },
+     {
+      "type": "text",
+      "text": "procesador",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "cpu.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " solo entiende instrucciones muy simples en binario: cargar un número, sumar, saltar. Nadie programa así. Escribimos en lenguajes como C, Python o JavaScript, y un "
+     },
+     {
+      "type": "text",
+      "text": "compilador",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " traduce ese "
+     },
+     {
+      "type": "text",
+      "text": "código fuente",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " a instrucciones que la máquina puede ejecutar."
+     }
+    ],
+    "attrs": {
+     "id": "b-co003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Traducir no es reemplazar palabra por palabra: el compilador tiene que entender la estructura del programa, revisar que tenga sentido, detectar errores y, de paso, hacerlo más rápido."
+     }
+    ],
+    "attrs": {
+     "id": "b-co004"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-co005",
+     "language": "text"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "total = precio * cantidad - descuento"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Esa línea, para el procesador, se convierte en algo parecido a: carga precio, carga cantidad, multiplica, carga descuento, resta, guarda en total. En esta lección vas a ver cada paso de esa traducción con un compilador pequeño, pero de verdad."
+     }
+    ],
+    "attrs": {
+     "id": "b-co006"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-formas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Compilar, interpretar y JIT"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Hay tres formas principales de ejecutar un programa:"
+     }
+    ],
+    "attrs": {
+     "id": "b-co007"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-co008"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Forma"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cómo funciona"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lenguajes"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Compilar",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " antes de ejecutar"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se traduce todo el programa a código máquina una vez; después corre directo y muy rápido"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "C, C++, Rust, Go, Swift"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Interpretar",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un programa (el intérprete) lee el código y lo va ejecutando; no hay paso previo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Python, Ruby, PHP (casi siempre pasan antes por un código intermedio, el bytecode)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "JIT",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " ("
+           },
+           {
+            "type": "text",
+            "text": "just in time",
+            "marks": [
+             {
+              "type": "italic"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Empieza interpretando y compila al vuelo las partes que más se repiten"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "JavaScript en el navegador, Java, C#"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Compilar antes da los programas más rápidos y detecta errores pronto. Interpretar permite probar cambios al instante. El JIT busca lo mejor de los dos: por eso JavaScript, que nació interpretado, hoy es rapidísimo."
+     }
+    ],
+    "attrs": {
+     "id": "b-co009"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-fases",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Las fases de un compilador"
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-co010"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Análisis léxico:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " separa el texto en piezas con significado, los "
+         },
+         {
+          "type": "text",
+          "text": "tokens",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Análisis sintáctico:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " acomoda los tokens en un árbol que muestra la estructura del programa."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Análisis semántico:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " revisa que tenga sentido: que las variables existan y los tipos cuadren."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Optimización:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " simplifica y acelera el programa sin cambiar lo que hace."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Generación de código:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " produce las instrucciones para el procesador."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-lexico",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Análisis léxico: los tokens"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El primer paso lee el código letra por letra y lo agrupa en "
+     },
+     {
+      "type": "text",
+      "text": "tokens",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": nombres (identificadores), números, operadores y signos. Los espacios y los comentarios se descartan. Si aparece un símbolo que el lenguaje no conoce, aquí se detecta el error."
+     }
+    ],
+    "attrs": {
+     "id": "b-co011"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-co012",
+     "nombre": "co-lexico",
+     "titulo": "Separa en tokens"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-sintactico",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Análisis sintáctico: el árbol"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con los tokens, el "
+     },
+     {
+      "type": "text",
+      "text": "analizador sintáctico",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "parser",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") arma un "
+     },
+     {
+      "type": "text",
+      "text": "árbol de sintaxis",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". El árbol resuelve algo que el texto deja implícito: el orden. En 2 + 3 × 4, la multiplicación tiene más "
+     },
+     {
+      "type": "text",
+      "text": "precedencia",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", así que queda más abajo en el árbol y se calcula primero. Los paréntesis cambian la forma del árbol."
+     }
+    ],
+    "attrs": {
+     "id": "b-co013"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-co014",
+     "nombre": "co-arbol",
+     "titulo": "Árbol de sintaxis"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Si el código no sigue la gramática del lenguaje (un paréntesis sin cerrar, dos operadores seguidos) el parser no puede armar el árbol: es un "
+     },
+     {
+      "type": "text",
+      "text": "error de sintaxis",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", el que más verás al empezar a programar."
+     }
+    ],
+    "attrs": {
+     "id": "b-co015"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-semantico",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Análisis semántico"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un programa puede estar bien escrito y aun así no tener sentido. El análisis semántico revisa, por ejemplo, que cada variable exista antes de usarse y que los "
+     },
+     {
+      "type": "text",
+      "text": "tipos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " cuadren: en un lenguaje como C, sumar un número con un texto es un error."
+     }
+    ],
+    "attrs": {
+     "id": "b-co016"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-co017",
+     "language": "c"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "int edad = 20;\nchar *nombre = \"Ana\";\nint x = edad + nombre;   // error: no se puede sumar un número y un texto así"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los lenguajes con "
+     },
+     {
+      "type": "text",
+      "text": "tipos estáticos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (C, Java, Rust, TypeScript) hacen esta revisión al compilar, antes de que el programa corra. Los de "
+     },
+     {
+      "type": "text",
+      "text": "tipos dinámicos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (Python, JavaScript) la hacen al ejecutar, así que el error aparece hasta que esa línea se usa."
+     }
+    ],
+    "attrs": {
+     "id": "b-co018"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-codigo",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Generar el código"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Al final, el compilador recorre el árbol y genera instrucciones. Una forma sencilla es pensar en una "
+     },
+     {
+      "type": "text",
+      "text": "pila",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": cada valor se pone encima, y cada operación toma los dos de arriba y deja el resultado. Así funcionan las máquinas virtuales de Java, de Python y de WebAssembly."
+     }
+    ],
+    "attrs": {
+     "id": "b-co019"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-co020",
+     "nombre": "co-codigo",
+     "titulo": "De árbol a instrucciones"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La "
+     },
+     {
+      "type": "text",
+      "text": "optimización",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " de este ejemplo se llama "
+     },
+     {
+      "type": "text",
+      "text": "plegado de constantes",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": si algo se puede calcular al compilar, como 60 × 60, el compilador pone directo 3,600 y el programa ya no lo calcula cada vez. Los compiladores reales hacen cientos de optimizaciones así."
+     }
+    ],
+    "attrs": {
+     "id": "b-co021"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-errores",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Errores de compilación y de ejecución"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-co022"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Error de compilación"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Error de ejecución"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cuándo aparece"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Antes de correr el programa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Mientras corre"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Falta un paréntesis, variable que no existe, tipos que no cuadran"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dividir entre cero, archivo que no existe, quedarse sin memoria"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué tan grave"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Molesto, pero seguro: el programa ni siquiera arranca"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Puede pasar con el usuario usando el programa"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-co023",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Lee los mensajes de error completos: casi siempre dicen el archivo, la línea y qué esperaba el compilador. Aprender a leerlos es una de las habilidades más útiles al programar."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-co024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Python se compila?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sí, en parte: CPython traduce tu código a "
+         },
+         {
+          "type": "text",
+          "text": "bytecode",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (los archivos .pyc) y una máquina virtual lo interpreta. No genera código máquina directo, por eso es más lento que C en cálculos pesados."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-co025"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es un transpilador?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un compilador que traduce de un lenguaje de alto nivel a otro. TypeScript, por ejemplo, se transpila a JavaScript, que es lo que entiende el navegador."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-co026"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "Si el compilador es un programa, ¿quién compiló el primero?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los primeros se escribieron directamente en código máquina o ensamblador. Grace Hopper creó uno de los primeros, el A-0, en 1952. Después, cada lenguaje suele escribir su compilador en sí mismo y compilarlo con una versión anterior: a eso se le llama "
+         },
+         {
+          "type": "text",
+          "text": "bootstrapping",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-co027"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es WebAssembly?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un formato de instrucciones para una máquina virtual que corre en el navegador. Permite compilar programas en C, C++ o Rust para que se ejecuten en una página web casi tan rápido como en tu computadora."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-co028",
+     "preguntas": [
+      {
+       "q": "¿Qué hace el análisis léxico?",
+       "o": [
+        "Separa el código en tokens",
+        "Ejecuta el programa",
+        "Revisa los tipos"
+       ],
+       "a": 0,
+       "e": "Agrupa las letras en tokens (nombres, números, operadores) y descarta espacios y comentarios."
+      },
+      {
+       "q": "En el árbol de 2 + 3 * 4, ¿qué operación queda más abajo?",
+       "o": [
+        "La suma",
+        "La multiplicación"
+       ],
+       "a": 1,
+       "e": "La multiplicación tiene más precedencia: se calcula primero, así que es un subárbol de la suma."
+      },
+      {
+       "q": "Usar una variable que no existe es un error…",
+       "o": [
+        "léxico",
+        "semántico",
+        "de hardware"
+       ],
+       "a": 1,
+       "e": "El código está bien escrito, pero no tiene sentido: lo detecta el análisis semántico."
+      },
+      {
+       "q": "¿Qué hace el plegado de constantes?",
+       "o": [
+        "Calcula al compilar lo que ya se sabe, como 60 * 60",
+        "Borra las variables",
+        "Comprime el archivo"
+       ],
+       "a": 0,
+       "e": "Si el resultado no depende de nada que cambie al ejecutar, el compilador lo calcula una vez y pone el resultado."
+      },
+      {
+       "q": "¿Qué lenguaje se ejecuta normalmente con un JIT?",
+       "o": [
+        "C",
+        "JavaScript en el navegador",
+        "Ensamblador"
+       ],
+       "a": 1,
+       "e": "Los motores de JavaScript empiezan interpretando y compilan al vuelo las partes que más se repiten."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-co029"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un compilador traduce el código fuente a instrucciones que el procesador puede ejecutar."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se puede compilar antes, interpretar o compilar al vuelo (JIT)."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El análisis léxico produce tokens; el sintáctico, un árbol que refleja la precedencia."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El análisis semántico revisa que el programa tenga sentido: variables y tipos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Al final se optimiza y se generan instrucciones, por ejemplo para una máquina de pila."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="compiladores.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

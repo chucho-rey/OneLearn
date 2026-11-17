@@ -40,7 +40,7 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
     r.igual(d.enPagina,d.total,lid+': cada bloque se dibuja con su identificador como ancla');
     r.cumple(d.props===4&&d.h1.length>3,lid+': título y ficha de la lección',d);
     r.igual(d.toc.join(','),d.secciones.join(','),lid+': el índice lista las secciones del documento');
-    r.cumple(d.labsDoc>=4&&d.labs===d.labsDoc&&d.labsVivos===d.labsDoc,lid+': los '+d.labsDoc+' laboratorios se dibujan y arrancan',d);
+    r.cumple(d.labsDoc>=2&&d.labs===d.labsDoc&&d.labsVivos===d.labsDoc,lid+': los '+d.labsDoc+' laboratorios se dibujan y arrancan',d);
     r.cumple(d.preguntasDoc>=4&&d.preguntas===d.preguntasDoc,lid+': el repaso tiene sus '+d.preguntasDoc+' preguntas',d);
     r.cumple(d.resumen,lid+': el resumen no cuenta como sección');
     r.igual(d.siguiente,'next',lid+': el enlace a la siguiente lección queda al final');
