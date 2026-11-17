@@ -98,4 +98,58 @@ prueba('Proyectos',async function({browser,base,r}){
   r.cumple((await q.locator('[role=option]').allTextContents()).some(function(t){return /Tu portafolio web/.test(t)&&/Proyecto/.test(t)}),'Ctrl K encuentra el proyecto');
   r.cumple(q.errores.length===0&&p.errores.length===0,'sin errores',q.errores.concat(p.errores));
   await cerrar(q);await cerrar(p);
+
+  /* Todos los proyectos del catálogo: coinciden con su archivo, cada fase se dibuja completa y sus enlaces existen */
+  const g=await pagina(browser,{ancho:1280,reducir:true});
+  await g.goto(base+'proyectos/index.html');await listo(g);
+  const cat=await g.evaluate(function(){return AT.proyectos.map(function(x){return {id:x.id,archivo:x.archivo,tareas:x.tareas,fases:x.fases}})});
+  r.igual(await g.locator('#pjLista .pj-card').count(),cat.length,'la lista muestra los '+cat.length+' proyectos');
+  for(const c of cat){
+    await g.goto(base+'proyectos/'+c.archivo);await listo(g);
+    const e=await g.evaluate(function(){return {id:AT.proyecto.id,fases:AT.proyecto.fases.map(function(f){return f.id}),tareas:AT.proyecto.fases.reduce(function(s,f){return s+f.tareas.length},0),
+      hrefs:(function(){const set=new Set();JSON.stringify(AT.proyecto).replace(/"href":"([^"]+)"/g,function(_,h){set.add(h)});return Array.from(set)})()}});
+    r.cumple(e.id===c.id&&e.tareas===c.tareas&&e.fases.length===c.fases,c.id+': el catálogo coincide con el proyecto',{e:e.tareas,c:c.tareas});
+    for(const f of e.fases){
+      await g.goto(base+'proyectos/'+c.archivo+'#'+f);await g.waitForTimeout(150);
+      const v=await g.evaluate(function(){return {cuerpo:document.querySelectorAll('.pj-cuerpo [data-b]').length,tareas:document.querySelectorAll('.pj-tl input').length,
+        labs:document.querySelectorAll('.pj-cuerpo .demo').length,vivos:Array.from(document.querySelectorAll('.pj-cuerpo .demo-b')).filter(function(b){return b.children.length>1}).length}});
+      r.cumple(v.cuerpo>3&&v.tareas>=3&&v.labs===v.vivos,c.id+' '+f+': contenido, tareas y diagramas funcionando',v);
+    }
+    for(const h of e.hrefs){
+      const res=await g.request.get(new URL(h,base+'proyectos/'+c.archivo).href.split('#')[0]);
+      r.cumple(res.ok(),c.id+': el enlace '+h+' existe');
+    }
+    r.cumple(g.errores.length===0,c.id+': sin errores',g.errores.slice(0,2));
+  }
+  await cerrar(g);
+
+  /* La red de una oficina: sus diagramas en todas las variantes y lo que calculan */
+  for(const [ancho,tema,contraste,escala,fuente] of [[390,'dark','high',1.5,'opendyslexic'],[1280,'light','normal',1,'normal']])
+  for(const f of ['f2','f7']){
+    const v=await pagina(browser,{ancho:ancho,ajustes:{tema:tema,contraste:contraste,escala:escala,fuente:fuente}});
+    await v.goto(base+'proyectos/red-oficina.html#'+f);await listo(v,400);
+    await revisar(v,r,'red-oficina '+f+' '+ancho+'px '+tema+'/'+contraste+' ×'+escala+' '+fuente);
+    await cerrar(v);
+  }
+  const n=await pagina(browser,{ancho:390,reducir:true});
+  await n.goto(base+'proyectos/red-oficina.html#f2');await listo(n);
+  await n.click('#toRuta [data-v="casa"]');
+  r.cumple(await n.locator('#toSvg .to-vpn.on').count()===1&&await n.locator('#toSvg .to-e.on').count()===4&&/túnel VPN/.test(await txt(n,'#toMsg')),'desde casa, el camino va por el túnel VPN: internet, router, switch y servidor');
+  await n.click('#toRuta [data-v="visita"]');
+  r.cumple(await n.getAttribute('#toStat','data-k')==='bad'&&await n.locator('#toSvg .to-x').count()===1,'la visita del Wi-Fi de invitados no llega al servidor');
+  await n.click('#toEq [data-v="srv"]');
+  r.cumple(/192\.168\.10\.10/.test(await txt(n,'#toMsg')),'tocar un equipo muestra su dirección y su papel');
+  const casos=[['192.168.10.30','good'],['192.168.10.10','bad'],['192.168.10.150','warn'],['192.168.11.5','bad'],['192.168.10.255','bad'],['hola','bad']];
+  for(const [ip,k] of casos){
+    await n.fill('#ipNueva',ip);
+    r.igual(await n.getAttribute('#ipStat','data-k'),k,'el plan de IP califica '+ip+' como '+k);
+  }
+  r.cumple(await n.locator('#ipMapa i.tu').count()===0,'una dirección inválida no se marca en el mapa');
+  await n.goto(base+'proyectos/red-oficina.html#f7');await listo(n);
+  await n.click('#reOp [data-v="0"]');
+  r.cumple(await n.getAttribute('#reStat','data-k')==='bad'&&/No se recomienda/.test(await txt(n,'#reMsg')),'abrir un puerto del router se marca como riesgoso');
+  await n.click('#reOp [data-v="1"]');
+  r.cumple(/IP pública/.test(await txt(n,'#reTab')),'WireGuard propio explica que necesita una IP pública');
+  r.cumple(n.errores.length===0,'red-oficina: sin errores',n.errores.slice(0,2));
+  await cerrar(n);
 });
