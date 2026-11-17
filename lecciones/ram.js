@@ -1,10 +1,13 @@
-/* Demos y repaso de la lección «Memoria RAM». Usa las utilidades de assets/js/base.js. */
+/* Laboratorios de la lección «Memoria RAM».
+   Cada uno se registra en AT.labs con el nombre de su bloque «laboratorio»; bloques.js lo llama después de
+   dibujar el bloque con su plantilla (<template data-lab="..."> en ram.html). Las preguntas de repaso
+   viven en el documento de la lección, no aquí. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,reduce=AT.reduce;
 
 /* ---------- Demo 1: llena tu RAM ---------- */
-(function(){
+AT.labs['ram-llenar']=function(){
   var apps=[
     {id:'os',n:'Sistema operativo',gb:3,c:1,fixed:true},
     {id:'web',n:'Navegador con 10 pestañas',gb:2.5,c:2},
@@ -56,10 +59,10 @@ var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,
     render();
   });
   render();
-})();
+};
 
 /* ---------- Demo 2: jerarquía de memoria ---------- */
-(function(){
+AT.labs['ram-jerarquia']=function(){
   var lv=[
     {n:'Registros del CPU',ns:0.3,cap:'menos de 1 KB',d:'Son las celdas más cercanas al cálculo, dentro del núcleo. El procesador opera directamente sobre ellos.'},
     {n:'Caché L1',ns:1,cap:'32 a 64 KB por núcleo',d:'Memoria SRAM dentro de cada núcleo. Guarda las instrucciones y los datos que se usan en este instante.'},
@@ -112,10 +115,10 @@ var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,
     render();
   });
   render();
-})();
+};
 
 /* ---------- Demo 3: celdas DRAM ---------- */
-(function(){
+AT.labs['ram-celdas']=function(){
   var ROWS=4,TXT='Hola';
   var host=$('#dram'),chk=$('#refreshChk'),pwrBtn=$('#pwrBtn'),writeBtn=$('#writeBtn'),stat=$('#dramStatus'),statMsg=$('#dramMsg');
   var ch=[],written=[],cellEls=[],rdEls=[],rowEls=[];
@@ -230,10 +233,10 @@ var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,
   writeBtn.addEventListener('click',function(){if(power){load();render()}});
   buttons();render();
   setInterval(tick,100);
-})();
+};
 
 /* ---------- Demo 4: leer una dirección ---------- */
-(function(){
+AT.labs['ram-direccion']=function(){
   var N=8,seed=11,bits=[];
   function rnd(){seed=(Math.imul(seed,1103515245)+12345)&0x7fffffff;return (seed>>>8)&1}
   for(var r=0;r<N;r++){bits[r]=[];for(var c=0;c<N;c++)bits[r][c]=rnd()}
@@ -348,10 +351,10 @@ var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,
     })();
   });
   paint();
-})();
+};
 
 /* ---------- Demo 5: calculadora ---------- */
-(function(){
+AT.labs['ram-modulos']=function(){
   var mods=[
     {n:'DDR3-1600',mt:1600,cl:11},
     {n:'DDR4-2666',mt:2666,cl:19},
@@ -394,21 +397,5 @@ var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,
     calc();
   });
   renderChips();calc();
-})();
-
-/* ---------- Repaso ---------- */
-AT.repaso({host:'#qz',score:'#qzScore',reset:'#qzReset',preguntas:[
-  {q:'¿Qué pasa con el contenido de la RAM cuando apagas el equipo?',
-   o:['Se guarda automáticamente en el SSD','Se pierde, porque la RAM es volátil','Se conserva durante 24 horas'],a:1,
-   e:'La RAM necesita energía para mantener la carga de sus capacitores. Sin corriente, el contenido desaparece. Por eso los archivos se guardan en el almacenamiento.'},
-  {q:'¿Por qué la DRAM necesita refresco?',
-   o:['Porque los capacitores pierden carga con el tiempo','Porque el procesador es más lento que ella','Porque los transistores se desgastan al leer'],a:0,
-   e:'Cada capacitor se descarga solo. Si no se reescribe a tiempo, un 1 se confunde con un 0.'},
-  {q:'Un módulo DDR4-3200 hace 3,200 millones de transferencias por segundo. ¿Cuál es su reloj?',
-   o:['3,200 MHz','1,600 MHz','6,400 MHz'],a:1,
-   e:'DDR transfiere en la subida y en la bajada del reloj, dos veces por ciclo. Por eso el reloj es la mitad: 1,600 MHz.'},
-  {q:'Instalas dos módulos iguales y la placa los usa en doble canal. ¿Qué pasa con el ancho de banda máximo?',
-   o:['Se duplica','Se mantiene igual','Baja a la mitad'],a:0,
-   e:'Cada canal tiene su propio bus de 64 bits. Con dos canales el procesador mueve el doble de datos por ciclo. La latencia casi no cambia.'}
-]});
+};
 })();

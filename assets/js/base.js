@@ -8,6 +8,7 @@
 (function(){
 'use strict';
 var AT=window.AT=window.AT||{};
+AT.labs=AT.labs||{};
 
 /* ---------- Utilidades ---------- */
 var $=AT.$=function(s,r){return (r||document).querySelector(s)};
@@ -43,6 +44,9 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-note" viewBox="0 0 24 24"><path d="M4 20l4-1L19.5 7.5a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14.5 6.5l3 3"/></symbol>'+
 '<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>'+
 '<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>'+
+'<symbol id="i-aviso" viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.2h.01"/></symbol>'+
+'<symbol id="i-idea" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></symbol>'+
+'<symbol id="i-marcador" viewBox="0 0 24 24"><path d="M6 3.5h12V21l-6-4.2L6 21z"/></symbol>'+
 '</svg>');
 
 /* ---------- Lección actual ---------- */
@@ -77,7 +81,8 @@ AT.contarPalabras=contarPalabras;
 /* ---------- Repaso: AT.repaso({host, score, reset, preguntas}) ----------
    Cada pregunta: {q:'texto', o:['opción',...], a:índiceCorrecto, e:'explicación'} */
 AT.repaso=function(opt){
-  var qs=opt.preguntas,host=$(opt.host),score=$(opt.score),done=0,ok=0;
+  function nodo(x){return typeof x==='string'?$(x):x}
+  var qs=opt.preguntas,host=nodo(opt.host),score=nodo(opt.score),done=0,ok=0;
   var inicio='Responde las '+qs.length+' preguntas.';
   function build(){
     done=0;ok=0;
@@ -102,9 +107,9 @@ AT.repaso=function(opt){
     ex.hidden=false;
     ex.textContent=(j===q.a?'Correcto. ':'No exactamente. ')+q.e;
     score.textContent=done<qs.length?'Aciertos: '+ok+' de '+done+' respondidas.':'Resultado final: '+ok+' de '+qs.length+'.';
-    if(done===qs.length)document.dispatchEvent(new CustomEvent('repaso-terminado',{detail:{ok:ok,total:qs.length}}));
+    if(done===qs.length)document.dispatchEvent(new CustomEvent('repaso-terminado',{detail:{ok:ok,total:qs.length,host:host}}));
   });
-  if(opt.reset)$(opt.reset).addEventListener('click',build);
+  if(opt.reset)nodo(opt.reset).addEventListener('click',build);
   build();
 };
 })();

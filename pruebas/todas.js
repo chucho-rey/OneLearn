@@ -1,6 +1,6 @@
 /* Corre todas las pruebas, una tras otra, y resume. Sale con código 1 si alguna falla.
    Uso: node todas.js        (todas)
-        node todas.js 3 5    (solo las que empiezan con 3 y con 5) */
+        node todas.js 3 5    (solo la 3 y la 5) */
 'use strict';
 const {spawnSync}=require('child_process');
 const fs=require('fs'),path=require('path');
@@ -8,8 +8,8 @@ const fs=require('fs'),path=require('path');
 const filtro=process.argv.slice(2);
 const archivos=fs.readdirSync(__dirname)
   .filter(function(f){return /^\d+-.*\.js$/.test(f)})
-  .filter(function(f){return !filtro.length||filtro.some(function(x){return f.indexOf(x)===0})})
-  .sort();
+  .filter(function(f){return !filtro.length||filtro.some(function(x){return f.indexOf(x+'-')===0})})
+  .sort(function(a,b){return parseInt(a,10)-parseInt(b,10)});
 const resultados=archivos.map(function(f){
   const r=spawnSync(process.execPath,[path.join(__dirname,f)],{stdio:'inherit'});
   return {f:f,ok:r.status===0};

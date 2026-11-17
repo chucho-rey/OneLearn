@@ -20,6 +20,7 @@ assets/
   js/lectura.js             Panel Lectura (tamaño de texto, tema, contraste, fuente y espacios)
   js/apuntes.js             Hoja de apuntes de cada lección (abajo o acoplada a la derecha)
   js/app.js                 App instalable: service worker, aviso de actualización e instalación
+  js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
@@ -28,9 +29,9 @@ assets/
 herramientas/tiptap/        Cómo se compila assets/vendor/tiptap.min.js (esbuild)
 pruebas/                    Pruebas automáticas con Playwright (ver pruebas/README.md)
 lecciones/
-  ram.html                  Contenido de la lección «Memoria RAM»
-  ram.css                   Estilos de sus demos
-  ram.js                    Sus demos y las preguntas de repaso
+  ram.html                  Lección «Memoria RAM»: su documento en JSON y las plantillas de sus laboratorios
+  ram.css                   Estilos de sus laboratorios
+  ram.js                    Sus laboratorios (AT.labs)
   cpu.html / .css / .js     Lección «Procesador (CPU)»
 ```
 
@@ -38,11 +39,28 @@ Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan m
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
+## Formato de bloques
+
+Las lecciones y los documentos que crea cada estudiante usan el mismo formato, y se dibujan con el mismo código (`assets/js/bloques.js`):
+
+```json
+{
+  "formato": 1, "tipo": "leccion", "id": "ram", "titulo": "Memoria RAM", "icono": "ram",
+  "props": [{"nombre": "Nivel", "valor": "Básico", "estilo": "verde"}],
+  "contenido": {"type": "doc", "content": [
+    {"type": "heading", "attrs": {"id": "s-que", "level": 2}, "content": [{"type": "text", "text": "¿Qué es la memoria RAM?"}]},
+    {"type": "paragraph", "attrs": {"id": "b-ram002"}, "content": [{"type": "text", "text": "La RAM", "marks": [{"type": "bold"}]}]}
+  ]}
+}
+```
+
+`contenido` usa el esquema del editor (Tiptap/ProseMirror). Cada bloque de primer nivel tiene un `id` fijo, que es el ancla de los marcadores: no lo cambies en una lección publicada. Tipos de bloque: `paragraph`, `heading` (niveles 2 y 3; los de nivel 2 son las secciones), listas (`bulletList`, `orderedList`, `taskList`), `blockquote`, `codeBlock`, `horizontalRule`, `table`, `callout` (variantes `info`, `aviso`, `idea`), `columnas`, `desplegable`, `laboratorio`, `repaso`, `indice` y `resumen`. El texto admite negrita, cursiva, subrayado, tachado, código, enlace, resaltado, subíndice y superíndice. El dibujo nunca interpreta el texto como HTML y descarta enlaces `javascript:`.
+
 ## Cómo agregar una lección
 
-1. En `assets/js/catalogo.js`, agrega `archivo` a la lección (por ejemplo, `archivo:'cpu.html'`). Así deja de mostrarse como «Pronto» y aparece en la barra lateral y en «Siguiente lección».
-2. Copia `lecciones/ram.html` como `lecciones/cpu.html`, cambia el `<title>`, pon `data-leccion="cpu"` en el `<body>` (igual al `id` del catálogo) y reemplaza el contenido de `<main class="page">`.
-3. Si la lección tiene demos propias, crea `lecciones/cpu.css` y `lecciones/cpu.js` y enlázalos en lugar de los de RAM. Desde el script tienes `AT.$`, `AT.$$`, `AT.fmt`, `AT.esc`, `AT.setPressed`, `AT.reduce` y `AT.repaso({host, score, reset, preguntas})`.
+1. En `assets/js/catalogo.js`, agrega `archivo` a la lección (por ejemplo, `archivo:'gpu.html'`). Así deja de mostrarse como «Pronto» y aparece en la barra lateral y en «Siguiente lección».
+2. Copia `lecciones/ram.html` como `lecciones/gpu.html`, cambia el `<title>` y la descripción, pon `data-leccion="gpu"` en el `<body>` (igual al `id` del catálogo) y reemplaza el JSON de `<script type="application/json" id="documento">` por el de la lección nueva.
+3. Si la lección tiene laboratorios, crea `lecciones/gpu.css` y `lecciones/gpu.js`. Cada laboratorio es un bloque `{"type": "laboratorio", "attrs": {"id": "...", "nombre": "gpu-algo", "titulo": "..."}}`, una plantilla `<template data-lab="gpu-algo">` con su HTML y una función `AT.labs['gpu-algo']=function(raiz){...}` en el script. Tienes `AT.$`, `AT.$$`, `AT.fmt`, `AT.esc`, `AT.setPressed` y `AT.reduce`. Las preguntas de repaso van en el bloque `repaso` del JSON.
 4. Agrega los archivos nuevos a `ARCHIVOS` en `sw.js` y sube `VERSION`, para que la lección funcione sin conexión.
 
 No cambies el `id` de una lección ya publicada: es la clave con la que se guardan sus apuntes.

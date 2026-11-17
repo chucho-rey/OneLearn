@@ -1,4 +1,7 @@
-/* Demos y repaso de la lección «Procesador (CPU)». Usa las utilidades de assets/js/base.js. */
+/* Laboratorios de la lección «Procesador (CPU)».
+   Cada uno se registra en AT.labs con el nombre de su bloque «laboratorio»; bloques.js lo llama después de
+   dibujar el bloque con su plantilla (<template data-lab="..."> en cpu.html). Las preguntas de repaso
+   viven en el documento de la lección, no aquí. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,reduce=AT.reduce;
@@ -14,7 +17,7 @@ function segValue(sel,fn){
 }
 
 /* ---------- Demo 1: CPU de juguete ---------- */
-(function(){
+AT.labs['cpu-juguete']=function(){
   /* Programa: r = x × y sumando x, y veces. Datos en las direcciones 8 (x), 9 (y) y 10 (r). */
   var PROG=[
     {op:'CARGA',k:0,txt:'CARGA A, 0',com:'A = 0'},
@@ -149,10 +152,10 @@ function segValue(sel,fn){
   segValue('#cpuX',function(v){X=v;reset()});
   segValue('#cpuY',function(v){Y=v;reset()});
   reset();
-})();
+};
 
 /* ---------- Demo 2: el reloj ---------- */
-(function(){
+AT.labs['cpu-reloj']=function(){
   var fq=$('#fq'),ipc=2;
   function render(){
     var f=+fq.value/10;
@@ -171,10 +174,10 @@ function segValue(sel,fn){
   fq.addEventListener('input',render);
   segValue('#ipcSeg',function(v){ipc=v;render()});
   render();
-})();
+};
 
 /* ---------- Demo 3: segmentación ---------- */
-(function(){
+AT.labs['cpu-segmentacion']=function(){
   var N=6,ST=['B','D','E','G'],NAMES={B:'buscar',D:'decodificar',E:'ejecutar',G:'guardar'};
   var seg=true,miss=false,cur=Infinity,T=0,timer=null;
   var host=$('#pipe'),out=$('#pipeOut'),note=$('#pipeNote'),chk=$('#pipeMiss'),play=$('#pipePlay');
@@ -240,10 +243,10 @@ function segValue(sel,fn){
     },reduce?300:500);
   });
   render();
-})();
+};
 
 /* ---------- Demo 4: caché ---------- */
-(function(){
+AT.labs['cpu-cache']=function(){
   var BS=4,LINES=4,PEN=80,HIT=1;
   var PATS=[
     {k:'orden',n:'Recorrer en orden',fin:'Cada fallo trae 4 direcciones y las 3 siguientes ya son aciertos. Eso es localidad espacial.'},
@@ -335,10 +338,10 @@ function segValue(sel,fn){
   });
   $('#cReset').addEventListener('click',reset);
   reset();
-})();
+};
 
 /* ---------- Demo 5: núcleos (ley de Amdahl) ---------- */
-(function(){
+AT.labs['cpu-nucleos']=function(){
   var n=4,pIn=$('#amP');
   function pct(x){return (x*100)+'%'}
   function render(){
@@ -364,21 +367,5 @@ function segValue(sel,fn){
   pIn.addEventListener('input',render);
   segValue('#amN',function(v){n=v;render()});
   render();
-})();
-
-/* ---------- Repaso ---------- */
-AT.repaso({host:'#qz',score:'#qzScore',reset:'#qzReset',preguntas:[
-  {q:'¿En qué orden trabaja el procesador con cada instrucción?',
-   o:['Ejecutar, buscar y guardar','Buscar, decodificar y ejecutar','Decodificar, compilar y ejecutar'],a:1,
-   e:'Primero busca la instrucción en la dirección que indica el PC, luego decodifica qué pide y al final la ejecuta.'},
-  {q:'El procesador A va a 5 GHz y completa 2 instrucciones por ciclo. El B va a 3.5 GHz y completa 4. ¿Cuál hace más trabajo por segundo?',
-   o:['A, porque tiene más GHz','B','Los dos hacen lo mismo'],a:1,
-   e:'A completa 5 × 2 = 10,000 millones de instrucciones por segundo y B, 3.5 × 4 = 14,000 millones. La frecuencia sola no basta para comparar.'},
-  {q:'La mitad del trabajo de un programa se puede repartir entre núcleos y la otra mitad no. ¿Cuánto más rápido puede llegar a ir con muchísimos núcleos?',
-   o:['Hasta 2 veces más rápido','Tantas veces como núcleos haya','No cambia nada'],a:0,
-   e:'Aunque la mitad repartida tarde casi cero, la otra mitad sigue igual. El tiempo nunca baja de la mitad, así que el límite es 2×.'},
-  {q:'¿Por qué recorrer los datos en orden suele ser más rápido que leerlos en desorden?',
-   o:['Porque el procesador sube su frecuencia','Porque la RAM se refresca menos seguido','Porque cada fallo de caché trae un bloque completo y los datos siguientes ya están ahí'],a:2,
-   e:'La caché trae bloques enteros de la RAM. Si lees en orden, después de cada fallo vienen varios aciertos. Eso es la localidad espacial.'}
-]});
+};
 })();

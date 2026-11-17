@@ -138,7 +138,7 @@ addEventListener('pagehide',guardar);
 /* Terminar el repaso marca su sección como leída y guarda el resultado */
 document.addEventListener('repaso-terminado',function(e){
   yo.repaso={ok:e.detail.ok,total:e.detail.total,fecha:new Date().toISOString()};
-  var q=$('#qz'),sec=null;
+  var q=e.detail.host||$('#qz'),sec=null;
   if(q)secs.forEach(function(s){if(s.h.compareDocumentPosition(q)&Node.DOCUMENT_POSITION_FOLLOWING)sec=s});
   if(sec)marcar(sec);
   guardar();avisar();

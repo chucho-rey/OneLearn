@@ -293,6 +293,34 @@ details.tg summary span{font-weight:600}
 details.tg .tg-b{padding:0 0.25rem 0.75rem;color:var(--fg-2)}
 details.tg .tg-b p{margin:.3em 0}
 
+/* ---------- Bloques de documentos (formato de bloques, assets/js/bloques.js) ---------- */
+/* Columnas: la primera línea de cada una es su título */
+.cols>div>p:first-child{margin:0;font-size:1rem;color:var(--fg)}
+.cols>div>p:first-child b{font-weight:600}
+.callout.aviso{background:var(--warn-bg);border-color:transparent}
+.callout.aviso>.ico{color:var(--warn-ink)}
+.callout.idea{background:var(--pur-bg);border-color:transparent}
+.callout.idea>.ico{color:var(--pur-ink)}
+.callout ol{margin:.5em 0 0;padding-left:1.4em}
+blockquote{margin:1em 0;padding:0.125rem 0 0.125rem 1rem;border-left:0.1875rem solid var(--line-strong);color:var(--fg-2)}
+pre.codigo{margin:1em 0;padding:0.75rem 1rem;overflow-x:auto;background:var(--bg-side);border:1px solid var(--line);border-radius:0.5rem;font-size:0.875rem;line-height:1.5}
+pre.codigo code{padding:0;border:0;background:none;font-size:inherit;white-space:pre}
+mark{background:var(--warn-bg);color:var(--fg);padding:0 0.125rem;border-radius:0.125rem}
+ul.tareas{list-style:none;padding-left:0;margin:.6em 0}
+li.tarea{display:flex;gap:0.625rem;align-items:flex-start;margin:.3em 0}
+.tarea-c{flex:none;width:1.125rem;height:1.125rem;margin-top:0.25em;border:1.5px solid var(--line-strong);border-radius:0.25rem}
+li.tarea.hecha .tarea-c{background:var(--accent-solid);border-color:var(--accent-solid);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");background-size:100%}
+li.tarea.hecha .tarea-t{color:var(--fg-2);text-decoration:line-through;text-decoration-color:var(--line-strong)}
+.tarea-t>p{margin:0}
+.cita{display:inline-flex;align-items:baseline;gap:0.25rem;padding:0 0.375rem;border-radius:0.25rem;background:var(--accent-bg);color:var(--accent-ink);text-decoration:none;font-size:.94em;max-width:100%;overflow-wrap:anywhere}
+.cita .ico{flex:none;width:.85em;height:.85em;align-self:center}
+a.cita:hover{text-decoration:underline}
+/* Al llegar a un bloque desde un marcador o una cita, se resalta un momento */
+[data-b]:target{animation:llegada 2.4s ease-out}
+@keyframes llegada{0%,35%{box-shadow:0 0 0 0.375rem var(--accent-bg);background-color:var(--accent-bg)}100%{box-shadow:0 0 0 0.375rem transparent}}
+:where([data-b]){scroll-margin-top:calc(4rem + env(safe-area-inset-top,0px))}
+@media (prefers-reduced-motion:reduce){[data-b]:target{animation:none;box-shadow:0 0 0 0.375rem var(--accent-bg);background-color:var(--accent-bg)}}
+
 /* ---------- Componentes de demo (comunes) ---------- */
 .demo{border:1px solid var(--line-strong);border-radius:0.625rem;margin:1.4em 0;max-width:100%}
 .demo-h{display:flex;align-items:center;gap:0.625rem;flex-wrap:wrap;padding:0.625rem 1rem;border-bottom:1px solid var(--line);background:var(--bg-side);border-radius:0.625rem 0.625rem 0 0}
