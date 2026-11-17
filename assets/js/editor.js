@@ -407,8 +407,10 @@ function opcionesDeCita(q){
   if(!AT.indice)return Promise.resolve([]);
   return AT.indice.cargar().then(function(todas){
     var propias=todas.filter(function(e){return CITABLES[e.tipo]&&e.docId!==AT.documentoAbierto});
-    var lista=q.trim()?AT.indice.buscar(q,propias,10):
-      propias.filter(function(e){return e.tipo==='marcador'}).concat(propias.filter(function(e){return e.tipo==='leccion'||e.tipo==='documento'})).slice(0,10);
+    /* Tus marcadores van primero: son lo que guardaste a propósito para citar */
+    function marcadoresPrimero(l){return l.filter(function(e){return e.tipo==='marcador'}).concat(l.filter(function(e){return e.tipo!=='marcador'}))}
+    var lista=q.trim()?marcadoresPrimero(AT.indice.buscar(q,propias,10)):
+      marcadoresPrimero(propias.filter(function(e){return e.tipo==='marcador'||e.tipo==='leccion'||e.tipo==='documento'})).slice(0,10);
     return lista.map(function(e){
       var tx=e.titulo.length>70?e.titulo.slice(0,70).replace(/\s+\S*$/,'')+'…':e.titulo;
       return {t:e.titulo,d:e.sub,i:e.icono,href:e.href,texto:tx};
