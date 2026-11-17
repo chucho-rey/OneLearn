@@ -92,6 +92,11 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   await g2.goto(base+'index.html');await listo(g2);
   r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn[aria-expanded="true"]')].map(function(b){return b.getAttribute('data-grupo')}).join(',')}),
     'hardware','la primera vez, en Inicio, solo se abre el primer grupo');
+  r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#explorar details.exp-g[open]')].map(function(d){return d.getAttribute('data-g')}).join(',')}),
+    'Hardware','en «Explorar temas», la primera vez solo se abre el primer grupo');
+  await g2.click('#explorar details[data-g="Redes"] summary');
+  r.cumple(await g2.isVisible('#explorar details[data-g="Redes"] a.exp-i'),'tocar un grupo de «Explorar temas» muestra sus lecciones');
+  await revisar(g2,r,'Inicio con «Explorar temas» plegable');
   await cerrar(g2);
 
   /* Las tres pestañas con letra grande, OpenDyslexic y alto contraste */

@@ -219,6 +219,65 @@ module.exports=function(txt,demo){
     r.cumple(await p.getAttribute('#rbStat','data-k')==='bad'&&await p.locator('#rbCopias li.mal').count()===2,'la memoria USB conectada también se cifra');
     await clic(p,1,'[data-v="4"]');await p.click('#rbAtaque');
     r.cumple(await p.getAttribute('#rbStat','data-k')==='good'&&await p.locator('#rbCopias li.bien').count()===2,'con la regla 3-2-1 recuperas todo');
+  },
+
+  'que-es-ia':async function(p,r){
+    r.cumple(await txt(p,'#rgOk')==='7 de 12'&&await txt(p,'#rgFn')==='5','sin reglas, todo el spam se cuela');
+    for(const k of [1,3,4])await p.check('#rgReglas input[data-r="'+k+'"]');
+    r.cumple(await txt(p,'#rgOk')==='11 de 12'&&await txt(p,'#rgFp')==='1','con tres reglas a mano: 11 de 12, con un mensaje normal marcado como spam');
+    await p.click('#rgAprender');
+    r.cumple(await txt(p,'#rgOk')==='12 de 12'&&await p.isVisible('#rgPesos')&&await p.isDisabled('#rgReglas input[data-r="0"]'),'aprendiendo de los ejemplos, el perceptrón acierta los 12');
+    await p.click('#rgManual');
+    r.igual(await txt(p,'#rgOk'),'11 de 12','«Volver a mis reglas» regresa al filtro manual');
+    const SI=[1,0,1,0,1,0,1,0];
+    for(let k=0;k<SI.length;k++){await p.click(SI[k]?'#dnSi':'#dnNo');if(k<SI.length-1)await p.click('#dnSig')}
+    r.cumple(/aciertos: 8/.test(await txt(p,'#dnCuenta')),'contestando bien, 8 de 8');
+  },
+
+  'aprendizaje-automatico':async function(p,r){
+    r.igual(await txt(p,'#arErr'),'2.030','la recta inicial tiene un error de 2.03');
+    await p.click('#arEntrenar');
+    const e=parseFloat(await txt(p,'#arErr'));
+    r.cumple(e<0.03&&await txt(p,'#arMv')==='0.49'&&/Muy buen ajuste/.test(await txt(p,'#arMsg')),'el descenso de gradiente llega a la mejor recta (pendiente 0.49)',e);
+    r.cumple(/dice: perro/.test(await txt(p,'#vcMsg')),'un animal de 9 kg y 33 cm: sus 3 vecinos son perros');
+    await rango(p,'#vcPeso',4);await rango(p,'#vcAlt',24);
+    r.cumple(/dice: gato/.test(await txt(p,'#vcMsg')),'uno de 4 kg y 24 cm: gato');
+    const prueba3=parseFloat(await txt(p,'#sjEp'));
+    await clic(p,2,'[data-v="9"]');
+    const ep9=await txt(p,'#sjEp');
+    r.cumple(await txt(p,'#sjEe')==='0.000'&&(ep9==='más de 100'||parseFloat(ep9)>prueba3*3),'la curva muy flexible memoriza: error 0 en entrenamiento y mucho mayor en prueba',[prueba3,ep9]);
+  },
+
+  'redes-neuronales':async function(p,r){
+    await clic(p,0,'[data-v="AND"]');
+    r.cumple(/compuerta AND/.test(await txt(p,'#nnMsg'))&&await txt(p,'#nnTab tr:last-child td:last-child')==='1','con los pesos de AND, solo 1 y 1 dan 1');
+    await rango(p,'#nnW1',6);await rango(p,'#nnW2',6);await rango(p,'#nnB',-3);
+    r.cumple(/compuerta OR/.test(await txt(p,'#nnMsg')),'con pesos 6, 6 y sesgo −3 se vuelve OR');
+    await p.click('#xrA');
+    r.cumple(/→ 1$/.test(await txt(p,'#xrO')),'XOR con A = 1 y B = 0 da 1');
+    await p.click('#xrB');
+    r.cumple(/→ 0$/.test(await txt(p,'#xrO')),'XOR con las dos en 1 da 0');
+    await p.click('#gdDiez');
+    r.cumple(/Llegó al mínimo/.test(await txt(p,'#gdMsg')),'con tasa 0.6, en 10 pasos llega al mínimo');
+    await clic(p,2,'[data-v="0.1"]');await p.click('#gdDiez');
+    r.cumple(/muy despacio/.test(await txt(p,'#gdMsg')),'con 0.1 avanza muy despacio');
+    await clic(p,2,'[data-v="2.2"]');await p.click('#gdDiez');
+    r.cumple(/error crece/.test(await txt(p,'#gdMsg')),'con 2.2 el entrenamiento diverge');
+  },
+
+  'modelos-lenguaje':async function(p,r){
+    r.cumple(/parque/.test(await txt(p,'#sgProb .br.on'))&&await txt(p,'#sgProb .br.on b')==='25 %','después de «el», lo más probable es «parque» (25 %)');
+    await rango(p,'#sgT',0.1);
+    r.cumple(parseInt(await txt(p,'#sgProb .br.on b'),10)>80,'con temperatura 0.1, «parque» se lleva casi toda la probabilidad (de 25 % a más de 80 %)');
+    await p.click('#sgGreedy');
+    r.cumple(await txt(p,'#sgFrase')==='el parque.'&&await p.getAttribute('#sgUna','aria-disabled')==='true','eligiendo siempre la más probable: «el parque.»');
+    await clic(p,0,'[data-v="los"]');await p.click('#sgFin');
+    const f=await txt(p,'#sgFrase');
+    r.cumple(f.indexOf('los ')===0&&/\.$/.test(f),'genera una frase que empieza con «los» y termina en punto',f);
+    await p.click('#veSel [data-v="rey"]');
+    r.cumple(/príncipe, princesa, reina/.test(await txt(p,'#veMsg')),'las vecinas de «rey» son príncipe, princesa y reina');
+    await p.click('#veAnalogia');
+    r.cumple(/caes justo en «reina»/.test(await txt(p,'#veMsg')),'rey − hombre + mujer ≈ reina');
   }
 
   };

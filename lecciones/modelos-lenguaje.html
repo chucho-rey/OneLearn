@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Modelos de lenguaje (LLM) · OneLearn</title>
+<meta name="description" content="Cómo funciona un modelo de lenguaje: tokens, predecir la siguiente palabra, temperatura, palabras como vectores, atención, entrenamiento, límites y cómo pedirle bien, con un modelo diminuto interactivo.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="modelos-lenguaje.css">
+</head>
+<body data-leccion="modelos-lenguaje">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="ml-siguiente">
+<p class="hint">El modelo leyó unas 30 frases sencillas. Elige una palabra para empezar y mira qué cree que sigue. Las probabilidades salen de contar.</p>
+<div class="chips" id="sgIni" role="group" aria-label="Palabra inicial">
+  <button class="chip" type="button" data-v="el" aria-pressed="true">el</button>
+  <button class="chip" type="button" data-v="la" aria-pressed="false">la</button>
+  <button class="chip" type="button" data-v="mi" aria-pressed="false">mi</button>
+  <button class="chip" type="button" data-v="los" aria-pressed="false">los</button>
+</div>
+<p class="sg-frase" id="sgFrase" aria-live="polite"></p>
+<p class="lbl sg-l">Qué podría seguir después de «<span id="sgUlt"></span>»</p>
+<div class="barras" id="sgProb"></div>
+<div class="ctl">
+  <span class="lbl">Temperatura</span>
+  <input class="slider" type="range" id="sgT" min="0.1" max="2" step="0.1" value="1" aria-label="Temperatura">
+  <b class="mono" id="sgTv"></b>
+</div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="sgUna">Agregar una palabra</button>
+  <button class="btn" type="button" id="sgFin">Terminar la frase</button>
+  <button class="btn" type="button" id="sgGreedy">Siempre la más probable</button>
+  <button class="btn" type="button" id="sgReset">Empezar de nuevo</button>
+</div>
+<p class="msg" id="sgMsg"></p>
+</template>
+<template data-lab="ml-vectores">
+<p class="hint">Cada palabra es un punto (en un modelo real serían miles de números; este mapa está hecho a mano para ilustrar la idea). Toca una palabra para ver sus vecinas más cercanas.</p>
+<div class="chips vc-ch" id="veSel" role="group" aria-label="Palabra"></div>
+<svg class="ve-svg" id="veSvg" viewBox="0 0 340 240" role="img" aria-label="Mapa de palabras: las de significado parecido están cerca"></svg>
+<p class="msg" id="veMsg" aria-live="polite"></p>
+<div class="ctl"><button class="btn" type="button" id="veAnalogia">Mostrar: rey − hombre + mujer</button></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "modelos-lenguaje",
+ "titulo": "Modelos de lenguaje (LLM)",
+ "icono": "chat",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Inteligencia artificial",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "15 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-ml001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-ml002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué es un modelo de lenguaje?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "modelo de lenguaje",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es una "
+     },
+     {
+      "type": "text",
+      "text": "red neuronal",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "redes-neuronales.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " entrenada para una tarea que suena simple: "
+     },
+     {
+      "type": "text",
+      "text": "predecir la siguiente palabra",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (en realidad, el siguiente "
+     },
+     {
+      "type": "text",
+      "text": "token",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") de un texto. Repitiendo esa predicción una y otra vez, escribe respuestas completas."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los "
+     },
+     {
+      "type": "text",
+      "text": "modelos de lenguaje grandes",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (LLM, por "
+     },
+     {
+      "type": "text",
+      "text": "large language models",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "), como los que están detrás de ChatGPT, Claude, Gemini o Llama, se entrenan con cantidades enormes de texto y tienen miles de millones de parámetros. Con eso aprenden gramática, datos del mundo, estilos de escritura y hasta a seguir instrucciones o escribir código."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml004"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-ml005"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Predicen",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Calculan qué tan probable es cada posible siguiente token."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Eligen",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Toman uno de los más probables, lo agregan al texto y vuelven a predecir."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Repiten",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Token por token, hasta terminar la respuesta."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tokens",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tokens"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los modelos no leen letras ni palabras completas, sino "
+     },
+     {
+      "type": "text",
+      "text": "tokens",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": pedazos de texto que pueden ser una palabra común, parte de una palabra rara, un signo o un espacio. Cada modelo tiene su propia forma de cortar. Un ejemplo ilustrativo:"
+     }
+    ],
+    "attrs": {
+     "id": "b-ml006"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-ml007"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Texto"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tokens (ejemplo)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cuántos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "gato"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "gato"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "inteligencia"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "intel · igencia"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "electroencefalograma"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "elect · ro · ence · fal · ograma"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "5"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "¿Cómo estás?"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "¿ · Cómo · estás · ?"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "4"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Por eso los límites de los modelos se miden en tokens: cuánto texto pueden leer de una vez (su "
+     },
+     {
+      "type": "text",
+      "text": "ventana de contexto",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") y cuánto pueden escribir. En español, una palabra suele ser de uno a tres tokens."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml008"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-siguiente",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Predecir la siguiente palabra"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Este laboratorio tiene un modelo de lenguaje de verdad, aunque diminuto: leyó unas 30 frases y contó qué palabra suele venir después de cada una. Un LLM hace algo parecido, pero mirando miles de tokens hacia atrás y con miles de millones de parámetros en lugar de un simple conteo."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml009"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-ml010",
+     "nombre": "ml-siguiente",
+     "titulo": "Predice la siguiente palabra"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La "
+     },
+     {
+      "type": "text",
+      "text": "temperatura",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " controla qué tanto se arriesga el modelo. Con temperatura baja casi siempre elige la opción más probable: respuestas predecibles. Con temperatura alta, las opciones menos probables ganan oportunidad: más variedad, pero también más disparates. Por eso un chatbot puede responder distinto a la misma pregunta."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml011"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-significado",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Palabras como puntos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Para trabajar con palabras, el modelo convierte cada token en una lista de números, un "
+     },
+     {
+      "type": "text",
+      "text": "vector",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " o "
+     },
+     {
+      "type": "text",
+      "text": "embedding",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Esos números se aprenden durante el entrenamiento, y terminan acomodando las palabras de forma que las de significado parecido quedan cerca. Los modelos reales usan miles de dimensiones; aquí lo vemos en dos."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml012"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-ml013",
+     "nombre": "ml-vectores",
+     "titulo": "Palabras como puntos"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Lo sorprendente es que las "
+     },
+     {
+      "type": "text",
+      "text": "direcciones",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " también significan algo: el camino de «hombre» a «mujer» es parecido al de «rey» a «reina». El modelo nunca recibió esas reglas: salieron de ver cómo se usan las palabras en millones de textos."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml014"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-transformer",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Atención y Transformers"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Para predecir bien, el modelo necesita el "
+     },
+     {
+      "type": "text",
+      "text": "contexto",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": en «el banco del parque estaba mojado», "
+     },
+     {
+      "type": "text",
+      "text": "banco",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " no es una institución financiera. La arquitectura "
+     },
+     {
+      "type": "text",
+      "text": "Transformer",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (2017) resolvió esto con un mecanismo de "
+     },
+     {
+      "type": "text",
+      "text": "atención",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": al procesar cada token, la red decide a qué otros tokens del texto prestarles atención y cuánto."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml015"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los modelos actuales tienen ventanas de contexto de cientos de miles de tokens: pueden leer un libro entero de una vez. Pero no recuerdan lo que no está en su ventana, como conversaciones anteriores, salvo que la aplicación se lo vuelva a dar."
+     }
+    ],
+    "attrs": {
+     "id": "b-ml016"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-entrenamiento",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cómo se entrena"
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-ml017"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Preentrenamiento:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " el modelo lee una cantidad enorme de texto (páginas web, libros, código) y aprende a predecir el siguiente token. Aquí aprende el idioma y muchos datos del mundo. Es la parte más cara: miles de "
+         },
+         {
+          "type": "text",
+          "text": "GPU",
+          "marks": [
+           {
+            "type": "link",
+            "attrs": {
+             "href": "gpu.html"
+            }
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " durante semanas o meses."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ajuste con instrucciones:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " se entrena con ejemplos de preguntas y buenas respuestas, para que aprenda a conversar y seguir indicaciones."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Retroalimentación:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " personas (y otros modelos) califican respuestas, y el modelo se ajusta para preferir las útiles, honestas y seguras."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-limites",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Límites"
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-ml018"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Alucinaciones:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " puede inventar datos, citas o referencias con total seguridad, porque genera lo que "
+         },
+         {
+          "type": "text",
+          "text": "suena",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " probable, no lo que comprobó."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Fecha de corte:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " solo sabe lo que había en sus datos de entrenamiento, salvo que use herramientas como un buscador."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cálculo exacto:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " puede equivocarse en cuentas largas si no usa una calculadora o código."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sesgos:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " refleja los sesgos de los textos con los que aprendió."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Privacidad:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " según el servicio, lo que escribes puede guardarse; no compartas datos sensibles."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-ml019",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Que una respuesta esté bien escrita no significa que sea correcta. Verifica los datos importantes, sobre todo nombres, fechas, cifras, citas y temas de salud, dinero o leyes."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-usar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cómo pedirle bien"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un buen mensaje ("
+     },
+     {
+      "type": "text",
+      "text": "prompt",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") da contexto, dice qué quieres y en qué formato. Compara:"
+     }
+    ],
+    "attrs": {
+     "id": "b-ml020"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-ml021",
+     "language": "text"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Mal:   explica la RAM\n\nMejor: Soy estudiante de primer semestre de ingeniería. Explícame qué es la\n       memoria RAM en 5 puntos cortos, con una analogía de la vida diaria,\n       y al final hazme 3 preguntas para comprobar que entendí."
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-ml022"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Di quién eres y para qué lo necesitas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pide un formato: lista, tabla, pasos, ejemplo de código."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pídele que explique su razonamiento o que te haga preguntas, para aprender en vez de solo copiar."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si la respuesta no sirve, corrígela y pide otra versión: es una conversación."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ml023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Un modelo de lenguaje me entiende?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Procesa tu texto y genera respuestas muy útiles, pero no tiene experiencias, intenciones ni memoria propia como una persona. Si eso cuenta como «entender» es un debate abierto."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ml024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué responde distinto a la misma pregunta?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Porque elige cada token con cierta aleatoriedad (la temperatura). Además, pequeños cambios en cómo preguntas cambian el contexto y, con él, las probabilidades."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ml025"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Puede programar por mí?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe código bastante bien y ayuda mucho a aprender, pero también comete errores sutiles. Lee y prueba todo lo que genera: si no entiendes el código, no lo uses todavía."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ml026"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Recuerda lo que le dije ayer?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El modelo en sí no aprende de tus conversaciones. Algunas aplicaciones guardan un historial o una «memoria» y se la vuelven a dar como contexto; revisa la configuración de privacidad del servicio que uses."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-ml027",
+     "preguntas": [
+      {
+       "q": "¿Qué aprende a hacer un modelo de lenguaje durante el preentrenamiento?",
+       "o": [
+        "Predecir el siguiente token de un texto",
+        "Buscar en internet",
+        "Traducir solo al inglés"
+       ],
+       "a": 0,
+       "e": "Todo lo demás (responder, resumir, programar) sale de esa habilidad de predecir el siguiente token, más el ajuste posterior."
+      },
+      {
+       "q": "¿Qué es un token?",
+       "o": [
+        "Una contraseña",
+        "Un pedazo de texto: una palabra, parte de una palabra o un signo",
+        "Una moneda"
+       ],
+       "a": 1,
+       "e": "Los modelos leen y escriben tokens; las palabras raras se parten en varios."
+      },
+      {
+       "q": "¿Qué pasa al subir la temperatura?",
+       "o": [
+        "Las respuestas son más predecibles",
+        "Las opciones menos probables ganan oportunidad: más variedad y más errores",
+        "El modelo se calienta"
+       ],
+       "a": 1,
+       "e": "Temperatura alta reparte más la probabilidad; baja la concentra en la opción más probable."
+      },
+      {
+       "q": "En los vectores de palabras, ¿qué quiere decir que dos palabras estén cerca?",
+       "o": [
+        "Que se escriben parecido",
+        "Que se usan en contextos parecidos",
+        "Que tienen las mismas letras"
+       ],
+       "a": 1,
+       "e": "Los vectores se aprenden de cómo se usan las palabras, así que las de significado parecido quedan juntas."
+      },
+      {
+       "q": "Un LLM te da una cita textual de un libro con página y todo. ¿Qué haces?",
+       "o": [
+        "La uso, se ve muy precisa",
+        "La verifico en el libro: podría estar inventada"
+       ],
+       "a": 1,
+       "e": "Los modelos pueden alucinar citas y referencias con total seguridad."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-ml028"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un modelo de lenguaje predice el siguiente token y, repitiendo, escribe textos completos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lee y escribe tokens; su ventana de contexto se mide en tokens."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La temperatura controla qué tanto se arriesga al elegir cada token."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Representa las palabras como vectores: las de significado parecido quedan cerca."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se entrena con mucho texto, luego con instrucciones y retroalimentación humana."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Puede alucinar: verifica lo importante y no compartas datos sensibles."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="modelos-lenguaje.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

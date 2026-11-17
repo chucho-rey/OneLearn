@@ -1,0 +1,31 @@
+/* Estilos propios de las demos de la lección «Aprendizaje automático». Las piezas comunes están en base.css. */
+
+/* Ajusta una recta */
+.ar-svg,.vc-svg,.sj-svg{display:block;width:100%;max-width:32rem;height:auto;margin:0.875rem auto 0}
+.ar-eje,.vc-eje{fill:none;stroke:var(--fg-2);stroke-width:1.5}
+.ar-t,.vc-t{fill:var(--fg-2);font-family:var(--font-mono);font-size:10px;text-anchor:middle}
+.ar-ty,.vc-ty{text-anchor:end}
+.ar-r{stroke:var(--bad);stroke-width:1.5;stroke-dasharray:3 3}
+.ar-l{stroke:var(--accent);stroke-width:3}
+.ar-p{fill:var(--c2);stroke:var(--bg);stroke-width:1.5}
+
+/* Clasifica por vecinos */
+.vc-svg{cursor:crosshair}
+.vc-g,.leg i.vc-l-g{fill:var(--c4);background:var(--c4)}
+.vc-p,.leg i.vc-l-p{fill:var(--c2);background:var(--c2)}
+.vc-g.cerca,.vc-p.cerca{stroke:var(--fg);stroke-width:2}
+.leg i.vc-l-g{border-radius:50%}
+.leg i.vc-l-n{background:var(--fg);transform:rotate(45deg)}
+.vc-v{stroke:var(--fg-2);stroke-width:1.5;stroke-dasharray:4 3}
+.vc-n{stroke:var(--fg);stroke-width:2}
+.vc-n.g{fill:var(--c4)}
+.vc-n.p{fill:var(--c2)}
+
+/* Memorizar no es aprender */
+.sj-svg{overflow:hidden}
+.sj-eje{stroke:var(--line-strong);stroke-width:1}
+.sj-c{fill:none;stroke:var(--accent);stroke-width:2.5}
+.sj-e,.leg i.sj-l-e{fill:var(--c4);background:var(--c4)}
+.sj-p{fill:var(--bg);stroke:var(--c6);stroke-width:2}
+.leg i.sj-l-p{background:var(--bg);border:2px solid var(--c6);border-radius:50%}
+.leg i.sj-l-e{border-radius:50%}

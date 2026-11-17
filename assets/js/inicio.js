@@ -94,16 +94,25 @@ function pintarDocs(){
   }).join('');
 }
 
+/* Cada grupo se pliega. Abiertos: los que tienen alguna lección empezada (o el primero, si no hay ninguna),
+   hasta que abras o cierres uno: desde ahí se respeta lo que elegiste mientras sigas en la página. */
+var expAbiertos=null;
 function pintarExplorar(){
   var pronto=AT.catalogo.filter(function(g){return !g.lecciones.some(function(l){return l.archivo})});
-  $('#explorar').innerHTML=AT.catalogo.filter(function(g){return pronto.indexOf(g)<0}).map(function(g){
-    return '<div class="exp-g"><h3 class="exp-t">'+esc(g.grupo)+'</h3><ul class="exp">'+g.lecciones.map(function(l){
+  var grupos=AT.catalogo.filter(function(g){return pronto.indexOf(g)<0});
+  function empezadas(g){return g.lecciones.filter(function(l){return l.archivo&&AT.avance.porcentaje(l.id)>0}).length}
+  var alguna=grupos.some(function(g){return empezadas(g)>0});
+  $('#explorar').innerHTML=grupos.map(function(g,i){
+    var emp=empezadas(g),listas=g.lecciones.filter(function(l){return l.archivo}).length;
+    var abierto=expAbiertos?expAbiertos.indexOf(g.grupo)>=0:emp>0||(!alguna&&i===0);
+    return '<details class="exp-g" data-g="'+esc(g.grupo)+'"'+(abierto?' open':'')+'><summary class="exp-s">'+ico('chev-l','exp-ic')+
+      '<h3 class="exp-t">'+esc(g.grupo)+'</h3><span class="exp-c">'+listas+(listas===1?' lección':' lecciones')+(emp?' · '+emp+(emp===1?' empezada':' empezadas'):'')+'</span></summary><ul class="exp">'+g.lecciones.map(function(l){
       var icono=ico(l.icono||'page');
       if(!l.archivo)return '<li><span class="exp-i soon">'+icono+'<span>'+esc(l.titulo)+'</span><em>Pronto</em></span></li>';
       var p=AT.avance.porcentaje(l.id);
       return '<li><a class="exp-i" href="'+url(l)+'">'+icono+'<span>'+esc(l.titulo)+'</span>'+
         '<span class="mini" aria-hidden="true"><i style="width:'+p+'%"></i></span><em>'+(p?p+'%':'Sin empezar')+'</em></a></li>';
-    }).join('')+'</ul></div>';
+    }).join('')+'</ul></details>';
   }).join('')+(pronto.length?
     '<div class="exp-g"><h3 class="exp-t">Próximos temas</h3><ul class="exp-pronto">'+pronto.map(function(g){
       return '<li><b>'+esc(g.grupo)+'</b><span>'+g.lecciones.length+(g.lecciones.length===1?' lección':' lecciones')+'</span></li>';
@@ -128,6 +137,10 @@ $('#instalarBtn').addEventListener('click',function(){
 document.addEventListener('app-instalable',pintarInstalar);
 document.addEventListener('app-instalada',function(){$('#instalar').hidden=true});
 
+/* «toggle» no burbujea: se escucha en la fase de captura */
+$('#explorar').addEventListener('toggle',function(){
+  expAbiertos=Array.prototype.filter.call(document.querySelectorAll('#explorar details.exp-g'),function(d){return d.open}).map(function(d){return d.getAttribute('data-g')});
+},true);
 function pintar(){pintarContinuar();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 $('#saludo').textContent=saludo();

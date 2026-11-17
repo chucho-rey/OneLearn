@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Redes neuronales · OneLearn</title>
+<meta name="description" content="Qué es una neurona artificial, cómo se organizan las capas, por qué una red resuelve XOR y cómo aprende con descenso de gradiente y retropropagación, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="redes-neuronales.css">
+</head>
+<body data-leccion="redes-neuronales">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="rn-neurona">
+<p class="hint">Ajusta los pesos y el sesgo. La tabla muestra qué responde la neurona con cada combinación de entradas (1 si la salida pasa de 0.5).</p>
+<div class="chips" id="nnPre" role="group" aria-label="Ejemplos de pesos">
+  <button class="chip" type="button" data-v="AND" aria-pressed="false">Hacer AND</button>
+  <button class="chip" type="button" data-v="OR" aria-pressed="false">Hacer OR</button>
+  <button class="chip" type="button" data-v="NAND" aria-pressed="false">Hacer NAND</button>
+</div>
+<div class="ctl"><span class="lbl">Peso 1</span><input class="slider" type="range" id="nnW1" min="-6" max="6" step="0.5" value="1" aria-label="Peso de la entrada 1"><b class="mono" id="nnW1v"></b></div>
+<div class="ctl"><span class="lbl">Peso 2</span><input class="slider" type="range" id="nnW2" min="-6" max="6" step="0.5" value="1" aria-label="Peso de la entrada 2"><b class="mono" id="nnW2v"></b></div>
+<div class="ctl"><span class="lbl">Sesgo</span><input class="slider" type="range" id="nnB" min="-10" max="10" step="0.5" value="0" aria-label="Sesgo"><b class="mono" id="nnBv"></b></div>
+<div class="nn">
+  <svg class="nn-svg" id="nnSvg" viewBox="0 0 220 130" role="img" aria-label="Neurona con dos entradas y una salida"></svg>
+  <div class="tbl-wrap nn-tw"><table class="nn-t"><thead><tr><th>Entrada 1</th><th>Entrada 2</th><th>Salida</th><th>0 o 1</th></tr></thead><tbody id="nnTab"></tbody></table></div>
+</div>
+<p class="msg" id="nnMsg" aria-live="polite"></p>
+</template>
+<template data-lab="rn-xor">
+<p class="hint">Esta red tiene 2 neuronas ocultas y 1 de salida, con pesos ya entrenados. Cambia las entradas tocándolas.</p>
+<div class="ctl" style="margin-top:0">
+  <button class="cg-b xr-b" type="button" id="xrA" aria-pressed="false">A = 0</button>
+  <button class="cg-b xr-b" type="button" id="xrB" aria-pressed="false">B = 0</button>
+</div>
+<svg class="xr-svg" id="xrSvg" viewBox="0 0 320 170" role="img" aria-label="Red con dos entradas, dos neuronas ocultas y una salida"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Oculta 1 (detecta «al menos una»)</span><b id="xrH1"></b></div>
+  <div class="kpi"><span>Oculta 2 (detecta «no las dos»)</span><b id="xrH2"></b></div>
+  <div class="kpi"><span>Salida (las dos ocultas encendidas)</span><b id="xrO"></b></div>
+</div>
+<p class="msg" id="xrMsg" aria-live="polite"></p>
+</template>
+<template data-lab="rn-gradiente">
+<p class="hint">La curva es el error según el valor de un peso. La pelota empieza en un mal valor; cada paso la mueve en contra de la pendiente. Elige la tasa de aprendizaje.</p>
+<div class="seg" id="gdLr" role="group" aria-label="Tasa de aprendizaje">
+  <button type="button" data-v="0.1" aria-pressed="false">Muy pequeña (0.1)</button>
+  <button type="button" data-v="0.6" aria-pressed="true">Adecuada (0.6)</button>
+  <button type="button" data-v="1.9" aria-pressed="false">Grande (1.9)</button>
+  <button type="button" data-v="2.2" aria-pressed="false">Demasiado (2.2)</button>
+</div>
+<svg class="gd-svg" id="gdSvg" viewBox="0 0 340 190" role="img" aria-label="Curva del error y la posición del peso"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Peso</span><b id="gdW"></b></div>
+  <div class="kpi"><span>Error</span><b id="gdE"></b><div class="bar"><i id="gdBar"></i></div></div>
+  <div class="kpi"><span>Pasos</span><b id="gdN"></b></div>
+</div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="gdUno">Un paso</button>
+  <button class="btn" type="button" id="gdDiez">10 pasos</button>
+  <button class="btn" type="button" id="gdReset">Reiniciar</button>
+</div>
+<p class="msg" id="gdMsg" aria-live="polite"></p>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "redes-neuronales",
+ "titulo": "Redes neuronales",
+ "icono": "red",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Inteligencia artificial",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "15 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-rn001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-rn002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-inspiracion",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Inspiradas en el cerebro"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las "
+     },
+     {
+      "type": "text",
+      "text": "redes neuronales artificiales",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " son el tipo de modelo detrás del reconocimiento de imágenes, la voz, la traducción y los modelos de lenguaje. Se inspiran, de lejos, en el cerebro: muchas unidades sencillas, las "
+     },
+     {
+      "type": "text",
+      "text": "neuronas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", conectadas entre sí. Cada conexión tiene un "
+     },
+     {
+      "type": "text",
+      "text": "peso",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " que dice cuánto influye una neurona en la siguiente."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una neurona artificial es muchísimo más simple que una biológica: solo multiplica, suma y aplica una función. La potencia sale de conectar miles o millones de ellas y ajustar sus pesos con ejemplos."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn004"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-neurona",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La neurona artificial"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una neurona recibe varias "
+     },
+     {
+      "type": "text",
+      "text": "entradas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (números), multiplica cada una por su "
+     },
+     {
+      "type": "text",
+      "text": "peso",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", suma todo y le agrega un "
+     },
+     {
+      "type": "text",
+      "text": "sesgo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Luego pasa el resultado por una "
+     },
+     {
+      "type": "text",
+      "text": "función de activación",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que lo deja entre 0 y 1: cerca de 1, la neurona «se enciende»; cerca de 0, se queda apagada."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn005"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-rn006",
+     "language": "text"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "salida = activación(entrada1 × peso1 + entrada2 × peso2 + sesgo)"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con los pesos adecuados, una sola neurona puede imitar una compuerta lógica como las de la lección de "
+     },
+     {
+      "type": "text",
+      "text": "transistores",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "transistores.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn007"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-rn008",
+     "nombre": "rn-neurona",
+     "titulo": "Una neurona"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-rn009",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Por más que lo intentes, una sola neurona no puede hacer XOR (1 cuando las entradas son distintas). Una neurona solo puede separar los casos con una línea recta, y los casos de XOR no se separan así. Para eso hacen falta más neuronas."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-capas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Capas: de neuronas a redes"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las neuronas se organizan en "
+     },
+     {
+      "type": "text",
+      "text": "capas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". La "
+     },
+     {
+      "type": "text",
+      "text": "capa de entrada",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " recibe los datos (los píxeles de una imagen, por ejemplo); las "
+     },
+     {
+      "type": "text",
+      "text": "capas ocultas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " combinan esa información en ideas cada vez más abstractas (bordes, formas, partes de objetos); y la "
+     },
+     {
+      "type": "text",
+      "text": "capa de salida",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " da la respuesta. Una red con muchas capas ocultas es una red "
+     },
+     {
+      "type": "text",
+      "text": "profunda",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": de ahí el nombre "
+     },
+     {
+      "type": "text",
+      "text": "deep learning",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn010"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-rn011",
+     "nombre": "rn-xor",
+     "titulo": "Una red pequeña resuelve XOR"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada neurona oculta resolvió un pedazo sencillo del problema, y la de salida combinó sus respuestas. Nadie le dice a una red grande qué debe hacer cada neurona: lo descubre sola durante el entrenamiento."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn012"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-entrenar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cómo aprende una red"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una red recién creada tiene pesos al azar y responde basura. Para entrenarla:"
+     }
+    ],
+    "attrs": {
+     "id": "b-rn013"
+    }
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-rn014"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Se le da un ejemplo y se compara su respuesta con la correcta usando una "
+         },
+         {
+          "type": "text",
+          "text": "función de pérdida",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", que mide qué tan mal le fue."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Con la "
+         },
+         {
+          "type": "text",
+          "text": "retropropagación",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "backpropagation",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ") se calcula cuánto contribuyó cada peso a ese error: el "
+         },
+         {
+          "type": "text",
+          "text": "gradiente",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cada peso se mueve un poquito en la dirección que reduce el error. El tamaño de ese paso es la "
+         },
+         {
+          "type": "text",
+          "text": "tasa de aprendizaje",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Se repite con millones de ejemplos, muchas veces."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Imagina que estás en una montaña con niebla y quieres bajar al valle: no ves el camino completo, pero sientes hacia dónde baja el suelo y das un paso en esa dirección. Eso es el "
+     },
+     {
+      "type": "text",
+      "text": "descenso de gradiente",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn015"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-rn016",
+     "nombre": "rn-gradiente",
+     "titulo": "Descenso de gradiente"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tipos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tipos de redes"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-rn017"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para qué es buena"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Densa",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (totalmente conectada)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Datos en tabla, decisiones sencillas"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Predecir si un cliente cancelará"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Convolucional",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (CNN)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Imágenes: busca los mismos patrones en todas las partes de la imagen"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Reconocer caras, leer placas, diagnósticos en radiografías"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Recurrente",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (RNN)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Secuencias, recordando lo anterior"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Reconocimiento de voz (hoy, menos usada)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Transformer",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Secuencias largas, prestando «atención» a las partes relevantes"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Modelos de lenguaje, traductores, también imágenes y audio"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tamano",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué tan grandes son?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El tamaño de una red se mide en "
+     },
+     {
+      "type": "text",
+      "text": "parámetros",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": sus pesos y sesgos. La red de la demo de XOR tiene 9. AlexNet, la que en 2012 reconoció imágenes mejor que todo lo anterior, tenía unos 60 millones. GPT-3 (2020) tenía 175 mil millones. Entrenar redes así requiere miles de "
+     },
+     {
+      "type": "text",
+      "text": "GPU",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "gpu.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " trabajando durante semanas."
+     }
+    ],
+    "attrs": {
+     "id": "b-rn018"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-rn019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Las redes neuronales funcionan como el cerebro?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Solo en la idea general. Las neuronas reales son mucho más complejas, se comunican con pulsos en el tiempo y el cerebro aprende de forma muy distinta (y gastando unos 20 watts). Las redes artificiales son matemáticas inspiradas en esa idea, no una copia."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-rn020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué se dice que son una «caja negra»?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Porque una red grande decide con millones de pesos que no tienen un significado fácil de leer. Es difícil explicar por qué dio una respuesta. Hay un área de investigación, la interpretabilidad, dedicada a entender qué pasa dentro."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-rn021"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Puedo entrenar una red en mi computadora?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sí, redes pequeñas sin problema: con Python y PyTorch puedes entrenar una que reconozca dígitos escritos a mano en minutos. Para redes grandes se usan GPU, propias o rentadas en la nube, o servicios gratuitos como Google Colab."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-rn022",
+     "preguntas": [
+      {
+       "q": "¿Qué calcula una neurona artificial?",
+       "o": [
+        "Entradas por pesos, más el sesgo, pasado por una función de activación",
+        "La raíz cuadrada de sus entradas",
+        "Un número al azar"
+       ],
+       "a": 0,
+       "e": "Multiplica cada entrada por su peso, suma, agrega el sesgo y aplica la activación."
+      },
+      {
+       "q": "¿Por qué una sola neurona no puede hacer XOR?",
+       "o": [
+        "Porque solo separa los casos con una línea recta",
+        "Porque necesita más memoria",
+        "Porque XOR no existe"
+       ],
+       "a": 0,
+       "e": "Los casos de XOR no se pueden separar con una sola línea; hacen falta neuronas ocultas."
+      },
+      {
+       "q": "¿Qué hace la retropropagación?",
+       "o": [
+        "Calcula cuánto contribuyó cada peso al error",
+        "Borra las neuronas que fallan",
+        "Copia los datos de entrenamiento"
+       ],
+       "a": 0,
+       "e": "Con ese gradiente se sabe hacia dónde mover cada peso para reducir el error."
+      },
+      {
+       "q": "¿Qué pasa si la tasa de aprendizaje es demasiado grande?",
+       "o": [
+        "Aprende más rápido, siempre",
+        "Los pasos se pasan del mínimo y el error puede crecer en lugar de bajar",
+        "No pasa nada"
+       ],
+       "a": 1,
+       "e": "Con pasos muy grandes, el entrenamiento rebota de un lado al otro o se dispara."
+      },
+      {
+       "q": "¿Qué tipo de red se usa en los modelos de lenguaje actuales?",
+       "o": [
+        "Convolucional",
+        "Transformer",
+        "Densa de una capa"
+       ],
+       "a": 1,
+       "e": "Los Transformers, con su mecanismo de atención, son la base de los modelos de lenguaje."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-rn023"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una red neuronal está hecha de neuronas que multiplican entradas por pesos, suman un sesgo y aplican una activación."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una neurona sola separa con una línea recta; con capas ocultas, la red resuelve problemas más complejos como XOR."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se entrena midiendo el error, calculando el gradiente con retropropagación y ajustando los pesos poco a poco."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La tasa de aprendizaje debe ser adecuada: muy chica tarda, muy grande no converge."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Hay redes densas, convolucionales, recurrentes y Transformers; las grandes tienen miles de millones de parámetros."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="redes-neuronales.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>
