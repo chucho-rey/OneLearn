@@ -76,6 +76,10 @@ async function pagina(browser,o){
   p.on('console',function(m){if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))p.errores.push(m.text())});
   /* Solo cuentan las cargas fallidas del propio sitio */
   p.on('requestfailed',function(q){if(q.url().indexOf('127.0.0.1')>=0&&!/ERR_ABORTED/.test(q.failure()&&q.failure().errorText))p.errores.push('no cargó '+q.url())});
+  /* Un archivo del sitio que no existe también es un error; y el sitio no debe depender de otros servidores */
+  p.on('response',function(res){if(res.url().indexOf('127.0.0.1')>=0&&res.status()>=400)p.errores.push(res.status()+' '+res.url())});
+  p.externos=[];
+  p.on('request',function(q){if(/^https?:/.test(q.url())&&q.url().indexOf('127.0.0.1')<0)p.externos.push(q.url())});
   if(o.local){
     await ctx.addInitScript(function(l){
       try{if(!localStorage.getItem('__sembrado')){localStorage.setItem('__sembrado','1');for(const k in l)localStorage.setItem(k,l[k])}}catch(e){}
