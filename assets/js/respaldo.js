@@ -9,7 +9,13 @@ var dlg=null,abridor=null;
 
 function mb(b){
   if(b<1024*1024)return AT.fmt(Math.max(1,Math.round(b/1024)))+' KB';
-  return AT.fmt(b/1024/1024,b<10*1024*1024?1:0)+' MB';
+  if(b<1024*1024*1024)return AT.fmt(b/1024/1024,b<10*1024*1024?1:0)+' MB';
+  return AT.fmt(b/1024/1024/1024,b<10*1024*1024*1024?1:0)+' GB';
+}
+/* Porcentaje legible: «menos de 0.1 %» en lugar de «0 %» cuando casi no se usa nada */
+function pct(x){
+  if(x<0.1)return 'menos de 0.1 %';
+  return AT.fmt(x,x<10?1:0)+' %';
 }
 function hace(iso){
   if(!iso)return '';
@@ -28,7 +34,8 @@ function crear(){
     '<button class="lec-x" type="button" data-td="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
     '<p class="td-p">Lo que escribes en OneLearn se guarda solo en este navegador, en este dispositivo. No se sube a ningún servidor.</p>'+
     '<dl class="td-res" id="tdRes"></dl>'+
-    '<p class="td-p td-nota" id="tdNotaEsp" hidden>El espacio incluye la copia de OneLearn que permite usarlo sin conexión.</p>'+
+    '<div class="td-esp" id="tdEsp" hidden><div class="td-bar" aria-hidden="true"><i id="tdBar"></i></div>'+
+      '<p class="td-p td-nota" id="tdNotaEsp"></p></div>'+
     '<div class="td-sec" id="tdProt"></div>'+
     '<div class="td-sec"><h3>Respaldo</h3>'+
       '<p class="td-p">Descarga una copia de todo en un archivo y guárdala en otro lugar, como tu nube o una memoria USB. Con ella recuperas tus datos en otro navegador o si borras los de este.</p>'+
@@ -87,8 +94,19 @@ function pintar(){
       '<div><dt>Documentos</dt><dd>'+AT.fmt(r[0].length)+'</dd></div>'+
       '<div><dt>Notas</dt><dd>'+AT.fmt(notas)+'</dd></div>'+
       '<div><dt>Marcadores</dt><dd>'+AT.fmt(r[2].length)+'</dd></div>'+
-      (esp?'<div><dt>Espacio usado</dt><dd>'+mb(esp.usado)+'</dd></div>':'');
-    $('#tdNotaEsp',dlg).hidden=!esp;
+      (esp?'<div><dt>Espacio usado</dt><dd>'+mb(esp.usado)+'</dd></div>':'')+
+      (esp&&esp.cuota?'<div><dt>Disponible</dt><dd>'+mb(Math.max(0,esp.cuota-esp.usado))+'</dd></div>':'');
+    /* La cuota es lo que el navegador le reserva a OneLearn; depende del espacio libre del dispositivo */
+    $('#tdEsp',dlg).hidden=!esp;
+    if(esp){
+      var uso=esp.cuota?Math.min(100,esp.usado/esp.cuota*100):0;
+      var bar=$('#tdBar',dlg);
+      bar.style.width=esp.cuota?Math.max(uso,1)+'%':'0';
+      bar.classList.toggle('lleno',uso>=80);
+      $('#tdEsp .td-bar',dlg).hidden=!esp.cuota;
+      $('#tdNotaEsp',dlg).textContent=(esp.cuota?'Usas '+pct(uso)+' de los '+mb(esp.cuota)+' que el navegador le reserva a OneLearn en este dispositivo (cambia según el espacio libre). ':'')+
+        'Incluye la copia de OneLearn que permite usarlo sin conexión.';
+    }
     var prot=$('#tdProt',dlg);
     if(pers===true)prot.innerHTML='<p class="td-p td-ok">'+ico('marcador')+'<span><b>Protegidos.</b> El navegador no los borrará aunque se quede sin espacio.</span></p>';
     else if(pers===false)prot.innerHTML='<p class="td-p"><b>Sin proteger.</b> Si el dispositivo se queda sin espacio, el navegador podría borrarlos. Puedes pedirle que los conserve (algunos navegadores lo deciden solos, según cuánto usas OneLearn).</p>'+

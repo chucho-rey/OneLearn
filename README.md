@@ -38,6 +38,7 @@ assets/
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
 herramientas/tiptap/        Cómo se compila assets/vendor/tiptap.min.js (esbuild)
 pruebas/                    Pruebas automáticas con Playwright (ver pruebas/README.md)
+docs/                       Planeación: qué falta para el MVP (MVP.md) y la idea del conector con Claude (conector-claude.md)
 lecciones/
   ram.html                  Lección «Memoria RAM»: su documento en JSON y las plantillas de sus laboratorios
   ram.css                   Estilos de sus laboratorios
@@ -86,7 +87,7 @@ Todo lo que escribe cada estudiante se guarda solo en su navegador; nada se sube
 - **IndexedDB** (base `onelearn`, `assets/js/datos.js`) guarda los documentos, las notas rápidas de cada lección y los marcadores. Si el navegador no tiene IndexedDB, se usa `localStorage`.
 - Cada nota se escribe primero en `localStorage` (al instante) y luego en IndexedDB; si la página se cierra a la mitad, la siguiente carga termina de guardarla. Así se pasaron también las notas de la fase 1, sin perder ninguna.
 - El avance de lectura y los ajustes siguen en `localStorage`, porque se leen antes de pintar la página.
-- **Tus datos** (barra lateral) muestra cuánto hay guardado, si el navegador protege los datos (almacenamiento persistente) y permite **descargar un respaldo** en JSON e **importarlo** en otro navegador. Importar combina: entra lo que no existe y lo más reciente; nunca se borra nada.
+- **Tus datos** (barra lateral) muestra cuánto hay guardado, el espacio usado y el disponible (lo que el navegador reserva para OneLearn), si el navegador protege los datos (almacenamiento persistente) y permite **descargar un respaldo** en JSON e **importarlo** en otro navegador. Importar combina: entra lo que no existe y lo más reciente; nunca se borra nada.
 
 ## App instalable y sin conexión
 

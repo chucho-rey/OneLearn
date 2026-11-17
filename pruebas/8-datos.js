@@ -73,7 +73,8 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   await p.click('#sideDatos');await p.waitForTimeout(400);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.tus-datos').open}),'«Tus datos» abre su ventana');
   const res=await p.textContent('#tdRes');
-  r.cumple(/Documentos\s*1/.test(res)&&/Notas\s*2/.test(res)&&/Marcadores\s*1/.test(res)&&/Espacio usado/.test(res),'muestra cuántos documentos, notas y marcadores hay y el espacio usado',res);
+  r.cumple(/Documentos\s*1/.test(res)&&/Notas\s*2/.test(res)&&/Marcadores\s*1/.test(res)&&/Espacio usado/.test(res)&&/Disponible/.test(res),'muestra cuántos documentos, notas y marcadores hay, el espacio usado y el disponible',res);
+  r.cumple(/Usas .+ de los .+ que el navegador le reserva/.test(await p.textContent('#tdNotaEsp'))&&await p.isVisible('#tdBar'),'explica qué parte del espacio reservado se usa, con una barra');
   r.cumple(/Todavía no has descargado/.test(await p.textContent('#tdUlt')),'avisa que aún no hay respaldo');
   r.cumple((await p.textContent('#tdProt')).length>10,'explica si el navegador protege los datos');
   await revisar(p,r,'ventana Tus datos en escritorio');
