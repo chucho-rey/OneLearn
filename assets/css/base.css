@@ -379,6 +379,26 @@ dialog.buscar-dlg[open]{display:flex}
 .demo-h b{font-family:var(--font-head);font-size:0.9375rem}
 .demo-h .tag{margin-left:auto}
 .demo-b{padding:1rem}
+/* Piezas compartidas por los laboratorios: mensajes, tarjetas de resultados, barras comparativas y campos de texto */
+.demo .msg{margin:0.75rem 0 0;font-size:0.9375rem;max-width:none}
+.demo .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:0.5rem;margin-top:0.875rem}
+.demo .kpi{border:1px solid var(--line);border-radius:0.25rem;padding:0.5rem 0.625rem;min-width:0}
+.demo .kpi>span{display:block;overflow-wrap:anywhere;hyphens:auto;font-size:0.8125rem;line-height:1.35;color:var(--fg-2)}
+.demo .kpi>b{display:block;margin-top:2px;font-family:var(--font-mono);font-size:0.9375rem;font-weight:600;overflow-wrap:anywhere}
+.demo .kpi .bar{height:0.375rem;margin-top:0.375rem;border-radius:2px;background:var(--bg-soft);overflow:hidden}
+.demo .kpi .bar i{display:block;height:100%;width:0;background:var(--c4);transition:width .25s ease}
+.barras{margin-top:0.875rem}
+.br{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr) auto;align-items:center;gap:0.375rem 0.75rem;padding:0.375rem 0;border-bottom:1px solid var(--line);font-size:0.875rem}
+.br-l{overflow-wrap:anywhere}
+.br-b{display:flex;height:1rem;border-radius:0.1875rem;background:var(--bg-soft);overflow:hidden}
+.br-b i{display:block;height:100%;min-width:2px;background:var(--c1);transition:width .3s ease}
+.br.on .br-l{font-weight:600}
+.br.on .br-b i{background:var(--accent)}
+.br>b{font-family:var(--font-mono);white-space:nowrap;text-align:right}
+@media (max-width:520px){.br{grid-template-columns:minmax(0,1fr) auto}.br-b{grid-column:1/-1;grid-row:2}}
+.demo .campo{width:100%;max-width:28rem;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.demo .campo.mono{font-family:var(--font-mono)}
+.demo .num{width:4.5rem;max-width:none}
 .hint{font-size:0.875rem;color:var(--fg-2);margin:0 0 0.75rem;max-width:none}
 .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 0.75rem;margin:0.75rem 0 0}
 .btn{padding:0.3125rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);font-size:0.875rem;cursor:pointer;line-height:1.4}

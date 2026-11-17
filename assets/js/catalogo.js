@@ -11,12 +11,12 @@ window.AT.catalogo=[
     {id:'cpu',titulo:'Procesador (CPU)',archivo:'cpu.html',icono:'cpu'},
     {id:'almacenamiento',titulo:'Almacenamiento',archivo:'almacenamiento.html',icono:'disco'},
     {id:'gpu',titulo:'Tarjeta gráfica',archivo:'gpu.html',icono:'gpu'},
-    {id:'placa-base',titulo:'Placa base'}
+    {id:'placa-base',titulo:'Placa base',archivo:'placa-base.html',icono:'placa'}
   ]},
   {grupo:'Electrónica',lecciones:[
-    {id:'capacitores',titulo:'Capacitores y resistencias'},
-    {id:'transistores',titulo:'Transistores'},
-    {id:'diodos',titulo:'Diodos y LEDs'}
+    {id:'capacitores',titulo:'Capacitores y resistencias',archivo:'capacitores.html',icono:'resistencia'},
+    {id:'transistores',titulo:'Transistores',archivo:'transistores.html',icono:'transistor'},
+    {id:'diodos',titulo:'Diodos y LEDs',archivo:'diodos.html',icono:'led'}
   ]},
   {grupo:'Software',lecciones:[
     {id:'sistema-operativo',titulo:'Sistema operativo'},

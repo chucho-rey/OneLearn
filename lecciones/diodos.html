@@ -1,0 +1,1735 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Diodos y LEDs · OneLearn</title>
+<meta name="description" content="Qué es un diodo, la unión P-N, polarización directa e inversa, cómo se convierte la corriente alterna en directa y cómo calcular la resistencia de un LED, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="diodos.css">
+</head>
+<body data-leccion="diodos">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="di-polaridad">
+<p class="hint">Gira el diodo y sube el voltaje de la pila. En el circuito hay una resistencia de 100 Ω que limita la corriente.</p>
+<div class="seg" id="poDir" role="group" aria-label="Sentido del diodo">
+  <button type="button" data-v="1" aria-pressed="true">Directa</button>
+  <button type="button" data-v="0" aria-pressed="false">Inversa</button>
+</div>
+<div class="ctl">
+  <span class="lbl">Voltaje de la pila</span>
+  <input class="slider" type="range" id="poV" min="0" max="5" step="0.1" value="1.5" aria-label="Voltaje de la pila">
+  <b class="mono" id="poVv"></b>
+</div>
+<svg class="po-svg" id="poSvg" viewBox="0 0 320 120" role="img" aria-label="Circuito con una pila, una resistencia y un diodo"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Corriente</span><b id="poI"></b><div class="bar"><i id="poBar"></i></div></div>
+  <div class="kpi"><span>Voltaje en el diodo</span><b id="poVd"></b></div>
+</div>
+<p class="msg" id="poMsg" aria-live="polite"></p>
+</template>
+<template data-lab="di-rectificar">
+<p class="hint">La línea punteada es la corriente alterna que entra; la línea gruesa, lo que sale. Elige el circuito.</p>
+<div class="chips" id="reModo" role="group" aria-label="Circuito">
+  <button class="chip" type="button" data-v="0" aria-pressed="true">Sin diodos</button>
+  <button class="chip" type="button" data-v="1" aria-pressed="false">Un diodo</button>
+  <button class="chip" type="button" data-v="2" aria-pressed="false">Puente de 4 diodos</button>
+  <button class="chip" type="button" data-v="3" aria-pressed="false">Puente + capacitor</button>
+</div>
+<svg class="re-svg" id="reSvg" viewBox="0 0 320 150" role="img" aria-label="Forma de la onda de entrada y de salida"></svg>
+<div class="leg"><span><i class="re-l-in"></i>Entrada (alterna)</span><span><i class="re-l-out"></i>Salida</span></div>
+<p class="msg" id="reMsg" aria-live="polite"></p>
+</template>
+<template data-lab="di-led">
+<p class="hint">Elige la fuente, el color del LED y la corriente. Los voltajes del LED son típicos; los exactos están en su hoja de datos.</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">Fuente</span>
+  <div class="seg" id="ldF" role="group" aria-label="Voltaje de la fuente">
+    <button type="button" data-v="3.3" aria-pressed="false">3.3 V</button>
+    <button type="button" data-v="5" aria-pressed="true">5 V</button>
+    <button type="button" data-v="9" aria-pressed="false">9 V</button>
+    <button type="button" data-v="12" aria-pressed="false">12 V</button>
+  </div>
+</div>
+<div class="ctl">
+  <span class="lbl">LED</span>
+  <div class="chips" id="ldC" role="group" aria-label="Color del LED">
+    <button class="chip" type="button" data-v="rojo" aria-pressed="true">Rojo · 2.0 V</button>
+    <button class="chip" type="button" data-v="amarillo" aria-pressed="false">Amarillo · 2.1 V</button>
+    <button class="chip" type="button" data-v="verde" aria-pressed="false">Verde · 3.0 V</button>
+    <button class="chip" type="button" data-v="azul" aria-pressed="false">Azul · 3.0 V</button>
+    <button class="chip" type="button" data-v="blanco" aria-pressed="false">Blanco · 3.0 V</button>
+  </div>
+</div>
+<div class="ctl">
+  <span class="lbl">Corriente</span>
+  <div class="seg" id="ldI" role="group" aria-label="Corriente del LED">
+    <button type="button" data-v="0.005" aria-pressed="false">5 mA</button>
+    <button type="button" data-v="0.01" aria-pressed="false">10 mA</button>
+    <button type="button" data-v="0.02" aria-pressed="true">20 mA</button>
+  </div>
+</div>
+<div class="ld">
+  <span class="ld-led" id="ldLed" aria-hidden="true"></span>
+  <div class="kpis ld-k">
+    <div class="kpi"><span>Resistencia exacta</span><b id="ldR"></b></div>
+    <div class="kpi"><span>Valor comercial a usar</span><b id="ldRc"></b></div>
+    <div class="kpi"><span>Potencia en la resistencia</span><b id="ldP"></b></div>
+  </div>
+</div>
+<p class="msg" id="ldMsg" aria-live="polite"></p>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "diodos",
+ "titulo": "Diodos y LEDs",
+ "icono": "led",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Electrónica",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "12 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-di001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-di002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué es un diodo?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "diodo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " deja pasar la corriente en un solo sentido, como una válvula que solo abre hacia un lado. Tiene dos patas: el "
+     },
+     {
+      "type": "text",
+      "text": "ánodo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (+) y el "
+     },
+     {
+      "type": "text",
+      "text": "cátodo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (−). La corriente entra por el ánodo y sale por el cátodo; al revés, se bloquea."
+     }
+    ],
+    "attrs": {
+     "id": "b-di003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En el símbolo, la flecha apunta hacia donde puede ir la corriente, y la raya marca el cátodo. En el componente real, el cátodo lleva una franja pintada."
+     }
+    ],
+    "attrs": {
+     "id": "b-di004"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-di005"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un solo sentido",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Protege circuitos contra pilas puestas al revés y convierte la corriente alterna en directa."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Emite luz",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un LED es un diodo hecho de materiales que, al conducir, brillan."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Capta luz",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un fotodiodo o una celda solar hace lo contrario: convierte la luz en corriente."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-pn",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La unión P-N"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un diodo es un trozo de semiconductor con una zona "
+     },
+     {
+      "type": "text",
+      "text": "tipo P",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (con huecos) pegada a una zona "
+     },
+     {
+      "type": "text",
+      "text": "tipo N",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (con electrones de sobra), como viste en la lección de "
+     },
+     {
+      "type": "text",
+      "text": "transistores",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "transistores.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Donde se juntan, electrones y huecos se combinan y dejan una franja sin cargas libres: la "
+     },
+     {
+      "type": "text",
+      "text": "zona de agotamiento",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que actúa como una barrera."
+     }
+    ],
+    "attrs": {
+     "id": "b-di006"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Si conectas el + a la zona P, empujas cargas hacia la barrera hasta que la cruzan: el diodo conduce. Si conectas al revés, las cargas se alejan, la barrera se ensancha y no pasa corriente."
+     }
+    ],
+    "attrs": {
+     "id": "b-di007"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-polaridad",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Polarización directa e inversa"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Conectar el diodo a favor se llama "
+     },
+     {
+      "type": "text",
+      "text": "polarización directa",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "; en contra, "
+     },
+     {
+      "type": "text",
+      "text": "polarización inversa",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". En directa, el diodo no conduce hasta que el voltaje supera un mínimo: unos "
+     },
+     {
+      "type": "text",
+      "text": "0.7 V",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " en los diodos de silicio. A partir de ahí, la corriente sube muy rápido, así que siempre se pone una resistencia que la limite."
+     }
+    ],
+    "attrs": {
+     "id": "b-di008"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-di009",
+     "nombre": "di-polaridad",
+     "titulo": "Directa o inversa"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-di010",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En inversa, un diodo común solo deja pasar una fuga de nanoamperes. Pero si el voltaje es muy alto, la barrera se rompe y conduce de golpe. Los "
+       },
+       {
+        "type": "text",
+        "text": "diodos Zener",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " están hechos para aprovechar eso: mantienen un voltaje fijo y se usan para regularlo."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-rectificar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "De alterna a directa"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El enchufe de tu casa da "
+     },
+     {
+      "type": "text",
+      "text": "corriente alterna",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": cambia de sentido 60 veces por segundo en México. Los aparatos electrónicos necesitan "
+     },
+     {
+      "type": "text",
+      "text": "corriente directa",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", siempre en el mismo sentido. El cargador del celular hace esa conversión, y los diodos son la pieza clave: un circuito que lo logra se llama "
+     },
+     {
+      "type": "text",
+      "text": "rectificador",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-di011"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-di012",
+     "nombre": "di-rectificar",
+     "titulo": "De alterna a directa"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con un diodo se aprovecha solo la mitad de la onda; con cuatro en "
+     },
+     {
+      "type": "text",
+      "text": "puente",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", las dos mitades. El "
+     },
+     {
+      "type": "text",
+      "text": "capacitor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " se carga en cada pico y entrega energía mientras el voltaje baja, así la salida queda casi plana. Los cargadores modernos agregan un circuito que regula el voltaje exacto."
+     }
+    ],
+    "attrs": {
+     "id": "b-di013"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-led",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "LED: diodos que brillan"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En un "
+     },
+     {
+      "type": "text",
+      "text": "LED",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "light-emitting diode",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "), cada electrón que cruza la unión suelta su energía como un fotón de luz. El "
+     },
+     {
+      "type": "text",
+      "text": "color",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " depende del material del semiconductor, y con él cambia el voltaje que necesita para encender:"
+     }
+    ],
+    "attrs": {
+     "id": "b-di014"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-di015"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Color"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Material"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Voltaje típico"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Rojo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "AlGaInP (fosfuro de aluminio, galio e indio)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1.8 a 2.2 V"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Amarillo y naranja"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "AlGaInP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2.0 a 2.2 V"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Verde brillante"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "InGaN (nitruro de indio y galio)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2.8 a 3.3 V"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Azul"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "InGaN"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2.8 a 3.3 V"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Blanco"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "LED azul con un recubrimiento de fósforo amarillo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2.8 a 3.3 V"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El LED azul eficiente llegó hasta los años noventa y fue el que permitió el LED blanco y las pantallas modernas; sus inventores recibieron el Premio Nobel de Física en 2014. Un foco LED da la misma luz que uno incandescente con una sexta parte de la energía."
+     }
+    ],
+    "attrs": {
+     "id": "b-di016"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Para saber qué pata es cuál: la "
+     },
+     {
+      "type": "text",
+      "text": "pata larga",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es el ánodo (+) y el lado "
+     },
+     {
+      "type": "text",
+      "text": "plano",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " de la cápsula marca el cátodo (−)."
+     }
+    ],
+    "attrs": {
+     "id": "b-di017"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-resistencia",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Siempre con resistencia"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un LED conectado directo a una pila deja pasar tanta corriente que se quema en segundos. Por eso lleva una resistencia en serie. Su valor sale de la ley de Ohm: la resistencia recibe el voltaje que sobra, "
+     },
+     {
+      "type": "text",
+      "text": "R = (V de la fuente − V del LED) ÷ I",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-di018"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-di019",
+     "nombre": "di-led",
+     "titulo": "La resistencia para un LED"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-otros",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Otros diodos"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-di020"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué hace"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dónde lo ves"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Rectificador"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Deja pasar la corriente en un sentido"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Fuentes de poder y cargadores"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Zener"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Mantiene un voltaje fijo en inversa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Reguladores y protecciones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Schottky"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Conduce con menos voltaje (unos 0.3 V) y cambia muy rápido"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Fuentes conmutadas, protección de USB"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Fotodiodo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Convierte la luz en corriente"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sensores, controles remotos, fibra óptica"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Celda solar"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un fotodiodo grande que entrega energía"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Paneles solares"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Diodo láser"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Emite luz coherente de un solo color"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lectores de discos, fibra óptica, apuntadores"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-di021"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué un LED casi no se calienta y un foco sí?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un foco incandescente produce luz calentando un filamento a unos 2,500 °C: más del 90 % de la energía se va en calor. Un LED genera luz directamente en la unión, así que desperdicia mucho menos. Aun así, los LED potentes necesitan disipador."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-di022"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué pasa si conecto un LED al revés?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No enciende (está en polarización inversa). Con voltajes bajos no se daña, pero un LED aguanta poco voltaje inverso (unos 5 V), así que tampoco conviene abusar."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-di023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es una pantalla OLED?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una pantalla en la que cada píxel es un LED orgánico que da su propia luz. Por eso el negro es negro de verdad: el píxel simplemente se apaga."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-di024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué los LED parpadean en algunos videos?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Muchos controlan el brillo prendiéndose y apagándose cientos de veces por segundo (PWM). El ojo ve un promedio, pero la cámara puede captar el parpadeo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-di025",
+     "preguntas": [
+      {
+       "q": "¿Qué hace un diodo?",
+       "o": [
+        "Guarda carga",
+        "Deja pasar la corriente en un solo sentido",
+        "Aumenta el voltaje"
+       ],
+       "a": 1,
+       "e": "Conduce del ánodo al cátodo y bloquea el sentido contrario."
+      },
+      {
+       "q": "Un diodo de silicio en directa con 0.5 V, ¿conduce?",
+       "o": [
+        "Sí, mucho",
+        "Casi nada: no llega a unos 0.7 V"
+       ],
+       "a": 1,
+       "e": "Por debajo de unos 0.7 V la barrera de la unión no deja pasar corriente apreciable."
+      },
+      {
+       "q": "¿Para qué sirve el capacitor después del puente de diodos?",
+       "o": [
+        "Para invertir la corriente",
+        "Para alisar la salida y que quede casi plana",
+        "Para encender un LED"
+       ],
+       "a": 1,
+       "e": "Se carga en los picos y entrega energía cuando el voltaje baja, reduciendo el rizado."
+      },
+      {
+       "q": "Un LED rojo (2 V) a 20 mA con una fuente de 5 V, ¿qué resistencia necesita?",
+       "o": [
+        "150 Ω",
+        "250 Ω",
+        "100 Ω"
+       ],
+       "a": 0,
+       "e": "R = (5 − 2) ÷ 0.02 = 150 Ω."
+      },
+      {
+       "q": "¿De qué depende el color de un LED?",
+       "o": [
+        "De la resistencia",
+        "Del material del semiconductor",
+        "Del voltaje de la fuente"
+       ],
+       "a": 1,
+       "e": "El material fija la energía de cada fotón, y con ella el color."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-di026"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un diodo es una unión P-N que conduce en un sentido y bloquea el otro."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En directa necesita unos 0.7 V (silicio) para conducir; en inversa solo deja pasar una fuga mínima."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los rectificadores con diodos y un capacitor convierten la corriente alterna en directa."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un LED emite luz al conducir; su color y su voltaje dependen del material."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un LED siempre necesita una resistencia: R = (V de la fuente − V del LED) ÷ I."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="diodos.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

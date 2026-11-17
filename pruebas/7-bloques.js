@@ -1,10 +1,19 @@
 /* Hito 2.1: formato de bloques. Las lecciones se dibujan desde su JSON con el mismo código que dibujará
    los documentos propios; los laboratorios son bloques especiales y el dibujo no ejecuta código del documento. */
 'use strict';
-const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
+const {prueba,pagina,cerrar,listo,revisar,RAIZ}=require('./lib');
+const fs=require('fs'),path=require('path'),vm=require('vm');
+/* Todas las lecciones publicadas del temario (assets/js/catalogo.js) */
+const LECCIONES=(function(){
+  const ctx={window:{}};
+  vm.runInNewContext(fs.readFileSync(path.join(RAIZ,'assets/js/catalogo.js'),'utf8'),ctx);
+  const out=[];
+  ctx.window.AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){if(l.archivo)out.push(l.id)})});
+  return out;
+})();
 
 prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
-  for(const lid of ['ram','cpu','almacenamiento','gpu']){
+  for(const lid of LECCIONES){
     const p=await pagina(browser);
     await p.goto(base+'lecciones/'+lid+'.html');await listo(p);
     const d=await p.evaluate(function(){

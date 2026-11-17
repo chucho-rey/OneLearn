@@ -68,9 +68,10 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
     return b.getAttribute('data-grupo')+':'+(b.getAttribute('aria-expanded')==='true'?'abierto':'cerrado')+(document.getElementById(b.getAttribute('aria-controls')).hidden?':oculto':'')})})};
   let gs=await grupos();
   r.igual(gs.join(' '),'hardware:abierto electronica:cerrado:oculto software:cerrado:oculto redes:cerrado:oculto ciberseguridad:cerrado:oculto inteligencia-artificial:cerrado:oculto',
-    'la primera vez solo se abre el grupo con lecciones; Ciberseguridad e Inteligencia artificial están en el temario');
-  r.igual(await g.textContent('#grpb-hardware em'),'4/5','el grupo dice cuántas lecciones tiene disponibles');
-  r.cumple(/4 de 5 lecciones disponibles/.test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
+    'la primera vez solo se abre el grupo de la lección actual; Ciberseguridad e Inteligencia artificial están en el temario');
+  const hw=await g.evaluate(function(){const l=AT.catalogo[0].lecciones;return [l.filter(function(x){return x.archivo}).length,l.length]});
+  r.igual(await g.textContent('#grpb-hardware em'),hw[0]+'/'+hw[1],'el grupo dice cuántas lecciones tiene disponibles');
+  r.cumple(new RegExp(hw[0]+' de '+hw[1]+' lecciones disponibles').test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
   await g.click('#grpb-ciberseguridad');await g.waitForTimeout(100);
   r.cumple(await g.isVisible('#grp-ciberseguridad .nv.soon'),'al tocar un grupo se abre y muestra sus lecciones');
   await g.focus('#grpb-hardware');await g.keyboard.press('Enter');await g.waitForTimeout(100);
@@ -82,10 +83,16 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   await g.goto(base+'index.html');await listo(g);
   gs=await grupos();
   r.cumple(gs.indexOf('hardware:cerrado:oculto')>=0&&gs.indexOf('ciberseguridad:abierto')>=0,'en Inicio se respeta lo que plegaste',gs);
-  r.igual(await g.evaluate(function(){return [...document.querySelectorAll('.exp-pronto b')].map(function(b){return b.textContent}).join(', ')}),
-    'Electrónica, Software, Redes, Ciberseguridad, Inteligencia artificial','Inicio junta los grupos sin lecciones en «Próximos temas»');
+  const pronto=await g.evaluate(function(){return [[...document.querySelectorAll('.exp-pronto b')].map(function(b){return b.textContent}).join(', '),
+    AT.catalogo.filter(function(x){return !x.lecciones.some(function(l){return l.archivo})}).map(function(x){return x.grupo}).join(', ')]});
+  r.igual(pronto[0],pronto[1],'Inicio junta los grupos sin lecciones en «Próximos temas»');
   await revisar(g,r,'Inicio con grupos plegados');
   await cerrar(g);
+  const g2=await pagina(browser,{ancho:1280});
+  await g2.goto(base+'index.html');await listo(g2);
+  r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn[aria-expanded="true"]')].map(function(b){return b.getAttribute('data-grupo')}).join(',')}),
+    'hardware','la primera vez, en Inicio, solo se abre el primer grupo');
+  await cerrar(g2);
 
   /* Las tres pestañas con letra grande, OpenDyslexic y alto contraste */
   for(const ancho of [390,1280])for(const [escala,fuente] of [[1,'normal'],[1.5,'normal'],[1,'opendyslexic'],[1.5,'opendyslexic']])

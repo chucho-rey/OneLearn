@@ -17,6 +17,15 @@ var reduce=AT.reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-m
 var fmt=AT.fmt=function(n,d){return n.toLocaleString('es-MX',{minimumFractionDigits:d||0,maximumFractionDigits:d||0})};
 var esc=AT.esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
 AT.setPressed=function(group,test){$$('button',group).forEach(function(b){b.setAttribute('aria-pressed',test(b)?'true':'false')})};
+/* Laboratorios: un grupo de botones (.seg o .chips) que elige un valor (data-v); fn recibe el valor como texto */
+AT.elegir=function(sel,fn){
+  $(sel).addEventListener('click',function(e){
+    var b=e.target.closest('button');
+    if(!b||!this.contains(b))return;
+    AT.setPressed(this,function(x){return x===b});
+    fn(b.getAttribute('data-v'),b);
+  });
+};
 var ico=AT.ico=function(id,cls,useId){
   return '<svg class="ico'+(cls?' '+cls:'')+'" aria-hidden="true" focusable="false"><use'+(useId?' id="'+useId+'"':'')+' href="#i-'+id+'"/></svg>';
 };
@@ -28,6 +37,23 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M9 2v4M12 2v4M15 2v4M9 18v4M12 18v4M15 18v4M2 9h4M2 12h4M2 15h4M18 9h4M18 12h4M18 15h4"/></symbol>'+
 '<symbol id="i-disco" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="11" r="4.5"/><circle cx="12" cy="11" r=".9" fill="currentColor" stroke="none"/><path d="M15 17.5h2.5"/></symbol>'+
 '<symbol id="i-gpu" viewBox="0 0 24 24"><rect x="2" y="6" width="18" height="11" rx="1.5"/><circle cx="8.5" cy="11.5" r="3"/><path d="M14 9.5h3M14 12h3M14 14.5h3M20 9h2v5h-2M5 17v2.5M8 17v2.5M11 17v2.5"/></symbol>'+
+'<symbol id="i-placa" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="6.5" height="6.5" rx=".5"/><path d="M16 6.5v11M18.5 6.5v11M6.5 16.5h6.5"/></symbol>'+
+'<symbol id="i-resistencia" viewBox="0 0 24 24"><path d="M2 12h4l1.5-3.5 3 7 3-7 3 7 1.5-3.5h4"/></symbol>'+
+'<symbol id="i-transistor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5 12h4.5M9.5 7.5v9M9.5 10l5-3.5V3M9.5 14l5 3.5V21"/><path d="M12.6 17.8l1.9-.3-.6-1.8"/></symbol>'+
+'<symbol id="i-led" viewBox="0 0 24 24"><path d="M6 15h12v-4.5a6 6 0 0 0-12 0z"/><path d="M9 15v6M15 15v6M18.5 3.5l2-2M20.5 7h2.5M17 1v2"/></symbol>'+
+'<symbol id="i-so" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M3 8h18M8 21h8M12 17v4"/></symbol>'+
+'<symbol id="i-capas" viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5M3 16.5l9 4.5 9-4.5"/></symbol>'+
+'<symbol id="i-compilar" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4.5l-3 15"/></symbol>'+
+'<symbol id="i-paquete" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></symbol>'+
+'<symbol id="i-globo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.5 3.2 14.5 0 18M12 3c-3.2 3.5-3.2 14.5 0 18"/></symbol>'+
+'<symbol id="i-llave" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4.5"/><path d="M11.2 12.3L20 3.5M16.5 7l3 3M14.5 9l2 2"/></symbol>'+
+'<symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11M12 15v2.5"/></symbol>'+
+'<symbol id="i-anzuelo" viewBox="0 0 24 24"><path d="M15 5v9.5a5 5 0 0 1-10 0V12l3 2.5"/><circle cx="15" cy="3.5" r="1.5"/></symbol>'+
+'<symbol id="i-bicho" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M12 7V4.5M9 3.5l1.5 2.5M15 3.5L13.5 6M3 11h4M17 11h4M3.5 17H7M17 17h3.5M12 11v9"/></symbol>'+
+'<symbol id="i-chispa" viewBox="0 0 24 24"><path d="M11 3l1.8 5.2L18 10l-5.2 1.8L11 17l-1.8-5.2L4 10l5.2-1.8z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>'+
+'<symbol id="i-grafica" viewBox="0 0 24 24"><path d="M3 3v18h18"/><circle cx="8" cy="15" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="16.5" cy="8.5" r="1.3"/><path d="M6 18L20 5.5"/></symbol>'+
+'<symbol id="i-red" viewBox="0 0 24 24"><circle cx="5" cy="7" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="7" r="2"/><circle cx="19" cy="17" r="2"/><path d="M6.8 8l3.4 3M6.8 16l3.4-3M13.8 11l3.4-3M13.8 13l3.4 3"/></symbol>'+
+'<symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9.5L4 20z"/><path d="M8 9h8M8 12.5h5"/></symbol>'+
 '<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5M10 20v-6h4v6"/></symbol>'+
 '<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15.5 4.8a3.2 3.2 0 0 1 0 6.4M17.5 14.3c2.1.7 3.5 2.8 3.5 5.7"/></symbol>'+
 '<symbol id="i-zen" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path d="M9 12h6"/></symbol>'+
