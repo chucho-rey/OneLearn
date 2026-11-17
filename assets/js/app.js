@@ -11,7 +11,7 @@ var catalogo=AT.catalogo||[],actual=AT.leccion;
 AT.aviso=function(texto,accion,fn){
   var v=document.getElementById('avisoApp');
   if(!v){
-    v=document.createElement('div');v.id='avisoApp';v.className='aviso';v.setAttribute('role','status');
+    v=document.createElement('div');v.id='avisoApp';v.className='aviso-app';v.setAttribute('role','status');
     document.body.appendChild(v);
   }
   v.innerHTML='<span>'+esc(texto)+'</span>'+(accion?'<button class="btn" type="button">'+esc(accion)+'</button>':'')+

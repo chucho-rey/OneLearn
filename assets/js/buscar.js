@@ -13,9 +13,11 @@ function recorte(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length
 
 /* ---------- Índice ---------- */
 var lecciones=null;
-/* Entradas de una lección: la lección, cada sección (con su texto) y cada bloque */
+/* Páginas del sitio que también se buscan, además de las lecciones del catálogo */
+var PAGINAS=[{id:'acerca',titulo:'Cómo está hecho OneLearn',ruta:'acerca.html',icono:'codigo',sub:'Sobre OneLearn'}];
+/* Entradas de una lección (o página): la lección, cada sección (con su texto) y cada bloque */
 function entradasDeLeccion(l,doc){
-  var url='lecciones/'+l.archivo,out=[{tipo:'leccion',titulo:doc.titulo||l.titulo,texto:'',href:url,sub:'Lección',icono:l.icono||'page',doc:l.id}];
+  var url=l.ruta,out=[{tipo:'leccion',titulo:doc.titulo||l.titulo,texto:'',href:url,sub:l.sub,icono:l.icono||'page',doc:l.id}];
   var sec=null;
   (doc.contenido&&doc.contenido.content||[]).forEach(function(b){
     var id=b.attrs&&b.attrs.id,t=AT.bloques.textoDe(b).replace(/\s+/g,' ').trim();
@@ -32,17 +34,19 @@ function entradasDeLeccion(l,doc){
 function cargarLecciones(){
   if(lecciones)return lecciones;
   var lista=[];
-  AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){if(l.archivo)lista.push(l)})});
+  AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){
+    if(l.archivo)lista.push({id:l.id,titulo:l.titulo,icono:l.icono,ruta:'lecciones/'+l.archivo,sub:'Lección'});
+  })});
+  lista=lista.concat(PAGINAS);
   lecciones=Promise.all(lista.map(function(l){
     /* La lección abierta ya está en memoria */
     if(AT.documento&&AT.documento.id===l.id)return Promise.resolve(entradasDeLeccion(l,AT.documento));
-    return fetch(RAIZ+'lecciones/'+l.archivo).then(function(r){return r.text()}).then(function(html){
+    var sola=[{tipo:'leccion',titulo:l.titulo,texto:'',href:l.ruta,sub:l.sub,icono:l.icono||'page'}];
+    return fetch(RAIZ+l.ruta).then(function(r){return r.text()}).then(function(html){
       var d=new DOMParser().parseFromString(html,'text/html'),s=d.getElementById('documento');
-      if(!s)return [{tipo:'leccion',titulo:l.titulo,texto:'',href:'lecciones/'+l.archivo,sub:'Lección',icono:l.icono||'page'}];
+      if(!s)return sola;
       return entradasDeLeccion(l,JSON.parse(s.textContent));
-    }).catch(function(){
-      return [{tipo:'leccion',titulo:l.titulo,texto:'',href:'lecciones/'+l.archivo,sub:'Lección',icono:l.icono||'page'}];
-    });
+    }).catch(function(){return sola});
   })).then(function(r){return [].concat.apply([],r)});
   return lecciones;
 }

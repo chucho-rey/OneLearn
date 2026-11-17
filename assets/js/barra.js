@@ -49,6 +49,7 @@ var grupo=AT.grupoActual,orden=AT.orden;
     '<div class="side-foot">'+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
       '<button class="nv" type="button" id="sideDatos">'+ico('datos')+'<span>Tus datos</span></button>'+
+      '<a class="nv'+(R.pagina==='acerca'?' on" aria-current="page':'')+'" href="'+RAIZ+'acerca.html">'+ico('codigo')+'<span>Cómo está hecho</span></a>'+
       (ES_INICIO?'':
         '<button class="nv" type="button" id="sideZen">'+ico('zen')+'<span>Modo zen</span><kbd>Z</kbd></button>'+
         '<button class="nv solo-teclado" type="button" id="sideAtajos">'+ico('teclado')+'<span>Atajos de teclado</span><kbd>?</kbd></button>')+
