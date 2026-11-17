@@ -24,6 +24,8 @@ document.body.insertAdjacentHTML('afterbegin',
 '<svg class="sprite" aria-hidden="true" focusable="false">'+
 '<symbol id="i-ram" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="11" rx="1.5"/><rect x="5" y="8" width="3.2" height="5" rx=".5" fill="currentColor" stroke="none"/><rect x="10.4" y="8" width="3.2" height="5" rx=".5" fill="currentColor" stroke="none"/><rect x="15.8" y="8" width="3.2" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M5 16v3M8 16v3M11 16v3M14 16v3M17 16v3M20 16v3"/></symbol>'+
 '<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M9 2v4M12 2v4M15 2v4M9 18v4M12 18v4M15 18v4M2 9h4M2 12h4M2 15h4M18 9h4M18 12h4M18 15h4"/></symbol>'+
+'<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5M10 20v-6h4v6"/></symbol>'+
+'<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15.5 4.8a3.2 3.2 0 0 1 0 6.4M17.5 14.3c2.1.7 3.5 2.8 3.5 5.7"/></symbol>'+
 '<symbol id="i-page" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></symbol>'+
 '<symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>'+
 '<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>'+
@@ -53,7 +55,14 @@ AT.leccion=actual;
 /* ---------- Estructura: barra lateral, barra superior, siguiente lección y apuntes ---------- */
 (function(){
   var h='<div class="side-in"><div class="ws"><a class="brand" href="../index.html">One<b>Learn</b></a>'+
-    '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div><nav>';
+    '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
+    '<a class="nv" href="../index.html">'+ico('home')+'<span>Inicio</span></a>'+
+    '<div class="tabs" role="tablist" aria-label="Secciones">'+
+      '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
+      '<button class="tab" type="button" role="tab" id="tab-apuntes" aria-controls="pn-apuntes">Mis apuntes</button>'+
+      '<button class="tab" type="button" role="tab" id="tab-comunidad" aria-controls="pn-comunidad">Comunidad</button>'+
+    '</div>'+
+    '<div class="tabp" role="tabpanel" id="pn-temas" aria-labelledby="tab-temas"><nav aria-label="Temas">';
   catalogo.forEach(function(g){
     h+='<div class="grp">'+esc(g.grupo)+'</div>';
     g.lecciones.forEach(function(l){
@@ -63,7 +72,21 @@ AT.leccion=actual;
       else h+='<span class="nv soon" aria-disabled="true">'+inner+'<em>Pronto</em></span>';
     });
   });
-  $('#side').innerHTML=h+'</nav></div>';
+  h+='</nav></div>'+
+    '<div class="tabp" role="tabpanel" id="pn-apuntes" aria-labelledby="tab-apuntes" hidden>'+
+      '<p class="side-txt">Las notas rápidas de cada lección. Se guardan en este dispositivo.</p>'+
+      '<ul class="notas" id="notasLista"></ul>'+
+      '<p class="side-txt side-soon"><b>Pronto:</b> temas propios con todas las herramientas de edición y marcadores a bloques de las lecciones.</p>'+
+    '</div>'+
+    '<div class="tabp" role="tabpanel" id="pn-comunidad" aria-labelledby="tab-comunidad" hidden>'+
+      '<p class="side-txt">Aquí podrás publicar tus temas, explorar los de otros estudiantes y guardar una copia en tus apuntes para editarla.</p>'+
+      '<p class="side-txt side-soon"><b>Pronto:</b> llega cuando OneLearn tenga cuentas.</p>'+
+    '</div>'+
+    '<div class="side-foot">'+
+      '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
+      '<span class="nv soon" aria-disabled="true">'+ico('expand')+'<span>Modo zen</span><em>Pronto</em></span>'+
+    '</div>';
+  $('#side').innerHTML=h+'</div>';
 
   $('#topbar').innerHTML=
     '<button class="icon-btn" id="menuBtn" type="button" aria-label="Abrir lecciones" aria-expanded="false" aria-controls="side">'+ico('menu')+'</button>'+
@@ -221,13 +244,22 @@ function setNav(open){
   if(sheetEl)sheetEl.toggleAttribute('inert',modal);
   syncMenu();
   if(modal&&!was){
-    var f=$('.nv.on',sideEl)||sideBtn;
+    var f=$('.tabp:not([hidden]) .nv.on',sideEl)||$('.tab[aria-selected="true"]',sideEl)||sideBtn;
     f.focus({preventScroll:true});
   }else if(!open&&was&&sideEl.contains(document.activeElement)){
     menuBtn.focus({preventScroll:true});
   }
 }
 AT.setNav=setNav;
+/* Trampa de foco del menú en celular: Tab no sale de la barra mientras está abierta */
+sideEl.addEventListener('keydown',function(e){
+  if(e.key!=='Tab'||!navOpen()||isDesk())return;
+  var f=$$('a[href],button,[tabindex="0"]',sideEl).filter(function(x){return !x.disabled&&x.tabIndex>=0&&x.getClientRects().length});
+  if(!f.length)return;
+  var first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+});
 function setSide(open){
   AT.ajustes.set('barra',open?'abierta':'cerrada');
   syncMenu();
@@ -257,6 +289,76 @@ $$('[data-go]').forEach(function(b){
     if(t)t.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
   });
 });
+
+/* ---------- Apuntes guardados en este dispositivo ---------- */
+var CLAVE_APUNTES='aprende-tecnologia:apuntes:';
+AT.apuntes={
+  leer:function(id){try{return localStorage.getItem(CLAVE_APUNTES+id)||''}catch(e){return ''}}
+};
+function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}
+
+/* ---------- Pestañas de la barra lateral: Temas, Mis apuntes y Comunidad ---------- */
+(function(){
+  var aj=AT.ajustes,tabs=$$('.tab',sideEl),lista=$('#notasLista',sideEl);
+  function elegir(nombre,foco){
+    tabs.forEach(function(t){
+      var on=t.id==='tab-'+nombre;
+      t.setAttribute('aria-selected',on?'true':'false');
+      t.tabIndex=on?0:-1;
+      $('#'+t.getAttribute('aria-controls')).hidden=!on;
+      if(on&&foco)t.focus();
+    });
+    if(nombre==='apuntes')pintarNotas();
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){aj.set('pestana',t.id.slice(4));elegir(t.id.slice(4))});
+  });
+  /* Flechas, Inicio y Fin mueven entre pestañas (patrón de pestañas de WAI-ARIA) */
+  $('.tabs',sideEl).addEventListener('keydown',function(e){
+    var i=tabs.indexOf(document.activeElement),n=tabs.length,j=-1;
+    if(i<0)return;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')j=(i+1)%n;
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp')j=(i-1+n)%n;
+    else if(e.key==='Home')j=0;
+    else if(e.key==='End')j=n-1;
+    if(j<0)return;
+    e.preventDefault();
+    var nombre=tabs[j].id.slice(4);
+    aj.set('pestana',nombre);
+    elegir(nombre,true);
+  });
+
+  /* Mis apuntes: una tarjeta por lección con nota */
+  function pintarNotas(){
+    var h='';
+    catalogo.forEach(function(g){
+      g.lecciones.forEach(function(l){
+        if(!l.archivo)return;
+        var t=AT.apuntes.leer(l.id);
+        if(!t.trim())return;
+        var linea=t.trim().split(/\n/)[0].trim(),n=contarPalabras(t),aqui=l===actual;
+        if(linea.length>90)linea=linea.slice(0,90)+'…';
+        h+='<li><a class="nota'+(aqui?' on':'')+'" href="'+esc(l.archivo)+'#apuntes"'+(aqui?' data-aqui="1"':'')+'>'+
+          '<b>'+esc(l.titulo)+'</b><span>'+esc(linea)+'</span><small>'+(n===1?'1 palabra':n+' palabras')+'</small></a></li>';
+      });
+    });
+    lista.innerHTML=h||'<li class="side-txt">Todavía no tienes apuntes. Abre una lección y toca «Apuntes», abajo, para escribir.</li>';
+  }
+  lista.addEventListener('click',function(e){
+    var a=e.target.closest('a[data-aqui]');
+    if(!a)return;
+    /* La nota de esta misma lección: se abre sin recargar */
+    e.preventDefault();
+    setNav(false);
+    if(AT.hoja)AT.hoja.abrir();
+  });
+  var espera=null;
+  AT.refrescarNotas=function(){clearTimeout(espera);espera=setTimeout(function(){if(!$('#pn-apuntes').hidden)pintarNotas()},400)};
+  window.addEventListener('storage',function(e){if(e.key&&e.key.indexOf(CLAVE_APUNTES)===0)AT.refrescarNotas()});
+
+  $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
+  elegir(aj.get('pestana'));
+})();
 
 /* ---------- Repaso: AT.repaso({host, score, reset, preguntas}) ----------
    Cada pregunta: {q:'texto', o:['opción',...], a:índiceCorrecto, e:'explicación'} */
@@ -293,7 +395,7 @@ AT.repaso=function(opt){
 
 /* ---------- Hoja de apuntes ---------- */
 (function(){
-  var LS_KEY='aprende-tecnologia:apuntes:'+actual.id;
+  var LS_KEY=CLAVE_APUNTES+actual.id;
   var LS_PEND=LS_KEY+':pendiente';
   var sheet=sheetEl,grab=$('#shGrab'),mainBtn=$('#shMain'),mainUse=$('#shMainUse'),hideBtn=$('#shHide'),hint=$('#shHint');
   var ta=$('#notes'),cnt=$('#nCnt'),stat=$('#nStat'),copyBtn=$('#nCopy'),clrBtn=$('#nClear');
@@ -455,6 +557,7 @@ AT.repaso=function(opt){
     dirty=true;fails=0;
     lsSet(LS_KEY,ta.value);lsSet(LS_PEND,'1');
     updateCount();
+    AT.refrescarNotas();
     setStat('','Escribiendo…');
     clearTimeout(timer);timer=setTimeout(flush,900);
   });
@@ -522,6 +625,7 @@ AT.repaso=function(opt){
     ta.value='';dirty=true;
     lsSet(LS_KEY,'');lsSet(LS_PEND,'1');
     updateCount();
+    AT.refrescarNotas();
     flush();
   });
 
@@ -532,5 +636,11 @@ AT.repaso=function(opt){
   measure();
   apply('closed',false);
   startDb();
+  AT.hoja={abrir:function(){go('half');ta.focus({preventScroll:true})}};
+  /* Llegar desde «Mis apuntes» de otra lección abre la nota de inmediato */
+  if(location.hash==='#apuntes'){
+    try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+    AT.hoja.abrir();
+  }
 })();
 })();

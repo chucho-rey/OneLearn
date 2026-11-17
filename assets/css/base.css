@@ -129,7 +129,8 @@ button{font-family:inherit;color:inherit}
 /* Barra lateral */
 .side{position:fixed;top:0;bottom:0;left:0;width:min(18.125rem,86vw);z-index:30;background:var(--bg-side);border-right:1px solid var(--line);overflow-y:auto;transform:translateX(-100%);visibility:hidden;transition:transform .2s ease,visibility 0s .2s}
 .nav-open .side{transform:none;visibility:visible;transition:transform .2s ease}
-.side-in{padding-top:calc(0.75rem + env(safe-area-inset-top,0px));padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px));padding-left:max(1rem,env(safe-area-inset-left,0px));padding-right:1rem}
+.side{container-type:inline-size}
+.side-in{display:flex;flex-direction:column;min-height:100%;padding-top:calc(0.75rem + env(safe-area-inset-top,0px));padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px));padding-left:max(1rem,env(safe-area-inset-left,0px));padding-right:1rem}
 .scrim{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
 .nav-open .scrim{opacity:1;pointer-events:auto}
 @media (min-width:900px){
@@ -153,6 +154,45 @@ button{font-family:inherit;color:inherit}
 .nv.on{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}
 .nv.soon{color:var(--fg-3);cursor:default}
 .nv em{margin-left:auto;font-style:normal;font-size:0.6875rem;color:var(--fg-3)}
+button.nv{font:inherit;font-size:0.875rem}
+.nv>span{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.ico-txt{flex:none;width:1rem;font-family:var(--font-head);font-size:0.75rem;font-weight:700;text-align:center;letter-spacing:-.02em}
+
+/* Pestañas de la barra lateral */
+.tabs{display:grid;grid-template-columns:repeat(3,auto);gap:2px;margin:0.625rem 0 0.25rem;padding:3px;border-radius:0.5rem;background:var(--bg-soft)}
+.tab{min-width:0;padding:0.375rem 0.375rem;border:0;border-radius:0.375rem;background:transparent;font-size:0.8125rem;line-height:1.25;color:var(--fg-2);cursor:pointer}
+.tab:hover{color:var(--fg)}
+.tab[aria-selected="true"]{background:var(--bg);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+/* Si la barra es angosta para el tamaño de letra, las pestañas van una debajo de otra */
+@container (max-width:15em){
+  .tabs{grid-template-columns:minmax(0,1fr)}
+  .tab{text-align:left;padding:0.375rem 0.5rem}
+}
+/* En una barra angosta, «Pronto» va debajo del título para no partirlo */
+@container (max-width:15em){
+  .nv.soon{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:0.5rem}
+  .nv.soon em{grid-column:2;margin-left:0}
+}
+[data-fuente="opendyslexic"] .nv.soon,[data-espaciado="amplio"] .nv.soon{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:0.5rem}
+[data-fuente="opendyslexic"] .nv.soon em,[data-espaciado="amplio"] .nv.soon em{grid-column:2;margin-left:0}
+[data-fuente="opendyslexic"] .tabs,[data-espaciado="amplio"] .tabs{grid-template-columns:minmax(0,1fr)}
+[data-fuente="opendyslexic"] .tab,[data-espaciado="amplio"] .tab{text-align:left;padding:0.375rem 0.5rem}
+.tabp{min-width:0}
+.side-txt{margin:0.5rem 0.5rem;font-size:0.8125rem;color:var(--fg-2);max-width:none;list-style:none}
+.side-soon{padding-top:0.5rem;border-top:1px dashed var(--line-strong)}
+
+/* Mis apuntes */
+.notas{list-style:none;margin:0.25rem 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.nota{display:flex;flex-direction:column;gap:0.125rem;padding:0.5rem;border-radius:0.375rem;color:var(--fg);text-decoration:none}
+.nota:hover{background:var(--hover)}
+.nota.on{background:var(--accent-bg)}
+.nota b{font-size:0.875rem;font-weight:600}
+.nota span{font-size:0.8125rem;color:var(--fg-2);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nota small{font-family:var(--font-mono);font-size:0.6875rem;color:var(--fg-2)}
+
+/* Pie de la barra lateral: Lectura y modo zen */
+.side-foot{margin-top:auto;padding-top:0.75rem;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.tabp+.side-foot,.tabp[hidden]+.side-foot{margin-top:auto}
 
 /* Barra superior */
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;height:2.75rem;display:flex;align-items:center;gap:0.5rem;background:var(--bg);padding-left:max(1rem,env(safe-area-inset-left,0px));padding-right:max(1rem,env(safe-area-inset-right,0px))}
@@ -374,7 +414,8 @@ a.next:hover{background:var(--hover)}
 [data-contrast="high"] .demo,[data-contrast="high"] .callout,[data-contrast="high"] .tbl-wrap,[data-contrast="high"] .next,[data-contrast="high"] .props{border-color:var(--line-strong)}
 [data-contrast="high"] .callout.info{border-color:var(--accent)}
 [data-contrast="high"] .seg button{border-right-color:var(--line-strong)}
-[data-contrast="high"] .seg button[aria-pressed="true"],[data-contrast="high"] .chip[aria-pressed="true"],[data-contrast="high"] .nv.on{outline:2px solid var(--accent);outline-offset:-2px}
+[data-contrast="high"] .seg button[aria-pressed="true"],[data-contrast="high"] .chip[aria-pressed="true"],[data-contrast="high"] .nv.on,[data-contrast="high"] .tab[aria-selected="true"],[data-contrast="high"] .nota.on{outline:2px solid var(--accent);outline-offset:-2px}
+[data-contrast="high"] .tabs{border:1px solid var(--line-strong)}
 [data-contrast="high"] .btn:disabled{opacity:1;border-style:dashed;color:var(--fg-2)}
 
 @media (prefers-reduced-motion: reduce){

@@ -13,8 +13,8 @@
   var AT=window.AT=window.AT||{};
   var KEY='aprende-tecnologia:ajustes';
   var root=document.documentElement;
-  var DEF={tema:'auto',contraste:'auto',escala:1,fuente:'normal',interlineado:'normal',espaciado:'normal',ancho:'normal',barra:'abierta'};
-  /* Los que se restablecen desde el panel Lectura (la barra lateral no es de lectura) */
+  var DEF={tema:'auto',contraste:'auto',escala:1,fuente:'normal',interlineado:'normal',espaciado:'normal',ancho:'normal',barra:'abierta',pestana:'temas'};
+  /* Los que se restablecen desde el panel Lectura (la barra lateral y su pestaña no son de lectura) */
   var LECTURA=['tema','contraste','escala','fuente','interlineado','espaciado','ancho'];
   var OK={
     tema:['auto','light','dark'],
@@ -24,7 +24,8 @@
     interlineado:['normal','amplio'],
     espaciado:['normal','amplio'],
     ancho:['estrecho','normal','amplio'],
-    barra:['abierta','cerrada']
+    barra:['abierta','cerrada'],
+    pestana:['temas','apuntes','comunidad']
   };
 
   function leer(k){try{return localStorage.getItem(k)}catch(e){return null}}
