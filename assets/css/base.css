@@ -471,6 +471,60 @@ a.exp-i:hover>span:not(.mini){color:var(--accent-ink)}
 .mini{flex:none;width:3.5rem;height:4px;border-radius:2px;background:var(--bg-soft);overflow:hidden}
 .mini i{display:block;height:100%;background:var(--accent)}
 
+/* ---------- Marca, teclas y botones del hito 5 ---------- */
+.brand{display:inline-flex;align-items:center;gap:0.5rem}
+.brand-mk{flex:none;width:1.375rem;height:1.375rem}
+.brand-mk rect{fill:var(--accent-solid)}
+.brand-mk path{fill:none;stroke:var(--on-accent);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+kbd{display:inline-block;min-width:1.5em;padding:0.0625rem 0.3125rem;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:0.25rem;background:var(--bg);color:var(--fg-2);font-family:var(--font-mono);font-size:0.75em;line-height:1.4;text-align:center}
+.nv kbd{flex:none;margin-left:auto}
+@media (hover:none){.solo-teclado{display:none}}
+.icon-btn.zen-btn{margin-left:auto;color:var(--fg-2);font-size:1.125rem}
+.icon-btn.zen-btn:hover{color:var(--fg)}
+.zen-btn~.aa-btn{margin-left:0.25rem}
+
+/* ---------- Modo zen ---------- */
+.zen-prog,.zen-bar{display:none}
+.zen .side,.zen .topbar,.zen .scrim,.zen .mapa{display:none!important}
+.zen .app{display:block}
+.zen .lienzo-in{display:block}
+.zen .page{padding-top:max(3.5rem,calc(env(safe-area-inset-top,0px) + 2rem))}
+.zen .page h2{scroll-margin-top:calc(1.5rem + env(safe-area-inset-top,0px))}
+.zen .sheet[data-state="closed"]{display:none}
+.zen .zen-prog{display:block;position:fixed;top:0;left:0;right:0;z-index:45;height:3px;padding-top:env(safe-area-inset-top,0px);box-sizing:content-box;pointer-events:none}
+.zen-prog i{display:block;height:3px;width:0;background:var(--accent)}
+.zen .zen-bar{display:flex;position:fixed;z-index:46;top:calc(env(safe-area-inset-top,0px) + 0.75rem);right:max(0.75rem,env(safe-area-inset-right,0px));gap:2px;padding:3px;border:1px solid var(--line);border-radius:0.625rem;background:var(--bg);box-shadow:0 0.25rem 1rem rgba(0,0,0,.08);opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
+.zen-vivo .zen-bar,.zen .zen-bar:focus-within{opacity:1;visibility:visible;transition:opacity .3s}
+.zen.nota-derecha .zen-bar{right:calc(var(--nota-w,24rem) + 0.75rem)}
+.zen-bar button{display:inline-flex;align-items:center;justify-content:center;gap:0.375rem;min-width:2.25rem;height:2.25rem;padding:0 0.5rem;border:0;border-radius:0.4375rem;background:transparent;color:var(--fg);font-family:var(--font-head);font-size:0.875rem;cursor:pointer}
+.zen-bar button:hover{background:var(--hover)}
+.zen-bar .ico{font-size:1.125rem}
+
+/* ---------- Nota acoplada a la derecha (solo escritorio) ---------- */
+.sh-resize,.sh-dock{display:none}
+@media (min-width:900px){
+  .sh-dock{display:grid}
+  .nota-derecha .app{padding-right:var(--nota-w,24rem)}
+  .nota-derecha .lec{right:calc(var(--nota-w,24rem) + 1rem)}
+  .sheet[data-state="right"],.side-collapsed .sheet[data-state="right"]{top:0;bottom:0!important;left:auto;right:0;width:var(--nota-w,24rem);height:auto!important;border-top:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;padding-top:env(safe-area-inset-top,0px)}
+}
+.sheet[data-state="right"] .sh-handle{display:none}
+.sheet[data-state="right"] .sh-grab{cursor:default;padding-top:0.25rem}
+.sheet[data-state="right"] .sh-in{max-width:none;padding-left:1.25rem;padding-right:1rem}
+.sheet[data-state="right"] .sh-resize{display:block;position:absolute;z-index:2;left:0;top:0;bottom:0;width:0.5rem;cursor:col-resize;touch-action:none}
+.sh-resize:hover,.sh-resize:focus-visible,.nota-ajustando .sh-resize{background:var(--accent);outline:0}
+.nota-ajustando,.nota-ajustando *{cursor:col-resize!important;user-select:none}
+
+/* ---------- Lista de atajos ---------- */
+dialog.atajos{width:min(27rem,calc(100vw - 2rem));max-height:calc(100dvh - 2rem);padding:1.125rem 1.25rem 1.25rem;border:1px solid var(--line-strong);border-radius:0.75rem;background:var(--bg);color:var(--fg);box-shadow:0 1rem 3rem rgba(0,0,0,.25)}
+dialog.atajos::backdrop{background:rgba(0,0,0,.45)}
+.at-h{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.5rem}
+.at-h h2{margin:0;font-size:1.125rem;letter-spacing:0}
+.atajos dl{margin:0 0 0.75rem}
+.atajos dl>div{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:0.75rem;align-items:baseline;padding:0.5rem 0;border-top:1px solid var(--line)}
+.atajos dt,.atajos dd{margin:0}
+.atajos dd{font-size:0.9375rem}
+
 /* ---------- Alto contraste: además de los colores ---------- */
 [data-contrast="high"] .page a,[data-contrast="high"] .link,[data-contrast="high"] .toc .link{text-decoration:underline;text-decoration-color:currentColor}
 [data-contrast="high"] .demo,[data-contrast="high"] .callout,[data-contrast="high"] .tbl-wrap,[data-contrast="high"] .next,[data-contrast="high"] .props{border-color:var(--line-strong)}
@@ -478,6 +532,8 @@ a.exp-i:hover>span:not(.mini){color:var(--accent-ink)}
 [data-contrast="high"] .seg button{border-right-color:var(--line-strong)}
 [data-contrast="high"] .seg button[aria-pressed="true"],[data-contrast="high"] .chip[aria-pressed="true"],[data-contrast="high"] .nv.on,[data-contrast="high"] .tab[aria-selected="true"],[data-contrast="high"] .nota.on{outline:2px solid var(--accent);outline-offset:-2px}
 [data-contrast="high"] .tabs{border:1px solid var(--line-strong)}
+[data-contrast="high"] .zen-bar{border-color:var(--line-strong)}
+[data-contrast="high"] .sheet[data-state="right"]{border-left-color:var(--line-strong)}
 [data-contrast="high"] .mapa .aqui a{outline:2px solid var(--accent);outline-offset:-2px}
 [data-contrast="high"] .mapa-bar,[data-contrast="high"] .cont-bar,[data-contrast="high"] .mini{outline:1px solid var(--line-strong)}
 [data-contrast="high"] .ini-notas .nota{border-color:var(--line-strong)}

@@ -26,6 +26,11 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M9 2v4M12 2v4M15 2v4M9 18v4M12 18v4M15 18v4M2 9h4M2 12h4M2 15h4M18 9h4M18 12h4M18 15h4"/></symbol>'+
 '<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5M10 20v-6h4v6"/></symbol>'+
 '<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15.5 4.8a3.2 3.2 0 0 1 0 6.4M17.5 14.3c2.1.7 3.5 2.8 3.5 5.7"/></symbol>'+
+'<symbol id="i-zen" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><path d="M9 12h6"/></symbol>'+
+'<symbol id="i-ancho" viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></symbol>'+
+'<symbol id="i-teclado" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7 14h10"/></symbol>'+
+'<symbol id="i-dock-r" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16"/></symbol>'+
+'<symbol id="i-dock-b" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 14h18"/></symbol>'+
 '<symbol id="i-page" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></symbol>'+
 '<symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>'+
 '<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>'+
@@ -58,7 +63,7 @@ AT.leccion=actual;
 
 /* ---------- Estructura: barra lateral, barra superior, siguiente lección y apuntes ---------- */
 (function(){
-  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'index.html">One<b>Learn</b></a>'+
+  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'index.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M20.5 22.5 30 16v32h14.5"/></svg><span>One<b>Learn</b></span></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
@@ -88,7 +93,9 @@ AT.leccion=actual;
     '</div>'+
     '<div class="side-foot">'+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
-      '<span class="nv soon" aria-disabled="true">'+ico('expand')+'<span>Modo zen</span><em>Pronto</em></span>'+
+      (ES_INICIO?'':
+        '<button class="nv" type="button" id="sideZen">'+ico('zen')+'<span>Modo zen</span><kbd>Z</kbd></button>'+
+        '<button class="nv solo-teclado" type="button" id="sideAtajos">'+ico('teclado')+'<span>Atajos de teclado</span><kbd>?</kbd></button>')+
     '</div>';
   $('#side').innerHTML=h+'</div>';
 
@@ -96,6 +103,7 @@ AT.leccion=actual;
     '<button class="icon-btn" id="menuBtn" type="button" aria-label="Abrir lecciones" aria-expanded="false" aria-controls="side">'+ico('menu')+'</button>'+
     '<nav class="crumbs" aria-label="Ruta">'+(grupo?'<span>'+esc(grupo)+'</span><span class="sep" aria-hidden="true">/</span>':'')+
     '<span class="cur" aria-current="page">'+esc(actual.titulo)+'</span></nav>'+
+    (ES_INICIO?'':'<button class="icon-btn zen-btn" id="zenBtn" type="button" aria-label="Modo zen (Z)" title="Modo zen (Z)" aria-pressed="false">'+ico('zen')+'</button>')+
     '<button class="aa-btn" id="aaBtn" type="button" aria-label="Lectura: tamaño de texto, tema y contraste" title="Lectura" aria-expanded="false" aria-controls="lectura">Aa</button>';
 
   var nx=$('#siguiente');
@@ -110,10 +118,12 @@ AT.leccion=actual;
   document.body.insertAdjacentHTML('beforeend','<div class="scrim" id="scrim"></div>');
   if(!ES_INICIO)document.body.insertAdjacentHTML('beforeend',
     '<section class="sheet" id="sheet" data-state="closed" aria-label="Apuntes de la lección">'+
+      '<div class="sh-resize" id="shResize" role="separator" aria-orientation="vertical" aria-label="Ancho de la nota" tabindex="0"></div>'+
       '<div class="sh-grab" id="shGrab"><div class="sh-in">'+
         '<span class="sh-handle" aria-hidden="true"></span>'+
         '<div class="sh-row">'+ico('note','sh-ic')+'<span class="sh-title">Apuntes</span><span class="tag sh-lesson">'+t+'</span>'+
           '<span class="sh-hint" id="shHint"></span><span class="sh-sp"></span>'+
+          '<button class="sh-btn sh-dock" id="shDock" type="button" aria-label="Acoplar a la derecha" title="Acoplar a la derecha">'+ico('dock-r','','shDockUse')+'</button>'+
           '<button class="sh-btn" id="shMain" type="button" aria-label="Abrir apuntes">'+ico('up','','shMainUse')+'</button>'+
           '<button class="sh-btn" id="shHide" type="button" aria-label="Ocultar apuntes" hidden>'+ico('down')+'</button>'+
         '</div>'+
@@ -208,7 +218,7 @@ AT.leccion=actual;
   }
   btn.addEventListener('click',function(){if(panel.hidden)abrir();else cerrar(false)});
   document.addEventListener('keydown',function(e){
-    if(e.key==='Escape'&&!panel.hidden){cerrar(panel.contains(document.activeElement));e.stopPropagation()}
+    if(e.key==='Escape'&&!panel.hidden){cerrar(panel.contains(document.activeElement));e.preventDefault();e.stopPropagation()}
   });
   document.addEventListener('pointerdown',function(e){
     if(!panel.hidden&&!panel.contains(e.target)&&!btn.contains(e.target))cerrar(false);
@@ -282,7 +292,7 @@ sideEl.addEventListener('click',function(e){
   /* Tocar la lección actual solo cierra el menú, no recarga la página */
   if(e.target.closest('.nv.on')){e.preventDefault();setNav(false)}
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&navOpen())setNav(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&navOpen()){setNav(false);e.preventDefault()}});
 function syncViewport(){setNav(false);syncMenu()}
 if(deskMq.addEventListener)deskMq.addEventListener('change',syncViewport);
 else if(deskMq.addListener)deskMq.addListener(syncViewport);
@@ -405,6 +415,8 @@ if(!ES_INICIO)(function(){
   var LS_KEY=CLAVE_APUNTES+actual.id;
   var LS_PEND=LS_KEY+':pendiente';
   var sheet=sheetEl,grab=$('#shGrab'),mainBtn=$('#shMain'),mainUse=$('#shMainUse'),hideBtn=$('#shHide'),hint=$('#shHint');
+  var dockBtn=$('#shDock'),dockUse=$('#shDockUse'),resizer=$('#shResize'),root=document.documentElement;
+  var KEY_ANCHO='aprende-tecnologia:nota-ancho';
   var ta=$('#notes'),cnt=$('#nCnt'),stat=$('#nStat'),copyBtn=$('#nCopy'),clrBtn=$('#nClear');
   var STATES=['closed','half','full'];
   var LABELS={closed:'Abrir apuntes',half:'Ver apuntes en pantalla completa',full:'Reducir apuntes a media página'};
@@ -435,15 +447,24 @@ if(!ES_INICIO)(function(){
     var full=Math.max(visH,peek+160);
     return s==='full'?full:Math.min(Math.round(layH*0.5),full);
   }
+  /* Al abrir: a la derecha si así lo prefieres y hay espacio (escritorio); si no, abajo a media página */
+  function abierta(){return AT.ajustes.get('nota')==='derecha'&&isDesk()?'right':'half'}
   function apply(s,anim){
     st=s;
-    sheet.classList.toggle('anim',!!anim&&!reduce);
+    var der=s==='right';
+    sheet.classList.toggle('anim',!!anim&&!reduce&&!der);
     sheet.setAttribute('data-state',s);
-    sheet.style.bottom=kb+'px';
-    sheet.style.height=target(s)+'px';
-    mainBtn.setAttribute('aria-label',LABELS[s]);
-    mainUse.setAttribute('href',ICONS[s]);
+    root.classList.toggle('nota-derecha',der);
+    sheet.style.bottom=der?'':kb+'px';
+    sheet.style.height=der?'':target(s)+'px';
+    mainBtn.hidden=der;
+    if(!der){mainBtn.setAttribute('aria-label',LABELS[s]);mainUse.setAttribute('href',ICONS[s])}
     hideBtn.hidden=(s==='closed');
+    hideBtn.setAttribute('aria-label',der?'Cerrar apuntes':'Ocultar apuntes');
+    var lab=der?'Acoplar abajo':'Acoplar a la derecha';
+    dockBtn.setAttribute('aria-label',lab);dockBtn.setAttribute('title',lab);
+    dockUse.setAttribute('href',der?'#i-dock-b':'#i-dock-r');
+    dockBtn.hidden=(s==='closed');
   }
   function go(s,anim){
     var was=st;
@@ -458,6 +479,7 @@ if(!ES_INICIO)(function(){
   /* ----- Arrastre ----- */
   grab.addEventListener('pointerdown',function(e){
     if(e.pointerType==='mouse'&&e.button!==0)return;
+    if(st==='right')return;
     if(e.target.closest('button'))return;
     measure();
     drag={id:e.pointerId,y0:e.clientY,h0:sheet.getBoundingClientRect().height,from:st,moved:false,pts:[{y:e.clientY,t:e.timeStamp}]};
@@ -480,7 +502,7 @@ if(!ES_INICIO)(function(){
     sheet.classList.remove('drag');
     try{grab.releasePointerCapture(e.pointerId)}catch(x){}
     if(!d.moved){
-      if(!cancel)go(st==='half'?'closed':'half');
+      if(!cancel)go(st==='closed'?abierta():'closed');
       return;
     }
     var cur=sheet.getBoundingClientRect().height;
@@ -498,11 +520,60 @@ if(!ES_INICIO)(function(){
   grab.addEventListener('pointerup',function(e){endDrag(e,false)});
   grab.addEventListener('pointercancel',function(e){endDrag(e,true)});
 
-  mainBtn.addEventListener('click',function(){go(st==='closed'?'half':(st==='half'?'full':'half'))});
+  mainBtn.addEventListener('click',function(){go(st==='closed'?abierta():(st==='half'?'full':'half'))});
   hideBtn.addEventListener('click',function(){go('closed')});
-  sheet.addEventListener('keydown',function(e){if(e.key==='Escape')go(st==='full'?'half':'closed')});
+  dockBtn.addEventListener('click',function(){
+    var aDerecha=st!=='right';
+    AT.ajustes.set('nota',aDerecha?'derecha':'abajo');
+    go(aDerecha?'right':'half');
+    dockBtn.focus({preventScroll:true});
+  });
+  sheet.addEventListener('keydown',function(e){
+    if(e.key!=='Escape'||st==='closed')return;
+    e.preventDefault();
+    go(st==='full'?'half':'closed');
+  });
 
-  function relayout(){if(drag)return;measure();apply(st,false)}
+  /* ----- Ancho de la nota acoplada: se arrastra el borde izquierdo o se usan las flechas ----- */
+  function limites(){return {min:256,max:Math.max(256,Math.min(Math.round(innerWidth*0.6),720))}}
+  function ancho(px,guardar){
+    var l=limites();
+    px=Math.round(Math.max(l.min,Math.min(l.max,px)));
+    root.style.setProperty('--nota-w',px+'px');
+    resizer.setAttribute('aria-valuemin',l.min);resizer.setAttribute('aria-valuemax',l.max);resizer.setAttribute('aria-valuenow',px);
+    if(guardar)lsSet(KEY_ANCHO,String(px));
+    return px;
+  }
+  var anchoActual=ancho(parseInt(lsGet(KEY_ANCHO),10)||384,false);
+  resizer.addEventListener('pointerdown',function(e){
+    if(st!=='right')return;
+    e.preventDefault();
+    try{resizer.setPointerCapture(e.pointerId)}catch(x){}
+    root.classList.add('nota-ajustando');
+    function mover(ev){anchoActual=ancho(innerWidth-ev.clientX,false)}
+    function soltar(){
+      resizer.removeEventListener('pointermove',mover);
+      root.classList.remove('nota-ajustando');
+      ancho(anchoActual,true);
+    }
+    resizer.addEventListener('pointermove',mover);
+    resizer.addEventListener('pointerup',soltar,{once:true});
+    resizer.addEventListener('pointercancel',soltar,{once:true});
+  });
+  resizer.addEventListener('keydown',function(e){
+    var d=e.key==='ArrowLeft'?16:e.key==='ArrowRight'?-16:0;
+    if(!d)return;
+    e.preventDefault();
+    anchoActual=ancho(anchoActual+d,true);
+  });
+
+  function relayout(){
+    if(drag)return;
+    measure();
+    if(st==='right'&&!isDesk())st='half';
+    ancho(anchoActual,false);
+    apply(st,false);
+  }
   window.addEventListener('resize',relayout);
   AT.ajustes.on(function(){requestAnimationFrame(relayout)});
   if(window.visualViewport){
@@ -643,7 +714,11 @@ if(!ES_INICIO)(function(){
   measure();
   apply('closed',false);
   startDb();
-  AT.hoja={abrir:function(){go('half');ta.focus({preventScroll:true})}};
+  AT.hoja={
+    abrir:function(){if(st==='closed')go(abierta());ta.focus({preventScroll:true})},
+    cerrar:function(){go('closed')},
+    abierta:function(){return st!=='closed'}
+  };
   /* Llegar desde «Mis apuntes» de otra lección abre la nota de inmediato */
   if(location.hash==='#apuntes'){
     try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
