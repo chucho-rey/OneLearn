@@ -91,7 +91,8 @@ function guardarGrupos(){
   var nx=$('#siguiente');
   if(nx){
     var sig=orden[orden.indexOf(actual)+1];
-    if(!sig)nx.remove();
+    /* Al final del temario, en lugar de «Siguiente lección», un cierre que regresa al inicio */
+    if(!sig)nx.outerHTML='<a class="next" href="'+RAIZ+'index.html">'+ico('home')+'<span>Terminaste todo el temario. Volver al inicio</span></a>';
     else if(sig.archivo)nx.outerHTML='<a class="next" href="'+esc(sig.archivo)+'">'+ico('page')+'<span>Siguiente lección: '+esc(sig.titulo)+'</span></a>';
     else nx.outerHTML='<div class="next">'+ico('page')+'<span>Siguiente lección: '+esc(sig.titulo)+'</span><em>Pronto</em></div>';
   }

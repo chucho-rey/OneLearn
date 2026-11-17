@@ -27,7 +27,7 @@ Todo lo que no ayude a contestar esto puede esperar.
 | Marcadores, citas y búsqueda | Marcadores en cualquier bloque, citas con «@» y búsqueda con Ctrl K, incluso sin conexión |
 | Tus datos | Todo en el navegador (IndexedDB), con respaldo e importación, espacio usado y disponible |
 | App | Instalable (PWA) y funciona sin conexión |
-| Calidad | 13 archivos de pruebas automáticas, más de mil comprobaciones (contraste, desbordes, funciones) |
+| Calidad | 13 archivos de pruebas automáticas, más de 1,600 comprobaciones (contraste, desbordes, funciones) |
 | Costo | 0: GitHub Pages, sin servidor |
 
 La base técnica es sólida. **Lo que más falta es contenido, saber qué pasa con los usuarios y algunos requisitos legales.**
