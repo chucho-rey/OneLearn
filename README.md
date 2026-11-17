@@ -12,6 +12,7 @@ documento.html              Un documento tuyo (?id=...): editar con el editor de
 acerca.html                 «Cómo está hecho OneLearn»: las tecnologías del sitio explicadas para estudiantes de programación
 proyectos/index.html        Lista de proyectos guiados, con su avance
 proyectos/portafolio.html   Proyecto «Tu portafolio web»: 8 fases, su contenido en JSON (<script id="proyecto">)
+proyectos/seguridad-negocio.*  Proyecto «Seguridad para un pequeño negocio»: 7 fases, matriz de riesgos y router simulado
 proyectos/red-oficina.*     Proyecto «La red de una oficina»: 8 fases y sus diagramas interactivos (.js y .css propios)
 manifest.webmanifest        Datos para instalar OneLearn como app
 sw.js                       Service worker: guarda el sitio para usarlo sin conexión
@@ -66,7 +67,9 @@ Todos los tamaños del CSS van en `rem`, para que la página entera crezca con e
 
 Cada fase trae objetivo, qué aprenderás, para qué sirve en el trabajo, la explicación con código de ejemplo (en el formato de bloques), tareas que se marcan y un entregable; la última guarda la dirección del sitio publicado (solo https). El avance vive en `localStorage` (`aprende-tecnologia:proyectos`) y entra en el respaldo de «Tus datos».
 
-El segundo, **La red de una oficina** (intermedio), es un caso de redes: el estudiante diseña la red de un despacho contable ficticio (diagrama, equipos, costos y plan de IP), monta un servidor Ubuntu en una máquina virtual con Nextcloud para compartir archivos y editar documentos en colaboración, da acceso remoto seguro a las laptops por VPN (Tailscale, sobre WireGuard), programa respaldos y documenta todo en GitHub. Trae diagramas interactivos: la topología con el camino de los datos, un comprobador del plan de IP y un comparador de opciones de acceso remoto.
+**Seguridad para un pequeño negocio** (básico, sin programar) es una evaluación de seguridad de una panadería ficticia: inventario de activos, matriz de riesgos, cuentas (gestor de contraseñas y segundo factor), equipos y respaldos, el router, capacitación y plan de respuesta a incidentes; el estudiante aplica cada medida en sus propios dispositivos y entrega un informe profesional en GitHub.
+
+**La red de una oficina** (intermedio), es un caso de redes: el estudiante diseña la red de un despacho contable ficticio (diagrama, equipos, costos y plan de IP), monta un servidor Ubuntu en una máquina virtual con Nextcloud para compartir archivos y editar documentos en colaboración, da acceso remoto seguro a las laptops por VPN (Tailscale, sobre WireGuard), programa respaldos y documenta todo en GitHub. Trae diagramas interactivos: la topología con el camino de los datos, un comprobador del plan de IP y un comparador de opciones de acceso remoto.
 
 Un proyecto puede tener laboratorios o diagramas como las lecciones: bloques `laboratorio` en sus fases, sus `<template data-lab>` en la página y `AT.labs[...]` en `proyectos/<id>.js` (cargado antes de `bloques.js`).
 

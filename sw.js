@@ -4,7 +4,7 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-15';
+const VERSION='onelearn-16';
 const ARCHIVOS=[
   './',
   'index.html',
@@ -12,6 +12,9 @@ const ARCHIVOS=[
   'acerca.html',
   'proyectos/index.html',
   'proyectos/portafolio.html',
+  'proyectos/seguridad-negocio.html',
+  'proyectos/seguridad-negocio.css',
+  'proyectos/seguridad-negocio.js',
   'proyectos/red-oficina.html',
   'proyectos/red-oficina.css',
   'proyectos/red-oficina.js',
