@@ -1,0 +1,2031 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Capacitores y resistencias · OneLearn</title>
+<meta name="description" content="Voltaje, corriente y resistencia, la ley de Ohm, el código de colores, resistencias en serie y en paralelo, y cómo se carga un capacitor, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="capacitores.css">
+</head>
+<body data-leccion="capacitores">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="cap-ohm">
+<p class="hint">Mueve el voltaje y elige la resistencia. La barra muestra cuánta corriente pasa.</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">Voltaje</span>
+  <input class="slider" type="range" id="ohV" min="1" max="24" step="0.5" value="5" aria-label="Voltaje">
+  <b class="mono" id="ohVv"></b>
+</div>
+<div class="ctl">
+  <span class="lbl">Resistencia</span>
+  <div class="seg" id="ohR" role="group" aria-label="Resistencia">
+    <button type="button" data-v="47" aria-pressed="false">47 Ω</button>
+    <button type="button" data-v="220" aria-pressed="false">220 Ω</button>
+    <button type="button" data-v="1000" aria-pressed="true">1 kΩ</button>
+    <button type="button" data-v="10000" aria-pressed="false">10 kΩ</button>
+  </div>
+</div>
+<div class="kpis">
+  <div class="kpi"><span>Corriente (I = V ÷ R)</span><b id="ohI"></b><div class="bar"><i id="ohBar"></i></div></div>
+  <div class="kpi"><span>Potencia en la resistencia (P = V × I)</span><b id="ohP"></b></div>
+</div>
+<div class="status" id="ohStat" data-k="" aria-live="polite"><span class="dot"></span><span id="ohMsg"></span></div>
+</template>
+<template data-lab="cap-serie">
+<p class="hint">Elige dos resistencias y cómo se conectan. La pila es de 9 V.</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">R1</span>
+  <div class="seg" id="srA" role="group" aria-label="Resistencia R1">
+    <button type="button" data-v="100" aria-pressed="true">100 Ω</button>
+    <button type="button" data-v="220" aria-pressed="false">220 Ω</button>
+    <button type="button" data-v="1000" aria-pressed="false">1 kΩ</button>
+  </div>
+  <span class="lbl">R2</span>
+  <div class="seg" id="srB" role="group" aria-label="Resistencia R2">
+    <button type="button" data-v="100" aria-pressed="true">100 Ω</button>
+    <button type="button" data-v="220" aria-pressed="false">220 Ω</button>
+    <button type="button" data-v="1000" aria-pressed="false">1 kΩ</button>
+  </div>
+</div>
+<div class="ctl">
+  <div class="seg" id="srModo" role="group" aria-label="Conexión">
+    <button type="button" data-v="s" aria-pressed="true">En serie</button>
+    <button type="button" data-v="p" aria-pressed="false">En paralelo</button>
+  </div>
+</div>
+<svg class="sr-svg" id="srSvg" viewBox="0 0 320 132" role="img" aria-label="Diagrama del circuito"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Resistencia total</span><b id="srT"></b></div>
+  <div class="kpi"><span>Corriente que sale de la pila</span><b id="srI"></b></div>
+</div>
+<p class="msg" id="srMsg" aria-live="polite"></p>
+</template>
+<template data-lab="cap-rc">
+<p class="hint">El capacitor se carga a 5 V a través de una resistencia. Elige los valores y pulsa «Cargar» o «Descargar».</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">R</span>
+  <div class="seg" id="rcR" role="group" aria-label="Resistencia">
+    <button type="button" data-v="1000" aria-pressed="false">1 kΩ</button>
+    <button type="button" data-v="10000" aria-pressed="true">10 kΩ</button>
+    <button type="button" data-v="100000" aria-pressed="false">100 kΩ</button>
+  </div>
+  <span class="lbl">C</span>
+  <div class="seg" id="rcC" role="group" aria-label="Capacitancia">
+    <button type="button" data-v="0.00001" aria-pressed="false">10 µF</button>
+    <button type="button" data-v="0.0001" aria-pressed="true">100 µF</button>
+    <button type="button" data-v="0.001" aria-pressed="false">1,000 µF</button>
+  </div>
+</div>
+<svg class="rc-svg" id="rcSvg" viewBox="0 0 320 170" role="img" aria-label="Voltaje del capacitor a lo largo del tiempo"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Constante de tiempo τ = R × C</span><b id="rcTau"></b></div>
+  <div class="kpi"><span>Casi lleno (5τ)</span><b id="rcCinco"></b></div>
+  <div class="kpi"><span>Voltaje ahora</span><b id="rcV"></b><div class="bar"><i id="rcBar"></i></div></div>
+</div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="rcCargar">Cargar</button>
+  <button class="btn" type="button" id="rcDescargar">Descargar</button>
+</div>
+<p class="msg" id="rcMsg" aria-live="polite"></p>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "capacitores",
+ "titulo": "Capacitores y resistencias",
+ "icono": "resistencia",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Electrónica",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "12 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-cr001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-cr002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-electricidad",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Electricidad en tres ideas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Todo circuito se entiende con tres magnitudes. Una analogía útil es agua que corre por un tubo:"
+     }
+    ],
+    "attrs": {
+     "id": "b-cr003"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-cr004"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Magnitud"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Unidad"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué es"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En la analogía"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Voltaje",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (V)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "volt (V)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La «presión» que empuja a los electrones"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La diferencia de altura del agua"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Corriente",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (I)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ampere (A)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cuántos electrones pasan por segundo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cuánta agua pasa por segundo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Resistencia",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (R)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ohm (Ω)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué tanto se opone el material al paso"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué tan angosto es el tubo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una pila AA da 1.5 V; un puerto USB, 5 V; un enchufe en México, 127 V de corriente alterna. Un LED pequeño usa unos 20 mA (miliamperes, milésimas de ampere)."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr005"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-ohm",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La ley de Ohm"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las tres magnitudes se relacionan con una fórmula sencilla, la "
+     },
+     {
+      "type": "text",
+      "text": "ley de Ohm",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": "
+     },
+     {
+      "type": "text",
+      "text": "V = I × R",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Si conoces dos, calculas la tercera. Por ejemplo, la corriente es I = V ÷ R: con más voltaje pasa más corriente, y con más resistencia pasa menos."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr006"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-cr007",
+     "nombre": "cap-ohm",
+     "titulo": "La ley de Ohm"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La resistencia convierte la energía en "
+     },
+     {
+      "type": "text",
+      "text": "calor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". La potencia que disipa es P = V × I, en watts (W). Una resistencia común de 1/4 W aguanta hasta 250 mW; si le pides más, se calienta de más y puede quemarse."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr008"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-resistencias",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Resistencias"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una "
+     },
+     {
+      "type": "text",
+      "text": "resistencia",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es un componente hecho para tener una resistencia exacta. Sirve para limitar la corriente (por ejemplo, la de un LED), para dividir un voltaje en partes o para fijar el nivel de una señal. Su valor se indica con "
+     },
+     {
+      "type": "text",
+      "text": "bandas de colores",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ":"
+     }
+    ],
+    "attrs": {
+     "id": "b-cr009"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-cr010"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Color"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dígito"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Multiplicador"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Negro"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "0"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 1"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Café"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 10"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Rojo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 100"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Naranja"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 1,000"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Amarillo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "4"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 10,000"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Verde"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "5"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 100,000"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Azul"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "6"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "× 1,000,000"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Violeta"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "7"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Gris"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "8"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Blanco"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "9"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las dos primeras bandas son dígitos y la tercera, el multiplicador. "
+     },
+     {
+      "type": "text",
+      "text": "Café, negro, rojo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es 1, 0 y × 100: 1,000 Ω, o sea 1 kΩ. Una cuarta banda dorada o plateada indica la tolerancia: ±5 % o ±10 %."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr011"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "b-cr012",
+     "level": 3
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "En serie y en paralelo"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Si conectas resistencias "
+     },
+     {
+      "type": "text",
+      "text": "en serie",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (una tras otra), la corriente tiene que atravesar las dos y sus valores se suman. "
+     },
+     {
+      "type": "text",
+      "text": "En paralelo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (lado a lado), la corriente tiene dos caminos, así que la resistencia total baja: siempre queda menor que la más pequeña."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr013"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-cr014",
+     "nombre": "cap-serie",
+     "titulo": "Serie y paralelo"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-capacitores",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Capacitores"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "capacitor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (o condensador) guarda energía en forma de carga eléctrica. Por dentro son dos placas conductoras separadas por un aislante. Al conectarlo a un voltaje, una placa junta carga positiva y la otra negativa, y ahí se queda aunque desconectes la fuente."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr015"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Su capacidad de guardar carga se mide en "
+     },
+     {
+      "type": "text",
+      "text": "faradios",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (F). Un faradio es muchísimo, así que lo común son microfaradios (µF), nanofaradios (nF) o picofaradios (pF)."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr016"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-cr017"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Valores típicos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Detalle"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cerámico"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1 pF a 10 µF"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Pequeño y barato; no tiene polaridad"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Electrolítico"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1 µF a 10,000 µF"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tiene polaridad: la pata más corta (y la franja) es el negativo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Supercapacitor"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "0.1 F a 3,000 F"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Guarda mucha energía; se usa como respaldo de memoria o en autos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-cr018",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un capacitor grande puede seguir cargado mucho después de desconectar un aparato. Los de las fuentes de poder y de los monitores viejos pueden dar una descarga peligrosa: no abras esos aparatos."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-rc",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Carga y descarga"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un capacitor no se llena al instante: si lo cargas a través de una resistencia, el voltaje sube rápido al principio y cada vez más despacio. La velocidad depende de la "
+     },
+     {
+      "type": "text",
+      "text": "constante de tiempo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", τ = R × C (resistencia por capacitancia, en segundos)."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr019"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-cr020",
+     "nombre": "cap-rc",
+     "titulo": "Carga de un capacitor"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Tras un tiempo τ, el capacitor llega al 63 % del voltaje; tras 5τ, está prácticamente lleno (99 %). Así funcionan muchos temporizadores: la luz que tarda en apagarse en un coche, o el parpadeo de un LED."
+     }
+    ],
+    "attrs": {
+     "id": "b-cr021"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-usos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Para qué sirven"
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-cr022"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Estabilizar la energía:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " junto a cada chip de una placa hay capacitores pequeños que entregan energía en los picos y suavizan el voltaje."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Filtrar:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " dejan pasar señales que cambian rápido y bloquean las constantes, por eso aparecen en los circuitos de audio."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Temporizar:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " con una resistencia, marcan tiempos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Soltar energía de golpe:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " el flash de una cámara se carga lento y se descarga en una milésima de segundo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Guardar bits:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " cada bit de la "
+         },
+         {
+          "type": "text",
+          "text": "memoria RAM",
+          "marks": [
+           {
+            "type": "link",
+            "attrs": {
+             "href": "ram.html"
+            }
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " es un capacitor diminuto que se recarga miles de veces por segundo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-cr023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué no se usa un cable sin resistencia para todo?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un cable tiene una resistencia muy baja, así que, según la ley de Ohm, pasaría una corriente enorme: eso es un "
+         },
+         {
+          "type": "text",
+          "text": "cortocircuito",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Calienta los cables, descarga la batería en segundos o quema componentes. Las resistencias ponen la corriente en el valor que necesitas."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-cr024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué pasa si conecto un capacitor electrolítico al revés?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Se calienta, se hincha y puede reventar. Por eso tienen marcado el negativo con una franja y una pata más corta."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-cr025"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es un potenciómetro?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una resistencia que puedes ajustar girando una perilla. Así funcionan muchos controles de volumen y de brillo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-cr026"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿La corriente alterna también cumple la ley de Ohm?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para resistencias, sí. Con capacitores y bobinas aparece la "
+         },
+         {
+          "type": "text",
+          "text": "impedancia",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", que depende de la frecuencia: un capacitor casi bloquea la corriente lenta y deja pasar la rápida."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-cr027",
+     "preguntas": [
+      {
+       "q": "Una resistencia de 1 kΩ está conectada a 5 V. ¿Qué corriente pasa?",
+       "o": [
+        "5 mA",
+        "0.2 mA",
+        "5 A"
+       ],
+       "a": 0,
+       "e": "I = V ÷ R = 5 V ÷ 1,000 Ω = 0.005 A, es decir, 5 mA."
+      },
+      {
+       "q": "Conectas en paralelo dos resistencias de 100 Ω. ¿Cuál es la resistencia total?",
+       "o": [
+        "200 Ω",
+        "50 Ω",
+        "100 Ω"
+       ],
+       "a": 1,
+       "e": "En paralelo, dos resistencias iguales dan la mitad: 50 Ω. La corriente tiene dos caminos."
+      },
+      {
+       "q": "¿Qué valor tiene una resistencia con bandas amarillo, violeta y rojo?",
+       "o": [
+        "4.7 kΩ",
+        "47 Ω",
+        "470 kΩ"
+       ],
+       "a": 0,
+       "e": "Amarillo = 4, violeta = 7 y rojo = × 100: 47 × 100 = 4,700 Ω = 4.7 kΩ."
+      },
+      {
+       "q": "Con R = 10 kΩ y C = 100 µF, ¿cuánto vale la constante de tiempo τ?",
+       "o": [
+        "1 segundo",
+        "10 segundos",
+        "0.1 segundos"
+       ],
+       "a": 0,
+       "e": "τ = R × C = 10,000 Ω × 0.0001 F = 1 s. En unos 5 s el capacitor estará casi lleno."
+      },
+      {
+       "q": "¿Qué guarda un capacitor?",
+       "o": [
+        "Corriente",
+        "Carga eléctrica, y con ella energía",
+        "Resistencia"
+       ],
+       "a": 1,
+       "e": "Guarda carga en sus placas; por eso puede soltar energía aunque se desconecte la fuente."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-cr028"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Voltaje empuja, corriente fluye y resistencia frena; se relacionan con V = I × R."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La resistencia convierte energía en calor: P = V × I, y cada resistencia aguanta una potencia máxima."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En serie las resistencias se suman; en paralelo, el total queda menor que la más pequeña."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un capacitor guarda carga entre dos placas; se mide en faradios."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Con una resistencia, un capacitor se carga en un tiempo que depende de τ = R × C."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="capacitores.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

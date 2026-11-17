@@ -37,11 +37,13 @@ function guardarGrupos(){
     '</div>'+
     '<div class="tabp" role="tabpanel" id="pn-temas" aria-labelledby="tab-temas"><nav aria-label="Temas">';
   /* Cada grupo se pliega para que la barra no crezca sin fin al agregar temas.
-     Abiertos: el grupo de la página actual y los que dejaste abiertos (o, la primera vez, los que tienen lecciones). */
-  var abiertos=gruposAbiertos();
+     Abiertos: el grupo de la página actual y los que dejaste abiertos. La primera vez, fuera de una lección,
+     solo el primer grupo con lecciones publicadas. */
+  var abiertos=gruposAbiertos(),primero=null;
+  catalogo.some(function(g){if(g.lecciones.some(function(l){return l.archivo})){primero=g;return true}});
   catalogo.forEach(function(g){
     var id=slugGrupo(g.grupo),listas=g.lecciones.filter(function(l){return l.archivo}).length;
-    var abierto=g.grupo===grupo||(abiertos?abiertos.indexOf(id)>=0:listas>0);
+    var abierto=g.grupo===grupo||(abiertos?abiertos.indexOf(id)>=0:!grupo&&g===primero);
     var cuenta=listas?'<em aria-hidden="true">'+listas+'/'+g.lecciones.length+'</em><span class="vh">, '+listas+' de '+g.lecciones.length+' lecciones disponibles</span>':
       '<em>Pronto</em>';
     h+='<div class="grp-s"><button class="grp grp-btn" type="button" id="grpb-'+id+'" data-grupo="'+id+'" aria-expanded="'+abierto+'" aria-controls="grp-'+id+'">'+

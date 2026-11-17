@@ -1,0 +1,1741 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Transistores · OneLearn</title>
+<meta name="description" content="Qué es un transistor, cómo funciona un MOSFET, cómo se arman compuertas lógicas y un sumador con ellos, y la ley de Moore, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="transistores.css">
+</head>
+<body data-leccion="transistores">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="tr-mosfet">
+<p class="hint">Sube el voltaje de la compuerta. El umbral de este transistor es de 2 V; el LED está en el circuito entre la fuente y el drenador.</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">Voltaje en la compuerta</span>
+  <input class="slider" type="range" id="msV" min="0" max="5" step="0.1" value="0" aria-label="Voltaje en la compuerta">
+  <b class="mono" id="msVv"></b>
+</div>
+<svg class="ms-svg" id="msSvg" viewBox="0 0 320 180" role="img" aria-label="Corte de un MOSFET con su canal"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Estado</span><b id="msEst"></b></div>
+  <div class="kpi"><span>Corriente por el LED</span><b id="msI"></b><div class="bar"><i id="msBar"></i></div></div>
+</div>
+<p class="msg" id="msMsg" aria-live="polite"></p>
+</template>
+<template data-lab="tr-compuertas">
+<p class="hint">Elige una compuerta y cambia las entradas tocándolas.</p>
+<div class="seg" id="cgTipo" role="group" aria-label="Compuerta">
+  <button type="button" data-v="NOT" aria-pressed="false">NOT</button>
+  <button type="button" data-v="AND" aria-pressed="true">AND</button>
+  <button type="button" data-v="OR" aria-pressed="false">OR</button>
+  <button type="button" data-v="NAND" aria-pressed="false">NAND</button>
+  <button type="button" data-v="XOR" aria-pressed="false">XOR</button>
+</div>
+<div class="cg">
+  <div class="cg-in">
+    <button class="cg-b" type="button" id="cgA" aria-pressed="false">A = 0</button>
+    <button class="cg-b" type="button" id="cgB" aria-pressed="false">B = 0</button>
+  </div>
+  <div class="cg-g" id="cgNom" aria-hidden="true"></div>
+  <div class="cg-out" id="cgOut" aria-live="polite"></div>
+</div>
+<div class="tbl-wrap cg-tw"><table class="cg-t"><thead id="cgTh"></thead><tbody id="cgTb"></tbody></table></div>
+<p class="msg" id="cgMsg"></p>
+</template>
+<template data-lab="tr-sumador">
+<p class="hint">Toca los bits de A y de B para cambiarlos. Cada columna es un sumador completo: suma sus dos bits más el acarreo que llega de la derecha.</p>
+<div class="sm" id="sm"></div>
+<div class="kpis">
+  <div class="kpi"><span>En decimal</span><b id="smDec"></b></div>
+  <div class="kpi"><span>Acarreos</span><b id="smCar"></b></div>
+</div>
+<p class="msg" id="smMsg" aria-live="polite"></p>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "transistores",
+ "titulo": "Transistores",
+ "icono": "transistor",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Electrónica",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "12 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-tr001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-tr002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué es un transistor?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "transistor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es un interruptor sin partes móviles que se enciende y se apaga con electricidad. Una señal pequeña en una de sus patas decide si la corriente pasa o no entre las otras dos. También puede funcionar como "
+     },
+     {
+      "type": "text",
+      "text": "amplificador",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": una señal débil controla una corriente mucho más grande."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Es el invento más importante de la electrónica. Tu procesador tiene miles de millones de transistores, cada uno encendiéndose y apagándose miles de millones de veces por segundo. Todo lo que hace una computadora sale de combinarlos."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr004"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-tr005"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Interruptor",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Encendido o apagado: un 1 o un 0. Es la base de toda la lógica digital."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Amplificador",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una señal pequeña controla una grande. Así funcionan los amplificadores de audio."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Diminuto",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los más pequeños miden unas decenas de átomos de ancho."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-semiconductores",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Semiconductores"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los transistores se fabrican con "
+     },
+     {
+      "type": "text",
+      "text": "silicio",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", un "
+     },
+     {
+      "type": "text",
+      "text": "semiconductor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": conduce la electricidad mejor que un aislante, pero peor que un metal. Lo interesante es que su conducción se puede controlar agregándole pequeñas cantidades de otros elementos ("
+     },
+     {
+      "type": "text",
+      "text": "dopado",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "):"
+     }
+    ],
+    "attrs": {
+     "id": "b-tr006"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-tr007"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tipo N:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " con átomos que aportan electrones de sobra (por ejemplo, fósforo). Conduce con cargas negativas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tipo P:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " con átomos a los que les falta un electrón (por ejemplo, boro). Conduce con «huecos», que se comportan como cargas positivas."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Juntando zonas N y P de cierta forma se obtienen diodos, transistores y todos los chips."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr008"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-mosfet",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "El MOSFET"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El transistor de los chips modernos es el "
+     },
+     {
+      "type": "text",
+      "text": "MOSFET",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Tiene tres terminales: "
+     },
+     {
+      "type": "text",
+      "text": "fuente",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "source",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "), "
+     },
+     {
+      "type": "text",
+      "text": "drenador",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "drain",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") y "
+     },
+     {
+      "type": "text",
+      "text": "compuerta",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "gate",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "). La compuerta está separada del silicio por una capa aislante finísima: no pasa corriente por ella, solo «empuja» con su voltaje."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr009"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuando el voltaje de la compuerta supera un "
+     },
+     {
+      "type": "text",
+      "text": "umbral",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", atrae cargas y forma un "
+     },
+     {
+      "type": "text",
+      "text": "canal",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " que une la fuente con el drenador: el interruptor se cierra. Por debajo del umbral, el canal desaparece y no pasa corriente."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr010"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-tr011",
+     "nombre": "tr-mosfet",
+     "titulo": "El transistor como interruptor"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-tr012",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Como por la compuerta casi no pasa corriente, un MOSFET apagado o encendido gasta muy poca energía. Solo consume al cambiar de estado. Por eso un chip calienta más mientras más rápido trabaja."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-logica",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "De interruptores a lógica"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con unos pocos transistores se arman "
+     },
+     {
+      "type": "text",
+      "text": "compuertas lógicas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", circuitos que reciben bits y devuelven un bit según una regla. Los chips usan pares de MOSFET de tipo N y P (tecnología "
+     },
+     {
+      "type": "text",
+      "text": "CMOS",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "): una compuerta NOT necesita 2 transistores y una NAND, 4."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr013"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-tr014"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Compuerta"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Da 1 cuando…"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Transistores (CMOS)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NOT"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "la entrada es 0 (invierte)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "AND"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "las dos entradas son 1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "6"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "OR"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "al menos una entrada es 1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "6"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NAND"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "no son las dos 1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "4"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "XOR"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "las entradas son distintas"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "8 a 12"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-tr015",
+     "nombre": "tr-compuertas",
+     "titulo": "Compuertas lógicas"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La compuerta NAND es "
+     },
+     {
+      "type": "text",
+      "text": "universal",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": combinando solo NAND se puede construir cualquier otra compuerta y, con ellas, cualquier circuito digital."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr016"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-sumar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Sumar con compuertas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Para sumar dos bits basta una XOR (el resultado) y una AND (el acarreo, lo que «se lleva»). Ese circuito es un "
+     },
+     {
+      "type": "text",
+      "text": "medio sumador",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Un "
+     },
+     {
+      "type": "text",
+      "text": "sumador completo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " también recibe el acarreo de la columna anterior. Encadenando sumadores completos se suman números de cualquier tamaño, igual que sumas a mano de derecha a izquierda."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr017"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-tr018",
+     "nombre": "tr-sumador",
+     "titulo": "Un sumador de 4 bits"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La ALU del "
+     },
+     {
+      "type": "text",
+      "text": "procesador",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "cpu.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " tiene sumadores así, de 64 bits y con trucos para no esperar a que el acarreo recorra todas las columnas."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr019"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-moore",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Miles de millones en un chip"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En 1965, Gordon Moore observó que la cantidad de transistores en un chip se duplicaba cada uno o dos años. Esa tendencia, la "
+     },
+     {
+      "type": "text",
+      "text": "ley de Moore",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", se mantuvo durante décadas:"
+     }
+    ],
+    "attrs": {
+     "id": "b-tr020"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-tr021"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Año"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Chip"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Transistores"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1971"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Intel 4004 (el primer microprocesador)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2,300"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1993"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Intel Pentium"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3.1 millones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2006"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Intel Core 2 Duo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "291 millones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2020"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Apple M1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "16 mil millones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2024"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NVIDIA B200 (GPU para IA)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "208 mil millones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Hoy se habla de procesos de «3 nm» o «2 nm», pero ese número ya es un nombre comercial: ninguna parte del transistor mide exactamente eso. Lo que sigue mejorando es cuántos transistores caben por milímetro cuadrado y cuánta energía gastan."
+     }
+    ],
+    "attrs": {
+     "id": "b-tr022"
+    }
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tr023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué ya no se puede achicar tan rápido?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Con capas aislantes de pocos átomos, los electrones empiezan a «atravesarlas» por efecto túnel y se escapa corriente aunque el transistor esté apagado. Además, fabricar a esa escala requiere máquinas de litografía con luz ultravioleta extrema que cuestan cientos de millones de dólares. Por eso ahora se innova en la forma (transistores con la compuerta rodeando el canal) y apilando chips."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tr024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué diferencia hay entre un transistor bipolar y un MOSFET?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El "
+         },
+         {
+          "type": "text",
+          "text": "bipolar",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (BJT) se controla con una corriente pequeña en su base; se usa mucho en amplificadores y circuitos analógicos. El "
+         },
+         {
+          "type": "text",
+          "text": "MOSFET",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " se controla con voltaje y casi no consume en la compuerta, por eso domina en los chips digitales y en la electrónica de potencia."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tr025"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cómo se fabrican miles de millones de transistores a la vez?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Con "
+         },
+         {
+          "type": "text",
+          "text": "fotolitografía",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": se cubre una oblea de silicio con un material sensible a la luz, se proyecta el diseño del chip a través de una máscara y se graban las zonas expuestas. Se repite decenas de veces, capa por capa. Una sola oblea tiene cientos de chips."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tr026"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Un transistor puede «gastarse»?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sí, muy despacio: el calor, el voltaje alto y el tiempo degradan el aislante de la compuerta. Por eso subir mucho el voltaje para hacer overclock acorta la vida de un procesador."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-tr027",
+     "preguntas": [
+      {
+       "q": "¿Qué controla si un MOSFET deja pasar corriente?",
+       "o": [
+        "La corriente que entra por el drenador",
+        "El voltaje de la compuerta",
+        "La temperatura del chip"
+       ],
+       "a": 1,
+       "e": "Si el voltaje de la compuerta supera el umbral, se forma el canal y la corriente pasa de la fuente al drenador."
+      },
+      {
+       "q": "¿Qué da una compuerta AND con entradas 1 y 0?",
+       "o": [
+        "1",
+        "0"
+       ],
+       "a": 1,
+       "e": "AND solo da 1 cuando las dos entradas son 1."
+      },
+      {
+       "q": "¿Qué compuertas forman un medio sumador?",
+       "o": [
+        "XOR para el resultado y AND para el acarreo",
+        "Dos NOT",
+        "OR y NOT"
+       ],
+       "a": 0,
+       "e": "1 + 1 = 10 en binario: el resultado (0) es XOR y el acarreo (1) es AND."
+      },
+      {
+       "q": "En binario, ¿cuánto es 0101 + 0011?",
+       "o": [
+        "1000",
+        "0110",
+        "1010"
+       ],
+       "a": 0,
+       "e": "5 + 3 = 8, que en binario es 1000. Los acarreos recorren tres columnas."
+      },
+      {
+       "q": "¿Qué dice la ley de Moore?",
+       "o": [
+        "Que los chips duplican su frecuencia cada año",
+        "Que la cantidad de transistores en un chip se duplica cada uno o dos años",
+        "Que los transistores miden 3 nm"
+       ],
+       "a": 1,
+       "e": "Moore observó que los transistores por chip se duplicaban regularmente; la tendencia continuó por décadas."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-tr028"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un transistor es un interruptor sin partes móviles que se controla con electricidad; también amplifica."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se fabrican con silicio dopado (tipo N y tipo P)."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El MOSFET conduce cuando el voltaje de su compuerta supera un umbral y forma un canal."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Combinando transistores se hacen compuertas lógicas; con compuertas, sumadores y procesadores completos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los chips actuales tienen miles de millones de transistores gracias a décadas de la ley de Moore."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="transistores.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

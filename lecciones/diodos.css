@@ -1,0 +1,31 @@
+/* Estilos propios de las demos de la lección «Diodos y LEDs». Las piezas comunes están en base.css. */
+
+/* Directa o inversa */
+.po-svg{display:block;width:100%;max-width:26rem;height:auto;margin:0.875rem auto 0}
+.po-c{fill:none;stroke:var(--fg-2);stroke-width:2;stroke-linejoin:round}
+.po-c.on{stroke:var(--accent);stroke-width:3}
+.po-pila{fill:none;stroke:var(--fg);stroke-width:2.5}
+.po-r{fill:var(--bg-soft);stroke:var(--fg-2);stroke-width:1.5}
+.po-d{fill:var(--fg);stroke:var(--fg);stroke-width:2;stroke-linejoin:round}
+.po-t{fill:var(--fg);font-family:var(--font-mono);font-size:11px;text-anchor:middle}
+
+/* De alterna a directa */
+.re-svg{display:block;width:100%;max-width:32rem;height:auto;margin:0.875rem auto 0}
+.re-eje{stroke:var(--line-strong);stroke-width:1}
+.re-t{fill:var(--fg-2);font-family:var(--font-mono);font-size:11px;text-anchor:end}
+.re-in{fill:none;stroke:var(--c1);stroke-width:1.5;stroke-dasharray:4 3}
+.re-out{fill:none;stroke:var(--accent);stroke-width:3;stroke-linejoin:round}
+.leg i.re-l-in{background:var(--c1)}
+.leg i.re-l-out{background:var(--accent)}
+
+/* La resistencia para un LED */
+.ld{display:flex;align-items:center;gap:1rem;margin-top:0.875rem}
+.ld-k{flex:1;margin-top:0}
+.ld-led{flex:none;width:2.75rem;height:3.5rem;border-radius:1.375rem 1.375rem 0.25rem 0.25rem;border:2px solid var(--line-strong);background:var(--bg-soft)}
+.ld-led.on[data-c="rojo"]{background:var(--bad);border-color:var(--bad)}
+.ld-led.on[data-c="amarillo"]{background:var(--warn);border-color:var(--warn)}
+.ld-led.on[data-c="verde"]{background:var(--good);border-color:var(--good)}
+.ld-led.on[data-c="azul"]{background:var(--c2);border-color:var(--c2)}
+.ld-led.on[data-c="blanco"]{background:var(--bg);border-color:var(--fg-2);box-shadow:0 0 0.75rem var(--c4)}
+.ld-led.on{box-shadow:0 0 0.875rem currentColor}
+@media (max-width:420px){.ld{flex-direction:column;align-items:stretch}.ld-led{align-self:center}}
