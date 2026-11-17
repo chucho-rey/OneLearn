@@ -1,6 +1,6 @@
 /* Pantalla de inicio de OneLearn: continúa donde te quedaste, tus notas recientes y explorar temas.
    La primera visita (sin avance ni notas) muestra una bienvenida que sugiere empezar por Memoria RAM.
-   Usa AT.avance (avance.js) y AT.apuntes (base.js). */
+   Usa AT.avance (avance.js) y AT.datos (datos.js). */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,esc=AT.esc,ico=AT.ico,LECC=AT.rutas.lecciones;
@@ -13,7 +13,8 @@ function saludo(){
   return h>=5&&h<12?'Buenos días':h>=12&&h<19?'Buenas tardes':'Buenas noches';
 }
 function url(l,hash){return esc(LECC+l.archivo+(hash?'#'+hash:''))}
-function hayNotas(){return disponibles.some(function(l){return AT.apuntes.leer(l.id).trim()})}
+var notasCache=[];
+function hayNotas(){return notasCache.some(function(n){return n.t.trim()})}
 
 function pintarContinuar(){
   var cont=$('#continuar'),bienv=$('#bienvenida');
@@ -44,8 +45,13 @@ function pintarContinuar(){
   cont.innerHTML=h;
 }
 
+function cargarNotas(){
+  return AT.datos.notas.todas().then(function(lista){
+    notasCache=lista.filter(function(n){return porId[n.id]&&porId[n.id].archivo}).map(function(n){return {l:porId[n.id],t:n.texto||'',f:n.editado||''}});
+  });
+}
 function pintarNotas(){
-  var notas=disponibles.map(function(l){return {l:l,t:AT.apuntes.leer(l.id),f:AT.apuntes.editado(l.id)}})
+  var notas=notasCache
     .filter(function(n){return n.t.trim()})
     .sort(function(a,b){return a.f===b.f?0:a.f<b.f?1:-1})
     .slice(0,3);
@@ -93,10 +99,12 @@ document.addEventListener('app-instalable',pintarInstalar);
 document.addEventListener('app-instalada',function(){$('#instalar').hidden=true});
 
 function pintar(){pintarContinuar();pintarNotas();pintarExplorar();pintarInstalar()}
+function recargar(){cargarNotas().then(pintar)}
 $('#saludo').textContent=saludo();
 pintar();
+recargar();
 AT.avance.on(pintar);
-window.addEventListener('storage',function(e){if(e.key&&e.key.indexOf('aprende-tecnologia:apuntes:')===0)pintar()});
+AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='*')recargar()});
 /* Al volver con «atrás» desde una lección, el navegador puede mostrar una copia vieja: se actualiza */
 window.addEventListener('pageshow',function(e){if(e.persisted)location.reload()});
 })();

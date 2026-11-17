@@ -15,11 +15,13 @@ assets/
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
   js/catalogo.js            Temario: grupos y lecciones de la barra lateral
-  js/base.js                Utilidades (AT.$, AT.esc, AT.ico...), íconos, página actual, lectura de apuntes y repaso (AT.repaso)
+  js/base.js                Utilidades (AT.$, AT.esc, AT.ico...), íconos, página actual y repaso (AT.repaso)
+  js/datos.js               Tus datos en IndexedDB: documentos, notas y marcadores, respaldo e importación (AT.datos)
   js/barra.js               Barra lateral, barra superior, menú en celular y pestañas Temas / Mis apuntes / Comunidad
   js/lectura.js             Panel Lectura (tamaño de texto, tema, contraste, fuente y espacios)
   js/apuntes.js             Hoja de apuntes de cada lección (abajo o acoplada a la derecha)
   js/app.js                 App instalable: service worker, aviso de actualización e instalación
+  js/respaldo.js            Ventana «Tus datos»: espacio, protección del navegador, descargar e importar respaldo
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
@@ -35,7 +37,7 @@ lecciones/
   cpu.html / .css / .js     Lección «Procesador (CPU)»
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js` y después los de cada página.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js` y después los de cada página.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
@@ -65,9 +67,14 @@ Las lecciones y los documentos que crea cada estudiante usan el mismo formato, y
 
 No cambies el `id` de una lección ya publicada: es la clave con la que se guardan sus apuntes.
 
-## Apuntes
+## Tus datos
 
-Cada lección tiene una hoja de apuntes. Se guardan en el navegador de este dispositivo; la sincronización entre dispositivos llegará con las cuentas.
+Todo lo que escribe cada estudiante se guarda solo en su navegador; nada se sube a un servidor (la sincronización llegará con las cuentas).
+
+- **IndexedDB** (base `onelearn`, `assets/js/datos.js`) guarda los documentos, las notas rápidas de cada lección y los marcadores. Si el navegador no tiene IndexedDB, se usa `localStorage`.
+- Cada nota se escribe primero en `localStorage` (al instante) y luego en IndexedDB; si la página se cierra a la mitad, la siguiente carga termina de guardarla. Así se pasaron también las notas de la fase 1, sin perder ninguna.
+- El avance de lectura y los ajustes siguen en `localStorage`, porque se leen antes de pintar la página.
+- **Tus datos** (barra lateral) muestra cuánto hay guardado, si el navegador protege los datos (almacenamiento persistente) y permite **descargar un respaldo** en JSON e **importarlo** en otro navegador. Importar combina: entra lo que no existe y lo más reciente; nunca se borra nada.
 
 ## App instalable y sin conexión
 

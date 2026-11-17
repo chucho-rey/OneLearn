@@ -7,7 +7,7 @@ var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,reduce=AT.reduce;
 var R=AT.rutas,RAIZ=R.raiz,LECC=R.lecciones,ES_INICIO=R.esInicio;
 var catalogo=AT.catalogo||[],actual=AT.leccion;
 if(ES_INICIO||!document.body.hasAttribute('data-leccion'))return;
-var setNav=AT.setNav,isDesk=AT.esEscritorio,CLAVE_APUNTES='aprende-tecnologia:apuntes:';
+var setNav=AT.setNav,isDesk=AT.esEscritorio;
 
 (function(){
   var t=esc(actual.titulo);
@@ -35,7 +35,6 @@ var setNav=AT.setNav,isDesk=AT.esEscritorio,CLAVE_APUNTES='aprende-tecnologia:ap
 })();
 
 (function(){
-  var LS_KEY=CLAVE_APUNTES+actual.id;
   var sheet=$('#sheet'),grab=$('#shGrab'),mainBtn=$('#shMain'),mainUse=$('#shMainUse'),hideBtn=$('#shHide'),hint=$('#shHint');
   var dockBtn=$('#shDock'),dockUse=$('#shDockUse'),resizer=$('#shResize'),root=document.documentElement;
   var KEY_ANCHO='aprende-tecnologia:nota-ancho';
@@ -223,14 +222,26 @@ var setNav=AT.setNav,isDesk=AT.esEscritorio,CLAVE_APUNTES='aprende-tecnologia:ap
     flashT=setTimeout(function(){stat.setAttribute('data-k',cur0.k);stat.textContent=cur0.t},1800);
   }
 
-  /* ----- Guardado en este dispositivo ----- */
-  var timer=null;
-  ta.addEventListener('input',function(){
-    lsSet(LS_KEY,ta.value);lsSet(LS_KEY+':editado',new Date().toISOString());
-    updateCount();
+  /* ----- Guardado en este dispositivo (AT.datos: al instante en un diario y después en IndexedDB) ----- */
+  var escritas=0;
+  function guardar(){
+    var n=++escritas;
+    setStat('','Guardando…');
+    AT.datos.notas.guardar(actual.id,ta.value).then(function(){
+      if(n===escritas)setStat('ok','Guardado');
+    },function(){
+      if(n===escritas)setStat('err','No se pudo guardar en la base; queda una copia en el navegador');
+    });
     AT.refrescarNotas();
-    setStat('','Escribiendo…');
-    clearTimeout(timer);timer=setTimeout(function(){setStat('ok','Guardado')},700);
+  }
+  ta.addEventListener('input',function(){updateCount();guardar()});
+  /* Otra pestaña cambió esta nota: si no la estás escribiendo aquí, se muestra la nueva */
+  AT.datos.on(function(c,deOtra){
+    if(!deOtra||(c.almacen!=='notas'&&c.almacen!=='*')||(c.id&&c.id!==actual.id)||document.activeElement===ta)return;
+    AT.datos.notas.leer(actual.id).then(function(x){
+      var t=x?x.texto:'';
+      if(t!==ta.value&&document.activeElement!==ta){ta.value=t;updateCount()}
+    });
   });
 
   /* ----- Copiar y borrar ----- */
@@ -255,16 +266,22 @@ var setNav=AT.setNav,isDesk=AT.esEscritorio,CLAVE_APUNTES='aprende-tecnologia:ap
     }
     disarm();
     ta.value='';
-    lsSet(LS_KEY,'');lsSet(LS_KEY+':editado',new Date().toISOString());
     updateCount();
-    AT.refrescarNotas();
-    setStat('ok','Guardado');
+    guardar();
   });
 
   /* ----- Inicio ----- */
-  ta.value=lsGet(LS_KEY);
   updateCount();
-  setStat('',ta.value?'Guardado':'Se guarda solo');
+  setStat('','Se guarda solo');
+  ta.setAttribute('aria-busy','true');
+  AT.datos.notas.leer(actual.id).then(function(x){
+    ta.removeAttribute('aria-busy');
+    /* Si empezaste a escribir antes de que cargara (muy raro), gana lo que escribiste */
+    if(ta.value||!x)return;
+    ta.value=x.texto||'';
+    updateCount();
+    if(ta.value)setStat('ok','Guardado');
+  });
   measure();
   apply('closed',false);
   AT.hoja={

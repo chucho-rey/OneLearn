@@ -565,6 +565,26 @@ dialog.atajos::backdrop{background:rgba(0,0,0,.45)}
 .atajos dl>div{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:0.75rem;align-items:baseline;padding:0.5rem 0;border-top:1px solid var(--line)}
 .atajos dt,.atajos dd{margin:0}
 .atajos dd{font-size:0.9375rem}
+/* Tus datos */
+dialog.tus-datos{width:min(31rem,calc(100vw - 2rem))}
+.td-p{margin:0 0 0.75rem;font-size:0.9375rem;color:var(--fg-2)}
+.td-p b{color:var(--fg)}
+.tus-datos .td-res{display:grid;grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr));margin:0 0 0.5rem;border:1px solid var(--line);border-radius:0.5rem;overflow:hidden}
+.tus-datos .td-res>div{display:flex;flex-direction:column;gap:0.125rem;padding:0.5rem 0.75rem;border:0;box-shadow:1px 0 0 var(--line),0 1px 0 var(--line)}
+.tus-datos .td-res dt{font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
+.tus-datos .td-res dd{font-size:1.0625rem;font-weight:600}
+.td-sec{padding-top:0.875rem;margin-top:0.875rem;border-top:1px solid var(--line)}
+.td-sec:empty{display:none}
+#tdProt.td-sec{border-top:0;margin-top:0;padding-top:0}
+.td-sec h3{margin:0 0 0.375rem;font-size:1rem}
+.td-ok{display:flex;gap:0.5rem;align-items:flex-start}
+.td-ok .ico{flex:none;margin-top:0.25rem;color:var(--good-ink)}
+.td-ult,.td-nota{font-size:0.875rem}
+.td-nota{margin-bottom:1rem}
+.td-bt{display:flex;flex-wrap:wrap;gap:0.5rem}
+.td-msg{margin:0.75rem 0 0;font-size:0.9375rem}
+.td-msg:empty{display:none}
+.td-msg.err{color:var(--bad-ink)}
 
 /* ---------- Aviso (por ejemplo, «OneLearn se actualizó») ---------- */
 .aviso{position:fixed;z-index:60;left:50%;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:0.75rem;width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}

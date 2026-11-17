@@ -1,6 +1,6 @@
 /* OneLearn: base compartida por todas las páginas.
-   Utilidades (AT.$, AT.fmt, AT.esc, AT.ico...), los íconos, la página actual (AT.leccion, AT.rutas),
-   la lectura de los apuntes guardados y el repaso de preguntas (AT.repaso).
+   Utilidades (AT.$, AT.fmt, AT.esc, AT.ico...), los íconos, la página actual (AT.leccion, AT.rutas)
+   y el repaso de preguntas (AT.repaso).
    Se usan scripts clásicos con un espacio de nombres global (no módulos ES) para que
    las páginas también funcionen abiertas directamente desde el disco (file://).
    Orden de carga: ajustes.js (en <head>), catalogo.js, base.js, barra.js, lectura.js, apuntes.js, app.js
@@ -46,6 +46,7 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>'+
 '<symbol id="i-aviso" viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.2h.01"/></symbol>'+
 '<symbol id="i-idea" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></symbol>'+
+'<symbol id="i-datos" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></symbol>'+
 '<symbol id="i-marcador" viewBox="0 0 24 24"><path d="M6 3.5h12V21l-6-4.2L6 21z"/></symbol>'+
 '</svg>');
 
@@ -67,14 +68,6 @@ if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:{id:LID||'leccion',tit
 AT.leccion=actual;
 AT.orden=orden;AT.grupoActual=grupo;
 
-/* ---------- Apuntes guardados en este dispositivo ---------- */
-var CLAVE_APUNTES='aprende-tecnologia:apuntes:';
-AT.apuntes={
-  CLAVE:CLAVE_APUNTES,
-  leer:function(id){try{return localStorage.getItem(CLAVE_APUNTES+id)||''}catch(e){return ''}},
-  /* Fecha ISO de la última edición, o '' si no se sabe (notas anteriores al hito 4) */
-  editado:function(id){try{return localStorage.getItem(CLAVE_APUNTES+id+':editado')||''}catch(e){return ''}}
-};
 function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}
 AT.contarPalabras=contarPalabras;
 

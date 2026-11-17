@@ -37,14 +37,16 @@ AT.avance={
     return id&&datos.lecciones[id]?Object.assign({id:id},datos.lecciones[id]):null;
   },
   hayDatos:function(){return Object.keys(datos.lecciones).length>0},
-  on:function(fn){oyentes.push(fn)}
+  on:function(fn){oyentes.push(fn)},
+  /* Vuelve a leer lo guardado (después de importar un respaldo, por ejemplo) */
+  recargar:recargar
 };
-/* Otra pestaña del navegador cambió el avance */
-window.addEventListener('storage',function(e){
-  if(e.key!==KEY)return;
+function recargar(){
   datos=leerTodo();if(!datos.lecciones)datos.lecciones={};
   avisar();
-});
+}
+/* Otra pestaña del navegador cambió el avance */
+window.addEventListener('storage',function(e){if(e.key===KEY)recargar()});
 
 /* ---------- Porcentaje en la barra lateral ---------- */
 function pintarBarra(){

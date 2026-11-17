@@ -42,6 +42,7 @@ var grupo=AT.grupoActual,orden=AT.orden;
     '</div>'+
     '<div class="side-foot">'+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
+      '<button class="nv" type="button" id="sideDatos">'+ico('datos')+'<span>Tus datos</span></button>'+
       (ES_INICIO?'':
         '<button class="nv" type="button" id="sideZen">'+ico('zen')+'<span>Modo zen</span><kbd>Z</kbd></button>'+
         '<button class="nv solo-teclado" type="button" id="sideAtajos">'+ico('teclado')+'<span>Atajos de teclado</span><kbd>?</kbd></button>')+
@@ -173,13 +174,23 @@ document.addEventListener('click',function(e){
     elegir(nombre,true);
   });
 
-  /* Mis apuntes: una tarjeta por lección con nota */
+  /* Mis apuntes: una tarjeta por lección con nota (las notas vienen de AT.datos, en IndexedDB) */
+  /* Se dibuja al instante con las notas ya cargadas y después se confirma con la base;
+     si no cambió nada, no se toca la lista (así no se pierde el foco) */
+  var pintando=0,cache=null,ultimo='';
   function pintarNotas(){
-    var h='';
+    if(cache)pintarNotasCon(cache);
+    var n0=++pintando;
+    AT.datos.notas.todas().then(function(lista){cache=lista;if(n0===pintando&&!$('#pn-apuntes').hidden)pintarNotasCon(lista)});
+  }
+  AT.datos.notas.todas().then(function(lista){if(!cache)cache=lista});
+  function pintarNotasCon(notas){
+    var h='',porId={};
+    notas.forEach(function(x){porId[x.id]=x.texto||''});
     catalogo.forEach(function(g){
       g.lecciones.forEach(function(l){
         if(!l.archivo)return;
-        var t=AT.apuntes.leer(l.id);
+        var t=porId[l.id]||'';
         if(!t.trim())return;
         var linea=t.trim().split(/\n/)[0].trim(),n=AT.contarPalabras(t),aqui=l===actual;
         if(linea.length>90)linea=linea.slice(0,90)+'…';
@@ -187,7 +198,8 @@ document.addEventListener('click',function(e){
           '<b>'+esc(l.titulo)+'</b><span>'+esc(linea)+'</span><small>'+(n===1?'1 palabra':n+' palabras')+'</small></a></li>';
       });
     });
-    lista.innerHTML=h||'<li class="side-txt">Todavía no tienes apuntes. Abre una lección y toca «Apuntes», abajo, para escribir.</li>';
+    h=h||'<li class="side-txt">Todavía no tienes apuntes. Abre una lección y toca «Apuntes», abajo, para escribir.</li>';
+    if(h!==ultimo){lista.innerHTML=h;ultimo=h}
   }
   lista.addEventListener('click',function(e){
     var a=e.target.closest('a[data-aqui]');
@@ -199,7 +211,7 @@ document.addEventListener('click',function(e){
   });
   var espera=null;
   AT.refrescarNotas=function(){clearTimeout(espera);espera=setTimeout(function(){if(!$('#pn-apuntes').hidden)pintarNotas()},400)};
-  window.addEventListener('storage',function(e){if(e.key&&e.key.indexOf(AT.apuntes.CLAVE)===0)AT.refrescarNotas()});
+  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='*')AT.refrescarNotas()});
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
   elegir(aj.get('pestana'));
