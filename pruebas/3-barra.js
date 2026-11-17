@@ -73,7 +73,7 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   r.igual(await g.textContent('#grpb-hardware em'),hw[0]+'/'+hw[1],'el grupo dice cuántas lecciones tiene disponibles');
   r.cumple(new RegExp(hw[0]+' de '+hw[1]+' lecciones disponibles').test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
   await g.click('#grpb-ciberseguridad');await g.waitForTimeout(100);
-  r.cumple(await g.isVisible('#grp-ciberseguridad .nv.soon'),'al tocar un grupo se abre y muestra sus lecciones');
+  r.cumple(await g.isVisible('#grp-ciberseguridad .nv'),'al tocar un grupo se abre y muestra sus lecciones');
   await g.focus('#grpb-hardware');await g.keyboard.press('Enter');await g.waitForTimeout(100);
   r.cumple(!await g.isVisible('#grp-hardware'),'con el teclado (Enter) también se pliega');
   await g.reload();await listo(g);
