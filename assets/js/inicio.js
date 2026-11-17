@@ -1,6 +1,6 @@
 /* Pantalla de inicio de OneLearn: continúa donde te quedaste, tus notas recientes y explorar temas.
    La primera visita (sin avance ni notas) muestra una bienvenida que sugiere empezar por Memoria RAM.
-   Usa AT.avance (avance.js) y AT.apuntes (comun.js). */
+   Usa AT.avance (avance.js) y AT.apuntes (base.js). */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,esc=AT.esc,ico=AT.ico,LECC=AT.rutas.lecciones;

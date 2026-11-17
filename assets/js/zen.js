@@ -5,7 +5,7 @@
    Atajos (ninguno se activa mientras escribes):
      Z  modo zen        N  nota rápida        J / K  sección siguiente / anterior
      ?  lista de atajos  Esc  cierra lo que esté abierto; si no hay nada, sale del modo zen
-   Se carga después de comun.js y avance.js. */
+   Se carga después de los scripts comunes y de avance.js. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,ico=AT.ico,aj=AT.ajustes,root=document.documentElement;

@@ -1,4 +1,4 @@
-/* Demos y repaso de la lección «Memoria RAM». Usa las utilidades de assets/js/comun.js. */
+/* Demos y repaso de la lección «Memoria RAM». Usa las utilidades de assets/js/base.js. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,fmt=AT.fmt,esc=AT.esc,setPressed=AT.setPressed,reduce=AT.reduce;

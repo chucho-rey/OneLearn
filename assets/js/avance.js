@@ -6,7 +6,7 @@
    - muestra el porcentaje de cada lección en la barra lateral.
    Una sección cuenta como leída cuando viste su final y pasaste en ella un tiempo mínimo
    proporcional a su largo, para que bajar de golpe hasta el final no la marque.
-   Se carga después de comun.js. */
+   Se carga después de base.js, barra.js y apuntes.js. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc;

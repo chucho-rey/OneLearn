@@ -3,9 +3,9 @@
 const fs=require('fs'),path=require('path');
 const {prueba,pagina,cerrar,listo,revisar,RAIZ}=require('./lib');
 
-/* Archivos que el sitio necesita: todo, menos pruebas, documentación, licencias y el propio sw.js */
+/* Archivos que el sitio necesita: todo, menos pruebas, herramientas de compilación, documentación, licencias y el propio sw.js */
 function archivosDelSitio(){
-  const fuera=/^(\.git|pruebas|node_modules)(\/|$)|(^|\/)README\.md$|\.txt$|^\.gitignore$|^sw\.js$/;
+  const fuera=/^(\.git|pruebas|herramientas|node_modules)(\/|$)|(^|\/)README\.md$|\.txt$|^\.gitignore$|^sw\.js$/;
   const lista=[];
   (function recorrer(dir){
     fs.readdirSync(dir,{withFileTypes:true}).forEach(function(d){

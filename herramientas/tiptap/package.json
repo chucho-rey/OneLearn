@@ -1,0 +1,21 @@
+{
+  "name": "onelearn-tiptap",
+  "private": true,
+  "description": "Empaqueta Tiptap (el editor de OneLearn) en un solo archivo: assets/vendor/tiptap.min.js",
+  "scripts": {
+    "compilar": "node compilar.js"
+  },
+  "devDependencies": {
+    "@tiptap/core": "3.32.2",
+    "@tiptap/pm": "3.32.2",
+    "@tiptap/starter-kit": "3.32.2",
+    "@tiptap/extensions": "3.32.2",
+    "@tiptap/extension-list": "3.32.2",
+    "@tiptap/extension-table": "3.32.2",
+    "@tiptap/extension-highlight": "3.32.2",
+    "@tiptap/extension-subscript": "3.32.2",
+    "@tiptap/extension-superscript": "3.32.2",
+    "@tiptap/suggestion": "3.32.2",
+    "esbuild": "0.28.2"
+  }
+}
