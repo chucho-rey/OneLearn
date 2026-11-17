@@ -233,9 +233,11 @@ hr{border:0;border-top:1px solid var(--line);margin:1.125rem 0}
 .page p a:hover,.page li a:hover{text-decoration-color:var(--accent-ink)}
 
 /* Propiedades */
-/* Ficha técnica de la lección: rejilla de celdas separadas por líneas finas */
-.props{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:0.5rem;overflow:hidden}
-.props>div{display:flex;flex-direction:column;gap:0.25rem;padding:0.625rem 0.875rem;background:var(--bg)}
+/* Ficha técnica de la lección: rejilla de celdas separadas por líneas finas.
+   Cada celda dibuja su línea derecha e inferior; las del borde las recorta el contenedor,
+   y si la última fila queda incompleta, el hueco se ve del color de la página */
+.props{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));border:1px solid var(--line);border-radius:0.5rem;overflow:hidden}
+.props>div{display:flex;flex-direction:column;gap:0.25rem;padding:0.625rem 0.875rem;box-shadow:1px 0 0 var(--line),0 1px 0 var(--line)}
 .props dt{font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
 .props dd{margin:0;font-size:0.9375rem}
 .tag{display:inline-block;padding:0 0.4375rem;border-radius:0.25rem;font-size:0.8125rem;line-height:1.25rem;background:var(--bg-soft);color:var(--fg)}

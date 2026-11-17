@@ -16,6 +16,8 @@ assets/
   js/comun.js               Arma la barra lateral, la barra superior y los apuntes; panel Lectura, navegación, repaso y utilidades (AT.*)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
+  js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
+  icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
 lecciones/
   ram.html                  Contenido de la lección «Memoria RAM»
   ram.css                   Estilos de sus demos
