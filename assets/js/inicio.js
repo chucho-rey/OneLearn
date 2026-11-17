@@ -74,7 +74,25 @@ function pintarExplorar(){
   }).join('');
 }
 
-function pintar(){pintarContinuar();pintarNotas();pintarExplorar()}
+/* Instalar: el botón aparece si el navegador lo permite; en iPhone y iPad se explica cómo hacerlo */
+function pintarInstalar(){
+  var sec=$('#instalar'),btn=$('#instalarBtn'),txt=$('#instalarTxt');
+  if(AT.app.instalada()){sec.hidden=true;return}
+  if(AT.app.evento){
+    sec.hidden=false;btn.hidden=false;
+    txt.textContent='Ábrelo como una app, desde tu pantalla de inicio, y estudia sin conexión.';
+  }else if(AT.app.esIOS()){
+    sec.hidden=false;btn.hidden=true;
+    txt.textContent='En iPhone o iPad: toca Compartir y luego «Agregar a inicio». Así lo abres como una app y funciona sin conexión.';
+  }else sec.hidden=true;
+}
+$('#instalarBtn').addEventListener('click',function(){
+  AT.app.instalar().then(function(ok){if(ok)$('#instalar').hidden=true;else pintarInstalar()});
+});
+document.addEventListener('app-instalable',pintarInstalar);
+document.addEventListener('app-instalada',function(){$('#instalar').hidden=true});
+
+function pintar(){pintarContinuar();pintarNotas();pintarExplorar();pintarInstalar()}
 $('#saludo').textContent=saludo();
 pintar();
 AT.avance.on(pintar);
