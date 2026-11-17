@@ -89,9 +89,9 @@ document.body.insertAdjacentHTML('afterbegin',
 /* ---------- Lección actual ---------- */
 var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
-/* Páginas: inicio y documento viven en la raíz del sitio; las lecciones, en lecciones/ */
+/* Páginas: inicio, documento y acerca («Cómo está hecho») viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':'';
 AT.rutas={raiz:RAIZ,lecciones:LECC,esInicio:ES_INICIO,pagina:PAGINA};
 var actual=null,grupo='',orden=[];
@@ -101,8 +101,10 @@ catalogo.forEach(function(g){
     if(l.id===LID){actual=l;grupo=g.grupo}
   });
 });
-if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{id:'documento',titulo:'Documento'}:{id:LID||'leccion',titulo:document.title};
+if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{id:'documento',titulo:'Documento'}:
+  PAGINA==='acerca'?{id:'acerca',titulo:'Cómo está hecho'}:{id:LID||'leccion',titulo:document.title};
 if(PAGINA==='documento')grupo='Mis apuntes';
+if(PAGINA==='acerca')grupo='OneLearn';
 AT.leccion=actual;
 AT.orden=orden;AT.grupoActual=grupo;
 
