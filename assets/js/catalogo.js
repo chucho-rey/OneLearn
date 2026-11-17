@@ -46,6 +46,8 @@ window.AT.catalogo=[
 window.AT.proyectos=[
   {id:'portafolio',titulo:'Tu portafolio web',archivo:'portafolio.html',icono:'proyecto',nivel:'Desde cero',duracion:'15 a 22 horas',fases:8,tareas:39,
    descripcion:'Crea y publica tu sitio web personal con HTML, CSS, JavaScript, Git y GitHub. Al terminar tendrás un enlace real para tu CV.'},
+  {id:'seguridad-negocio',titulo:'Seguridad para un pequeño negocio',archivo:'seguridad-negocio.html',icono:'candado',nivel:'Básico',duracion:'10 a 14 horas',fases:7,tareas:31,
+   descripcion:'Evalúa la seguridad de una panadería: cuentas, equipos, respaldos, red y personas. Al terminar entregas un informe de seguridad profesional.'},
   {id:'red-oficina',titulo:'La red de una oficina',archivo:'red-oficina.html',icono:'globo',nivel:'Intermedio',duracion:'15 a 20 horas',fases:8,tareas:38,
    descripcion:'Diseña la red de un despacho, monta un servidor Ubuntu con Nextcloud para editar documentos en colaboración y da acceso remoto seguro por VPN.'}
 ];

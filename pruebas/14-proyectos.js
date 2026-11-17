@@ -152,4 +152,27 @@ prueba('Proyectos',async function({browser,base,r}){
   r.cumple(/IP pública/.test(await txt(n,'#reTab')),'WireGuard propio explica que necesita una IP pública');
   r.cumple(n.errores.length===0,'red-oficina: sin errores',n.errores.slice(0,2));
   await cerrar(n);
+
+  /* Seguridad para un pequeño negocio: matriz de riesgos y router simulado */
+  for(const [ancho,tema,contraste,escala,fuente] of [[390,'dark','high',1.5,'opendyslexic'],[1280,'light','normal',1,'normal']])
+  for(const f of ['f2','f5']){
+    const v=await pagina(browser,{ancho:ancho,ajustes:{tema:tema,contraste:contraste,escala:escala,fuente:fuente}});
+    await v.goto(base+'proyectos/seguridad-negocio.html#'+f);await listo(v,400);
+    await revisar(v,r,'seguridad-negocio '+f+' '+ancho+'px '+tema+'/'+contraste+' ×'+escala+' '+fuente);
+    await cerrar(v);
+  }
+  const s=await pagina(browser,{ancho:1280,reducir:true});
+  await s.goto(base+'proyectos/seguridad-negocio.html#f2');await listo(s);
+  r.cumple(await s.locator('#rgLista li.alta').count()===3&&/Phishing/.test(await txt(s,'#rgLista li:first-child')),'la matriz empieza con tres riesgos altos, phishing primero');
+  await s.click('#rgAm [data-v="5"]');await s.click('#rgP [data-v="3"]');await s.click('#rgI [data-v="3"]');
+  r.cumple(await s.locator('#rgLista li.alta').count()===4&&/= 9, prioridad alta/.test(await txt(s,'#rgMsg')),'subir la probabilidad y el impacto del exempleado lo vuelve prioridad alta');
+  r.igual(await s.locator('#rgMx .mx-c.alta b.sel').count(),1,'la amenaza elegida se marca en la matriz');
+  await s.goto(base+'proyectos/seguridad-negocio.html#f5');await listo(s);
+  r.cumple(await txt(s,'#rtOk')==='0 de 7'&&await s.locator('#rtHall li').count()===7,'el router de fábrica tiene 7 fallas');
+  for(const [id,v] of [['panel','nueva'],['cifrado','wpa3'],['clave','larga'],['wps','no'],['invitados','aparte'],['remota','no'],['firmware','nuevo']])await s.click('#rt-'+id+' [data-v="'+v+'"]');
+  r.cumple(await txt(s,'#rtOk')==='7 de 7'&&/Sin fallas/.test(await txt(s,'#rtHall')),'corrigiendo todo, el router queda sin fallas');
+  await s.click('#rt-cifrado [data-v="wep"]');
+  r.cumple(await txt(s,'#rtOk')==='6 de 7'&&/WEP se rompe/.test(await txt(s,'#rtHall')),'volver a WEP aparece como falla con su explicación');
+  r.cumple(s.errores.length===0,'seguridad-negocio: sin errores',s.errores.slice(0,2));
+  await cerrar(s);
 });
