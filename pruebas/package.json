@@ -1,0 +1,11 @@
+{
+  "name": "onelearn-pruebas",
+  "private": true,
+  "description": "Pruebas automáticas de OneLearn con Playwright",
+  "scripts": {
+    "test": "node todas.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

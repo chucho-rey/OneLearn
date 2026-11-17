@@ -18,6 +18,7 @@ assets/
   js/inicio.js              Pantalla de inicio
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
   icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
+pruebas/                    Pruebas automáticas con Playwright (ver pruebas/README.md)
 lecciones/
   ram.html                  Contenido de la lección «Memoria RAM»
   ram.css                   Estilos de sus demos
