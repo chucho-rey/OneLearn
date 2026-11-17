@@ -1,0 +1,5097 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>La red de una oficina · Proyectos · OneLearn</title>
+<meta name="description" content="Proyecto guiado de redes: diseña la red de un despacho, monta un servidor Ubuntu con Nextcloud para editar documentos en colaboración y da acceso remoto seguro por VPN, en 8 fases.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="red-oficina.css">
+</head>
+<body data-pagina="proyecto" data-proyecto="red-oficina" data-titulo="La red de una oficina">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page proyecto" id="pjPage">
+      <noscript><p>Este proyecto necesita JavaScript para mostrarse.</p></noscript>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los diagramas interactivos: bloques.js las copia dentro de cada bloque «laboratorio» -->
+
+<template data-lab="ro-topologia">
+<p class="hint">Toca un equipo para ver su papel, o elige una situación para seguir el camino de los datos.</p>
+<div class="chips" id="toRuta" role="group" aria-label="Situación">
+  <button class="chip" type="button" data-v="oficina" aria-pressed="false">Laura edita desde la oficina</button>
+  <button class="chip" type="button" data-v="casa" aria-pressed="false">Carlos entra desde su casa</button>
+  <button class="chip" type="button" data-v="visita" aria-pressed="false">Una visita intenta entrar</button>
+</div>
+<svg class="to-svg" id="toSvg" viewBox="0 0 600 340" role="img" aria-label="Diagrama de la red del despacho"></svg>
+<div class="leg"><span><i class="to-l-cable"></i>Cable</span><span><i class="to-l-wifi"></i>Wi-Fi</span><span><i class="to-l-vpn"></i>Túnel VPN</span><span><i class="to-l-ruta"></i>Camino de los datos</span></div>
+<div class="status" id="toStat" data-k="" aria-live="polite"><span class="dot"></span><span id="toMsg"></span></div>
+<div class="chips to-eq" id="toEq" role="group" aria-label="Equipos"></div>
+</template>
+<template data-lab="ro-ip">
+<p class="hint">Quieres agregar un equipo con dirección fija a la red 192.168.10.0/24. Escribe la dirección que le darías.</p>
+<label class="lbl" for="ipNueva">Dirección del equipo nuevo</label>
+<input class="campo mono" type="text" id="ipNueva" value="192.168.10.30" spellcheck="false" autocomplete="off" inputmode="decimal">
+<div class="chips ip-ej" id="ipEj" role="group" aria-label="Ejemplos">
+  <button class="chip" type="button" data-v="192.168.10.30" aria-pressed="true">192.168.10.30</button>
+  <button class="chip" type="button" data-v="192.168.10.10" aria-pressed="false">192.168.10.10</button>
+  <button class="chip" type="button" data-v="192.168.10.150" aria-pressed="false">192.168.10.150</button>
+  <button class="chip" type="button" data-v="192.168.11.5" aria-pressed="false">192.168.11.5</button>
+  <button class="chip" type="button" data-v="192.168.10.255" aria-pressed="false">192.168.10.255</button>
+</div>
+<div class="ip-mapa" id="ipMapa" aria-hidden="true"></div>
+<div class="leg"><span><i class="ip-l-fija"></i>Fijas en uso</span><span><i class="ip-l-dhcp"></i>Rango DHCP</span><span><i class="ip-l-libre"></i>Libres para fijas</span><span><i class="ip-l-tu"></i>Tu equipo</span></div>
+<div class="status" id="ipStat" data-k="" aria-live="polite"><span class="dot"></span><span id="ipMsg"></span></div>
+</template>
+<template data-lab="ro-remoto">
+<p class="hint">Elige una forma de que Carlos y Ana entren desde fuera y compara.</p>
+<div class="chips" id="reOp" role="group" aria-label="Opción de acceso remoto">
+  <button class="chip" type="button" data-v="0" aria-pressed="false">Abrir un puerto del router</button>
+  <button class="chip" type="button" data-v="1" aria-pressed="false">VPN propia con WireGuard</button>
+  <button class="chip" type="button" data-v="2" aria-pressed="true">Tailscale (VPN administrada)</button>
+</div>
+<div class="tbl-wrap"><table class="re-t"><tbody id="reTab"></tbody></table></div>
+<div class="status" id="reStat" data-k="" aria-live="polite"><span class="dot"></span><span id="reMsg"></span></div>
+</template>
+
+<!-- El proyecto: introducción y fases, cada una con su contenido en el formato de bloques -->
+<script type="application/json" id="proyecto">
+{
+ "formato": 1,
+ "tipo": "proyecto",
+ "id": "red-oficina",
+ "titulo": "La red de una oficina",
+ "icono": "globo",
+ "props": [
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Duración",
+   "valor": "15 a 20 horas",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Fases",
+   "valor": "8",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Al terminar tendrás",
+   "valor": "Un servidor con nube privada, VPN y su documentación en GitHub",
+   "estilo": "texto"
+  }
+ ],
+ "intro": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En este proyecto eres el técnico que diseña y monta la red de un despacho contable pequeño: un servidor propio para guardar y "
+     },
+     {
+      "type": "text",
+      "text": "editar documentos en colaboración",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " desde las computadoras de la oficina, y "
+     },
+     {
+      "type": "text",
+      "text": "acceso remoto seguro",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " para las laptops que trabajan fuera."
+     }
+    ],
+    "attrs": {
+     "id": "b-rin001"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Vas a practicar en tu propia computadora, con una máquina virtual como servidor y tu celular y tu navegador como los equipos del despacho. Todo el software es gratuito. Te ayuda haber usado antes la terminal (por ejemplo, en la fase 1 del "
+     },
+     {
+      "type": "text",
+      "text": "portafolio",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "portafolio.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "); lo demás se explica paso a paso."
+     }
+    ],
+    "attrs": {
+     "id": "b-rin002"
+    }
+   }
+  ]
+ },
+ "fases": [
+  {
+   "id": "f1",
+   "titulo": "Entiende el caso",
+   "duracion": "1 hora",
+   "objetivo": "Entender qué necesita el despacho y convertirlo en requisitos claros.",
+   "aprenderas": [
+    "Levantar requisitos con un cliente",
+    "Separar requisitos funcionales y no funcionales",
+    "Pensar en riesgos desde el principio"
+   ],
+   "trabajo": "Antes de tocar un cable, un administrador de redes entiende el negocio. Saber hacer las preguntas correctas es lo que más se valora en un puesto de soporte o de infraestructura.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ríos Contadores",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es un despacho contable pequeño (ficticio) que te contrató para ordenar su red. Hoy cada quien guarda los archivos en su computadora, se los mandan por correo o en memorias USB, y nadie sabe cuál es la versión buena de cada documento. El mes pasado se descompuso una computadora y se perdieron dos semanas de trabajo."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf1001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf1002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Quiénes trabajan ahí"
+       }
+      ]
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-rf1003"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Persona"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Puesto"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Equipo"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Dónde trabaja"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Laura"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Contadora"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de escritorio"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Oficina"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Miguel"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Auxiliar contable"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de escritorio"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Oficina"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sofía"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Recepción y facturación"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de escritorio"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Oficina"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Carlos"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Socio"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Laptop"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Oficina, su casa y con clientes"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Ana"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Contadora de campo"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Laptop"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Casi siempre con clientes"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Además hay una impresora que todos usan, y los clientes que llegan de visita piden la contraseña del Wi-Fi."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf1004"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf1005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Lo que pide el despacho"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "attrs": {
+       "id": "b-rf1006"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un solo lugar para los archivos",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", con carpetas por área y permisos: recepción no debe ver la contabilidad de los clientes."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Editar el mismo documento al mismo tiempo",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", sin mandarse copias."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Trabajar desde fuera:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " Carlos y Ana deben entrar a los archivos desde su casa o desde la oficina de un cliente, de forma segura."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Que no se pierda nada:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " respaldos automáticos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Que las visitas tengan internet",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", pero sin poder ver los equipos del despacho."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Presupuesto limitado:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " prefieren software libre y reutilizar lo que tienen."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf1007",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Requisitos funcionales y no funcionales"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un buen primer paso en cualquier proyecto es separar "
+       },
+       {
+        "type": "text",
+        "text": "qué debe hacer",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " el sistema (requisitos funcionales) de "
+       },
+       {
+        "type": "text",
+        "text": "cómo debe hacerlo",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (requisitos no funcionales: seguridad, disponibilidad, costo)."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf1008"
+      }
+     },
+     {
+      "type": "columnas",
+      "attrs": {
+       "id": "b-rf1009"
+      },
+      "content": [
+       {
+        "type": "columna",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Funcionales",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Compartir archivos por área · Editar en colaboración · Acceso remoto · Imprimir desde cualquier PC · Internet para visitas"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "columna",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No funcionales",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Solo personas autorizadas · Datos cifrados al viajar por internet · Respaldo diario · Costo bajo · Fácil de mantener"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf1010",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En el mundo real, esta conversación con el cliente se llama "
+         },
+         {
+          "type": "text",
+          "text": "levantamiento de requisitos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Pregunta siempre «¿qué pasa si…?»: ¿si se va la luz?, ¿si alguien pierde su laptop?, ¿si un empleado se va de la empresa?"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf1011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Cómo vas a practicar"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "No necesitas cinco computadoras. Vas a construir el servidor en una "
+       },
+       {
+        "type": "text",
+        "text": "máquina virtual",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " dentro de tu computadora (o en una PC vieja, si tienes), y vas a usar tu propia computadora, tu celular y otro navegador como si fueran los equipos del despacho."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf1012"
+      }
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f1-1",
+     "texto": "Leí el caso y la lista de personas y equipos"
+    },
+    {
+     "id": "f1-2",
+     "texto": "Escribí los requisitos funcionales y no funcionales con mis palabras"
+    },
+    {
+     "id": "f1-3",
+     "texto": "Agregué al menos dos preguntas «¿qué pasa si…?» que le haría al cliente"
+    },
+    {
+     "id": "f1-4",
+     "texto": "Creé una carpeta «red-rios-contadores» para la documentación del proyecto"
+    }
+   ],
+   "entregable": "Un documento de requisitos (requisitos.md) en la carpeta del proyecto, con los requisitos y tus preguntas para el cliente.",
+   "enlace": false
+  },
+  {
+   "id": "f2",
+   "titulo": "Diseña la red",
+   "duracion": "2 a 3 horas",
+   "objetivo": "Diseñar la topología, elegir los equipos y hacer el plan de direcciones IP.",
+   "aprenderas": [
+    "Topología de una red pequeña",
+    "Direcciones fijas, reservas y DHCP",
+    "Separar la red de visitas"
+   ],
+   "trabajo": "Diagramas y planes de direcciones son lo primero que pide cualquier empresa antes de comprar equipo. Un buen diagrama vale más que una explicación de una hora.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ahora diseñas la red en papel: qué equipos hay, cómo se conectan y qué dirección tiene cada uno. Este es el diseño que propondrías al despacho:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf2001"
+      }
+     },
+     {
+      "type": "laboratorio",
+      "attrs": {
+       "id": "b-rf2002",
+       "nombre": "ro-topologia",
+       "titulo": "Diagrama de la red del despacho"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf2003",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Los equipos"
+       }
+      ]
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-rf2004"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Equipo"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Para qué"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Costo aproximado (2026)"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Router con firewall"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Conecta la oficina a internet y la protege; reparte direcciones (DHCP)"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$1,500 a $3,000"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Switch de 8 puertos gigabit"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Conecta por cable las PC, el servidor y la impresora"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$400 a $800"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Punto de acceso Wi-Fi"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Wi-Fi para las laptops y una red aparte para visitas"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$1,000 a $2,000"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Servidor (mini PC o una PC reutilizada)"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Guarda los archivos y corre Nextcloud"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$0 a $9,000"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Disco externo de 2 TB"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Respaldos"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$1,300 a $1,800"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "No-break (UPS)"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Que un apagón no apague el servidor de golpe"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$1,200 a $2,000"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Cable de red Cat 6"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Conexiones por cable"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "$300 a $600"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Los precios son aproximados y cambian; revísalos al cotizar. Lo importante es saber justificar cada equipo."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf2005"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf2006",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "El plan de direcciones IP"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Todo el despacho usa la red "
+       },
+       {
+        "type": "text",
+        "text": "192.168.10.0/24",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (lo viste en la lección de "
+       },
+       {
+        "type": "text",
+        "text": "DNS y direcciones IP",
+        "marks": [
+         {
+          "type": "link",
+          "attrs": {
+           "href": "../lecciones/dns.html"
+          }
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "). Los equipos que otros necesitan encontrar siempre en el mismo lugar llevan una "
+       },
+       {
+        "type": "text",
+        "text": "dirección fija",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "; los demás reciben una del rango que reparte el router por "
+       },
+       {
+        "type": "text",
+        "text": "DHCP",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf2007"
+      }
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-rf2008"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Equipo"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Dirección IP"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Cómo la obtiene"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Router (puerta de enlace)"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.10.1"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Fija"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Punto de acceso Wi-Fi"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.10.2"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Fija"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Servidor"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.10.10"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Fija"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Impresora"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.10.20"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Fija"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de Laura, Miguel y Sofía"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.10.101 a .103"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Reserva DHCP (siempre la misma)"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Laptops y otros equipos"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.10.100 a .199"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "DHCP"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Wi-Fi de visitas"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "192.168.20.0/24"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Otra red, separada"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "laboratorio",
+      "attrs": {
+       "id": "b-rf2009",
+       "nombre": "ro-ip",
+       "titulo": "¿Cabe este equipo en el plan?"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf2010",
+       "variante": "aviso"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Nunca pongas una dirección fija dentro del rango que reparte el DHCP: tarde o temprano el router se la dará a otro equipo y los dos dejarán de funcionar. Es una de las fallas más comunes en oficinas pequeñas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf2011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Dibuja tu propio diagrama"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Haz tu versión del diagrama con una herramienta gratuita como "
+       },
+       {
+        "type": "text",
+        "text": "draw.io",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (diagrams.net), que tiene íconos de red. Guárdalo en tu carpeta del proyecto; lo vas a usar en la documentación final."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf2012"
+      }
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f2-1",
+     "texto": "Revisé el diagrama y entendí el camino de un archivo dentro y fuera de la oficina"
+    },
+    {
+     "id": "f2-2",
+     "texto": "Hice mi propio diagrama en draw.io (o en papel)"
+    },
+    {
+     "id": "f2-3",
+     "texto": "Escribí el plan de direcciones IP con un rango DHCP que no choque con las fijas"
+    },
+    {
+     "id": "f2-4",
+     "texto": "Hice la lista de equipos con su costo aproximado"
+    }
+   ],
+   "entregable": "Tu diagrama de red y tu plan de direcciones IP (red.md con la tabla), guardados en la carpeta del proyecto.",
+   "enlace": false
+  },
+  {
+   "id": "f3",
+   "titulo": "Prepara el laboratorio",
+   "duracion": "2 horas",
+   "objetivo": "Tener un servidor Ubuntu funcionando en una máquina virtual y administrarlo por SSH.",
+   "aprenderas": [
+    "Qué es una máquina virtual",
+    "Instalar Ubuntu Server",
+    "Encontrar la IP de un equipo y conectarte por SSH"
+   ],
+   "trabajo": "La virtualización y Linux están en casi todos los centros de datos y nubes. Instalar un servidor y entrar por SSH es tarea diaria en soporte, redes y DevOps.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El servidor del despacho va a correr "
+       },
+       {
+        "type": "text",
+        "text": "Ubuntu Server",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", un sistema operativo Linux gratuito muy usado en empresas. Para practicar, lo instalas en una "
+       },
+       {
+        "type": "text",
+        "text": "máquina virtual",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ": una computadora simulada dentro de la tuya."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf3001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf3002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Lo que necesitas"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-rf3003"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una computadora con al menos "
+           },
+           {
+            "type": "text",
+            "text": "8 GB de RAM",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y 30 GB libres en el disco."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "VirtualBox",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (virtualbox.org), gratuito. Si tu computadora es una Mac con chip Apple, usa "
+           },
+           {
+            "type": "text",
+            "text": "UTM",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (mac.getutm.app) y la versión ARM de Ubuntu Server."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La imagen de "
+           },
+           {
+            "type": "text",
+            "text": "Ubuntu Server 24.04 LTS",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (ubuntu.com/download/server)."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf3004",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Tienes una computadora vieja que ya nadie usa? Instalar Ubuntu Server directamente en ella es todavía mejor práctica: así funciona un servidor real."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf3005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea la máquina virtual"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "attrs": {
+       "id": "b-rf3006"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En VirtualBox, crea una máquina nueva: tipo Linux, Ubuntu (64-bit), "
+           },
+           {
+            "type": "text",
+            "text": "2 GB de RAM",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " o más, "
+           },
+           {
+            "type": "text",
+            "text": "2 procesadores",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y un disco de "
+           },
+           {
+            "type": "text",
+            "text": "25 GB",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En "
+           },
+           {
+            "type": "text",
+            "text": "Red",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", cambia «NAT» por "
+           },
+           {
+            "type": "text",
+            "text": "Adaptador puente",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " ("
+           },
+           {
+            "type": "text",
+            "text": "bridged",
+            "marks": [
+             {
+              "type": "italic"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "). Así la máquina virtual se conecta a tu red como un equipo más y tus otros dispositivos pueden verla."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Arranca la máquina con la imagen de Ubuntu Server e instálalo con las opciones predeterminadas. Cuando te pregunte, marca "
+           },
+           {
+            "type": "text",
+            "text": "Install OpenSSH server",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Crea tu usuario (por ejemplo, «admin») con una contraseña fuerte."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf3007",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Primeros comandos"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Al terminar, inicia sesión en la máquina virtual y averigua su dirección IP:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf3008"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf3009",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "ip a"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Busca una línea como "
+       },
+       {
+        "type": "text",
+        "text": "inet 192.168.1.57/24",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en el adaptador que empieza con «enp». Esa es la dirección del servidor en tu red. Después, desde la terminal de "
+       },
+       {
+        "type": "text",
+        "text": "tu computadora",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (no de la máquina virtual), comprueba que lo ves y conéctate por SSH:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf3010"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf3011",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "ping 192.168.1.57\nssh admin@192.168.1.57"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "SSH",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " abre una terminal del servidor desde otra computadora. Así se administran casi todos los servidores del mundo: nadie se sienta frente a ellos."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf3012"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf3013",
+       "variante": "info"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tu red de casa probablemente usa 192.168.1.x o 192.168.0.x, no la 192.168.10.x del diseño. Es normal: en el laboratorio adaptas el plan a tu red; en el despacho usarías el plan de la fase 2."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf3014"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: la máquina virtual no recibe una dirección de tu red"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que el adaptador esté en «Adaptador puente» y que el nombre del adaptador elegido sea el que usa tu computadora para conectarse (el de Wi-Fi o el de cable). Algunas redes Wi-Fi de escuelas o empresas no permiten el modo puente; en casa casi siempre funciona."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf3015"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: «ssh: connect to host … Connection refused»"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No se instaló el servidor SSH. Dentro de la máquina virtual escribe "
+           },
+           {
+            "type": "text",
+            "text": "sudo apt install openssh-server",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f3-1",
+     "texto": "Instalé VirtualBox (o UTM)"
+    },
+    {
+     "id": "f3-2",
+     "texto": "Creé la máquina virtual con el adaptador de red en modo puente"
+    },
+    {
+     "id": "f3-3",
+     "texto": "Instalé Ubuntu Server con OpenSSH"
+    },
+    {
+     "id": "f3-4",
+     "texto": "Encontré la dirección IP del servidor con «ip a»"
+    },
+    {
+     "id": "f3-5",
+     "texto": "Me conecté al servidor por SSH desde mi computadora"
+    }
+   ],
+   "entregable": "Una sesión de SSH abierta desde tu computadora hacia el servidor.",
+   "enlace": false
+  },
+  {
+   "id": "f4",
+   "titulo": "Configura el servidor",
+   "duracion": "2 horas",
+   "objetivo": "Dejar el servidor actualizado, con una dirección fija, acceso seguro y firewall.",
+   "aprenderas": [
+    "Configurar la red de Linux con netplan",
+    "Entrar por SSH con llaves",
+    "Configurar un firewall con ufw"
+   ],
+   "trabajo": "«Endurecer» un servidor (actualizar, cerrar puertos, usar llaves) es una de las primeras tareas que te encargarán en un puesto de soporte o de administración de sistemas.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un servidor nuevo se prepara siempre igual: actualizarlo, darle una dirección que no cambie, proteger el acceso y encender el firewall."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf4002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Actualiza el sistema"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4003",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo apt update\nsudo apt upgrade -y"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf4004",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Una dirección que no cambie"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Las PC del despacho necesitan encontrar el servidor siempre en el mismo lugar. Hay dos formas: hacer una "
+       },
+       {
+        "type": "text",
+        "text": "reserva DHCP",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en el router (lo más sencillo si tienes acceso a él) o configurar una "
+       },
+       {
+        "type": "text",
+        "text": "IP fija",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en el servidor. Para la fija, Ubuntu usa "
+       },
+       {
+        "type": "text",
+        "text": "netplan",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Primero mira el nombre de tu adaptador con "
+       },
+       {
+        "type": "text",
+        "text": "ip a",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (por ejemplo, enp0s3) y el de tu archivo de configuración con "
+       },
+       {
+        "type": "text",
+        "text": "ls /etc/netplan",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (suele llamarse 50-cloud-init.yaml), y edítalo:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4005"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4006",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nano /etc/netplan/50-cloud-init.yaml"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4007",
+       "language": "yaml"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "network:\n  version: 2\n  ethernets:\n    enp0s3:\n      dhcp4: false\n      addresses: [192.168.1.50/24]\n      routes:\n        - to: default\n          via: 192.168.1.1\n      nameservers:\n        addresses: [1.1.1.1, 8.8.8.8]"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Cambia los valores por los de tu red: una dirección "
+       },
+       {
+        "type": "text",
+        "text": "fuera",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " del rango DHCP de tu router, la puerta de enlace de tu router (normalmente termina en .1) y el nombre de tu adaptador. Guarda (Ctrl+O, Enter, Ctrl+X) y aplica:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4008"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4009",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo netplan apply"
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf4010",
+       "variante": "aviso"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En YAML los espacios importan: usa espacios, nunca tabulaciones, y respeta la sangría exacta. Si te equivocas, el servidor puede quedarse sin red; por eso conviene hacerlo desde la consola de la máquina virtual y no por SSH."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf4011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Entra con llaves, no con contraseña"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Una "
+       },
+       {
+        "type": "text",
+        "text": "llave SSH",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es como un candado y su llave: la parte pública va al servidor y la privada se queda en tu computadora. Es más seguro que una contraseña. Desde "
+       },
+       {
+        "type": "text",
+        "text": "tu computadora",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ":"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4012"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4013",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "ssh-keygen -t ed25519\nssh-copy-id admin@192.168.1.50"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En Windows, si no tienes "
+       },
+       {
+        "type": "text",
+        "text": "ssh-copy-id",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", copia el contenido de tu archivo "
+       },
+       {
+        "type": "text",
+        "text": ".ssh/id_ed25519.pub",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " al archivo "
+       },
+       {
+        "type": "text",
+        "text": "~/.ssh/authorized_keys",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " del servidor. Comprueba que ya entras sin que te pida la contraseña del usuario."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4014"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf4015",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Enciende el firewall"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El firewall bloquea todo lo que no autorices. Solo abrimos lo necesario: SSH para administrar y la web (80 y 443) para Nextcloud:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4016"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4017",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo ufw allow OpenSSH\nsudo ufw allow 80/tcp\nsudo ufw allow 443/tcp\nsudo ufw enable\nsudo ufw status"
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf4018",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Permite SSH "
+         },
+         {
+          "type": "text",
+          "text": "antes",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de encender el firewall. Si lo enciendes primero, te quedas fuera de tu propio servidor (y tendrás que entrar por la consola de la máquina virtual)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf4019",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "5. Actualizaciones automáticas de seguridad"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf4020",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo apt install unattended-upgrades\nsudo dpkg-reconfigure --priority=low unattended-upgrades"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Así el servidor instala solo los parches de seguridad, que es lo que detiene a los gusanos (lo viste en la lección de "
+       },
+       {
+        "type": "text",
+        "text": "malware",
+        "marks": [
+         {
+          "type": "link",
+          "attrs": {
+           "href": "../lecciones/malware.html"
+          }
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ")."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf4021"
+      }
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f4-1",
+     "texto": "Actualicé el servidor"
+    },
+    {
+     "id": "f4-2",
+     "texto": "Le di una dirección que no cambia (IP fija o reserva DHCP) y sigue teniendo internet"
+    },
+    {
+     "id": "f4-3",
+     "texto": "Entro por SSH con mi llave, sin escribir contraseña"
+    },
+    {
+     "id": "f4-4",
+     "texto": "Encendí el firewall con SSH, 80 y 443 permitidos"
+    },
+    {
+     "id": "f4-5",
+     "texto": "Activé las actualizaciones automáticas de seguridad"
+    }
+   ],
+   "entregable": "Una captura de «sudo ufw status» mostrando el firewall activo, y la dirección fija del servidor anotada en tu red.md.",
+   "enlace": false
+  },
+  {
+   "id": "f5",
+   "titulo": "Instala Nextcloud",
+   "duracion": "2 a 3 horas",
+   "objetivo": "Montar una nube privada con usuarios, grupos y carpetas compartidas.",
+   "aprenderas": [
+    "Instalar un servicio en Linux",
+    "HTTPS y certificados",
+    "Usuarios, grupos y el principio de mínimo privilegio"
+   ],
+   "trabajo": "Administrar usuarios, grupos y permisos es el día a día de cualquier área de TI. Nextcloud, además, es una herramienta real que muchas organizaciones usan.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Nextcloud",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es un programa libre que convierte tu servidor en una nube propia, parecida a Google Drive: carpetas compartidas, permisos, sincronización con las computadoras y edición de documentos en el navegador, varias personas a la vez. Lo usan escuelas, gobiernos y empresas que quieren tener sus datos en casa."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf5002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Instálalo"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "La forma más sencilla en Ubuntu es el paquete "
+       },
+       {
+        "type": "text",
+        "text": "snap",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", que trae todo lo necesario (servidor web, base de datos y PHP):"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5003"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf5004",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo snap install nextcloud"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea la cuenta de administrador (usa una contraseña fuerte y distinta a la del servidor):"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5005"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf5006",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nextcloud.manual-install admin \"UnaContraseñaLargaYUnica\""
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf5007",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Permite que lo abran por su dirección"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Nextcloud solo responde a los nombres o direcciones que le autorices. Agrega la IP de tu servidor:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5008"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf5009",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nextcloud.occ config:system:set trusted_domains 1 --value=192.168.1.50"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf5010",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Conexión cifrada"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Aunque sea dentro de la oficina, las contraseñas no deben viajar en texto plano. Activa HTTPS con un certificado propio:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5011"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf5012",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nextcloud.enable-https self-signed"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ahora abre "
+       },
+       {
+        "type": "text",
+        "text": "https://192.168.1.50",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en tu navegador. Te advertirá que el certificado no es de confianza: es normal con un certificado propio (lo firmaste tú, no una autoridad). Acepta la advertencia solo porque sabes que es tu servidor."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5013"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf5014",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Usuarios, grupos y carpetas"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Entra como admin y, en "
+       },
+       {
+        "type": "text",
+        "text": "Cuentas",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (o Usuarios), crea los grupos y las personas del despacho:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5015"
+      }
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-rf5016"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Grupo"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Personas"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Carpetas que ven"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "contabilidad"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Laura, Miguel, Carlos, Ana"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Clientes, Declaraciones, Plantillas"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "recepcion"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sofía"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Facturación, Plantillas"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "socios"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Carlos"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Todo, incluida Administración"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "También puedes crearlos desde la terminal, que es como se automatiza en empresas grandes:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5017"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf5018",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nextcloud.occ group:add contabilidad\nsudo nextcloud.occ user:add --display-name=\"Laura\" --group=\"contabilidad\" laura"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea las carpetas con el usuario admin y "
+       },
+       {
+        "type": "text",
+        "text": "compártelas con el grupo",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " que corresponda (botón de compartir, escribe el nombre del grupo). Así, cuando entre una persona nueva, solo la agregas al grupo y ve todo lo que necesita."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf5019"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf5020",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Este principio se llama "
+         },
+         {
+          "type": "text",
+          "text": "mínimo privilegio",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": cada quien ve solo lo que necesita para su trabajo. Si la cuenta de Sofía se ve comprometida, la contabilidad de los clientes sigue a salvo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf5021"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: «Acceso a través de un dominio no confiable»"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La dirección que escribiste no está en trusted_domains. Repite el paso 2 con la dirección exacta que usas en el navegador (puedes agregar más con los índices 2, 3…)."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf5022"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Y si quiero editar documentos de Word y Excel?"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Nextcloud trae un editor de texto colaborativo. Para documentos de Office, se agrega la app "
+           },
+           {
+            "type": "text",
+            "text": "Nextcloud Office",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (basada en Collabora Online). Necesita más memoria en el servidor; pruébala cuando todo lo demás funcione."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f5-1",
+     "texto": "Instalé Nextcloud y creé la cuenta de administrador"
+    },
+    {
+     "id": "f5-2",
+     "texto": "Agregué la IP del servidor a los dominios de confianza"
+    },
+    {
+     "id": "f5-3",
+     "texto": "Activé HTTPS y entro con https://"
+    },
+    {
+     "id": "f5-4",
+     "texto": "Creé los grupos y al menos tres usuarios del despacho"
+    },
+    {
+     "id": "f5-5",
+     "texto": "Creé las carpetas y las compartí con los grupos correctos"
+    }
+   ],
+   "entregable": "Nextcloud funcionando por https, con los grupos, los usuarios y las carpetas del despacho.",
+   "enlace": false
+  },
+  {
+   "id": "f6",
+   "titulo": "Conecta la oficina",
+   "duracion": "2 horas",
+   "objetivo": "Que tres equipos usen el servidor y editen el mismo documento a la vez.",
+   "aprenderas": [
+    "Probar permisos con distintos usuarios",
+    "Edición colaborativa y versiones",
+    "Nombres locales con el archivo hosts"
+   ],
+   "trabajo": "Probar desde el punto de vista de cada usuario, y no solo como administrador, es lo que distingue a un buen técnico: así se encuentran los errores de permisos antes de que los encuentre el cliente.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ahora simulas las tres PC del despacho. Cada «equipo» será un navegador o dispositivo distinto, con la cuenta de una persona:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf6001"
+      }
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-rf6002"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Equipo del despacho"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Cómo lo simulas"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de Laura"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Tu navegador normal, con la cuenta de laura"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de Miguel"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Otro navegador (o una ventana privada), con la cuenta de miguel"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "PC de Sofía"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Tu celular conectado a tu Wi-Fi, con la cuenta de sofia"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf6003",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Entra desde cada equipo"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En cada uno, abre https://IP-DE-TU-SERVIDOR e inicia sesión con su cuenta. Comprueba que cada quien ve "
+       },
+       {
+        "type": "text",
+        "text": "solo",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " sus carpetas: Sofía no debe ver «Clientes»."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf6004"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf6005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Edita en colaboración"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "attrs": {
+       "id": "b-rf6006"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Como Laura, crea dentro de «Clientes» un documento de texto llamado «Cierre de mes.md» y escribe una lista de pendientes."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Como Miguel, abre el mismo documento al mismo tiempo."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Escriban los dos a la vez: verás el cursor y los cambios del otro en tiempo real."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa el "
+           },
+           {
+            "type": "text",
+            "text": "historial de versiones",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " del archivo (en sus detalles): puedes regresar a una versión anterior si alguien borra algo por error."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf6007",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Sincroniza una carpeta en la computadora"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Instala el "
+       },
+       {
+        "type": "text",
+        "text": "cliente de escritorio de Nextcloud",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (nextcloud.com/install) en tu computadora y conéctalo a tu servidor con la cuenta de Laura. Las carpetas aparecerán en el explorador de archivos como una carpeta normal, y lo que guardes ahí se sube solo."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf6008"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf6009",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Un nombre en lugar de una IP"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Recordar 192.168.1.50 es incómodo. En una empresa, el router o un servidor DNS interno le darían un nombre, como "
+       },
+       {
+        "type": "text",
+        "text": "nube.rios.local",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". En tu laboratorio puedes simularlo en tu computadora agregando una línea al archivo hosts (en Windows: C:\\Windows\\System32\\drivers\\etc\\hosts, abierto como administrador; en macOS y Linux: /etc/hosts):"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf6010"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf6011",
+       "language": "text"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "192.168.1.50   nube.rios.local"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Agrégalo también a los dominios de confianza de Nextcloud (índice 2) y prueba https://nube.rios.local."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf6012"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf6013",
+       "variante": "info"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La impresora del despacho se compartiría igual: con su dirección fija (192.168.10.20) cada PC la agrega una vez y la encuentra siempre. Es la razón de las direcciones fijas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf6014"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: el celular no abre la página"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que esté conectado al mismo Wi-Fi que tu computadora y no a los datos móviles, y que el firewall del servidor permita el puerto 443. Algunos routers aíslan a los dispositivos del Wi-Fi entre sí («aislamiento de clientes»); en ese caso, prueba con una computadora conectada por cable."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f6-1",
+     "texto": "Entré desde tres equipos (o navegadores) con tres cuentas distintas"
+    },
+    {
+     "id": "f6-2",
+     "texto": "Comprobé que recepción no ve las carpetas de contabilidad"
+    },
+    {
+     "id": "f6-3",
+     "texto": "Dos usuarios editaron el mismo documento al mismo tiempo"
+    },
+    {
+     "id": "f6-4",
+     "texto": "Recuperé una versión anterior de un archivo"
+    },
+    {
+     "id": "f6-5",
+     "texto": "Sincronicé una carpeta con el cliente de escritorio"
+    }
+   ],
+   "entregable": "Una captura de dos usuarios editando el mismo documento al mismo tiempo.",
+   "enlace": false
+  },
+  {
+   "id": "f7",
+   "titulo": "Acceso remoto seguro",
+   "duracion": "2 horas",
+   "objetivo": "Que las laptops entren al servidor desde cualquier lugar por un túnel cifrado, sin abrir puertos.",
+   "aprenderas": [
+    "Qué es una VPN y por qué no abrir puertos",
+    "WireGuard, CGNAT y Tailscale",
+    "Quitar el acceso a un dispositivo perdido"
+   ],
+   "trabajo": "El trabajo remoto hizo de la VPN una pieza básica de cualquier empresa. Saber explicar por qué no se expone un servidor directamente a internet es una pregunta clásica de entrevista.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Carlos y Ana necesitan los archivos desde su casa o con clientes. El servidor está en la oficina, detrás del router. ¿Cómo llegan a él desde internet sin abrirle la puerta a todo el mundo?"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7001"
+      }
+     },
+     {
+      "type": "laboratorio",
+      "attrs": {
+       "id": "b-rf7002",
+       "nombre": "ro-remoto",
+       "titulo": "¿Cómo entran las laptops desde fuera?"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf7003",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "La idea de una VPN"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Una "
+       },
+       {
+        "type": "text",
+        "text": "VPN",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (red privada virtual) crea un "
+       },
+       {
+        "type": "text",
+        "text": "túnel cifrado",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " entre la laptop y la red de la oficina. Para la laptop, es como si estuviera conectada al switch del despacho, aunque esté en otra ciudad. Todo lo que viaja por el túnel va cifrado (lo viste en la lección de "
+       },
+       {
+        "type": "text",
+        "text": "cifrado",
+        "marks": [
+         {
+          "type": "link",
+          "attrs": {
+           "href": "../lecciones/cifrado.html"
+          }
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "), y solo entran los dispositivos que tienen su llave."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7004"
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "WireGuard",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es un protocolo de VPN moderno, rápido y libre. Montarlo a mano requiere que el router de la oficina tenga una dirección pública y abrir un puerto. Pero muchos proveedores de internet en México comparten una misma IP pública entre varios clientes (se llama "
+       },
+       {
+        "type": "text",
+        "text": "CGNAT",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "), y entonces no se puede recibir conexiones desde fuera."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7005"
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Tailscale",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " resuelve eso: usa WireGuard por dentro, pero se encarga de conectar los equipos aunque estén detrás de CGNAT, sin abrir puertos. Su plan personal es gratuito para practicar. Lo vas a usar en el laboratorio."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7006"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf7007",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Instala Tailscale en el servidor"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf7008",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "curl -fsSL https://tailscale.com/install.sh | sh\nsudo tailscale up"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El segundo comando te da un enlace: ábrelo en tu navegador e inicia sesión para autorizar el servidor. Luego mira la dirección que le asignó Tailscale (empieza con 100.):"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7009"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf7010",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "tailscale ip -4"
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf7011",
+       "variante": "aviso"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Antes de ejecutar un comando que descarga y corre un script de internet ("
+         },
+         {
+          "type": "text",
+          "text": "curl … | sh",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "), comprueba que la dirección sea exactamente la del sitio oficial. Es una práctica común, pero solo es segura con fuentes confiables."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf7012",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Instala Tailscale en la «laptop»"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Instala la app de Tailscale en tu celular (o en otra computadora) e inicia sesión con la misma cuenta. Ya forman una red privada."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7013"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf7014",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Autoriza la nueva dirección en Nextcloud"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf7015",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nextcloud.occ config:system:set trusted_domains 3 --value=100.x.y.z"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Cambia 100.x.y.z por la dirección de tu servidor en Tailscale."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7016"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf7017",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. La prueba de fuego"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En tu celular, "
+       },
+       {
+        "type": "text",
+        "text": "desconéctate del Wi-Fi",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " y usa los datos móviles, como si fueras Ana con un cliente. Activa Tailscale y abre https://100.x.y.z. Si ves tu Nextcloud, el acceso remoto funciona, sin haber abierto un solo puerto del router."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7018"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf7019",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "5. Si una laptop se pierde"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Desde el panel de Tailscale puedes "
+       },
+       {
+        "type": "text",
+        "text": "quitar el acceso",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " a un dispositivo al instante, y en Nextcloud puedes cerrar las sesiones de esa persona. Agrega además la "
+       },
+       {
+        "type": "text",
+        "text": "verificación en dos pasos",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " de Nextcloud (app «Two-Factor TOTP Provider») para que una contraseña robada no baste."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf7020"
+      }
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf7021"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Y en una empresa más grande?"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se usan VPN administradas por la propia empresa (WireGuard u OpenVPN en un firewall dedicado) o soluciones de «acceso de confianza cero» ("
+           },
+           {
+            "type": "text",
+            "text": "zero trust",
+            "marks": [
+             {
+              "type": "italic"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "), que verifican a cada usuario y dispositivo en cada conexión. Los conceptos son los mismos que practicaste aquí."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f7-1",
+     "texto": "Comparé las opciones de acceso remoto y entendí sus riesgos"
+    },
+    {
+     "id": "f7-2",
+     "texto": "Instalé Tailscale en el servidor y en otro dispositivo"
+    },
+    {
+     "id": "f7-3",
+     "texto": "Agregué la dirección de Tailscale a los dominios de confianza"
+    },
+    {
+     "id": "f7-4",
+     "texto": "Abrí Nextcloud desde el celular con datos móviles, sin Wi-Fi"
+    },
+    {
+     "id": "f7-5",
+     "texto": "Activé la verificación en dos pasos para al menos un usuario"
+    }
+   ],
+   "entregable": "Una captura de tu Nextcloud abierto desde el celular con datos móviles por la VPN.",
+   "enlace": false
+  },
+  {
+   "id": "f8",
+   "titulo": "Respaldos y documentación",
+   "duracion": "2 a 3 horas",
+   "objetivo": "Respaldar, revisar la seguridad y documentar el proyecto como un trabajo profesional.",
+   "aprenderas": [
+    "Respaldar y restaurar un servicio",
+    "Programar tareas con cron",
+    "Escribir un manual de operación (runbook)"
+   ],
+   "trabajo": "La documentación y los respaldos probados son lo que separa a un técnico de un profesional. Un cliente o un jefe confía en quien deja todo por escrito.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un sistema que nadie más entiende y sin respaldos no está terminado. La última fase es la que convierte tu laboratorio en un trabajo profesional."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf8002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Respaldos"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El paquete de Nextcloud trae un comando que exporta la configuración, la base de datos y los archivos:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8003"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf8004",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo nextcloud.export"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea una carpeta con la fecha dentro de /var/snap/nextcloud/common/backups. Ese respaldo debe salir del servidor: cópialo a un disco externo y, si se puede, a otro lugar fuera de la oficina (la "
+       },
+       {
+        "type": "text",
+        "text": "regla 3-2-1",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " de la lección de "
+       },
+       {
+        "type": "text",
+        "text": "almacenamiento",
+        "marks": [
+         {
+          "type": "link",
+          "attrs": {
+           "href": "../lecciones/almacenamiento.html"
+          }
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "). Para que sea diario, se programa con "
+       },
+       {
+        "type": "text",
+        "text": "cron",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ":"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8005"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf8006",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "sudo crontab -e\n# Todos los días a las 2:30 de la mañana\n30 2 * * * /snap/bin/nextcloud.export -abc"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Las opciones -a, -b y -c exportan las apps, la base de datos y la configuración; sin -d no copian los archivos, que pesan más y conviene respaldar aparte (por ejemplo, con rsync al disco externo). Revisa con "
+       },
+       {
+        "type": "text",
+        "text": "nextcloud.export --help",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " qué incluye tu versión."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8007"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf8008",
+       "variante": "aviso"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un respaldo que nunca restauraste es solo una esperanza. Haz la prueba: en una máquina virtual nueva, instala Nextcloud y restaura con "
+         },
+         {
+          "type": "text",
+          "text": "sudo nextcloud.import",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " seguido de la carpeta del respaldo. Anota cuánto tardó."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf8009",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Revisión de seguridad"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-rf8010"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El panel de administración de Nextcloud tiene una sección de "
+           },
+           {
+            "type": "text",
+            "text": "Resumen",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " con advertencias de seguridad y configuración: atiéndelas."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ningún puerto del router está abierto hacia el servidor."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cada persona tiene su propia cuenta; nadie usa la de admin para trabajar."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Las visitas usan otra red Wi-Fi."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf8011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. La documentación"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea un repositorio en GitHub llamado "
+       },
+       {
+        "type": "text",
+        "text": "red-rios-contadores",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (puedes usar lo que aprendiste en el proyecto del portafolio) con la documentación del proyecto. Es lo que entregarías a un cliente y lo que muestras en una entrevista:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8012"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-rf8013",
+       "language": "text"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "red-rios-contadores/\n├── README.md          Resumen del proyecto y resultados\n├── requisitos.md      Lo que pidió el cliente (fase 1)\n├── red.md             Diagrama, equipos, costos y plan de IP (fase 2)\n├── servidor.md        Cómo se instaló y configuró (fases 3 a 5)\n├── acceso-remoto.md   VPN y cómo dar o quitar acceso (fase 7)\n├── respaldos.md       Qué se respalda, cuándo y cómo restaurar (fase 8)\n└── diagrama.png"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Escribe "
+       },
+       {
+        "type": "text",
+        "text": "servidor.md",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " como un "
+       },
+       {
+        "type": "text",
+        "text": "manual de operación",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " ("
+       },
+       {
+        "type": "text",
+        "text": "runbook",
+        "marks": [
+         {
+          "type": "italic"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "): los pasos exactos para repetir la instalación o resolver un problema, para que otra persona pueda hacerlo sin ti. Nunca pongas contraseñas en el repositorio: escribe «la contraseña está en el gestor de contraseñas del despacho»."
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8014"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-rf8015",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Preséntalo"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Agrega el proyecto a tu portafolio y a tu CV. Una línea como esta dice mucho en una entrevista para soporte, redes o administración de sistemas:"
+       }
+      ],
+      "attrs": {
+       "id": "b-rf8016"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-rf8017",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«Diseñé la red de un despacho de 5 personas y monté un servidor Ubuntu con Nextcloud para archivos compartidos y edición colaborativa, acceso remoto por VPN (WireGuard/Tailscale), firewall y respaldos automáticos. Documentación en GitHub.»"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-rf8018"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Qué sigue?"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para seguir creciendo en redes: estudia para una certificación de entrada como CompTIA Network+ o Cisco CCNA, practica con Packet Tracer (simulador gratuito de Cisco) y aprende a automatizar servidores con scripts de Bash o con Ansible."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f8-1",
+     "texto": "Hice un respaldo con nextcloud.export y lo copié fuera del servidor"
+    },
+    {
+     "id": "f8-2",
+     "texto": "Programé el respaldo diario con cron"
+    },
+    {
+     "id": "f8-3",
+     "texto": "Probé restaurar un respaldo en una máquina virtual nueva"
+    },
+    {
+     "id": "f8-4",
+     "texto": "Revisé las advertencias de seguridad de Nextcloud"
+    },
+    {
+     "id": "f8-5",
+     "texto": "Publiqué la documentación del proyecto en GitHub, sin contraseñas"
+    }
+   ],
+   "entregable": "El enlace al repositorio de GitHub con la documentación del proyecto. Escríbelo abajo para guardarlo en OneLearn.",
+   "enlace": true
+  }
+ ]
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="red-oficina.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/proyecto.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>
