@@ -90,6 +90,17 @@
   --c1:#b9c4c1; --c2:#7fbcff; --c3:#7fe0a6; --c4:#ffd166; --c5:#c3a8ff; --c6:#ff8fc4; --c7:#ffb27a;
   color-scheme:dark;
 }
+/* IBM Plex, la tipografía del sitio, alojada aquí para que funcione sin conexión (SIL OFL 1.1) */
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:italic;font-weight:400;font-display:swap;src:url("../fonts/ibm-plex-sans-latin-400-italic.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;font-display:swap;src:url("../fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;font-display:swap;src:url("../fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:700;font-display:swap;src:url("../fonts/ibm-plex-sans-latin-700-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url("../fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;font-display:swap;src:url("../fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;font-display:swap;src:url("../fonts/ibm-plex-mono-latin-700-normal.woff2") format("woff2")}
+
 /* Fuentes de lectura alojadas en el sitio (licencia SIL OFL 1.1, ver assets/fonts/LICENSE-*).
    El navegador solo las descarga cuando alguien las elige en Lectura. */
 @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("../fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2")}
@@ -526,6 +537,15 @@ dialog.atajos::backdrop{background:rgba(0,0,0,.45)}
 .atajos dl>div{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:0.75rem;align-items:baseline;padding:0.5rem 0;border-top:1px solid var(--line)}
 .atajos dt,.atajos dd{margin:0}
 .atajos dd{font-size:0.9375rem}
+
+/* ---------- Aviso (por ejemplo, «OneLearn se actualizó») ---------- */
+.aviso{position:fixed;z-index:60;left:50%;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:0.75rem;width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}
+.aviso>span{min-width:0}
+.aviso-x{display:grid;place-items:center;flex:none;width:2rem;height:2rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);cursor:pointer}
+.aviso-x:hover{background:var(--hover);color:var(--fg)}
+
+/* ---------- Instalar la app (pantalla de inicio) ---------- */
+.ini-app p{margin:0 0 0.75rem;color:var(--fg-2)}
 
 /* ---------- Alto contraste: además de los colores ---------- */
 [data-contrast="high"] .page a,[data-contrast="high"] .link,[data-contrast="high"] .toc .link{text-decoration:underline;text-decoration-color:currentColor}
