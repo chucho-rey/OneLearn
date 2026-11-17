@@ -1,0 +1,1518 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cómo viaja un paquete · OneLearn</title>
+<meta name="description" content="Cómo viajan tus datos por internet: paquetes, capas, routers y rutas, TCP contra UDP y la latencia, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="paquetes.css">
+</head>
+<body data-leccion="paquetes">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="pq-dividir">
+<p class="hint">Elige qué mandas. Cada paquete lleva hasta 1,460 bytes de datos y 40 bytes de encabezados (IP y TCP).</p>
+<div class="chips" id="dvQue" role="group" aria-label="Qué mandas">
+  <button class="chip" type="button" data-v="200" aria-pressed="true">Un mensaje de chat (200 bytes)</button>
+  <button class="chip" type="button" data-v="2000000" aria-pressed="false">Una página web (2 MB)</button>
+  <button class="chip" type="button" data-v="3000000" aria-pressed="false">Una foto (3 MB)</button>
+  <button class="chip" type="button" data-v="8000000" aria-pressed="false">Una canción (8 MB)</button>
+</div>
+<div class="dv" id="dvPaq" aria-hidden="true"></div>
+<p class="lbl dv-n" id="dvMas"></p>
+<div class="kpis">
+  <div class="kpi"><span>Paquetes</span><b id="dvN"></b></div>
+  <div class="kpi"><span>Bytes de encabezados</span><b id="dvEnc"></b></div>
+  <div class="kpi"><span>Datos extra por los encabezados</span><b id="dvPct"></b></div>
+</div>
+<p class="msg" id="dvMsg" aria-live="polite"></p>
+</template>
+<template data-lab="pq-ruta">
+<p class="hint">El paquete va de tu casa al servidor. Cada router elige el siguiente salto por el camino más rápido; el número en cada enlace es su latencia en milisegundos.</p>
+<label class="chk"><input type="checkbox" id="ruCorte"> Cortar el enlace entre B y D (por ejemplo, un cable dañado)</label>
+<svg class="ru-svg" id="ruSvg" viewBox="0 0 360 200" role="img" aria-label="Mapa de routers entre tu casa y el servidor"></svg>
+<div class="kpis">
+  <div class="kpi"><span>Saltos</span><b id="ruSal"></b></div>
+  <div class="kpi"><span>Tiempo acumulado</span><b id="ruMs"></b></div>
+  <div class="kpi"><span>TTL del paquete</span><b id="ruTtl"></b></div>
+</div>
+<div class="status" id="ruStat" data-k="" aria-live="polite"><span class="dot"></span><span id="ruMsg"></span></div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="ruSig">Siguiente salto</button>
+  <button class="btn" type="button" id="ruReset">Reiniciar</button>
+</div>
+</template>
+<template data-lab="pq-tcp">
+<p class="hint">Se envían 10 paquetes por una red que pierde algunos. Elige cuántos se pierden y con qué protocolo se envían.</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">Pérdida</span>
+  <input class="slider" type="range" id="tcPer" min="0" max="40" step="10" value="20" aria-label="Porcentaje de paquetes perdidos">
+  <b class="mono" id="tcPerV"></b>
+</div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="tcTcp">Enviar con TCP</button>
+  <button class="btn" type="button" id="tcUdp">Enviar con UDP</button>
+</div>
+<ol class="tc" id="tcRes" aria-label="Paquetes enviados"></ol>
+<div class="leg"><span><i class="tc-l-ok"></i>Llegó</span><span><i class="tc-l-re"></i>Llegó al reenviarse</span><span><i class="tc-l-no"></i>Se perdió</span></div>
+<div class="kpis">
+  <div class="kpi"><span>Paquetes que llegaron</span><b id="tcOk"></b></div>
+  <div class="kpi"><span>Envíos en total</span><b id="tcEnv"></b></div>
+</div>
+<p class="msg" id="tcMsg" aria-live="polite"></p>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "paquetes",
+ "titulo": "Cómo viaja un paquete",
+ "icono": "paquete",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "12 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-pq001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-pq002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Internet: una red de redes"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Internet no es una sola red: son decenas de miles de redes (la de tu casa, la de tu proveedor, la de una universidad, la de una empresa de video) conectadas entre sí. Ninguna computadora las controla todas; funcionan juntas porque todas hablan los mismos "
+     },
+     {
+      "type": "text",
+      "text": "protocolos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", las reglas que dicen cómo enviar y recibir datos."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq003"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-pq004"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Paquetes",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Todo lo que envías se corta en pedazos pequeños que viajan por separado."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Routers",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Equipos que reciben cada paquete y deciden por dónde mandarlo para que se acerque a su destino."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Protocolos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "IP, TCP, UDP, HTTP… acuerdos que permiten que equipos de cualquier marca se entiendan."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-paquetes",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Todo viaja en paquetes"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuando mandas una foto, no viaja entera. Se corta en "
+     },
+     {
+      "type": "text",
+      "text": "paquetes",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " de hasta unos 1,500 bytes (el límite típico de una red, llamado MTU). Cada paquete lleva un "
+     },
+     {
+      "type": "text",
+      "text": "encabezado",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " con la dirección de origen, la de destino y un número de orden, como un sobre con remitente y destinatario."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq005"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Así un mismo cable puede llevar los paquetes de miles de personas mezclados, y si uno se pierde, solo hay que reenviar ese pedazo y no el archivo completo."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq006"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-pq007",
+     "nombre": "pq-dividir",
+     "titulo": "Divide un archivo en paquetes"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-capas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Las capas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los protocolos de internet se organizan en "
+     },
+     {
+      "type": "text",
+      "text": "capas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Cada una resuelve un problema y se apoya en la de abajo:"
+     }
+    ],
+    "attrs": {
+     "id": "b-pq008"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-pq009"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Capa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué resuelve"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Protocolos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Aplicación"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué se dice: pedir una página, mandar un correo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "HTTP, HTTPS, DNS, SMTP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Transporte"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Que los datos lleguen completos y al programa correcto (por "
+           },
+           {
+            "type": "text",
+            "text": "puerto",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP, UDP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Internet"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cómo llegar de una red a otra (por "
+           },
+           {
+            "type": "text",
+            "text": "dirección IP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "IP (IPv4, IPv6)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Enlace"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cómo pasar al siguiente equipo por un cable o por aire"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Wi-Fi, Ethernet, fibra"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Al enviar, cada capa mete los datos de la de arriba en su propio sobre ("
+     },
+     {
+      "type": "text",
+      "text": "encapsulamiento",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "): la página web va dentro de un segmento TCP, que va dentro de un paquete IP, que va dentro de una trama Wi-Fi. Al recibir, cada capa abre su sobre y entrega el contenido a la de arriba."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq010"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-routers",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Routers y rutas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "router",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es un equipo con varias conexiones. Cuando le llega un paquete, mira la dirección de destino, consulta su "
+     },
+     {
+      "type": "text",
+      "text": "tabla de rutas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y lo manda por la salida que lo acerca más. Ningún router conoce el camino completo: cada uno solo decide el siguiente salto."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq011"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada paquete lleva un contador llamado "
+     },
+     {
+      "type": "text",
+      "text": "TTL",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "time to live",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "): cada router le resta 1, y si llega a 0, el paquete se descarta. Así un paquete perdido en un círculo no da vueltas para siempre."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq012"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-pq013",
+     "nombre": "pq-ruta",
+     "titulo": "La ruta de un paquete"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-pq014",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Puedes ver la ruta real de tus paquetes con el comando "
+       },
+       {
+        "type": "text",
+        "text": "tracert onelearn.example",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en Windows o "
+       },
+       {
+        "type": "text",
+        "text": "traceroute",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en macOS y Linux (cambia el nombre por cualquier sitio). Muestra cada router por el que pasan y cuánto tarda cada salto."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tcp",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "TCP y UDP"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "IP solo hace su mejor esfuerzo: un paquete puede perderse, duplicarse o llegar desordenado. La capa de transporte decide qué hacer con eso:"
+     }
+    ],
+    "attrs": {
+     "id": "b-pq015"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-pq016"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Garantiza que llegue todo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sí: confirma cada paquete y reenvía los perdidos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No: lo que se pierde, se pierde"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Orden"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Reordena los paquetes al llegar"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los entrega como llegan"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Velocidad"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un poco más lento por las confirmaciones"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Más rápido, sin esperas"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para qué"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Páginas web, correo, descargas, mensajes"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Videollamadas, juegos en línea, transmisiones en vivo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-pq017",
+     "nombre": "pq-tcp",
+     "titulo": "TCP contra UDP"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En una videollamada no sirve de nada recibir tarde un pedazo de audio que ya pasó: es mejor seguir. En una descarga, en cambio, un solo byte faltante echa a perder el archivo."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq018"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-latencia",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué tan rápido viaja?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En la fibra óptica, la luz viaja a unos 200,000 km por segundo. De la Ciudad de México a Madrid hay unos 9,000 km: un paquete tarda al menos 45 ms en llegar, y 90 ms en ir y volver, sin contar el tiempo en cada router. Ese tiempo de ida y vuelta es la "
+     },
+     {
+      "type": "text",
+      "text": "latencia",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", y ningún plan de internet la puede bajar del límite de la luz."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq019"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-pq020",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ancho de banda",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " y "
+       },
+       {
+        "type": "text",
+        "text": "latencia",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " son cosas distintas. El ancho de banda es cuántos datos caben por segundo (como el ancho de una carretera); la latencia, cuánto tarda cada uno en llegar (como la distancia). Para descargar archivos importa el primero; para jugar en línea o videollamadas, la segunda."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La mayor parte del tráfico entre continentes viaja por "
+     },
+     {
+      "type": "text",
+      "text": "cables submarinos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " de fibra óptica, no por satélites. Hay cientos de ellos en el fondo del mar."
+     }
+    ],
+    "attrs": {
+     "id": "b-pq021"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-pq022"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es el ping?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un programa que manda un paquete pequeño a otro equipo y mide cuánto tarda la respuesta: la latencia. En los juegos, el «ping» es justo eso, en milisegundos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-pq023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es un puerto?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un número que indica a qué programa de un equipo va un paquete. La dirección IP lleva el paquete a la computadora y el puerto, al programa: 443 para HTTPS, 53 para DNS, y así."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-pq024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "Contraté 100 megas, ¿por qué descargo a 12 MB/s?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los planes se miden en megabits por segundo (Mb/s) y los programas de descarga muestran megabytes por segundo (MB/s). Un byte son 8 bits: 100 ÷ 8 = 12.5 MB/s, y algo se va en encabezados."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-pq025"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Wi-Fi o cable?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El cable suele dar menos latencia y más estabilidad, porque no comparte el aire ni sufre interferencias. El Wi-Fi moderno es muy rápido, pero las paredes y los vecinos le afectan."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-pq026",
+     "preguntas": [
+      {
+       "q": "¿Por qué los datos viajan en paquetes?",
+       "o": [
+        "Porque así ocupan menos espacio",
+        "Para compartir los cables entre muchos y reenviar solo lo que se pierde",
+        "Porque el Wi-Fi no acepta archivos"
+       ],
+       "a": 1,
+       "e": "Cortar en paquetes permite mezclar el tráfico de muchos y, si algo falla, reenviar solo ese pedazo."
+      },
+      {
+       "q": "¿Qué hace un router con cada paquete?",
+       "o": [
+        "Lo abre y lee su contenido",
+        "Mira la dirección de destino y lo manda al siguiente salto",
+        "Lo guarda hasta tener el archivo completo"
+       ],
+       "a": 1,
+       "e": "Cada router decide solo el siguiente salto según su tabla de rutas."
+      },
+      {
+       "q": "¿Qué pasa cuando el TTL de un paquete llega a 0?",
+       "o": [
+        "Se descarta",
+        "Se acelera",
+        "Vuelve al origen completo"
+       ],
+       "a": 0,
+       "e": "El TTL evita que un paquete dé vueltas para siempre: cada router le resta 1 y en 0 se descarta."
+      },
+      {
+       "q": "¿Qué protocolo conviene para una videollamada?",
+       "o": [
+        "TCP, porque reenvía todo",
+        "UDP, porque no espera a reenviar lo que ya pasó"
+       ],
+       "a": 1,
+       "e": "En tiempo real es mejor perder un pedacito que esperar a que se reenvíe."
+      },
+      {
+       "q": "¿Por qué hay al menos unos 90 ms de ida y vuelta entre México y España?",
+       "o": [
+        "Por la velocidad de la luz en la fibra y la distancia",
+        "Porque el plan de internet es lento",
+        "Por el Wi-Fi"
+       ],
+       "a": 0,
+       "e": "A unos 200,000 km/s en la fibra, 9,000 km de ida y otros tantos de vuelta tardan unos 90 ms."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-pq027"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Internet es una red de redes que se entienden por protocolos comunes."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los datos viajan en paquetes de hasta unos 1,500 bytes, cada uno con su encabezado."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Las capas (aplicación, transporte, internet y enlace) meten unos datos dentro de otros."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los routers deciden salto por salto; el TTL evita que un paquete dé vueltas para siempre."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP garantiza que llegue todo y en orden; UDP es más rápido y acepta pérdidas."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La latencia tiene un mínimo que pone la velocidad de la luz."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="paquetes.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DNS y direcciones IP · OneLearn</title>
+<meta name="description" content="Qué es una dirección IP, IPv4 e IPv6, direcciones privadas y NAT, máscaras de red y cómo el DNS traduce nombres a direcciones, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="dns.css">
+</head>
+<body data-leccion="dns">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="dn-ip">
+<p class="hint">Escribe los cuatro números de una dirección (del 0 al 255) y mira sus bits y de qué tipo es.</p>
+<div class="ip" role="group" aria-label="Dirección IPv4">
+  <input class="campo num mono" type="number" min="0" max="255" id="ip0" value="192" aria-label="Primer octeto">
+  <span aria-hidden="true">.</span>
+  <input class="campo num mono" type="number" min="0" max="255" id="ip1" value="168" aria-label="Segundo octeto">
+  <span aria-hidden="true">.</span>
+  <input class="campo num mono" type="number" min="0" max="255" id="ip2" value="1" aria-label="Tercer octeto">
+  <span aria-hidden="true">.</span>
+  <input class="campo num mono" type="number" min="0" max="255" id="ip3" value="10" aria-label="Cuarto octeto">
+</div>
+<div class="chips ip-ej" id="ipEj" role="group" aria-label="Ejemplos">
+  <button class="chip" type="button" data-v="192.168.1.10" aria-pressed="false">192.168.1.10</button>
+  <button class="chip" type="button" data-v="10.0.0.25" aria-pressed="false">10.0.0.25</button>
+  <button class="chip" type="button" data-v="127.0.0.1" aria-pressed="false">127.0.0.1</button>
+  <button class="chip" type="button" data-v="8.8.8.8" aria-pressed="false">8.8.8.8</button>
+</div>
+<div class="ip-bits" id="ipBits"></div>
+<div class="status" id="ipStat" data-k="" aria-live="polite"><span class="dot"></span><span id="ipMsg"></span></div>
+</template>
+<template data-lab="dn-mascara">
+<p class="hint">Tu equipo tiene la dirección 192.168.1.10. Elige la máscara y otra dirección para ver si están en la misma red.</p>
+<div class="ctl" style="margin-top:0">
+  <span class="lbl">Máscara</span>
+  <div class="seg" id="msPre" role="group" aria-label="Máscara">
+    <button type="button" data-v="8" aria-pressed="false">/8</button>
+    <button type="button" data-v="16" aria-pressed="false">/16</button>
+    <button type="button" data-v="24" aria-pressed="true">/24</button>
+    <button type="button" data-v="28" aria-pressed="false">/28</button>
+  </div>
+</div>
+<div class="ctl">
+  <span class="lbl">Otra dirección</span>
+  <div class="chips" id="msOtra" role="group" aria-label="Otra dirección">
+    <button class="chip" type="button" data-v="192.168.1.200" aria-pressed="true">192.168.1.200</button>
+    <button class="chip" type="button" data-v="192.168.1.12" aria-pressed="false">192.168.1.12</button>
+    <button class="chip" type="button" data-v="192.168.2.5" aria-pressed="false">192.168.2.5</button>
+    <button class="chip" type="button" data-v="10.0.0.1" aria-pressed="false">10.0.0.1</button>
+  </div>
+</div>
+<div class="kpis">
+  <div class="kpi"><span>Máscara</span><b id="msMas"></b></div>
+  <div class="kpi"><span>Dirección de la red</span><b id="msRed"></b></div>
+  <div class="kpi"><span>Equipos posibles en la red</span><b id="msHost"></b></div>
+</div>
+<div class="status" id="msStat" data-k="" aria-live="polite"><span class="dot"></span><span id="msMsg"></span></div>
+</template>
+<template data-lab="dn-resolver">
+<p class="hint">Elige un nombre y avanza paso a paso. Las direcciones IP del ejemplo son ficticias (de los rangos reservados para documentación).</p>
+<div class="chips" id="rsNom" role="group" aria-label="Nombre a resolver">
+  <button class="chip" type="button" data-v="0" aria-pressed="true">es.wikipedia.org</button>
+  <button class="chip" type="button" data-v="1" aria-pressed="false">www.unam.mx</button>
+</div>
+<ol class="rs-p" id="rsPasos"></ol>
+<div class="kpis">
+  <div class="kpi"><span>Tiempo de la resolución</span><b id="rsMs"></b></div>
+  <div class="kpi"><span>Respuesta</span><b id="rsIp"></b></div>
+</div>
+<div class="status" id="rsStat" data-k="" aria-live="polite"><span class="dot"></span><span id="rsMsg"></span></div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="rsSig">Siguiente paso</button>
+  <button class="btn" type="button" id="rsOtra">Visitarlo otra vez</button>
+  <button class="btn" type="button" id="rsVaciar">Vaciar la caché</button>
+</div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "dns",
+ "titulo": "DNS y direcciones IP",
+ "icono": "globo",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "12 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-dn001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-dn002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-ip",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Direcciones IP"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada equipo conectado a una red tiene una "
+     },
+     {
+      "type": "text",
+      "text": "dirección IP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que es a donde se mandan sus "
+     },
+     {
+      "type": "text",
+      "text": "paquetes",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "paquetes.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". En "
+     },
+     {
+      "type": "text",
+      "text": "IPv4",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", la versión más usada, una dirección son 32 bits, que se escriben como cuatro números del 0 al 255 separados por puntos: por ejemplo, 192.168.1.10. Cada número es un "
+     },
+     {
+      "type": "text",
+      "text": "octeto",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": 8 bits."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn003"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-dn004",
+     "nombre": "dn-ip",
+     "titulo": "Una dirección IPv4 por dentro"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con 32 bits hay unos 4,300 millones de direcciones. Parecían muchísimas en los años ochenta; hoy hay más aparatos conectados que eso, y las direcciones IPv4 libres se agotaron hace años."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn005"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-nat",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Privadas, públicas y NAT"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La solución fue reservar rangos de "
+     },
+     {
+      "type": "text",
+      "text": "direcciones privadas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " para usar dentro de casas y empresas: 10.x.x.x, 172.16.x.x a 172.31.x.x y 192.168.x.x. Esas direcciones se repiten en millones de redes y no salen a internet."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn006"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-dn007"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "IP privada",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La de cada aparato dentro de tu casa (192.168.1.10, 192.168.1.11…). Solo vale dentro de tu red."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "IP pública",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La que tu proveedor le da a tu módem. Con ella te ve el resto de internet."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "NAT",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El módem cambia la dirección privada por la pública al salir y la regresa al volver, anotando a quién le toca cada respuesta."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Por eso todos los aparatos de tu casa salen a internet con la misma IP pública. En muchas redes de celular, incluso varios clientes comparten una."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn008"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-ipv6",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "IPv6"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "IPv6",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " usa direcciones de 128 bits: unas 3.4 × 10"
+     },
+     {
+      "type": "text",
+      "text": "38",
+      "marks": [
+       {
+        "type": "superscript"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", suficientes para darle millones a cada grano de arena del planeta. Se escriben en hexadecimal, en grupos de cuatro, y los ceros seguidos se abrevian con :: (por ejemplo, 2001:db8::1). Hoy conviven las dos versiones: una parte grande y creciente de internet ya funciona con IPv6."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn009"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-mascara",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Redes y máscaras"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una dirección IP tiene dos partes: la de la "
+     },
+     {
+      "type": "text",
+      "text": "red",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y la del "
+     },
+     {
+      "type": "text",
+      "text": "equipo",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " dentro de esa red. La "
+     },
+     {
+      "type": "text",
+      "text": "máscara",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " dice dónde se corta. Se escribe como un número de bits, por ejemplo /24: los primeros 24 bits son la red y los últimos 8, el equipo. En tu casa, casi siempre es /24 (máscara 255.255.255.0)."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn010"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Si dos equipos están en la misma red, se hablan directamente. Si no, el paquete va a la "
+     },
+     {
+      "type": "text",
+      "text": "puerta de enlace",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (el router) para que lo saque hacia otra red."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn011"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-dn012",
+     "nombre": "dn-mascara",
+     "titulo": "La máscara de red"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dns",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "DNS: la agenda de internet"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Recordar 198.51.100.24 es difícil; recordar es.wikipedia.org, no. El "
+     },
+     {
+      "type": "text",
+      "text": "DNS",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (sistema de nombres de dominio) traduce nombres a direcciones IP. Es una base de datos repartida por todo el mundo y organizada como un árbol:"
+     }
+    ],
+    "attrs": {
+     "id": "b-dn013"
+    }
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-dn014"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los "
+         },
+         {
+          "type": "text",
+          "text": "servidores raíz",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " saben quién maneja cada terminación (.org, .mx, .com…)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los servidores de cada "
+         },
+         {
+          "type": "text",
+          "text": "dominio de nivel superior",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (TLD) saben quién maneja cada dominio, como wikipedia.org."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los servidores "
+         },
+         {
+          "type": "text",
+          "text": "autoritativos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de cada dominio tienen la respuesta final: la IP."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Tu computadora no hace todo ese recorrido: se lo pide a un "
+     },
+     {
+      "type": "text",
+      "text": "resolvedor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (el de tu proveedor, o uno público como 1.1.1.1 o 8.8.8.8), que pregunta por ti y "
+     },
+     {
+      "type": "text",
+      "text": "guarda en caché",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " las respuestas para no repetir el viaje."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn015"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-dn016",
+     "nombre": "dn-resolver",
+     "titulo": "Resuelve un nombre"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-registros",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tipos de registros"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-dn017"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Registro"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué guarda"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "A"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La dirección IPv4 de un nombre"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "sitio.example → 203.0.113.7"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "AAAA"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La dirección IPv6"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "sitio.example → 2001:db8::7"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "CNAME"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Otro nombre (un alias)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "www.sitio.example → sitio.example"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "MX"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El servidor de correo del dominio"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "sitio.example → correo.sitio.example"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TXT"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Texto libre, usado para verificaciones"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Pruebas de que el dominio es tuyo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NS"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué servidores son autoritativos para el dominio"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ns1.proveedor.example"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada respuesta lleva un "
+     },
+     {
+      "type": "text",
+      "text": "TTL",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": cuántos segundos se puede guardar en caché. Por eso, cuando un sitio cambia de servidor, a algunas personas les llega el cambio antes que a otras."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn018"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dhcp",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cómo obtienes tu IP: DHCP"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Al conectarte a una red Wi-Fi no escribes ninguna dirección: tu equipo grita «¿alguien me da una IP?» y el router responde con una dirección libre, la máscara, la puerta de enlace y los servidores DNS. Ese protocolo es "
+     },
+     {
+      "type": "text",
+      "text": "DHCP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". La dirección se presta por un tiempo y se renueva sola."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn019"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cambiar el DNS hace más rápido mi internet?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Puede hacer un poco más rápida la primera visita a cada sitio, si el resolvedor nuevo responde antes, pero no cambia la velocidad de descarga. Algunos resolvedores públicos también ofrecen más privacidad o bloquean sitios maliciosos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn021"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es 127.0.0.1 o «localhost»?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una dirección especial que siempre apunta a tu propio equipo. Se usa al programar para probar un servidor en tu computadora sin salir a la red."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn022"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cómo veo mi dirección IP?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La privada, con "
+         },
+         {
+          "type": "text",
+          "text": "ipconfig",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " en Windows o "
+         },
+         {
+          "type": "text",
+          "text": "ip addr",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " en Linux (o en los ajustes de Wi-Fi). La pública es la que ve internet; muchos sitios te la muestran si buscas «cuál es mi IP»."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es un dominio y quién los vende?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un nombre registrado, como onelearn.mx. Lo administra un registro para cada terminación (en México, .mx lo maneja NIC México) y se compra por año en empresas llamadas registradores."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-dn024",
+     "preguntas": [
+      {
+       "q": "¿Cuántos bits tiene una dirección IPv4?",
+       "o": [
+        "8",
+        "32",
+        "128"
+       ],
+       "a": 1,
+       "e": "Cuatro octetos de 8 bits: 32 bits en total. IPv6 usa 128."
+      },
+      {
+       "q": "¿Cuál de estas direcciones es privada?",
+       "o": [
+        "192.168.1.20",
+        "8.8.8.8",
+        "203.0.113.5"
+       ],
+       "a": 0,
+       "e": "192.168.x.x es uno de los rangos privados, que solo valen dentro de una red local."
+      },
+      {
+       "q": "Con máscara /24, ¿están en la misma red 192.168.1.10 y 192.168.2.5?",
+       "o": [
+        "Sí",
+        "No: el tercer número es distinto"
+       ],
+       "a": 1,
+       "e": "Con /24, los tres primeros números son la red. 192.168.1 y 192.168.2 son redes distintas: el paquete pasa por el router."
+      },
+      {
+       "q": "¿Qué hace el DNS?",
+       "o": [
+        "Traduce nombres de dominio a direcciones IP",
+        "Cifra las páginas",
+        "Asigna direcciones IP a los equipos"
+       ],
+       "a": 0,
+       "e": "Convierte nombres fáciles de recordar en las direcciones que usan los paquetes. Asignar direcciones es trabajo de DHCP."
+      },
+      {
+       "q": "¿Por qué la segunda vez que visitas un sitio la resolución DNS es casi instantánea?",
+       "o": [
+        "Porque el sitio ya está descargado",
+        "Porque la respuesta quedó guardada en caché",
+        "Porque el DNS se apaga"
+       ],
+       "a": 1,
+       "e": "El navegador, el sistema y el resolvedor guardan la respuesta durante su TTL."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-dn025"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una dirección IPv4 son 32 bits escritos como cuatro números del 0 al 255; IPv6 usa 128 bits."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Las direcciones privadas se usan dentro de cada red; el NAT del módem las cambia por la pública."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La máscara separa la red del equipo; en la misma red los equipos se hablan directo."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El DNS traduce nombres a IP preguntando a la raíz, al TLD y al servidor autoritativo, y guarda las respuestas en caché."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "DHCP te asigna una dirección automáticamente al conectarte."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="dns.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

@@ -83,13 +83,12 @@ AT.labs['so-planificador']=function(){
     h+='</tr></thead><tbody>';
     var esp=0,res=0,cam=0;
     PROC.forEach(function(p,k){
-      h+='<tr><th scope="row">'+esc(p.n)+' <span>(llega '+p.l+', dura '+p.d+')</span></th>';
-      var fin=0,ini=-1;
+      var fin=0,ini=-1,corre=[],celdas='';
       for(var t=0;t<T;t++){
-        if(L[t]===k){fin=t+1;if(ini<0)ini=t}
-        h+='<td class="'+(L[t]===k?'run':'')+'">'+(L[t]===k?'<span class="vh">corre</span>':'')+'</td>';
+        if(L[t]===k){fin=t+1;if(ini<0)ini=t;corre.push(t)}
+        celdas+='<td class="'+(L[t]===k?'run':'')+'"></td>';
       }
-      h+='</tr>';
+      h+='<tr><th scope="row">'+esc(p.n)+' <span>(llega '+p.l+', dura '+p.d+')</span><span class="vh">, corre en los milisegundos '+corre.join(', ')+'</span></th>'+celdas+'</tr>';
       esp+=fin-p.l-p.d;res+=ini-p.l;
     });
     for(var t2=1;t2<T;t2++)if(L[t2]!==L[t2-1])cam++;
