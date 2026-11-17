@@ -10,6 +10,8 @@ Es un sitio estático: no necesita servidor propio ni dependencias para funciona
 index.html                  Inicio: continúa donde te quedaste, tus documentos, notas recientes y explorar temas
 documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
 acerca.html                 «Cómo está hecho OneLearn»: las tecnologías del sitio explicadas para estudiantes de programación
+proyectos/index.html        Lista de proyectos guiados, con su avance
+proyectos/portafolio.html   Proyecto «Tu portafolio web»: 8 fases, su contenido en JSON (<script id="proyecto">)
 manifest.webmanifest        Datos para instalar OneLearn como app
 sw.js                       Service worker: guarda el sitio para usarlo sin conexión
 assets/
@@ -33,6 +35,7 @@ assets/
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
+  js/proyecto.js            Proyectos: la lista y cada proyecto por fases, con tareas que se guardan (AT.proyectosAvance en base.js)
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
   icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
@@ -55,6 +58,14 @@ Todos los tamaños del CSS van en `rem`, para que la página entera crezca con e
 ## «Cómo está hecho OneLearn»
 
 `acerca.html` explica a estudiantes de programación con qué está hecho el sitio: HTML, CSS con variables, JavaScript sin framework, el formato de bloques, Tiptap y esbuild, IndexedDB, el service worker, la accesibilidad, las pruebas y la publicación, con ejemplos del código real y preguntas de repaso. Se abre desde la barra lateral («Cómo está hecho») y desde Inicio, y la búsqueda la incluye. Su contenido es un documento en el formato de bloques, como una lección: **si cambias algo de la arquitectura, actualiza también esta página.**
+
+## Proyectos
+
+«Proyectos» (barra lateral e Inicio) guía casos prácticos por fases, para que el estudiante termine con algo que pueda mostrar al buscar trabajo. El primero, **Tu portafolio web**, va desde cero: en su propia computadora, con Visual Studio Code, Git y GitHub, el estudiante crea y publica su sitio personal en 8 fases (preparar la computadora, planear, HTML, CSS, celular y accesibilidad, JavaScript, Git y GitHub, publicar y presentarlo).
+
+Cada fase trae objetivo, qué aprenderás, para qué sirve en el trabajo, la explicación con código de ejemplo (en el formato de bloques), tareas que se marcan y un entregable; la última guarda la dirección del sitio publicado (solo https). El avance vive en `localStorage` (`aprende-tecnologia:proyectos`) y entra en el respaldo de «Tus datos».
+
+Para agregar un proyecto: crea `proyectos/<id>.html` como `portafolio.html` con su JSON (`{id, titulo, props, intro, fases: [{id, titulo, duracion, objetivo, aprenderas, trabajo, contenido, tareas, entregable, enlace}]}`), agrégalo a `AT.proyectos` en `catalogo.js` (con el total de `tareas` y `fases`, que la prueba 14 comprueba) y a `sw.js`.
 
 ## Formato de bloques
 

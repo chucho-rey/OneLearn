@@ -1,0 +1,4931 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tu portafolio web · Proyectos · OneLearn</title>
+<meta name="description" content="Proyecto guiado desde cero: crea y publica tu portafolio web con HTML, CSS, JavaScript, Git y GitHub Pages, en 8 fases.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+</head>
+<body data-pagina="proyecto" data-proyecto="portafolio" data-titulo="Tu portafolio web">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page proyecto" id="pjPage">
+      <noscript><p>Este proyecto necesita JavaScript para mostrarse.</p></noscript>
+    </main>
+  </div>
+</div>
+
+<!-- El proyecto: introducción y fases, cada una con su contenido en el formato de bloques -->
+<script type="application/json" id="proyecto">
+{
+ "formato": 1,
+ "tipo": "proyecto",
+ "id": "portafolio",
+ "titulo": "Tu portafolio web",
+ "icono": "proyecto",
+ "props": [
+  {
+   "nombre": "Nivel",
+   "valor": "Desde cero",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Duración",
+   "valor": "15 a 22 horas",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Fases",
+   "valor": "8",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Al terminar tendrás",
+   "valor": "Tu sitio publicado y su enlace para el CV",
+   "estilo": "texto"
+  }
+ ],
+ "intro": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En este proyecto vas a crear tu "
+     },
+     {
+      "type": "text",
+      "text": "portafolio web",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": un sitio personal que muestra quién eres, qué sabes hacer y cómo contactarte, publicado en internet con tu propio enlace. Es lo primero que muchos reclutadores piden para un puesto de programación."
+     }
+    ],
+    "attrs": {
+     "id": "b-pin001"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Vas a trabajar como en un empleo real: en tu computadora, con Visual Studio Code, Git y GitHub. OneLearn te guía fase por fase; marca cada tarea al terminarla y tu avance se guardará aquí. No necesitas saber programar: empezamos desde cero."
+     }
+    ],
+    "attrs": {
+     "id": "b-pin002"
+    }
+   }
+  ]
+ },
+ "fases": [
+  {
+   "id": "f1",
+   "titulo": "Prepara tu computadora",
+   "duracion": "1 hora",
+   "objetivo": "Instalar las herramientas que usan los desarrolladores web todos los días.",
+   "aprenderas": [
+    "Qué hace cada herramienta",
+    "Usar la terminal por primera vez",
+    "Configurar Git"
+   ],
+   "trabajo": "Preparar tu entorno es lo primero que harás en cualquier trabajo de programación. Saber hacerlo solo, sin ayuda, ya te distingue.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un desarrollador web trabaja con cuatro herramientas todos los días. Todas son gratuitas y funcionan en Windows, macOS y Linux."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf1001"
+      }
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-pf1002"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Herramienta"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Para qué sirve"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Dónde se consigue"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Un navegador"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Ver y revisar tu página. Chrome, Edge y Firefox traen herramientas para desarrolladores."
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Seguramente ya tienes uno"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Visual Studio Code",
+              "marks": [
+               {
+                "type": "bold"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "El editor donde escribirás el código"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "code.visualstudio.com"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Git",
+              "marks": [
+               {
+                "type": "bold"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Guarda el historial de cambios de tu proyecto"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "git-scm.com"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "GitHub",
+              "marks": [
+               {
+                "type": "bold"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Guarda tu proyecto en internet y lo publica gratis"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "github.com"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf1003",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Instala Visual Studio Code"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "attrs": {
+       "id": "b-pf1004"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Descárgalo de code.visualstudio.com e instálalo con las opciones que trae."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ábrelo. Si quieres los menús en español, abre la paleta de comandos (Ctrl+Mayús+P, o Cmd+Mayús+P en Mac), escribe «Configure Display Language» y elige español."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf1005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Instala Git"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-pf1006"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Windows:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " descárgalo de git-scm.com e instálalo dejando las opciones predeterminadas."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "macOS:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " abre la Terminal y escribe "
+           },
+           {
+            "type": "text",
+            "text": "git --version",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ". Si no está instalado, el sistema te ofrecerá instalar las herramientas de línea de comandos: acepta."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Linux (Ubuntu):",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " en la terminal, "
+           },
+           {
+            "type": "text",
+            "text": "sudo apt install git",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf1007",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Comprueba que funciona"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En Visual Studio Code abre una terminal desde el menú "
+       },
+       {
+        "type": "text",
+        "text": "Terminal → Nueva terminal",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " y escribe:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf1008"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf1009",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "git --version"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Si responde algo como «git version 2.47.0», Git está listo. El número exacto no importa."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf1010"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf1011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Dile a Git quién eres"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Git firma cada cambio que guardas con tu nombre y tu correo. Escribe estos dos comandos con tus datos:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf1012"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf1013",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "git config --global user.name \"Tu Nombre\"\ngit config --global user.email \"tu-correo@ejemplo.com\""
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf1014",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "5. Crea tu cuenta de GitHub"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Entra a github.com y crea una cuenta con el mismo correo. Elige el "
+       },
+       {
+        "type": "text",
+        "text": "nombre de usuario",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " con cuidado: aparecerá en la dirección de tu portafolio (tu-usuario.github.io) y lo verán los reclutadores. Algo como «ana-lopez» o «analopezdev» funciona mejor que «gamer_x2009»."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf1015"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf1016",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "6. Crea la carpeta del proyecto"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea una carpeta llamada "
+       },
+       {
+        "type": "text",
+        "text": "portafolio",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en un lugar fácil de encontrar (por ejemplo, en Documentos). En Visual Studio Code, ábrela con "
+       },
+       {
+        "type": "text",
+        "text": "Archivo → Abrir carpeta",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Todo tu proyecto vivirá ahí."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf1017"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf1018",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Evita espacios y acentos en los nombres de carpetas y archivos de código: «portafolio» y «estilos.css» mejor que «Mi Portafolio» o «diseño.css». Te ahorrará problemas en la terminal y en internet."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf1019"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: «git no se reconoce como un comando»"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cierra Visual Studio Code y vuelve a abrirlo después de instalar Git: la terminal necesita reiniciarse para encontrarlo. Si sigue sin funcionar en Windows, reinstala Git y deja marcada la opción «Git from the command line and also from 3rd-party software»."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f1-1",
+     "texto": "Instalé Visual Studio Code y lo abrí"
+    },
+    {
+     "id": "f1-2",
+     "texto": "Instalé Git y «git --version» muestra una versión"
+    },
+    {
+     "id": "f1-3",
+     "texto": "Configuré mi nombre y mi correo en Git"
+    },
+    {
+     "id": "f1-4",
+     "texto": "Creé mi cuenta de GitHub con un nombre de usuario profesional"
+    },
+    {
+     "id": "f1-5",
+     "texto": "Creé la carpeta «portafolio» y la abrí en Visual Studio Code"
+    }
+   ],
+   "entregable": "Tu carpeta «portafolio» abierta en Visual Studio Code, con una terminal donde «git --version» funciona.",
+   "enlace": false
+  },
+  {
+   "id": "f2",
+   "titulo": "Planea tu portafolio",
+   "duracion": "1 a 2 horas",
+   "objetivo": "Decidir qué vas a mostrar y cómo, antes de escribir código.",
+   "aprenderas": [
+    "Qué busca un reclutador en un portafolio",
+    "Escribir el contenido primero",
+    "Hacer un boceto (wireframe)"
+   ],
+   "trabajo": "En un trabajo real, casi nunca se programa sin un plan: primero se definen el contenido y el diseño con el cliente o el equipo.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un portafolio es tu carta de presentación como desarrollador: muestra quién eres, qué sabes hacer y cómo contactarte. Un reclutador suele dedicarle menos de un minuto, así que tiene que ser claro y directo."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf2001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf2002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Las secciones"
+       }
+      ]
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-pf2003"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sección"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Qué lleva"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Consejo"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Inicio"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Tu nombre y una frase sobre lo que haces"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Que en 5 segundos se entienda quién eres"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sobre mí"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Dos o tres párrafos cortos: qué estudias, qué te gusta construir"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Habla de lo que haces, no solo de lo que te gusta"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Habilidades"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Lenguajes y herramientas que sabes usar"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sé honesto: mejor 4 que conozcas que 15 que solo viste"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Proyectos"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Dos o tres trabajos, cada uno con descripción y enlace"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Lo más importante del portafolio"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Contacto"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Correo, GitHub y LinkedIn"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Nada de datos privados"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf2004",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Escribe el contenido antes que el código"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea en tu carpeta un archivo "
+       },
+       {
+        "type": "text",
+        "text": "contenido.txt",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " y escribe ahí todos los textos. Así, al programar, solo te preocupas del código:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf2005"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf2006",
+       "language": "text"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "NOMBRE: Ana López\nFRASE: Estudio programación y creo páginas web rápidas y accesibles.\n\nSOBRE MÍ:\nEstudio el segundo semestre de Ingeniería en Sistemas. Me gusta...\n\nHABILIDADES: HTML, CSS, JavaScript básico, Git y GitHub\n\nPROYECTOS:\n1. Este portafolio — mi primer sitio, hecho desde cero.\n2. ...\n\nCONTACTO: ana.lopez.dev@ejemplo.com · github.com/ana-lopez"
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf2007"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Y si todavía no tengo proyectos?"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Es normal al empezar. Tu primer proyecto es este mismo portafolio. Puedes agregar también tareas de la escuela de las que estés orgulloso, una página que hayas hecho para un familiar o un negocio, o los siguientes proyectos de OneLearn. Lo importante es que muestres cosas que hiciste tú y puedas explicar cómo."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf2008",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Haz un boceto"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Dibuja en papel cómo se verá la página: cajas para cada sección, de arriba abajo. Empieza por cómo se vería en un "
+       },
+       {
+        "type": "text",
+        "text": "celular",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (una sola columna) y después piensa en la computadora. Los diseñadores llaman a esto "
+       },
+       {
+        "type": "text",
+        "text": "wireframe",
+        "marks": [
+         {
+          "type": "italic"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", y ahorra horas de prueba y error."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf2009"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf2010",
+       "variante": "aviso"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No publiques tu teléfono, tu dirección ni tu fecha de nacimiento. Un correo creado para tu vida profesional y tus perfiles de GitHub y LinkedIn bastan para que te contacten."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f2-1",
+     "texto": "Escribí mi presentación en 2 o 3 líneas"
+    },
+    {
+     "id": "f2-2",
+     "texto": "Hice la lista de mis habilidades"
+    },
+    {
+     "id": "f2-3",
+     "texto": "Elegí 2 o 3 proyectos (o ideas) para mostrar"
+    },
+    {
+     "id": "f2-4",
+     "texto": "Dibujé un boceto de la página en papel"
+    },
+    {
+     "id": "f2-5",
+     "texto": "Decidí cómo me pueden contactar sin publicar datos privados"
+    }
+   ],
+   "entregable": "El archivo «contenido.txt» con todos los textos y una foto de tu boceto guardada en la carpeta del proyecto.",
+   "enlace": false
+  },
+  {
+   "id": "f3",
+   "titulo": "La estructura con HTML",
+   "duracion": "3 a 4 horas",
+   "objetivo": "Construir la estructura completa de tu página con HTML semántico.",
+   "aprenderas": [
+    "Qué son las etiquetas HTML",
+    "HTML semántico",
+    "Enlaces, listas e imágenes con texto alternativo"
+   ],
+   "trabajo": "Todo sitio web, de cualquier empresa y hecho con cualquier tecnología, termina siendo HTML en el navegador. Escribirlo bien y accesible es una habilidad que se nota en una entrevista.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "HTML",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es el lenguaje que describe la estructura de una página: qué es un título, qué es un párrafo, qué es un enlace. Se escribe con "
+       },
+       {
+        "type": "text",
+        "text": "etiquetas",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " entre picoparéntesis, como "
+       },
+       {
+        "type": "text",
+        "text": "\u003cp>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " y "
+       },
+       {
+        "type": "text",
+        "text": "\u003c/p>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", que encierran el contenido."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf3001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf3002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Tu primer archivo"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En Visual Studio Code crea un archivo llamado "
+       },
+       {
+        "type": "text",
+        "text": "index.html",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (así se llama la página principal de casi cualquier sitio) y escribe esta estructura. Cambia los textos por los de tu contenido.txt:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf3003"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf3004",
+       "language": "html"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "\u003c!doctype html>\n\u003chtml lang=\"es\">\n\u003chead>\n  \u003cmeta charset=\"utf-8\">\n  \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  \u003ctitle>Ana López · Desarrolladora web\u003c/title>\n  \u003cmeta name=\"description\" content=\"Portafolio de Ana López: proyectos de desarrollo web.\">\n\u003c/head>\n\u003cbody>\n  \u003cheader>\n    \u003cnav>\n      \u003ca href=\"#sobre-mi\">Sobre mí\u003c/a>\n      \u003ca href=\"#proyectos\">Proyectos\u003c/a>\n      \u003ca href=\"#contacto\">Contacto\u003c/a>\n    \u003c/nav>\n  \u003c/header>\n\n  \u003cmain>\n    \u003csection id=\"inicio\">\n      \u003ch1>Hola, soy Ana López\u003c/h1>\n      \u003cp>Estudio programación y creo páginas web rápidas y accesibles.\u003c/p>\n    \u003c/section>\n\n    \u003csection id=\"sobre-mi\">\n      \u003ch2>Sobre mí\u003c/h2>\n      \u003cimg src=\"img/foto.jpg\" alt=\"Ana López sonriendo frente a su computadora\">\n      \u003cp>Estudio el segundo semestre de Ingeniería en Sistemas...\u003c/p>\n    \u003c/section>\n\n    \u003csection id=\"habilidades\">\n      \u003ch2>Habilidades\u003c/h2>\n      \u003cul>\n        \u003cli>HTML\u003c/li>\n        \u003cli>CSS\u003c/li>\n        \u003cli>Git y GitHub\u003c/li>\n      \u003c/ul>\n    \u003c/section>\n\n    \u003csection id=\"proyectos\">\n      \u003ch2>Proyectos\u003c/h2>\n      \u003cdiv class=\"proyectos\">\n        \u003carticle>\n          \u003ch3>Este portafolio\u003c/h3>\n          \u003cp>Mi primer sitio, hecho desde cero con HTML, CSS y JavaScript.\u003c/p>\n          \u003ca href=\"https://github.com/ana-lopez/portafolio\">Ver el código\u003c/a>\n        \u003c/article>\n      \u003c/div>\n    \u003c/section>\n\n    \u003csection id=\"contacto\">\n      \u003ch2>Contacto\u003c/h2>\n      \u003cp>Escríbeme a \u003ca href=\"mailto:ana.lopez.dev@ejemplo.com\">ana.lopez.dev@ejemplo.com\u003c/a>.\u003c/p>\n    \u003c/section>\n  \u003c/main>\n\n  \u003cfooter>\n    \u003cp>Hecho por Ana López\u003c/p>\n  \u003c/footer>\n\u003c/body>\n\u003c/html>"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf3005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Qué hace cada etiqueta"
+       }
+      ]
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-pf3006"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Etiqueta"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Para qué"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003chead>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Datos de la página que no se ven: título de la pestaña, idioma, descripción para buscadores"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003cheader>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             },
+             {
+              "type": "text",
+              "text": ", "
+             },
+             {
+              "type": "text",
+              "text": "\u003cnav>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "La parte de arriba y el menú"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003cmain>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "El contenido principal (solo uno por página)"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003csection>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Una sección con su propio título"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003carticle>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Algo que se entiende solo, como cada proyecto"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003ch1>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             },
+             {
+              "type": "text",
+              "text": " a "
+             },
+             {
+              "type": "text",
+              "text": "\u003ch3>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Títulos. Un solo "
+             },
+             {
+              "type": "text",
+              "text": "\u003ch1>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             },
+             {
+              "type": "text",
+              "text": " por página; "
+             },
+             {
+              "type": "text",
+              "text": "\u003ch2>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             },
+             {
+              "type": "text",
+              "text": " para cada sección"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003ca href=\"…\">",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Un enlace. Con "
+             },
+             {
+              "type": "text",
+              "text": "#sobre-mi",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             },
+             {
+              "type": "text",
+              "text": " salta a la sección con ese "
+             },
+             {
+              "type": "text",
+              "text": "id",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003cimg src=\"…\" alt=\"…\">",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Una imagen. El "
+             },
+             {
+              "type": "text",
+              "text": "alt",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             },
+             {
+              "type": "text",
+              "text": " describe la imagen para quien no puede verla"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "\u003cfooter>",
+              "marks": [
+               {
+                "type": "code"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "El pie de página"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Usar la etiqueta correcta para cada cosa se llama "
+       },
+       {
+        "type": "text",
+        "text": "HTML semántico",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ": ayuda a los lectores de pantalla, a los buscadores y a cualquier persona que lea tu código. OneLearn está hecho igual; lo puedes ver en "
+       },
+       {
+        "type": "text",
+        "text": "Cómo está hecho OneLearn",
+        "marks": [
+         {
+          "type": "link",
+          "attrs": {
+           "href": "../acerca.html#s-html"
+          }
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf3007"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf3008",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Tu foto"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea una carpeta "
+       },
+       {
+        "type": "text",
+        "text": "img",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " dentro de tu proyecto y guarda ahí tu foto (u otra imagen) como foto.jpg. Antes, redúcela a unos 800 píxeles de ancho: una foto del celular sin reducir pesa varios megas y hace lenta la página."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf3009"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf3010",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Mírala en el navegador"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Haz doble clic en index.html para abrirla en el navegador. Se verá sencilla, con letras negras sobre blanco: es normal, todavía no tiene diseño. Cada vez que guardes cambios (Ctrl+S), recarga la página (F5) para verlos."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf3011"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf3012",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La extensión "
+         },
+         {
+          "type": "text",
+          "text": "Live Server",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de Visual Studio Code recarga la página sola cada vez que guardas. Búscala en el panel de extensiones (Ctrl+Mayús+X)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf3013"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: los acentos se ven raros"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que tenga la línea "
+           },
+           {
+            "type": "text",
+            "text": "\u003cmeta charset=\"utf-8\">",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y que el archivo esté guardado en UTF-8 (lo dice abajo a la derecha en Visual Studio Code)."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf3014"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: la imagen no aparece"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que la ruta coincida exactamente, incluidas mayúsculas: "
+           },
+           {
+            "type": "text",
+            "text": "img/foto.jpg",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " no es lo mismo que "
+           },
+           {
+            "type": "text",
+            "text": "img/Foto.JPG",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ". En internet sí importa la diferencia."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f3-1",
+     "texto": "Creé index.html con la estructura básica"
+    },
+    {
+     "id": "f3-2",
+     "texto": "Agregué las secciones de inicio, sobre mí, habilidades, proyectos y contacto con mis textos"
+    },
+    {
+     "id": "f3-3",
+     "texto": "Usé un solo \u003ch1> y un \u003ch2> para cada sección"
+    },
+    {
+     "id": "f3-4",
+     "texto": "Agregué al menos una imagen con su texto alternativo (alt)"
+    },
+    {
+     "id": "f3-5",
+     "texto": "Abrí la página en el navegador y los enlaces del menú llevan a cada sección"
+    }
+   ],
+   "entregable": "Tu archivo index.html completo, con todos tus textos (todavía sin diseño).",
+   "enlace": false
+  },
+  {
+   "id": "f4",
+   "titulo": "El diseño con CSS",
+   "duracion": "4 a 5 horas",
+   "objetivo": "Darle a tu página un diseño propio, limpio y legible.",
+   "aprenderas": [
+    "Reglas, selectores y propiedades",
+    "Variables de color",
+    "Flexbox y CSS Grid",
+    "Las herramientas del navegador"
+   ],
+   "trabajo": "Maquetar con Flexbox y Grid y saber depurar estilos con las herramientas del navegador es parte del trabajo diario de cualquier desarrollador frontend.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "CSS",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " decide cómo se ve la página: colores, tipografía, espacios y la forma en que se acomodan las cosas. Se escribe en un archivo aparte, con "
+       },
+       {
+        "type": "text",
+        "text": "reglas",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ": un selector (a qué se aplica) y propiedades (qué cambia)."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf4001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf4002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Conecta el archivo de estilos"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea "
+       },
+       {
+        "type": "text",
+        "text": "estilos.css",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en tu carpeta y conéctalo desde index.html, dentro del "
+       },
+       {
+        "type": "text",
+        "text": "\u003chead>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ":"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf4003"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf4004",
+       "language": "html"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "\u003clink rel=\"stylesheet\" href=\"estilos.css\">"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf4005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Los colores como variables"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Define tus colores una sola vez, como "
+       },
+       {
+        "type": "text",
+        "text": "variables",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", y úsalos en todo el archivo. Si un día quieres cambiar de color, lo cambias en un solo lugar. Elige un color de acento que te guste:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf4006"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf4007",
+       "language": "css"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": ":root {\n  --fondo: #ffffff;\n  --texto: #1d2422;\n  --acento: #0e7c7b;\n  --suave: #eef3f2;\n}\n\n* {\n  box-sizing: border-box;\n}\n\nbody {\n  margin: 0;\n  font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  line-height: 1.6;\n  color: var(--texto);\n  background: var(--fondo);\n}"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf4008",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "El menú, los títulos y las secciones"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf4009",
+       "language": "css"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "header {\n  position: sticky;\n  top: 0;\n  background: var(--fondo);\n  border-bottom: 1px solid var(--suave);\n}\n\nnav {\n  display: flex;\n  gap: 1.25rem;\n  max-width: 60rem;\n  margin: 0 auto;\n  padding: 1rem;\n}\n\nnav a {\n  color: var(--texto);\n  font-weight: 600;\n  text-decoration: none;\n}\n\nnav a:hover {\n  color: var(--acento);\n}\n\nmain {\n  max-width: 60rem;\n  margin: 0 auto;\n  padding: 0 1rem;\n}\n\nsection {\n  padding: 3rem 0;\n}\n\nh1 {\n  font-size: 2.5rem;\n  line-height: 1.1;\n}\n\na {\n  color: var(--acento);\n}"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "display: flex",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " pone los enlaces del menú en fila con un espacio ("
+       },
+       {
+        "type": "text",
+        "text": "gap",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ") entre ellos. "
+       },
+       {
+        "type": "text",
+        "text": "max-width",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " y "
+       },
+       {
+        "type": "text",
+        "text": "margin: 0 auto",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " centran el contenido para que las líneas no sean larguísimas en una pantalla ancha."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf4010"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf4011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Tus proyectos en tarjetas"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "CSS Grid",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " acomoda elementos en columnas. Con esta regla, los proyectos se reparten en tantas columnas como quepan, de al menos 16rem cada una:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf4012"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf4013",
+       "language": "css"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": ".proyectos {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));\n  gap: 1rem;\n}\n\narticle {\n  padding: 1.25rem;\n  border-radius: 0.75rem;\n  background: var(--suave);\n}\n\nimg {\n  max-width: 100%;\n  height: auto;\n  border-radius: 0.75rem;\n}"
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf4014",
+       "variante": "info"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Las medidas en "
+         },
+         {
+          "type": "text",
+          "text": "rem",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " son relativas al tamaño de letra. Si alguien agranda el texto en su navegador, todo crece en proporción. Es lo mismo que hace OneLearn."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf4015",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Experimenta con las herramientas del navegador"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Presiona "
+       },
+       {
+        "type": "text",
+        "text": "F12",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " en tu página y elige un elemento: verás sus reglas de CSS y podrás cambiar valores en vivo para probar. Los cambios ahí no se guardan; cuando te guste algo, cópialo a estilos.css."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf4016"
+      }
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf4017"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: no se aplica ningún estilo"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que estilos.css esté en la misma carpeta que index.html y que el "
+           },
+           {
+            "type": "text",
+            "text": "\u003clink>",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " diga exactamente "
+           },
+           {
+            "type": "text",
+            "text": "href=\"estilos.css\"",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ". En la pestaña «Consola» de F12 aparece un error si no encuentra el archivo."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf4018"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Cómo sé si mis colores se leen bien?"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El texto necesita suficiente contraste con el fondo: al menos 4.5 a 1. Las herramientas del navegador lo muestran al inspeccionar un texto (en el selector de color), y hay comprobadores en línea gratuitos si buscas «contrast checker»."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f4-1",
+     "texto": "Creé estilos.css y lo conecté desde index.html"
+    },
+    {
+     "id": "f4-2",
+     "texto": "Definí mis colores como variables en :root"
+    },
+    {
+     "id": "f4-3",
+     "texto": "Le di estilo al menú, a los títulos y a los enlaces"
+    },
+    {
+     "id": "f4-4",
+     "texto": "Acomodé mis proyectos en tarjetas con CSS Grid"
+    },
+    {
+     "id": "f4-5",
+     "texto": "Revisé que el texto se lea bien, con contraste suficiente"
+    }
+   ],
+   "entregable": "Tu página con un diseño propio: colores, tipografía, menú y tarjetas de proyectos.",
+   "enlace": false
+  },
+  {
+   "id": "f5",
+   "titulo": "En celular y para todos",
+   "duracion": "2 a 3 horas",
+   "objetivo": "Que tu página funcione bien en cualquier pantalla y para cualquier persona.",
+   "aprenderas": [
+    "Diseño adaptable con media queries",
+    "Accesibilidad básica",
+    "Medir la calidad con Lighthouse"
+   ],
+   "trabajo": "Las empresas exigen sitios adaptables y, cada vez más, accesibles: en muchos países es obligatorio por ley. Saber revisarlo te pone por delante.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Más de la mitad de las visitas a un sitio llegan desde un celular, y muchos reclutadores abrirán tu enlace ahí. Además, tu página tiene que poder usarla cualquiera: con teclado, con lector de pantalla o con la letra más grande."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf5001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf5002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Pruébala como si fuera un celular"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Abre las herramientas del navegador (F12) y activa el "
+       },
+       {
+        "type": "text",
+        "text": "modo de dispositivo",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (Ctrl+Mayús+M, o el ícono de celular y tableta). Elige un celular pequeño de la lista y revisa toda la página."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf5003"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf5004",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Ajustes para pantallas pequeñas"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Con una "
+       },
+       {
+        "type": "text",
+        "text": "media query",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " aplicas reglas solo cuando la pantalla es angosta:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf5005"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf5006",
+       "language": "css"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "@media (max-width: 600px) {\n  h1 {\n    font-size: 2rem;\n  }\n\n  nav {\n    gap: 0.75rem;\n    font-size: 0.95rem;\n    overflow-x: auto;\n  }\n\n  section {\n    padding: 2rem 0;\n  }\n}"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "La línea "
+       },
+       {
+        "type": "text",
+        "text": "\u003cmeta name=\"viewport\" …>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " que pusiste en el "
+       },
+       {
+        "type": "text",
+        "text": "\u003chead>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es indispensable: sin ella, el celular muestra la página como si fuera de computadora, en miniatura."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf5007"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf5008",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Que la pueda usar cualquiera"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-pf5009"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Teclado:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " recorre la página solo con la tecla Tab. Debes poder llegar a todos los enlaces y ver dónde estás."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Foco visible:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " agrega una regla para que el enlace con el foco se distinga claramente."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Texto alternativo:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " cada imagen con "
+           },
+           {
+            "type": "text",
+            "text": "alt",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " que describa lo importante (o "
+           },
+           {
+            "type": "text",
+            "text": "alt=\"\"",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " si es solo decoración)."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Idioma:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " "
+           },
+           {
+            "type": "text",
+            "text": "\u003chtml lang=\"es\">",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " hace que los lectores de pantalla pronuncien en español."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Títulos en orden:",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " h1, luego h2, luego h3, sin saltarse niveles."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf5010",
+       "language": "css"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "a:focus-visible,\nbutton:focus-visible {\n  outline: 3px solid var(--acento);\n  outline-offset: 3px;\n}"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf5011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "Pide una revisión automática"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En las herramientas del navegador (en Chrome y Edge) está "
+       },
+       {
+        "type": "text",
+        "text": "Lighthouse",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ": elige la categoría de accesibilidad y pulsa «Analyze page load». Te da una calificación de 0 a 100 y una lista de problemas con su explicación. Corrige lo que señale hasta llegar a 90 o más."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf5012"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf5013",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un informe de Lighthouse con buena calificación es algo concreto que puedes mencionar en una entrevista: demuestra que te importa la calidad y que sabes medirla."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf5014"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: la página se mueve hacia los lados en el celular"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Algo es más ancho que la pantalla. Suele ser una imagen sin "
+           },
+           {
+            "type": "text",
+            "text": "max-width: 100%",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " o un texto muy largo sin espacios, como una dirección de correo. En el modo de dispositivo, busca qué elemento se sale del borde."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f5-1",
+     "texto": "La página se ve bien en un celular pequeño, sin moverse hacia los lados"
+    },
+    {
+     "id": "f5-2",
+     "texto": "Las imágenes no se salen de la pantalla"
+    },
+    {
+     "id": "f5-3",
+     "texto": "Puedo recorrer todos los enlaces con Tab y se ve dónde está el foco"
+    },
+    {
+     "id": "f5-4",
+     "texto": "Corrí Lighthouse y la accesibilidad sale en 90 o más"
+    },
+    {
+     "id": "f5-5",
+     "texto": "Revisé que los títulos vayan en orden y que cada imagen tenga alt"
+    }
+   ],
+   "entregable": "Tu página funcionando bien en el modo de celular, y una captura del informe de Lighthouse con 90 o más en accesibilidad.",
+   "enlace": false
+  },
+  {
+   "id": "f6",
+   "titulo": "Un toque de JavaScript",
+   "duracion": "2 a 3 horas",
+   "objetivo": "Agregar comportamiento a tu página con JavaScript: un modo oscuro que se recuerda.",
+   "aprenderas": [
+    "Seleccionar elementos y responder a clics",
+    "Guardar datos en el navegador con localStorage",
+    "Leer errores en la consola"
+   ],
+   "trabajo": "Manipular la página con JavaScript y depurar con la consola son la base de cualquier trabajo frontend, también con frameworks como React o Vue.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "JavaScript",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " le da comportamiento a la página: responder a clics, cambiar cosas sin recargar, recordar preferencias. Vas a agregar un botón de "
+       },
+       {
+        "type": "text",
+        "text": "modo oscuro",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " que se recuerde y un año que se actualice solo."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf6001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf6002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. El botón y el año en el HTML"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Dentro del "
+       },
+       {
+        "type": "text",
+        "text": "\u003cnav>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", al final, agrega el botón. En el pie de página, cambia el texto para que tenga un lugar para el año:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf6003"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf6004",
+       "language": "html"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "\u003cbutton id=\"tema\" type=\"button\" aria-pressed=\"false\">Modo oscuro\u003c/button>\n\n\u003cfooter>\n  \u003cp>© \u003cspan id=\"anio\">\u003c/span> Ana López\u003c/p>\n\u003c/footer>"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf6005",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Los colores del modo oscuro"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Gracias a las variables de la fase 4, solo hay que cambiar sus valores cuando el "
+       },
+       {
+        "type": "text",
+        "text": "\u003cbody>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " tenga la clase «oscuro». Agrégalo a estilos.css:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf6006"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf6007",
+       "language": "css"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "body.oscuro {\n  --fondo: #121615;\n  --texto: #e6eeec;\n  --suave: #1e2624;\n  --acento: #5ccfc9;\n}\n\n#tema {\n  margin-left: auto;\n  padding: 0.25rem 0.75rem;\n  border: 1px solid var(--acento);\n  border-radius: 0.5rem;\n  background: transparent;\n  color: var(--texto);\n  font: inherit;\n  cursor: pointer;\n}"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf6008",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. El código"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Crea "
+       },
+       {
+        "type": "text",
+        "text": "app.js",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " con este código. Lee los comentarios: explican qué hace cada parte."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf6009"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf6010",
+       "language": "javascript"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "// El botón que cambia entre modo claro y oscuro\nconst boton = document.getElementById('tema');\n\n// Aplica un modo: agrega o quita la clase \"oscuro\" y actualiza el botón\nfunction aplicar(oscuro) {\n  document.body.classList.toggle('oscuro', oscuro);\n  boton.setAttribute('aria-pressed', oscuro);\n  boton.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';\n}\n\n// Al hacer clic, cambia al modo contrario y lo guarda en el navegador\nboton.addEventListener('click', () => {\n  const oscuro = !document.body.classList.contains('oscuro');\n  aplicar(oscuro);\n  localStorage.setItem('tema', oscuro ? 'oscuro' : 'claro');\n});\n\n// Al cargar la página, usa el modo que se guardó la última vez\naplicar(localStorage.getItem('tema') === 'oscuro');\n\n// El año del pie de página se pone solo\ndocument.getElementById('anio').textContent = new Date().getFullYear();"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Y conéctalo desde el "
+       },
+       {
+        "type": "text",
+        "text": "\u003chead>",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " de index.html. El atributo "
+       },
+       {
+        "type": "text",
+        "text": "defer",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " hace que el código espere a que la página esté lista:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf6011"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf6012",
+       "language": "html"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "\u003cscript src=\"app.js\" defer>\u003c/script>"
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf6013",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Revisa la consola"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Abre F12 y ve a la pestaña "
+       },
+       {
+        "type": "text",
+        "text": "Consola",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Si hay un error en tu código, aparece ahí en rojo, con el archivo y la línea. Leer la consola es la forma más rápida de encontrar errores en JavaScript."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf6014"
+      }
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf6015",
+       "variante": "info"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "localStorage",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " guarda datos en el navegador de quien visita tu página, igual que OneLearn guarda tus ajustes. Si borras los datos del navegador, se pierde la preferencia."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf6016"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: «Cannot read properties of null»"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El código buscó un elemento que no encontró. Revisa que el "
+           },
+           {
+            "type": "text",
+            "text": "id",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " del HTML sea exactamente el mismo que en "
+           },
+           {
+            "type": "text",
+            "text": "getElementById",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (por ejemplo, «tema» y «anio», sin ñ) y que el "
+           },
+           {
+            "type": "text",
+            "text": "\u003cscript>",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " tenga "
+           },
+           {
+            "type": "text",
+            "text": "defer",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf6017"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Reto opcional"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Haz que, la primera vez, el modo siga la preferencia del sistema de la persona. Pista: "
+           },
+           {
+            "type": "text",
+            "text": "window.matchMedia('(prefers-color-scheme: dark)').matches",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " vale "
+           },
+           {
+            "type": "text",
+            "text": "true",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " si su sistema está en modo oscuro."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f6-1",
+     "texto": "Creé app.js y lo cargué con defer"
+    },
+    {
+     "id": "f6-2",
+     "texto": "Agregué el botón de modo oscuro y funciona"
+    },
+    {
+     "id": "f6-3",
+     "texto": "El modo elegido se recuerda al recargar la página"
+    },
+    {
+     "id": "f6-4",
+     "texto": "El año del pie de página se pone solo"
+    },
+    {
+     "id": "f6-5",
+     "texto": "La consola del navegador no muestra errores"
+    }
+   ],
+   "entregable": "Tu página con un modo oscuro que funciona y se recuerda.",
+   "enlace": false
+  },
+  {
+   "id": "f7",
+   "titulo": "Guarda tu trabajo con Git y GitHub",
+   "duracion": "2 horas",
+   "objetivo": "Poner tu proyecto bajo control de versiones y subirlo a GitHub.",
+   "aprenderas": [
+    "Qué es un commit",
+    "Subir un proyecto a GitHub",
+    "Escribir buenos mensajes de commit"
+   ],
+   "trabajo": "Git es una de las herramientas más pedidas en las ofertas de trabajo. Tu perfil de GitHub, con commits claros, es parte de tu currículum.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Git",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " guarda fotos de tu proyecto a lo largo del tiempo, llamadas "
+       },
+       {
+        "type": "text",
+        "text": "commits",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Si algo se rompe, puedes volver a una versión anterior, y puedes ver qué cambió y cuándo. "
+       },
+       {
+        "type": "text",
+        "text": "GitHub",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " guarda una copia en internet y es donde los equipos colaboran. En casi cualquier trabajo de programación usarás los dos."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf7001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf7002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Tu primer commit"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En la terminal de Visual Studio Code, dentro de tu carpeta, escribe:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf7003"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf7004",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "git init\ngit add .\ngit commit -m \"Primera versión del portafolio\""
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-pf7005"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "git init",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " convierte la carpeta en un repositorio de Git."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "git add .",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " prepara todos los archivos para guardarlos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "git commit -m \"…\"",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " guarda la foto con un mensaje que explica qué hiciste."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf7006",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Crea el repositorio en GitHub"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "attrs": {
+       "id": "b-pf7007"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En github.com, pulsa "
+           },
+           {
+            "type": "text",
+            "text": "New",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (nuevo repositorio)."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ponle de nombre "
+           },
+           {
+            "type": "text",
+            "text": "portafolio",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", déjalo "
+           },
+           {
+            "type": "text",
+            "text": "público",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y no marques ninguna opción para agregar archivos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Pulsa "
+           },
+           {
+            "type": "text",
+            "text": "Create repository",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ". GitHub te mostrará unos comandos; los que necesitas son estos (con tu usuario):"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf7008",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "git branch -M main\ngit remote add origin https://github.com/TU-USUARIO/portafolio.git\ngit push -u origin main"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "La primera vez, Git te pedirá iniciar sesión. GitHub ya no acepta tu contraseña escrita en la terminal: se abrirá el navegador para que autorices el acceso. Si no se abre, instala "
+       },
+       {
+        "type": "text",
+        "text": "GitHub CLI",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " (cli.github.com) y escribe "
+       },
+       {
+        "type": "text",
+        "text": "gh auth login",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf7009"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf7010",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Cada vez que hagas cambios"
+       }
+      ]
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf7011",
+       "language": "bash"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "git status\ngit add .\ngit commit -m \"Agrega la sección de contacto\"\ngit push"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "git status",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " te dice qué archivos cambiaron. Acostúmbrate a hacer commits pequeños y frecuentes, cada uno con un mensaje claro:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf7012"
+      }
+     },
+     {
+      "type": "table",
+      "attrs": {
+       "id": "b-pf7013"
+      },
+      "content": [
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Mensaje"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableHeader",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "¿Bueno?"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "«Agrega el modo oscuro»"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sí: dice qué hace el cambio"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "«Corrige el menú que se salía en celular»"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "Sí: dice qué problema resuelve"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "«cambios»"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "No: no dice nada"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableRow",
+        "content": [
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "«ya quedó ahora sí»"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "tableCell",
+          "content": [
+           {
+            "type": "paragraph",
+            "content": [
+             {
+              "type": "text",
+              "text": "No: dentro de un mes no sabrás qué era"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf7014",
+       "variante": "aviso"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tu repositorio es público: cualquiera puede ver todos sus archivos, y también los de commits anteriores. Nunca subas contraseñas, claves ni datos personales que no quieras publicar."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf7015"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: «rejected» o «failed to push»"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Pasa si creaste el repositorio en GitHub con un README u otro archivo. Lo más sencillo al empezar: borra ese repositorio en GitHub (Settings, hasta abajo) y créalo de nuevo sin marcar ninguna opción."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf7016"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: «Author identity unknown»"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Te faltó configurar tu nombre y tu correo (fase 1, paso 4). Escribe esos dos comandos y vuelve a hacer el commit."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f7-1",
+     "texto": "Inicié Git en mi carpeta e hice mi primer commit"
+    },
+    {
+     "id": "f7-2",
+     "texto": "Creé el repositorio «portafolio» en GitHub"
+    },
+    {
+     "id": "f7-3",
+     "texto": "Subí mi código con git push y lo veo en GitHub"
+    },
+    {
+     "id": "f7-4",
+     "texto": "Hice al menos un cambio más con su propio commit y un mensaje claro"
+    }
+   ],
+   "entregable": "Tu repositorio en GitHub con todos los archivos del portafolio y al menos dos commits.",
+   "enlace": false
+  },
+  {
+   "id": "f8",
+   "titulo": "Publícalo y preséntalo",
+   "duracion": "2 horas",
+   "objetivo": "Publicar tu portafolio en internet y usarlo para buscar trabajo.",
+   "aprenderas": [
+    "Publicar un sitio con GitHub Pages",
+    "Escribir un README",
+    "Presentar tu trabajo a reclutadores"
+   ],
+   "trabajo": "Publicar, documentar y presentar tu trabajo es tan importante como programarlo. Es exactamente lo que harás al entregar proyectos en un empleo.",
+   "contenido": {
+    "type": "doc",
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Llegó el momento: tu portafolio va a estar en internet, gratis, con "
+       },
+       {
+        "type": "text",
+        "text": "GitHub Pages",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", el mismo servicio que publica OneLearn."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf8001"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf8002",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "1. Publícalo"
+       }
+      ]
+     },
+     {
+      "type": "orderedList",
+      "attrs": {
+       "id": "b-pf8003"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En tu repositorio de GitHub, entra a "
+           },
+           {
+            "type": "text",
+            "text": "Settings → Pages",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En «Build and deployment», elige "
+           },
+           {
+            "type": "text",
+            "text": "Deploy from a branch",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En «Branch», elige "
+           },
+           {
+            "type": "text",
+            "text": "main",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y la carpeta "
+           },
+           {
+            "type": "text",
+            "text": "/ (root)",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", y pulsa "
+           },
+           {
+            "type": "text",
+            "text": "Save",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Espera uno o dos minutos y recarga la página de Settings: aparecerá la dirección de tu sitio."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "La dirección será "
+       },
+       {
+        "type": "text",
+        "text": "https://TU-USUARIO.github.io/portafolio/",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Si quieres que sea solo https://TU-USUARIO.github.io, el repositorio debe llamarse exactamente TU-USUARIO.github.io."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf8004"
+      }
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Cada vez que hagas "
+       },
+       {
+        "type": "text",
+        "text": "git push",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", GitHub Pages publicará la versión nueva en uno o dos minutos. Puedes ver el progreso en la pestaña "
+       },
+       {
+        "type": "text",
+        "text": "Actions",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " del repositorio."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf8005"
+      }
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf8006",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "2. Revísalo en el mundo real"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-pf8007"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ábrelo en tu celular y en la computadora de alguien más."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que la foto cargue: en internet sí importan las mayúsculas en los nombres de archivo."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Vuelve a correr Lighthouse, ahora sobre la dirección publicada."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf8008",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "3. Escribe un README"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El archivo "
+       },
+       {
+        "type": "text",
+        "text": "README.md",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es lo primero que alguien ve al abrir tu repositorio. Créalo en tu carpeta, súbelo con un commit y explica tu proyecto:"
+       }
+      ],
+      "attrs": {
+       "id": "b-pf8009"
+      }
+     },
+     {
+      "type": "codeBlock",
+      "attrs": {
+       "id": "b-pf8010",
+       "language": "markdown"
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "# Portafolio de Ana López\n\nMi sitio personal: quién soy, mis habilidades y mis proyectos.\n\n**Visítalo:** https://ana-lopez.github.io/portafolio/\n\n## Hecho con\n\n- HTML semántico\n- CSS (variables, Flexbox, Grid y media queries)\n- JavaScript (modo oscuro que se recuerda con localStorage)\n\n## Lo que aprendí\n\nEstructurar una página accesible, hacerla adaptable al celular\ny publicarla con Git y GitHub Pages."
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf8011",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "4. Ponlo a trabajar"
+       }
+      ]
+     },
+     {
+      "type": "bulletList",
+      "attrs": {
+       "id": "b-pf8012"
+      },
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Agrega el enlace a tu "
+           },
+           {
+            "type": "text",
+            "text": "CV",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", junto a tu correo."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ponlo en tu perfil de "
+           },
+           {
+            "type": "text",
+            "text": "LinkedIn",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (sección de destacados) y en tu perfil de "
+           },
+           {
+            "type": "text",
+            "text": "GitHub",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Pide a "
+           },
+           {
+            "type": "text",
+            "text": "dos personas",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " que lo revisen (un profesor, un compañero, alguien que trabaje en tecnología) y aplica al menos una sugerencia."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cada vez que termines un proyecto nuevo, agrégalo como tarjeta. Un portafolio vivo vale más que uno perfecto."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "callout",
+      "attrs": {
+       "id": "b-pf8013",
+       "variante": "idea"
+      },
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "¿Quieres una dirección propia, como analopez.dev? Se compra un dominio (desde unos cientos de pesos al año) y se configura en Settings → Pages. Para entender qué pasa por detrás, revisa la lección de "
+         },
+         {
+          "type": "text",
+          "text": "DNS y direcciones IP",
+          "marks": [
+           {
+            "type": "link",
+            "attrs": {
+             "href": "../lecciones/dns.html"
+            }
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "heading",
+      "attrs": {
+       "id": "b-pf8014",
+       "level": 3
+      },
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué sigue?"
+       }
+      ]
+     },
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Con esto ya tienes lo que muchas personas que buscan su primer empleo no tienen: un proyecto terminado, publicado y con su código a la vista. Los siguientes pasos naturales son hacer proyectos que resuelvan un problema real (una app de tareas, una página para un negocio) y aprender un framework de JavaScript."
+       }
+      ],
+      "attrs": {
+       "id": "b-pf8015"
+      }
+     },
+     {
+      "type": "desplegable",
+      "attrs": {
+       "id": "b-pf8016"
+      },
+      "content": [
+       {
+        "type": "desplegableTitulo",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si te atoras: la página publicada sale en blanco o con error 404"
+         }
+        ]
+       },
+       {
+        "type": "desplegableCuerpo",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa que el archivo principal se llame exactamente "
+           },
+           {
+            "type": "text",
+            "text": "index.html",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (en minúsculas) y que esté en la raíz del repositorio, no dentro de otra carpeta. Si acabas de activar Pages, espera unos minutos más."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "tareas": [
+    {
+     "id": "f8-1",
+     "texto": "Activé GitHub Pages y mi portafolio abre en su dirección pública"
+    },
+    {
+     "id": "f8-2",
+     "texto": "Lo abrí en mi celular y se ve bien"
+    },
+    {
+     "id": "f8-3",
+     "texto": "Escribí un README.md que explica el proyecto"
+    },
+    {
+     "id": "f8-4",
+     "texto": "Agregué el enlace a mi CV o a mi perfil de LinkedIn"
+    },
+    {
+     "id": "f8-5",
+     "texto": "Le pedí retroalimentación a dos personas y apliqué al menos un cambio"
+    }
+   ],
+   "entregable": "La dirección pública de tu portafolio. Escríbela abajo para guardarla en OneLearn.",
+   "enlace": true
+  }
+ ]
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/proyecto.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

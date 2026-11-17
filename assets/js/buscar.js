@@ -38,6 +38,8 @@ function cargarLecciones(){
     if(l.archivo)lista.push({id:l.id,titulo:l.titulo,icono:l.icono,ruta:'lecciones/'+l.archivo,sub:'Lección'});
   })});
   lista=lista.concat(PAGINAS);
+  /* Proyectos: se buscan por su título y descripción (sin abrir su archivo) */
+  var proy=(AT.proyectos||[]).map(function(p){return {tipo:'leccion',titulo:p.titulo,texto:p.descripcion||'',href:'proyectos/'+p.archivo,sub:'Proyecto',icono:p.icono||'proyecto',doc:'proyecto-'+p.id}});
   lecciones=Promise.all(lista.map(function(l){
     /* La lección abierta ya está en memoria */
     if(AT.documento&&AT.documento.id===l.id)return Promise.resolve(entradasDeLeccion(l,AT.documento));
@@ -47,7 +49,7 @@ function cargarLecciones(){
       if(!s)return sola;
       return entradasDeLeccion(l,JSON.parse(s.textContent));
     }).catch(function(){return sola});
-  })).then(function(r){return [].concat.apply([],r)});
+  })).then(function(r){return [].concat.apply(proy,r)});
   return lecciones;
 }
 function cargarTuyo(){

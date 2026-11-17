@@ -40,3 +40,10 @@ window.AT.catalogo=[
     {id:'modelos-lenguaje',titulo:'Modelos de lenguaje (LLM)',archivo:'modelos-lenguaje.html',icono:'chat'}
   ]}
 ];
+
+/* Proyectos guiados por fases. `tareas` es el total de tareas del proyecto (para el avance sin abrirlo);
+   pruebas/14-proyectos.js comprueba que coincida con el proyecto. Las rutas de `archivo` son relativas a proyectos/. */
+window.AT.proyectos=[
+  {id:'portafolio',titulo:'Tu portafolio web',archivo:'portafolio.html',icono:'proyecto',nivel:'Desde cero',duracion:'15 a 22 horas',fases:8,tareas:39,
+   descripcion:'Crea y publica tu sitio web personal con HTML, CSS, JavaScript, Git y GitHub. Al terminar tendrás un enlace real para tu CV.'}
+];

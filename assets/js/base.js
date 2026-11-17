@@ -37,6 +37,7 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M9 2v4M12 2v4M15 2v4M9 18v4M12 18v4M15 18v4M2 9h4M2 12h4M2 15h4M18 9h4M18 12h4M18 15h4"/></symbol>'+
 '<symbol id="i-disco" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="11" r="4.5"/><circle cx="12" cy="11" r=".9" fill="currentColor" stroke="none"/><path d="M15 17.5h2.5"/></symbol>'+
 '<symbol id="i-gpu" viewBox="0 0 24 24"><rect x="2" y="6" width="18" height="11" rx="1.5"/><circle cx="8.5" cy="11.5" r="3"/><path d="M14 9.5h3M14 12h3M14 14.5h3M20 9h2v5h-2M5 17v2.5M8 17v2.5M11 17v2.5"/></symbol>'+
+'<symbol id="i-proyecto" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8.5 7V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2V7M3 12.5h18M10.5 12.5v2h3v-2"/></symbol>'+
 '<symbol id="i-placa" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="6.5" height="6.5" rx=".5"/><path d="M16 6.5v11M18.5 6.5v11M6.5 16.5h6.5"/></symbol>'+
 '<symbol id="i-resistencia" viewBox="0 0 24 24"><path d="M2 12h4l1.5-3.5 3 7 3-7 3 7 1.5-3.5h4"/></symbol>'+
 '<symbol id="i-transistor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5 12h4.5M9.5 7.5v9M9.5 10l5-3.5V3M9.5 14l5 3.5V21"/><path d="M12.6 17.8l1.9-.3-.6-1.8"/></symbol>'+
@@ -120,7 +121,9 @@ var LID=document.body.getAttribute('data-leccion')||'';
 /* Páginas: inicio, documento y acerca («Cómo está hecho») viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
 var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca';
-var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':'';
+/* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
+var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
+var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
 AT.rutas={raiz:RAIZ,lecciones:LECC,esInicio:ES_INICIO,pagina:PAGINA};
 var actual=null,grupo='',orden=[];
 catalogo.forEach(function(g){
@@ -130,14 +133,28 @@ catalogo.forEach(function(g){
   });
 });
 if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{id:'documento',titulo:'Documento'}:
-  PAGINA==='acerca'?{id:'acerca',titulo:'Cómo está hecho'}:{id:LID||'leccion',titulo:document.title};
+  PAGINA==='acerca'?{id:'acerca',titulo:'Cómo está hecho'}:
+  PAGINA==='proyectos'?{id:'proyectos',titulo:'Proyectos'}:
+  PAGINA==='proyecto'?{id:'proyecto',titulo:document.body.getAttribute('data-titulo')||document.title}:{id:LID||'leccion',titulo:document.title};
 if(PAGINA==='documento')grupo='Mis apuntes';
 if(PAGINA==='acerca')grupo='OneLearn';
+if(PAGINA==='proyecto')grupo='Proyectos';
 AT.leccion=actual;
 AT.orden=orden;AT.grupoActual=grupo;
 
 function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}
 AT.contarPalabras=contarPalabras;
+
+/* Avance de los proyectos (localStorage, aprende-tecnologia:proyectos):
+   {<id>: {tareas: {<idTarea>: fecha}, fase: 'f3', enlace: 'https://…', visto: fecha}} */
+var CLAVE_PROY='aprende-tecnologia:proyectos';
+AT.proyectosAvance={
+  todos:function(){try{var v=JSON.parse(localStorage.getItem(CLAVE_PROY));return v&&typeof v==='object'?v:{}}catch(e){return {}}},
+  leer:function(id){var p=this.todos()[id];return p&&typeof p==='object'?p:{tareas:{}}},
+  guardar:function(id,p){var t=this.todos();t[id]=p;try{localStorage.setItem(CLAVE_PROY,JSON.stringify(t))}catch(e){}},
+  /* Tareas hechas de un proyecto del catálogo, de las que tiene en total */
+  hechas:function(id){var p=this.leer(id);return Object.keys(p.tareas||{}).length}
+};
 
 /* ---------- Repaso: AT.repaso({host, score, reset, preguntas}) ----------
    Cada pregunta: {q:'texto', o:['opción',...], a:índiceCorrecto, e:'explicación'} */

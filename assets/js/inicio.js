@@ -141,7 +141,18 @@ document.addEventListener('app-instalada',function(){$('#instalar').hidden=true}
 $('#explorar').addEventListener('toggle',function(){
   expAbiertos=Array.prototype.filter.call(document.querySelectorAll('#explorar details.exp-g'),function(d){return d.open}).map(function(d){return d.getAttribute('data-g')});
 },true);
-function pintar(){pintarContinuar();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
+/* Proyectos: el primero, con su avance y un botón para empezar o seguir */
+function pintarProyectos(){
+  var c=$('#iniProyectos');if(!c)return;
+  c.innerHTML=(AT.proyectos||[]).slice(0,1).map(function(p){
+    var h=AT.proyectosAvance.hechas(p.id),pct=p.tareas?Math.round(h/p.tareas*100):0,fin=p.tareas&&h===p.tareas;
+    return '<div class="ini-pj">'+ico(p.icono||'proyecto','pj-card-ic')+'<div class="pj-card-c"><h3>'+esc(p.titulo)+'</h3><p>'+esc(p.descripcion)+'</p>'+
+      '<div class="pj-bar" aria-hidden="true"><i style="width:'+pct+'%"></i></div>'+
+      '<p class="pj-card-e">'+(fin?'Terminado':h?'Llevas '+pct+' %':p.nivel+' · '+p.duracion)+'</p>'+
+      '<a class="btn pri" href="proyectos/'+esc(p.archivo)+'">'+(fin?'Ver el proyecto':h?'Continuar':'Empezar el proyecto')+'</a></div></div>';
+  }).join('');
+}
+function pintar(){pintarContinuar();pintarProyectos();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 $('#saludo').textContent=saludo();
 pintar();
