@@ -49,6 +49,7 @@ lecciones/
   ram.css                   Estilos de sus laboratorios
   ram.js                    Sus laboratorios (AT.labs)
   cpu.html / .css / .js     Lección «Procesador (CPU)»
+  como-funciona.html / .css / .js   «Cómo funciona OneLearn» (grupo OneLearn): guía de uso con laboratorios que usan los controles reales
   <id>.html / .css / .js    Una lección por tema del catálogo (21 en total): hardware, electrónica, software,
                             redes, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios
 ```

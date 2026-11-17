@@ -221,6 +221,30 @@ module.exports=function(txt,demo){
     r.cumple(await p.getAttribute('#rbStat','data-k')==='good'&&await p.locator('#rbCopias li.bien').count()===2,'con la regla 3-2-1 recuperas todo');
   },
 
+  'como-funciona':async function(p,r){
+    await p.click('#clTema [data-v="dark"]');
+    r.cumple(await p.evaluate(function(){return document.documentElement.getAttribute('data-theme')==='dark'&&AT.ajustes.get('tema')==='dark'}),'el laboratorio cambia el tema real de OneLearn');
+    await p.click('#clTam [data-v="1"]');
+    r.igual(await txt(p,'#clTamV'),'115 %','A+ sube la letra al 115 %');
+    await p.click('#clFue [data-v="opendyslexic"]');
+    r.igual(await p.evaluate(function(){return AT.ajustes.get('fuente')}),'opendyslexic','y cambia la fuente');
+    await p.click('#clReset');
+    r.cumple(await txt(p,'#clTamV')==='100 %'&&await p.evaluate(function(){return AT.ajustes.esInicial()}),'«Volver a como estaba» restablece la lectura');
+    await p.locator('body').press('j');await p.waitForTimeout(150);await p.locator('body').press('k');await p.waitForTimeout(150);
+    r.igual(await p.locator('#caLista li.ok').count(),2,'presionar J y K los marca como probados');
+    r.cumple(await p.locator('#cdKpis .kpi').count()===5&&await txt(p,'#cdKpis .kpi:first-child b')==='0','muestra lo que hay guardado en el navegador');
+    await p.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-cf',titulo:'Prueba',contenido:{type:'doc',content:[]}})});
+    await p.waitForFunction(function(){return document.querySelector('#cdKpis .kpi:first-child b').textContent==='1'});
+    r.cumple(true,'al guardar un documento, el contador se actualiza solo');
+    await p.click('#cdAbrir');
+    r.cumple(await p.evaluate(function(){return document.querySelector('dialog.tus-datos').open}),'«Abrir Tus datos» abre la ventana real');
+    await p.keyboard.press('Escape');
+    await p.click('#ciDisp [data-v="ios"]');
+    r.cumple(/Agregar a inicio/.test(await txt(p,'#ciPasos')),'para iPhone explica «Agregar a inicio»');
+    await p.click('#ciDisp [data-v="android"]');
+    r.cumple(/Instalar app/.test(await txt(p,'#ciPasos')),'para Android explica «Instalar app»');
+  },
+
   'que-es-ia':async function(p,r){
     r.cumple(await txt(p,'#rgOk')==='7 de 12'&&await txt(p,'#rgFn')==='5','sin reglas, todo el spam se cuela');
     for(const k of [1,3,4])await p.check('#rgReglas input[data-r="'+k+'"]');

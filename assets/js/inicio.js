@@ -79,6 +79,27 @@ function cuando(iso){
   if(min<60*24&&d.getDate()===new Date().getDate())return 'Hoy, '+d.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'});
   return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:d.getFullYear()===new Date().getFullYear()?undefined:'numeric'});
 }
+/* Recordatorio de respaldo: si tienes documentos o notas y no descargas un respaldo desde hace 14 días
+   (o nunca), Inicio lo sugiere. «Recordármelo en una semana» lo pospone 7 días. */
+var CLAVE_POSPONER='aprende-tecnologia:recordar-respaldo',DIA=864e5;
+function pintarRespaldo(){
+  var caja=$('#iniRespaldo');if(!caja)return;
+  var ult=AT.datos.ultimoRespaldo(),hasta=0;
+  try{hasta=+localStorage.getItem(CLAVE_POSPONER)||0}catch(e){}
+  var dias=ult?Math.floor((Date.now()-new Date(ult).getTime())/DIA):null;
+  var mostrar=hayNotas()&&(dias===null||dias>=14)&&Date.now()>=hasta;
+  caja.hidden=!mostrar;
+  if(mostrar)$('#iniRespaldoTxt').textContent=(dias===null?'Todavía no has descargado ningún respaldo.':'Tu último respaldo es de hace '+dias+' días.')+
+    ' Tus documentos y notas solo viven en este navegador: si se borran sus datos, se pierden. Descarga un respaldo y guárdalo en otro lugar.';
+}
+$('#iniRespaldoSi').addEventListener('click',function(){
+  AT.datos.descargar().then(function(){pintarRespaldo();AT.aviso('Respaldo descargado. Guárdalo en tu nube o en una memoria USB.')},function(){AT.aviso('No se pudo crear el respaldo. Inténtalo otra vez.')});
+});
+$('#iniRespaldoNo').addEventListener('click',function(){
+  try{localStorage.setItem(CLAVE_POSPONER,String(Date.now()+7*DIA))}catch(e){}
+  pintarRespaldo();$('#t-docs').focus();
+});
+
 function pintarDocs(){
   var ul=$('#iniDocs');
   if(!ul)return;
@@ -152,7 +173,7 @@ function pintarProyectos(){
       '<a class="btn pri" href="proyectos/'+esc(p.archivo)+'">'+(fin?'Ver el proyecto':h?'Continuar':'Empezar el proyecto')+'</a></div></div>';
   }).join('');
 }
-function pintar(){pintarContinuar();pintarProyectos();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
+function pintar(){pintarContinuar();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 $('#saludo').textContent=saludo();
 pintar();

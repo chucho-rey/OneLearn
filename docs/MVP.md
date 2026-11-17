@@ -43,9 +43,9 @@ Las 21 lecciones del temario están publicadas. Lo que falta aquí es **revisarl
 - Cada lección nueva sigue los pasos del `README.md` («Cómo agregar una lección») y trae sus comprobaciones.
 - Con tantos temas, conviene pensar en **rutas sugeridas** (por ejemplo, «Empieza aquí si estudias programación») para que nadie se pierda.
 
-### 3.2 «Cómo funciona OneLearn» (hito 7) · Necesario
+### 3.2 «Cómo funciona OneLearn» (hito 7) · Hecho
 
-Está en pausa, pero ahora OneLearn tiene muchas funciones que un usuario nuevo no va a descubrir solo: marcadores, «@», Ctrl K, «Tus datos», el respaldo. Una guía corta (o un recorrido la primera vez) evita que alguien pierda sus apuntes por no saber que viven en su navegador.
+Es el primer tema del temario, en el grupo «OneLearn», y la bienvenida de Inicio lo sugiere. Explica lecciones, Lectura, atajos, apuntes, marcadores, «Crear», búsqueda, proyectos, dónde se guardan los datos e instalar la app. Sus cuatro laboratorios usan los controles reales: ajustar la lectura, probar los atajos, ver tus datos de este navegador e instalar la app.
 
 ### 3.3 Saber qué pasa: medición · Necesario
 
@@ -76,12 +76,10 @@ Las pruebas automáticas usan Chromium. Falta probar a mano en:
 - Firefox de escritorio.
 - Un lector de pantalla (VoiceOver o NVDA) en una lección completa.
 
-### 3.7 Proteger los datos del estudiante · Necesario
+### 3.7 Proteger los datos del estudiante · Hecho
 
-Como los apuntes solo viven en el navegador, perderlos es el mayor riesgo del MVP.
-
-- Recordar descargar un respaldo (por ejemplo, un aviso discreto si hay documentos y el último respaldo tiene más de 2 semanas).
-- Pedir el almacenamiento persistente en el momento adecuado (al crear el primer documento), no solo desde «Tus datos».
+- Inicio recuerda descargar un respaldo si hay documentos o notas y el último respaldo tiene 14 días o más (o nunca se hizo). Se puede posponer una semana.
+- El almacenamiento persistente se pide al crear un documento, además de desde «Tus datos» y desde la lección «Cómo funciona OneLearn».
 
 ### 3.8 Imágenes en los documentos · Recomendado
 
@@ -127,9 +125,9 @@ Si una meta no se cumple, la tabla te dice dónde mirar: el contenido, las razon
 ## 6. Orden sugerido
 
 1. Aviso de privacidad, analítica y botón de comentarios (unos días).
-2. Hito 7: «Cómo funciona OneLearn» (una semana).
+2. ~~Hito 7: «Cómo funciona OneLearn»~~ (hecho).
 3. Revisión del contenido con personas que conozcan cada tema.
-4. Recordatorio de respaldo y almacenamiento persistente.
+4. ~~Recordatorio de respaldo y almacenamiento persistente~~ (hecho).
 5. Pruebas en dispositivos reales.
 6. Lanzamiento con un grupo pequeño (un salón, un club de programación, un servidor de Discord).
 7. En paralelo, si da tiempo: imágenes y PDF.

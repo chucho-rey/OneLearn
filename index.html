@@ -30,12 +30,16 @@
 
       <div class="bienv" id="bienvenida">
         <p>OneLearn explica cómo funciona la tecnología con lecciones cortas y laboratorios que puedes tocar. Tu avance y tus apuntes se guardan en este dispositivo.</p>
-        <a class="btn pri" href="lecciones/ram.html">Empieza por Memoria RAM</a>
+        <div class="bienv-b"><a class="btn pri" href="lecciones/como-funciona.html">Así funciona OneLearn</a><a class="btn" href="lecciones/ram.html">Empieza por Memoria RAM</a></div>
       </div>
       <div id="continuar" hidden></div>
 
       <section class="ini-sec" aria-labelledby="t-docs">
-        <div class="ini-sec-h"><h2 id="t-docs">Tus documentos</h2><button class="btn" type="button" data-crear>+ Crear</button></div>
+        <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus documentos</h2><button class="btn" type="button" data-crear>+ Crear</button></div>
+        <div class="ini-resp" id="iniRespaldo" role="region" aria-label="Recordatorio de respaldo" hidden>
+          <p id="iniRespaldoTxt"></p>
+          <div class="ini-resp-b"><button class="btn pri" type="button" id="iniRespaldoSi">Descargar respaldo</button><button class="btn" type="button" id="iniRespaldoNo">Recordármelo en una semana</button></div>
+        </div>
         <ul class="ini-notas" id="iniDocs"></ul>
       </section>
 
