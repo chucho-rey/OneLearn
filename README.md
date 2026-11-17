@@ -1,6 +1,6 @@
 # OneLearn
 
-Lecciones interactivas de tecnología (hardware, electrónica, software y redes) en español, con demos, repaso y apuntes que se guardan solos.
+Lecciones interactivas de tecnología (hardware, electrónica, software, redes, ciberseguridad e inteligencia artificial) en español, con demos, repaso y apuntes que se guardan solos.
 
 Es un sitio estático: no necesita servidor propio ni dependencias para funcionar. Abre `index.html` en el navegador, directamente desde el disco o desde cualquier servidor estático (por ejemplo, GitHub Pages). La única pieza compilada es el editor (Tiptap), y el resultado ya está guardado en `assets/vendor/`.
 
@@ -17,7 +17,7 @@ assets/
   css/editor.css            Estilos del editor (solo documento.html): barra de herramientas, asa de bloque, menús y formularios
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
-  js/catalogo.js            Temario: grupos y lecciones de la barra lateral
+  js/catalogo.js            Temario: grupos y lecciones (en la barra lateral, cada grupo se pliega y se recuerda cuáles dejaste abiertos)
   js/base.js                Utilidades (AT.$, AT.esc, AT.ico...), íconos, página actual y repaso (AT.repaso)
   js/datos.js               Tus datos en IndexedDB: documentos, notas y marcadores, respaldo e importación (AT.datos)
   js/barra.js               Barra lateral, barra superior, menú en celular y pestañas Temas / Mis apuntes / Comunidad

@@ -61,6 +61,32 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   r.cumple(c.errores.length===0,'sin errores en celular',c.errores);
   await cerrar(c);
 
+  /* Grupos plegables del temario: no se satura aunque haya muchos temas */
+  const g=await pagina(browser,{ancho:1280});
+  await g.goto(base+'lecciones/cpu.html');await listo(g);
+  const grupos=function(){return g.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn')].map(function(b){
+    return b.getAttribute('data-grupo')+':'+(b.getAttribute('aria-expanded')==='true'?'abierto':'cerrado')+(document.getElementById(b.getAttribute('aria-controls')).hidden?':oculto':'')})})};
+  let gs=await grupos();
+  r.igual(gs.join(' '),'hardware:abierto electronica:cerrado:oculto software:cerrado:oculto redes:cerrado:oculto ciberseguridad:cerrado:oculto inteligencia-artificial:cerrado:oculto',
+    'la primera vez solo se abre el grupo con lecciones; Ciberseguridad e Inteligencia artificial están en el temario');
+  r.igual(await g.textContent('#grpb-hardware em'),'2/5','el grupo dice cuántas lecciones tiene disponibles');
+  r.cumple(/2 de 5 lecciones disponibles/.test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
+  await g.click('#grpb-ciberseguridad');await g.waitForTimeout(100);
+  r.cumple(await g.isVisible('#grp-ciberseguridad .nv.soon'),'al tocar un grupo se abre y muestra sus lecciones');
+  await g.focus('#grpb-hardware');await g.keyboard.press('Enter');await g.waitForTimeout(100);
+  r.cumple(!await g.isVisible('#grp-hardware'),'con el teclado (Enter) también se pliega');
+  await g.reload();await listo(g);
+  gs=await grupos();
+  r.cumple(gs.indexOf('ciberseguridad:abierto')>=0,'se recuerda qué grupos dejaste abiertos',gs);
+  r.cumple(gs.indexOf('hardware:abierto')>=0,'el grupo de la lección actual siempre se abre, aunque lo hayas plegado',gs);
+  await g.goto(base+'index.html');await listo(g);
+  gs=await grupos();
+  r.cumple(gs.indexOf('hardware:cerrado:oculto')>=0&&gs.indexOf('ciberseguridad:abierto')>=0,'en Inicio se respeta lo que plegaste',gs);
+  r.igual(await g.evaluate(function(){return [...document.querySelectorAll('.exp-pronto b')].map(function(b){return b.textContent}).join(', ')}),
+    'Electrónica, Software, Redes, Ciberseguridad, Inteligencia artificial','Inicio junta los grupos sin lecciones en «Próximos temas»');
+  await revisar(g,r,'Inicio con grupos plegados');
+  await cerrar(g);
+
   /* Las tres pestañas con letra grande, OpenDyslexic y alto contraste */
   for(const ancho of [390,1280])for(const [escala,fuente] of [[1,'normal'],[1.5,'normal'],[1,'opendyslexic'],[1.5,'opendyslexic']])
   for(const [tema,contraste] of [['light','normal'],['dark','high']])for(const pestana of ['temas','apuntes','comunidad']){

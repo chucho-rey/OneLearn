@@ -2,6 +2,7 @@
    Arma la barra lateral (Inicio, pestañas Temas / Mis apuntes / Comunidad, Lectura y Modo zen),
    la barra superior y el enlace a la siguiente lección a partir de AT.catalogo; maneja el menú en celular
    (panel modal con trampa de foco), la barra contraída en escritorio y las pestañas.
+   Los grupos del temario se pliegan; se recuerda cuáles dejaste abiertos (aprende-tecnologia:grupos).
    Expone AT.setNav, AT.esEscritorio y AT.refrescarNotas. */
 (function(){
 'use strict';
@@ -9,6 +10,18 @@ var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,reduce=AT.reduce;
 var R=AT.rutas,RAIZ=R.raiz,LECC=R.lecciones,ES_INICIO=R.esInicio;
 var catalogo=AT.catalogo||[],actual=AT.leccion;
 var grupo=AT.grupoActual,orden=AT.orden;
+
+/* ---------- Grupos plegables del temario ---------- */
+var CLAVE_GRUPOS='aprende-tecnologia:grupos';
+function slugGrupo(n){return String(n).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+/* null si nunca has abierto o cerrado un grupo */
+function gruposAbiertos(){
+  try{var v=JSON.parse(localStorage.getItem(CLAVE_GRUPOS));return Array.isArray(v)?v:null}catch(e){return null}
+}
+function guardarGrupos(){
+  var v=$$('.grp-btn',$('#side')).filter(function(b){return b.getAttribute('aria-expanded')==='true'}).map(function(b){return b.getAttribute('data-grupo')});
+  try{localStorage.setItem(CLAVE_GRUPOS,JSON.stringify(v))}catch(e){}
+}
 
 /* ---------- Estructura: barra lateral, barra superior y siguiente lección ---------- */
 (function(){
@@ -23,14 +36,24 @@ var grupo=AT.grupoActual,orden=AT.orden;
       '<button class="tab" type="button" role="tab" id="tab-comunidad" aria-controls="pn-comunidad">Comunidad</button>'+
     '</div>'+
     '<div class="tabp" role="tabpanel" id="pn-temas" aria-labelledby="tab-temas"><nav aria-label="Temas">';
+  /* Cada grupo se pliega para que la barra no crezca sin fin al agregar temas.
+     Abiertos: el grupo de la página actual y los que dejaste abiertos (o, la primera vez, los que tienen lecciones). */
+  var abiertos=gruposAbiertos();
   catalogo.forEach(function(g){
-    h+='<div class="grp">'+esc(g.grupo)+'</div>';
+    var id=slugGrupo(g.grupo),listas=g.lecciones.filter(function(l){return l.archivo}).length;
+    var abierto=g.grupo===grupo||(abiertos?abiertos.indexOf(id)>=0:listas>0);
+    var cuenta=listas?'<em aria-hidden="true">'+listas+'/'+g.lecciones.length+'</em><span class="vh">, '+listas+' de '+g.lecciones.length+' lecciones disponibles</span>':
+      '<em>Pronto</em>';
+    h+='<div class="grp-s"><button class="grp grp-btn" type="button" id="grpb-'+id+'" data-grupo="'+id+'" aria-expanded="'+abierto+'" aria-controls="grp-'+id+'">'+
+      ico('chev-l','grp-ic')+'<span>'+esc(g.grupo)+'</span>'+cuenta+'</button>'+
+      '<div class="grp-l" id="grp-'+id+'" role="group" aria-labelledby="grpb-'+id+'"'+(abierto?'':' hidden')+'>';
     g.lecciones.forEach(function(l){
       var inner=ico(l.icono||'page')+'<span>'+esc(l.titulo)+'</span>';
       if(l===actual)h+='<a class="nv on" href="'+esc(LECC+l.archivo)+'" aria-current="page" data-id="'+esc(l.id)+'">'+inner+'</a>';
       else if(l.archivo)h+='<a class="nv" href="'+esc(LECC+l.archivo)+'" data-id="'+esc(l.id)+'">'+inner+'</a>';
       else h+='<span class="nv soon" aria-disabled="true">'+inner+'<em>Pronto</em></span>';
     });
+    h+='</div></div>';
   });
   h+='</nav></div>'+
     '<div class="tabp" role="tabpanel" id="pn-apuntes" aria-labelledby="tab-apuntes" hidden>'+
@@ -134,6 +157,14 @@ sideBtn.addEventListener('click',function(){
 });
 $('#scrim').addEventListener('click',function(){setNav(false)});
 sideEl.addEventListener('click',function(e){
+  var g=e.target.closest('.grp-btn');
+  if(g){
+    var abrir=g.getAttribute('aria-expanded')!=='true';
+    g.setAttribute('aria-expanded',abrir?'true':'false');
+    $('#'+g.getAttribute('aria-controls'),sideEl).hidden=!abrir;
+    guardarGrupos();
+    return;
+  }
   /* Tocar la lección actual solo cierra el menú, no recarga la página */
   if(e.target.closest('.nv.on')){e.preventDefault();setNav(false)}
 });

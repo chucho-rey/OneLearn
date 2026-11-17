@@ -38,7 +38,7 @@ Ordenado por importancia. Lo marcado como **Necesario** bloquea el lanzamiento; 
 
 ### 3.1 Contenido: un recorrido completo · Necesario
 
-Hoy hay 2 lecciones de 13 en el temario, y el resto dice «Pronto». Un estudiante que termina la RAM y la CPU no tiene a dónde ir, así que no se puede medir si regresa.
+Hoy hay 2 lecciones de 21 en el temario (seis grupos, incluidos Ciberseguridad e Inteligencia artificial), y el resto dice «Pronto». Un estudiante que termina la RAM y la CPU no tiene a dónde ir, así que no se puede medir si regresa.
 
 - **Propuesta:** terminar el grupo **Hardware** (faltan Almacenamiento, Tarjeta gráfica y Placa base). Así hay un recorrido completo de 5 lecciones, con un principio y un final.
 - Esconder del temario los grupos que no tienen ninguna lección publicada, o dejar uno solo como «Próximo tema», para que el sitio no se vea vacío.
