@@ -7,11 +7,13 @@ Es un sitio estático: no necesita servidor propio ni dependencias para funciona
 ## Estructura
 
 ```
-index.html                  Inicio: continúa donde te quedaste, notas recientes y explorar temas
+index.html                  Inicio: continúa donde te quedaste, tus documentos, notas recientes y explorar temas
+documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
 manifest.webmanifest        Datos para instalar OneLearn como app
 sw.js                       Service worker: guarda el sitio para usarlo sin conexión
 assets/
   css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
+  css/editor.css            Estilos del editor (solo documento.html): barra de herramientas, asa de bloque, menús y formularios
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
   js/catalogo.js            Temario: grupos y lecciones de la barra lateral
@@ -22,6 +24,9 @@ assets/
   js/apuntes.js             Hoja de apuntes de cada lección (abajo o acoplada a la derecha)
   js/app.js                 App instalable: service worker, aviso de actualización e instalación
   js/respaldo.js            Ventana «Tus datos»: espacio, protección del navegador, descargar e importar respaldo
+  js/crear.js               «Crear»: tipos de documento, sus plantillas y la ventana «¿Qué quieres crear?» (AT.crear)
+  js/editor.js              El editor de bloques sobre Tiptap: bloques propios, barra, menú «/», asa para mover (AT.editor)
+  js/documento.js           Página de un documento: modos Editar y Leer, autoguardado, Markdown, duplicar y eliminar
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
@@ -82,6 +87,18 @@ OneLearn se puede instalar como app desde el navegador (en iPhone, con Compartir
 
 **Al agregar o quitar un archivo del sitio** (una lección nueva, por ejemplo), agrégalo a la lista `ARCHIVOS` de `sw.js` y sube `VERSION`. La prueba `pruebas/6-app.js` falla si a la lista le falta algo.
 
+
+## Crear y editar
+
+«Crear» (barra lateral e inicio) pregunta qué quieres crear: **libreta de estudio** (índice, secciones, preguntas de repaso y resumen, como una lección), **notas** (una página en blanco) o **apuntes de clase** (materia, profesor y fecha arriba; tareas al final). Libro, documento de investigación, tesis, guía para examen, bitácora, presentación y documento en blanco llegan en la fase 3.
+
+Cada documento se abre en `documento.html?id=...` con dos modos: **Editar** (título, propiedades y el editor) y **Leer** (dibujado con `bloques.js`, igual que una lección; la tecla E vuelve a editar). Se guarda solo, unos instantes después de cada cambio. En el editor:
+
+- Barra de herramientas (con flechas entre botones): deshacer, tipo de bloque, negrita, cursiva, subrayado, tachado, resaltado, código, enlace, listas, «Insertar» y opciones del bloque.
+- **«/»** abre el menú para insertar: secciones, listas, tareas, callouts (información, aviso, idea), tabla, desplegable, columnas, preguntas de repaso, resumen, índice, cita textual, código y separador.
+- **Asa del bloque** (al pasar el ratón): «+» inserta debajo; «⋮⋮» se arrastra para mover el bloque o abre sus opciones.
+- Atajos: Alt+↑/↓ mueven el bloque, Ctrl+Mayús+D lo duplica, Ctrl+Z deshace, Esc suelta el editor (y otro Esc sale del modo zen).
+- «⋯» descarga el documento como Markdown, lo duplica o lo elimina (con «Deshacer»).
 
 ## El editor (Tiptap)
 

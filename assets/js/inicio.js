@@ -14,7 +14,7 @@ function saludo(){
 }
 function url(l,hash){return esc(LECC+l.archivo+(hash?'#'+hash:''))}
 var notasCache=[];
-function hayNotas(){return notasCache.some(function(n){return n.t.trim()})}
+function hayNotas(){return docsCache.length>0||notasCache.some(function(n){return n.t.trim()})}
 
 function pintarContinuar(){
   var cont=$('#continuar'),bienv=$('#bienvenida');
@@ -68,6 +68,32 @@ function pintarNotas(){
   }).join('');
 }
 
+/* Tus documentos: los 6 más recientes */
+var docsCache=[];
+function cargarDocs(){return AT.datos.documentos.todos().then(function(l){docsCache=l})}
+function cuando(iso){
+  if(!iso)return '';
+  var d=new Date(iso),min=(Date.now()-d.getTime())/6e4;
+  if(min<1)return 'Hace un momento';
+  if(min<60)return 'Hace '+Math.round(min)+' min';
+  if(min<60*24&&d.getDate()===new Date().getDate())return 'Hoy, '+d.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'});
+  return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:d.getFullYear()===new Date().getFullYear()?undefined:'numeric'});
+}
+function pintarDocs(){
+  var ul=$('#iniDocs');
+  if(!ul)return;
+  var docs=docsCache.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0}).slice(0,6);
+  if(!docs.length){
+    ul.innerHTML='<li class="ini-vacio">Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.</li>';
+    return;
+  }
+  ul.innerHTML=docs.map(function(d){
+    var t=AT.tiposDoc&&AT.tiposDoc[d.tipo],w=AT.bloques?AT.bloques.palabras(d):0;
+    return '<li><a class="nota" href="documento.html?id='+encodeURIComponent(d.id)+'"><b class="doc-t">'+ico(t?t.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></b>'+
+      '<span>'+esc(t?t.nombre:'Documento')+(AT.bloques?' · '+(w===1?'1 palabra':w+' palabras'):'')+'</span><small>'+esc(cuando(d.editado))+'</small></a></li>';
+  }).join('');
+}
+
 function pintarExplorar(){
   $('#explorar').innerHTML=AT.catalogo.map(function(g){
     return '<div class="exp-g"><h3 class="exp-t">'+esc(g.grupo)+'</h3><ul class="exp">'+g.lecciones.map(function(l){
@@ -98,13 +124,13 @@ $('#instalarBtn').addEventListener('click',function(){
 document.addEventListener('app-instalable',pintarInstalar);
 document.addEventListener('app-instalada',function(){$('#instalar').hidden=true});
 
-function pintar(){pintarContinuar();pintarNotas();pintarExplorar();pintarInstalar()}
-function recargar(){cargarNotas().then(pintar)}
+function pintar(){pintarContinuar();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
+function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 $('#saludo').textContent=saludo();
 pintar();
 recargar();
 AT.avance.on(pintar);
-AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='*')recargar()});
+AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='*')recargar()});
 /* Al volver con «atrás» desde una lección, el navegador puede mostrar una copia vieja: se actualiza */
 window.addEventListener('pageshow',function(e){if(e.persisted)location.reload()});
 })();

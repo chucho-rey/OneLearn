@@ -15,6 +15,7 @@ var grupo=AT.grupoActual,orden=AT.orden;
   var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'index.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M20.5 22.5 30 16v32h14.5"/></svg><span>One<b>Learn</b></span></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
+    '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
       '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
       '<button class="tab" type="button" role="tab" id="tab-apuntes" aria-controls="pn-apuntes">Mis apuntes</button>'+
@@ -32,9 +33,11 @@ var grupo=AT.grupoActual,orden=AT.orden;
   });
   h+='</nav></div>'+
     '<div class="tabp" role="tabpanel" id="pn-apuntes" aria-labelledby="tab-apuntes" hidden>'+
-      '<p class="side-txt">Las notas rápidas de cada lección. Se guardan en este dispositivo.</p>'+
+      '<div class="grp">Documentos</div>'+
+      '<ul class="docs" id="docsLista"></ul>'+
+      '<div class="grp">Notas de las lecciones</div>'+
       '<ul class="notas" id="notasLista"></ul>'+
-      '<p class="side-txt side-soon"><b>Pronto:</b> temas propios con todas las herramientas de edición y marcadores a bloques de las lecciones.</p>'+
+      '<p class="side-txt">Todo se guarda en este dispositivo.</p>'+
     '</div>'+
     '<div class="tabp" role="tabpanel" id="pn-comunidad" aria-labelledby="tab-comunidad" hidden>'+
       '<p class="side-txt">Aquí podrás publicar tus temas, explorar los de otros estudiantes y guardar una copia en tus apuntes para editarla.</p>'+
@@ -177,13 +180,29 @@ document.addEventListener('click',function(e){
   /* Mis apuntes: una tarjeta por lección con nota (las notas vienen de AT.datos, en IndexedDB) */
   /* Se dibuja al instante con las notas ya cargadas y después se confirma con la base;
      si no cambió nada, no se toca la lista (así no se pierde el foco) */
-  var pintando=0,cache=null,ultimo='';
+  var pintando=0,cache=null,ultimo='',docsCache=null,ultimoDocs='',listaDocs=$('#docsLista',sideEl);
   function pintarNotas(){
     if(cache)pintarNotasCon(cache);
+    if(docsCache)pintarDocsCon(docsCache);
     var n0=++pintando;
-    AT.datos.notas.todas().then(function(lista){cache=lista;if(n0===pintando&&!$('#pn-apuntes').hidden)pintarNotasCon(lista)});
+    Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos()]).then(function(r){
+      cache=r[0];docsCache=r[1];
+      if(n0===pintando&&!$('#pn-apuntes').hidden){pintarNotasCon(r[0]);pintarDocsCon(r[1])}
+    });
   }
-  AT.datos.notas.todas().then(function(lista){if(!cache)cache=lista});
+  Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos()]).then(function(r){if(!cache)cache=r[0];if(!docsCache)docsCache=r[1]});
+  /* Documentos: los más recientes primero; el que está abierto, marcado */
+  function pintarDocsCon(docs){
+    var abierto=AT.documentoAbierto||'';
+    docs=docs.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
+    var h=docs.map(function(d){
+      var aqui=d.id===abierto,tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo];
+      return '<li><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+'documento.html?id='+encodeURIComponent(d.id)+'"'+(aqui?' aria-current="page"':'')+'>'+
+        ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></a></li>';
+    }).join('');
+    h=h||'<li class="side-txt">Todavía no creas documentos. Toca «Crear» para empezar una libreta o unas notas.</li>';
+    if(h!==ultimoDocs){listaDocs.innerHTML=h;ultimoDocs=h}
+  }
   function pintarNotasCon(notas){
     var h='',porId={};
     notas.forEach(function(x){porId[x.id]=x.texto||''});
@@ -211,7 +230,7 @@ document.addEventListener('click',function(e){
   });
   var espera=null;
   AT.refrescarNotas=function(){clearTimeout(espera);espera=setTimeout(function(){if(!$('#pn-apuntes').hidden)pintarNotas()},400)};
-  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='*')AT.refrescarNotas()});
+  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='*')AT.refrescarNotas()});
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
   elegir(aj.get('pestana'));

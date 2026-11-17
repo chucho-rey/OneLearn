@@ -1,4 +1,4 @@
-/* Modo zen y atajos de teclado de OneLearn (solo en las lecciones).
+/* Modo zen y atajos de teclado de OneLearn (en las lecciones y en tus documentos).
    Modo zen: oculta la barra lateral, la barra superior, el mapa y la barra de apuntes; deja el texto y una línea
    fina de avance arriba, y usa la pantalla completa del navegador donde se puede. Una barra discreta (que aparece
    al mover el ratón o con Tab) cambia el tamaño de letra y el ancho, abre la nota rápida y sale.
@@ -10,7 +10,8 @@
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,ico=AT.ico,aj=AT.ajustes,root=document.documentElement;
 var page=$('.page');
-if(!page||!document.body.getAttribute('data-leccion'))return;
+var conNota=!!document.body.getAttribute('data-leccion');
+if(!page||!(conNota||AT.rutas.pagina==='documento'))return;
 
 /* Avisos para lectores de pantalla */
 var aviso=document.createElement('div');
@@ -29,7 +30,7 @@ barra.innerHTML=
   '<button type="button" data-z="menos" aria-label="Texto más pequeño">A−</button>'+
   '<button type="button" data-z="mas" aria-label="Texto más grande">A+</button>'+
   '<button type="button" data-z="ancho" aria-label="Ancho de columna">'+ico('ancho')+'</button>'+
-  '<button type="button" data-z="nota" aria-label="Nota rápida (N)">'+ico('note')+'</button>'+
+  (conNota?'<button type="button" data-z="nota" aria-label="Nota rápida (N)">'+ico('note')+'</button>':'')+
   '<button type="button" data-z="salir">Salir <kbd>Esc</kbd></button>';
 /* Al principio de la página: con Tab es lo primero a lo que se llega en el modo zen */
 document.body.insertBefore(barra,document.body.firstChild);
@@ -133,7 +134,7 @@ dlg.innerHTML='<div class="at-h"><h2 id="atajosT">Atajos de teclado</h2>'+
   '<button type="button" class="lec-x" data-cerrar aria-label="Cerrar">'+ico('close')+'</button></div>'+
   '<dl>'+
     '<div><dt><kbd>Z</kbd></dt><dd>Entrar o salir del modo zen</dd></div>'+
-    '<div><dt><kbd>N</kbd></dt><dd>Abrir la nota rápida</dd></div>'+
+    (conNota?'<div><dt><kbd>N</kbd></dt><dd>Abrir la nota rápida</dd></div>':'')+
     '<div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>Sección siguiente y anterior</dd></div>'+
     '<div><dt><kbd>Esc</kbd></dt><dd>Cerrar lo que esté abierto, o salir del modo zen</dd></div>'+
     '<div><dt><kbd>?</kbd></dt><dd>Ver esta lista</dd></div>'+
