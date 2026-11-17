@@ -30,6 +30,7 @@ function guardarGrupos(){
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
+    '<a class="nv'+(R.pagina==='proyectos'||R.pagina==='proyecto'?' on" aria-current="page':'')+'" href="'+RAIZ+'proyectos/index.html" id="sideProyectos">'+ico('proyecto')+'<span>Proyectos</span></a>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
       '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
       '<button class="tab" type="button" role="tab" id="tab-apuntes" aria-controls="pn-apuntes">Mis apuntes</button>'+

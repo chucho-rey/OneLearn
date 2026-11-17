@@ -207,7 +207,7 @@ function exportar(){
     return {
       app:'OneLearn',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],
-      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes')
+      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos')
     };
   });
 }
@@ -234,7 +234,7 @@ function importar(datos){
   if(!esObjeto(datos)||datos.app!=='OneLearn'||typeof datos.formato!=='number')
     return Promise.reject(new Error('El archivo no es un respaldo de OneLearn.'));
   if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneLearn. Actualiza la página e inténtalo otra vez.'));
-  var res={documentos:0,notas:0,marcadores:0,avance:false};
+  var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
     return esObjeto(d)&&idValido(d.id)&&esObjeto(d.contenido)&&d.contenido.type==='doc'&&(d.contenido.content==null||Array.isArray(d.contenido.content));
@@ -276,6 +276,20 @@ function importar(datos){
         if(!act.ultima||(ent.ultima&&act.lecciones[ent.ultima]&&!act.lecciones[act.ultima]))act.ultima=ent.ultima;
         lsSet(PREF+'avance',JSON.stringify(act));
         if(AT.avance&&AT.avance.recargar)AT.avance.recargar();
+      }
+      /* Proyectos: se suman las tareas hechas; el enlace y la fase, si aquí no hay */
+      if(esObjeto(datos.proyectos)){
+        var pa=leerJSON(PREF+'proyectos')||{};
+        Object.keys(datos.proyectos).forEach(function(id){
+          var e=datos.proyectos[id];
+          if(!idValido(id)||!esObjeto(e))return;
+          var a=esObjeto(pa[id])?pa[id]:(pa[id]={tareas:{}});
+          if(!esObjeto(a.tareas))a.tareas={};
+          if(esObjeto(e.tareas))Object.keys(e.tareas).forEach(function(t){if(idValido(t)&&!a.tareas[t]){a.tareas[t]=String(e.tareas[t]).slice(0,40);res.proyectos=true}});
+          if(!a.enlace&&typeof e.enlace==='string'&&/^https:\/\/\S+$/.test(e.enlace)){a.enlace=e.enlace.slice(0,300);res.proyectos=true}
+          if(!a.fase&&typeof e.fase==='string'&&/^f\d{1,2}$/.test(e.fase))a.fase=e.fase;
+        });
+        lsSet(PREF+'proyectos',JSON.stringify(pa));
       }
       /* Ajustes: solo si en este navegador no has cambiado ninguno */
       if(esObjeto(datos.ajustes)&&AT.ajustes&&AT.ajustes.esInicial()&&lsGet(PREF+'ajustes')===null){
