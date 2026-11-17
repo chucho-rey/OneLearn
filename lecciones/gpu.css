@@ -1,0 +1,47 @@
+/* Estilos propios de las demos de la lección «Tarjeta gráfica». */
+
+.msg{margin:0.75rem 0 0;font-size:0.9375rem;max-width:none}
+
+/* Tarjetas de resultados */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:0.5rem;margin-top:0.875rem}
+.kpi{border:1px solid var(--line);border-radius:0.25rem;padding:0.5rem 0.625rem;min-width:0}
+.kpi>span{display:block;overflow-wrap:anywhere;hyphens:auto;font-size:0.8125rem;line-height:1.35;color:var(--fg-2)}
+.kpi>b{display:block;margin-top:2px;font-family:var(--font-mono);font-size:0.9375rem;font-weight:600;overflow-wrap:anywhere}
+.kpi .bar{height:0.375rem;margin-top:0.375rem;border-radius:2px;background:var(--bg-soft);overflow:hidden}
+.kpi .bar i{display:block;height:100%;width:0;background:var(--c4);transition:width .25s ease}
+
+/* Demo: pinta una imagen */
+.pt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:0.875rem}
+@media (max-width:560px){.pt{grid-template-columns:minmax(0,1fr)}}
+.pt-h{display:flex;justify-content:space-between;gap:0.5rem;margin-bottom:0.375rem;font-size:0.875rem}
+.pt-h b{font-weight:600}
+.pt-img{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:1px;padding:1px;border:1px solid var(--line-strong);border-radius:0.25rem;background:var(--line)}
+.pt-img i{display:block;aspect-ratio:1;background:var(--bg-soft)}
+.pt-img i.on[data-c="cielo"]{background:var(--c2)}
+.pt-img i.on[data-c="sol"]{background:var(--c4)}
+.pt-img i.on[data-c="monte"]{background:var(--c3)}
+.pt-img i.on[data-c="suelo"]{background:var(--c7)}
+
+/* Demo: del triángulo a los píxeles */
+.rs{display:grid;grid-template-columns:minmax(0,20rem) minmax(0,1fr);gap:1.25rem;align-items:start;margin-top:0.875rem}
+@media (max-width:640px){.rs{grid-template-columns:minmax(0,1fr)}}
+.rs-svg{display:block;width:100%;max-width:20rem;height:auto;border:1px solid var(--line-strong);border-radius:0.25rem}
+.rs-p{fill:var(--bg);stroke:var(--line);stroke-width:0.5}
+.rs-p.in{fill:var(--accent)}
+.rs-tri{fill:none;stroke:var(--fg);stroke-width:2;stroke-linejoin:round}
+.rs-v{fill:var(--bg);stroke:var(--fg);stroke-width:2}
+.rs-kpis{margin-top:0}
+
+/* Demo: ancho de banda */
+.vr{margin-top:0.875rem}
+.vr-r{display:grid;grid-template-columns:minmax(0,13rem) minmax(0,1fr) auto;align-items:center;gap:0.375rem 0.75rem;padding:0.375rem 0;border-bottom:1px solid var(--line);font-size:0.875rem}
+.vr-r.on .vr-l{font-weight:600}
+.vr-l{overflow-wrap:anywhere}
+.vr-b{display:flex;height:1rem;border-radius:0.1875rem;background:var(--bg-soft);overflow:hidden}
+.vr-b i{display:block;height:100%;background:var(--c1);transition:width .3s ease}
+.vr-r.on .vr-b i{background:var(--accent)}
+.vr-r b{font-family:var(--font-mono);white-space:nowrap;text-align:right}
+@media (max-width:520px){
+  .vr-r{grid-template-columns:minmax(0,1fr) auto}
+  .vr-b{grid-column:1/-1;grid-row:2}
+}

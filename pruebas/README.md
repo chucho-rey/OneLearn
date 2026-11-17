@@ -36,6 +36,7 @@ DETALLE=1 node 2-lectura.js   # muestra también cada comprobación que pasa
 | `8-datos.js` | Tus datos: las notas de antes pasan a IndexedDB, guardado y recarga, otras pestañas, respaldo (descargar, navegador limpio, importar) y uso sin IndexedDB |
 | `9-editor.js` | «Crear» y el editor: una libreta con secciones, callout, tabla y repaso que se ve como una lección; autoguardado, deshacer, mover, duplicar y arrastrar bloques, menú «/», barra con teclado, Markdown, duplicar, eliminar y deshacer, apuntes de clase y notas en celular |
 | `10-marcadores.js` | Marcadores (ratón, tecla M y celular), su lista en Mis apuntes, la búsqueda con Ctrl K y citar un bloque de la RAM con «@» en una libreta que lleva de vuelta a ese bloque |
+| `12-hardware.js` | Las lecciones «Almacenamiento» y «Tarjeta gráfica»: todas las variantes de lectura y los cálculos de sus 8 laboratorios |
 | `11-acerca.js` | «Cómo está hecho OneLearn»: se ve bien en todos los temas y anchos, su índice, ejemplos y repaso, el modo zen, el acceso desde Inicio y la búsqueda |
 | `lib.js` | Servidor, navegador, auditoría de contraste y utilidades compartidas |
 
