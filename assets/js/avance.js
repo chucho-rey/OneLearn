@@ -199,7 +199,8 @@ pintarMapa();
 /* Llegar con #seccion (desde «Continúa donde te quedaste») lleva a esa sección,
    también después de que carguen las fuentes y cambie la altura del texto */
 var destino=location.hash.length>1&&document.getElementById(decodeURIComponent(location.hash.slice(1)));
-if(destino&&destino.tagName==='H2'){
+if(destino&&(destino.tagName==='H2'||destino.hasAttribute('data-b'))){
+  if(destino.tagName==='DETAILS')destino.open=true;
   var ir=function(){destino.scrollIntoView({block:'start'})};
   ir();
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(ir);

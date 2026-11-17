@@ -293,7 +293,8 @@ AT.datos.documentos.leer(ID).then(function(d){
   modoBtn.hidden=masBtn.hidden=false;
   var nuevo=false;
   try{nuevo=sessionStorage.getItem('onelearn:recien-creado')===ID;if(nuevo)sessionStorage.removeItem('onelearn:recien-creado')}catch(e){}
-  ponerModo(nuevo?'editar':(modoGuardado()||'editar'),nuevo?'titulo':false);
+  var conAncla=location.hash.length>1;
+  ponerModo(nuevo?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo?'titulo':false);
   ponerEstado('Guardado','ok');
   if(AT.refrescarNotas)AT.refrescarNotas();
   /* Si llegaste con #bloque (desde una cita o la búsqueda), se va a ese bloque en modo lectura */

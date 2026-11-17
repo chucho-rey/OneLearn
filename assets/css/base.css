@@ -320,10 +320,49 @@ li.tarea.hecha .tarea-t{color:var(--fg-2);text-decoration:line-through;text-deco
 .cita .ico{flex:none;width:.85em;height:.85em;align-self:center}
 a.cita:hover{text-decoration:underline}
 /* Al llegar a un bloque desde un marcador o una cita, se resalta un momento */
-[data-b]:target{animation:llegada 2.4s ease-out}
+[data-b]:target,[data-b].llegada{animation:llegada 2.4s ease-out}
 @keyframes llegada{0%,35%{box-shadow:0 0 0 0.375rem var(--accent-bg);background-color:var(--accent-bg)}100%{box-shadow:0 0 0 0.375rem transparent}}
 :where([data-b]){scroll-margin-top:calc(4rem + env(safe-area-inset-top,0px))}
-@media (prefers-reduced-motion:reduce){[data-b]:target{animation:none;box-shadow:0 0 0 0.375rem var(--accent-bg);background-color:var(--accent-bg)}}
+@media (prefers-reduced-motion:reduce){[data-b]:target,[data-b].llegada{animation:none;box-shadow:0 0 0 0.375rem var(--accent-bg);background-color:var(--accent-bg)}}
+/* Marcadores en las lecciones */
+.page [data-b].marcado{position:relative}
+.page [data-b].marcado::before{content:"";position:absolute;left:-0.75rem;top:0.15em;width:0.25rem;height:1.2em;border-radius:0.125rem;background:var(--accent)}
+.page details[data-b].marcado::before,.page .demo[data-b].marcado::before{top:0.75rem}
+.marc-btn{position:absolute;z-index:6;display:grid;place-items:center;width:1.75rem;height:1.75rem;border:1px solid var(--line);border-radius:0.375rem;background:var(--bg);color:var(--fg-2);font-size:1rem;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.marc-btn:hover{color:var(--accent-ink);border-color:var(--accent)}
+.marc-btn[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent-ink);border-color:var(--accent)}
+.marc-btn[aria-pressed="true"] .ico{fill:currentColor}
+.zen .marc-btn{display:none}
+.marcs .marc-li{display:flex;align-items:flex-start;gap:2px}
+.nv.marc{align-items:flex-start;min-width:0;flex:1}
+.nv.marc .ico{margin-top:0.1875rem;color:var(--accent-ink)}
+.nv.marc>span{display:flex;flex-direction:column;min-width:0}
+.nv.marc b{font-weight:400;color:var(--fg);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nv.marc small{font-size:0.75rem;color:var(--fg-2)}
+.marc-x{flex:none;display:grid;place-items:center;width:1.75rem;height:1.75rem;margin-top:0.125rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);font-size:0.875rem;cursor:pointer}
+.marc-x:hover{background:var(--hover);color:var(--fg)}
+/* Búsqueda */
+dialog.buscar-dlg{width:min(38rem,calc(100vw - 2rem));padding:0;margin-top:max(4rem,10vh);overflow:hidden;display:none;flex-direction:column;max-height:min(36rem,calc(100dvh - 6rem))}
+dialog.buscar-dlg[open]{display:flex}
+.bus-campo{display:flex;align-items:center;gap:0.625rem;padding:0.75rem 1rem;border-bottom:1px solid var(--line)}
+.bus-campo>.ico{flex:none;font-size:1.25rem;color:var(--fg-2)}
+.bus-campo input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:inherit;font-size:1.0625rem;padding:0.25rem 0}
+.bus-campo input:focus{outline:none}
+.bus-campo input::-webkit-search-cancel-button{display:none}
+.bus-esc{flex:none}
+.bus-res{overflow-y:auto;padding:0.25rem 0.5rem;min-height:0}
+.bus-g{padding:0.25rem 0}
+.bus-gt{padding:0.5rem 0.5rem 0.25rem;font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
+.bus-o{display:flex;gap:0.75rem;align-items:flex-start;padding:0.5rem;border-radius:0.5rem;color:var(--fg);text-decoration:none}
+.bus-o>.ico{flex:none;margin-top:0.1875rem;font-size:1.0625rem;color:var(--fg-2)}
+.bus-o[aria-selected="true"],.bus-o:hover{background:var(--accent-bg)}
+.bus-o[aria-selected="true"]>.ico{color:var(--accent-ink)}
+.bus-t{display:flex;flex-direction:column;gap:0.0625rem;min-width:0}
+.bus-t b{font-weight:600;font-size:0.9375rem;overflow-wrap:anywhere}
+.bus-t small{font-size:0.75rem;color:var(--fg-2)}
+.bus-f{font-size:0.8125rem;color:var(--fg-2);overflow-wrap:anywhere}
+.bus-pie{margin:0;padding:0.5rem 1rem;border-top:1px solid var(--line);font-size:0.8125rem;color:var(--fg-2)}
+[data-contrast="high"] .bus-o[aria-selected="true"]{outline:2px solid var(--accent)}
 
 /* ---------- Componentes de demo (comunes) ---------- */
 .demo{border:1px solid var(--line-strong);border-radius:0.625rem;margin:1.4em 0;max-width:100%}

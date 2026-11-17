@@ -198,6 +198,44 @@ var Repaso=atomo('repaso',function(p){
   parseHTML:function(e){try{return JSON.parse(e.getAttribute('data-preguntas')||'[]')}catch(x){return []}},
   renderHTML:function(a){return {'data-preguntas':JSON.stringify(a.preguntas||[])}}}}}});
 
+/* Cita a un marcador, una sección o un documento: un enlace que no se edita letra por letra */
+var Cita=T.Node.create({
+  name:'cita',group:'inline',inline:true,atom:true,selectable:true,
+  addAttributes:function(){return {
+    href:{default:'',parseHTML:function(e){return e.getAttribute('href')||''},renderHTML:function(a){return {href:AT.bloques.hrefSeguro(a.href)||'#'}}},
+    texto:{default:'',parseHTML:function(e){return e.textContent.trim()},renderHTML:function(){return {}}}
+  }},
+  parseHTML:function(){return [{tag:'a[data-cita]'}]},
+  renderHTML:function(o){return ['a',T.mergeAttributes(o.HTMLAttributes,{'data-cita':'',class:'cita'}),svg('marcador'),['span',{},o.node.attrs.texto||'Cita']]},
+  renderText:function(o){return o.node.attrs.texto||''}
+});
+/* Tocar una cita en el editor ofrece abrirla o quitarla */
+var claveClicCita=new pm.PluginKey('clicCita');
+var ClicCita=T.Extension.create({
+  name:'clicCita',
+  addProseMirrorPlugins:function(){
+    var editor=this.editor;
+    return [new pm.Plugin({key:claveClicCita,props:{
+    /* La cita no es editable por dentro, así que el navegador la seguiría como enlace: se evita */
+    handleDOMEvents:{click:function(view,e){if(e.target.closest&&e.target.closest('a.cita'))e.preventDefault();return false}},
+    handleClickOn:function(view,pos,node,nodePos,event){
+      if(node.type.name!=='cita')return false;
+      var a=event.target.closest('a.cita')||view.nodeDOM(nodePos);
+      if(event.ctrlKey||event.metaKey){window.open(node.attrs.href,'_blank');return true}
+      setTimeout(function(){
+        abrirMenu(a,[
+          {t:'Ir a «'+(node.attrs.texto.length>40?node.attrs.texto.slice(0,40)+'…':node.attrs.texto)+'»',i:'enlace',d:'Abre lo citado',f:function(){if(AT.editorActual)AT.editorActual.guardarYa();location.href=AT.bloques.hrefSeguro(node.attrs.href)||'#'}},
+          {t:'Quitar la cita',i:'close',peligro:true,f:function(){
+            var p=nodePos,n=editor.state.doc.nodeAt(p);
+            if(n&&n.type.name==='cita')editor.chain().focus().deleteRange({from:p,to:p+n.nodeSize}).run();
+          }}
+        ],{etiqueta:'Cita',devolver:view.dom,alElegir:function(it){it.f()}});
+      },0);
+      return true;
+    }}})];
+  }
+});
+
 /* ---------- Bloques que se pueden insertar ---------- */
 function P(texto){return texto?{type:'paragraph',content:[{type:'text',text:texto}]}:{type:'paragraph'}}
 var INSERTAR=[
@@ -222,7 +260,8 @@ var INSERTAR=[
   {k:'indice',t:'Índice',d:'La lista de secciones, al día',i:'indice',p:'contenido toc',f:function(c){return c.insertContent({type:'indice'})}},
   {k:'cita',t:'Cita textual',d:'Palabras de otra persona',i:'comillas',p:'blockquote',f:function(c){return c.toggleBlockquote()}},
   {k:'codigo',t:'Bloque de código',d:'Texto con letra de ancho fijo',i:'codigo',p:'programa code',f:function(c){return c.toggleCodeBlock()}},
-  {k:'separador',t:'Separador',d:'Una línea horizontal',i:'separador',p:'linea hr',f:function(c){return c.setHorizontalRule()}}
+  {k:'separador',t:'Separador',d:'Una línea horizontal',i:'separador',p:'linea hr',f:function(c){return c.setHorizontalRule()}},
+  {k:'citar',t:'Citar una lección o un marcador',d:'También escribiendo «@»',i:'marcador',p:'arroba marcador referencia enlace interno',f:function(c){return c.insertContent('@')}}
 ];
 AT.editorInsertar=INSERTAR;
 
@@ -361,6 +400,63 @@ var MenuBarra=T.Extension.create({
   }
 });
 
+/* ---------- Menú «@»: citar marcadores, secciones de las lecciones y tus documentos ---------- */
+var claveArroba=new pm.PluginKey('menuCita');
+var CITABLES={marcador:1,seccion:1,leccion:1,documento:1,'seccion-doc':1};
+function opcionesDeCita(q){
+  if(!AT.indice)return Promise.resolve([]);
+  return AT.indice.cargar().then(function(todas){
+    var propias=todas.filter(function(e){return CITABLES[e.tipo]&&e.docId!==AT.documentoAbierto});
+    var lista=q.trim()?AT.indice.buscar(q,propias,10):
+      propias.filter(function(e){return e.tipo==='marcador'}).concat(propias.filter(function(e){return e.tipo==='leccion'||e.tipo==='documento'})).slice(0,10);
+    return lista.map(function(e){
+      var tx=e.titulo.length>70?e.titulo.slice(0,70).replace(/\s+\S*$/,'')+'…':e.titulo;
+      return {t:e.titulo,d:e.sub,i:e.icono,href:e.href,texto:tx};
+    });
+  });
+}
+var MenuCita=T.Extension.create({
+  name:'menuCita',
+  addProseMirrorPlugins:function(){
+    var editor=this.editor;
+    return [T.Suggestion({
+      editor:editor,char:'@',pluginKey:claveArroba,allowSpaces:true,startOfLine:false,
+      items:function(o){return opcionesDeCita(o.query)},
+      command:function(o){
+        o.editor.chain().focus().insertContentAt(o.range,[{type:'cita',attrs:{href:o.props.href,texto:o.props.texto}},{type:'text',text:' '}]).run();
+      },
+      render:function(){
+        var menu=null,ultimas=null;
+        function rect(props){return function(){return props.clientRect&&props.clientRect()}}
+        function elegir(it){if(ultimas)ultimas.command(it)}
+        function aria(id){var d=editor.view.dom;if(id)d.setAttribute('aria-activedescendant',id);else d.removeAttribute('aria-activedescendant')}
+        function lista(props){
+          if(props.items.length)return props.items;
+          return [{t:props.query.trim()?'Nada coincide con «'+props.query.trim()+'»':'Todavía no hay nada que citar',d:'Guarda marcadores en las lecciones o crea documentos',i:'marcador',desactivado:true}];
+        }
+        return {
+          onStart:function(props){ultimas=props;menu=abrirMenu(rect(props),lista(props),{foco:false,etiqueta:'Citar',clase:'menu-barra menu-cita',alMarcar:aria,alElegir:elegir})},
+          onUpdate:function(props){
+            ultimas=props;
+            if(!menu||menuAbierto!==menu)menu=abrirMenu(rect(props),lista(props),{foco:false,etiqueta:'Citar',clase:'menu-barra menu-cita',alMarcar:aria,alElegir:elegir});
+            else{menu.ancla=rect(props);menu.filtrar(lista(props))}
+          },
+          onKeyDown:function(props){
+            if(!menu||menuAbierto!==menu)return false;
+            var e=props.event;
+            if(e.key==='ArrowDown'){menu.mover(1);return true}
+            if(e.key==='ArrowUp'){menu.mover(-1);return true}
+            if(e.key==='Enter'){if(!ultimas||!ultimas.items.length)return false;menu.elegir();return true}
+            if(e.key==='Escape'){cerrarMenu();return true}
+            return false;
+          },
+          onExit:function(){if(menu&&menuAbierto===menu)cerrarMenu();menu=null;ultimas=null;aria('')}
+        };
+      }
+    })];
+  }
+});
+
 /* ---------- Mover, duplicar y borrar el bloque actual ---------- */
 function bloqueActual(state){
   var $f=state.selection.$from;
@@ -413,7 +509,8 @@ var Atajos=T.Extension.create({
       'Alt-ArrowUp':function(){return moverBloque(ed,-1)},
       'Alt-ArrowDown':function(){return moverBloque(ed,1)},
       'Mod-Shift-d':function(){return duplicarBloque(ed)},
-      'Mod-k':function(){if(AT.editorActual)AT.editorActual.enlace();return true}
+      /* Ctrl K con texto seleccionado crea un enlace; sin selección, deja pasar la tecla a la búsqueda */
+      'Mod-k':function(){if(ed.state.selection.empty&&!ed.isActive('link'))return false;if(AT.editorActual)AT.editorActual.enlace();return true}
     };
   }
 });
@@ -717,7 +814,7 @@ function crear(o){
       }}),
       T.CharacterCount,
       Ids,Callout,Columnas,Columna,Desplegable,DesplegableTitulo,DesplegableCuerpo,Resumen,Indice,Laboratorio,Repaso,
-      MenuBarra,Atajos
+      Cita,ClicCita,MenuBarra,MenuCita,Atajos
     ].concat(o.extensiones||[]),
     onUpdate:function(){
       indices.forEach(function(v){v.pintar()});
