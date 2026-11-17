@@ -95,7 +95,8 @@ function pintarDocs(){
 }
 
 function pintarExplorar(){
-  $('#explorar').innerHTML=AT.catalogo.map(function(g){
+  var pronto=AT.catalogo.filter(function(g){return !g.lecciones.some(function(l){return l.archivo})});
+  $('#explorar').innerHTML=AT.catalogo.filter(function(g){return pronto.indexOf(g)<0}).map(function(g){
     return '<div class="exp-g"><h3 class="exp-t">'+esc(g.grupo)+'</h3><ul class="exp">'+g.lecciones.map(function(l){
       var icono=ico(l.icono||'page');
       if(!l.archivo)return '<li><span class="exp-i soon">'+icono+'<span>'+esc(l.titulo)+'</span><em>Pronto</em></span></li>';
@@ -103,7 +104,10 @@ function pintarExplorar(){
       return '<li><a class="exp-i" href="'+url(l)+'">'+icono+'<span>'+esc(l.titulo)+'</span>'+
         '<span class="mini" aria-hidden="true"><i style="width:'+p+'%"></i></span><em>'+(p?p+'%':'Sin empezar')+'</em></a></li>';
     }).join('')+'</ul></div>';
-  }).join('');
+  }).join('')+(pronto.length?
+    '<div class="exp-g"><h3 class="exp-t">Próximos temas</h3><ul class="exp-pronto">'+pronto.map(function(g){
+      return '<li><b>'+esc(g.grupo)+'</b><span>'+g.lecciones.length+(g.lecciones.length===1?' lección':' lecciones')+'</span></li>';
+    }).join('')+'</ul></div>':'');
 }
 
 /* Instalar: el botón aparece si el navegador lo permite; en iPhone y iPad se explica cómo hacerlo */
