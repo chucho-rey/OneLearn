@@ -28,10 +28,10 @@ window.AT.catalogo=[
     {id:'dns',titulo:'DNS y direcciones IP',archivo:'dns.html',icono:'globo'}
   ]},
   {grupo:'Ciberseguridad',lecciones:[
-    {id:'contrasenas',titulo:'Contraseñas y autenticación'},
-    {id:'cifrado',titulo:'Cifrado'},
-    {id:'phishing',titulo:'Phishing e ingeniería social'},
-    {id:'malware',titulo:'Malware y cómo protegerte'}
+    {id:'contrasenas',titulo:'Contraseñas y autenticación',archivo:'contrasenas.html',icono:'llave'},
+    {id:'cifrado',titulo:'Cifrado',archivo:'cifrado.html',icono:'candado'},
+    {id:'phishing',titulo:'Phishing e ingeniería social',archivo:'phishing.html',icono:'anzuelo'},
+    {id:'malware',titulo:'Malware y cómo protegerte',archivo:'malware.html',icono:'bicho'}
   ]},
   {grupo:'Inteligencia artificial',lecciones:[
     {id:'que-es-ia',titulo:'Qué es la inteligencia artificial'},

@@ -151,6 +151,74 @@ module.exports=function(txt,demo){
     r.cumple(await txt(p,'#rsMs')==='64 ms'&&await txt(p,'#rsIp')==='198.51.100.24','la primera resolución recorre raíz, TLD y autoritativo: 64 ms');
     await p.click('#rsOtra');await p.click('#rsSig');
     r.cumple(await txt(p,'#rsMs')==='0 ms'&&await p.locator('#rsPasos li').count()===1,'la segunda vez sale de la caché: 0 ms');
+  },
+
+  'contrasenas':async function(p,r){
+    r.cumple(await txt(p,'#fzBits')==='35 bits'&&await p.getAttribute('#fzStat','data-k')==='bad'&&/palabra seguida de números/.test(await txt(p,'#fzMsg')),'«Mexico2024»: una palabra con números se adivina pronto');
+    await p.fill('#fzIn','password');
+    r.cumple(await txt(p,'#fzOff')==='Al instante'&&/más usadas/.test(await txt(p,'#fzMsg')),'«password» está entre las más usadas');
+    await p.fill('#fzIn','tren-nube-limon-faro-cobre');
+    r.cumple(await p.getAttribute('#fzStat','data-k')==='good'&&parseInt(await txt(p,'#fzBits'),10)>100,'una frase larga es muy fuerte');
+    r.cumple((await txt(p,'#frOut')).split('-').length===6&&await txt(p,'#frBits')==='48 bits'&&await txt(p,'#frBits2')==='78 bits','6 palabras: 48 bits con esta lista, 78 con una de 7,776');
+    await clic(p,1,'[data-v="4"]');
+    r.cumple((await txt(p,'#frOut')).split('-').length===4&&await txt(p,'#frBits')==='32 bits','4 palabras: 32 bits');
+    await p.waitForFunction(function(){return document.querySelectorAll('#hsOut dd').length===2});
+    const sha=require('crypto').createHash('sha256').update('gato123').digest('hex');
+    r.igual(await txt(p,'#hsOut div:first-child dd'),sha,'calcula el SHA-256 real de «gato123»');
+    r.cumple(/gato124/.test(await txt(p,'#hsOut'))&&/de los 64 dígitos/.test(await txt(p,'#hsMsg')),'compara con «gato124» y cuenta cuántos dígitos cambian');
+    await p.check('#hsSal');
+    await p.waitForFunction(function(){return /Ana/.test(document.getElementById('hsOut').textContent)});
+    const h=await p.$$eval('#hsOut dd',function(d){return d.map(function(x){return x.textContent})});
+    r.cumple(h.length===2&&h[0]!==h[1]&&h[0]!==sha,'con sal, la misma contraseña da hashes distintos');
+  },
+
+  'cifrado':async function(p,r){
+    r.igual(await txt(p,'#ceOut'),'DWDFDU DÑ DODPHFHU','«ATACAR AL AMANECER» con desplazamiento 3 (con Ñ)');
+    await p.click('#ceRomper');
+    r.cumple(await p.locator('#ceTodas li').count()===26&&await txt(p,'#ceTodas li.ok b')==='3','probando las 26 claves, solo la 3 da el mensaje');
+    r.cumple(/«b»/.test(await txt(p,'#xoTab .xo-f.ci'))&&/«H»/.test(await txt(p,'#xoTab .xo-f.de')),'H XOR 00101010 = b, y otra vez XOR regresa a H');
+    await clic(p,1,'#xoK [data-v="0"]');
+    r.cumple(/«H»/.test(await txt(p,'#xoTab .xo-f.ci'))&&/no cambia nada/.test(await txt(p,'#xoMsg')),'con una clave de ceros no cambia nada');
+    r.cumple(/misma clave secreta, 2,/.test(await txt(p,'#dhMsg')),'con a = 6 y b = 15, los dos llegan a la clave 2');
+    await rango(p,'#dhA',11);await rango(p,'#dhB',7);
+    const k=await p.$$eval('.dh-k',function(e){return e.map(function(x){return x.textContent})});
+    r.cumple(k.length===2&&k[0]===k[1],'con otros secretos también coinciden',k);
+  },
+
+  'phishing':async function(p,r){
+    const OK=[1,0,1,0,0,0,1];
+    let homo='';
+    for(let k=0;k<OK.length;k++){
+      await p.click(OK[k]?'#peBien':'#peMal');
+      if(k===5)homo=await txt(p,'#peMsg');
+      if(k===1)r.cumple(/verificar-cuenta\.example/.test(await txt(p,'#peMsg')),'explica cuál es el dominio real de un subdominio engañoso');
+      if(k<OK.length-1)await p.click('#peSig');
+    }
+    r.cumple(/aciertos: 7 de 7/.test(await txt(p,'#peCuenta')),'contestando bien, 7 de 7');
+    r.cumple(/xn--/.test(homo),'la letra cirílica se delata como xn--…',homo);
+    await p.click('#peSig');
+    await p.click('#peBien');await p.click('#peSig');await p.click('#peBien');
+    r.cumple(await p.getAttribute('#peStat','data-k')==='bad'&&/aciertos: 1 de 2/.test(await txt(p,'#peCuenta')),'si caes en la trampa, lo dice');
+    await p.click('#pmMsg .pm-s >> nth=0');
+    r.cumple(/Saludo genérico/.test(await txt(p,'#pmExp'))&&/1 de 6/.test(await txt(p,'#pmN')),'tocar una señal la explica');
+    await p.click('#pmTodas');
+    r.igual(await txt(p,'#pmN'),'Señales encontradas: 6 de 6','el SMS tiene 6 señales');
+    await clic(p,1,'[data-v="1"]');
+    r.igual(await txt(p,'#pmN'),'Señales encontradas: 0 de 6','el correo del banco también tiene 6');
+  },
+
+  'malware':async function(p,r){
+    await rango(p,'#gsPct',0);await p.click('#gsTodo');
+    r.igual(await txt(p,'#gsInf'),'100 de 100','sin parches, el gusano infecta toda la red');
+    await rango(p,'#gsPct',70);await p.click('#gsTodo');
+    const n=parseInt(await txt(p,'#gsInf'),10);
+    r.cumple(n<30&&/a salvo/.test(await txt(p,'#gsMsg')),'con 70 % actualizados, el gusano se detiene pronto',n);
+    await p.click('#rbAtaque');
+    r.cumple(await p.getAttribute('#rbStat','data-k')==='bad'&&await p.locator('#rbCopias li.mal').count()===1,'sin respaldo, pierdes los archivos');
+    await clic(p,1,'[data-v="1"]');await p.click('#rbAtaque');
+    r.cumple(await p.getAttribute('#rbStat','data-k')==='bad'&&await p.locator('#rbCopias li.mal').count()===2,'la memoria USB conectada también se cifra');
+    await clic(p,1,'[data-v="4"]');await p.click('#rbAtaque');
+    r.cumple(await p.getAttribute('#rbStat','data-k')==='good'&&await p.locator('#rbCopias li.bien').count()===2,'con la regla 3-2-1 recuperas todo');
   }
 
   };
