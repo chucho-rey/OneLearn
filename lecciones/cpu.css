@@ -1,6 +1,5 @@
 /* Estilos propios de las demos de la lección «Procesador (CPU)». */
 
-.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .msg{margin:0.75rem 0 0;font-size:0.9375rem;max-width:none}
 .out{font-size:0.875rem;margin-top:0.625rem;max-width:none}
 

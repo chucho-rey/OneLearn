@@ -42,6 +42,10 @@ document.body.insertAdjacentHTML('afterbegin',
 /* ---------- Lección actual ---------- */
 var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
+/* La página de inicio vive en la raíz del sitio; las lecciones, en lecciones/ */
+var ES_INICIO=document.body.getAttribute('data-pagina')==='inicio';
+var RAIZ=ES_INICIO?'':'../',LECC=ES_INICIO?'lecciones/':'';
+AT.rutas={raiz:RAIZ,lecciones:LECC,esInicio:ES_INICIO};
 var actual=null,grupo='',orden=[];
 catalogo.forEach(function(g){
   g.lecciones.forEach(function(l){
@@ -49,14 +53,14 @@ catalogo.forEach(function(g){
     if(l.id===LID){actual=l;grupo=g.grupo}
   });
 });
-if(!actual)actual={id:LID||'leccion',titulo:document.title};
+if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:{id:LID||'leccion',titulo:document.title};
 AT.leccion=actual;
 
 /* ---------- Estructura: barra lateral, barra superior, siguiente lección y apuntes ---------- */
 (function(){
-  var h='<div class="side-in"><div class="ws"><a class="brand" href="../index.html">One<b>Learn</b></a>'+
+  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'index.html">One<b>Learn</b></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
-    '<a class="nv" href="../index.html">'+ico('home')+'<span>Inicio</span></a>'+
+    '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
       '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
       '<button class="tab" type="button" role="tab" id="tab-apuntes" aria-controls="pn-apuntes">Mis apuntes</button>'+
@@ -67,8 +71,8 @@ AT.leccion=actual;
     h+='<div class="grp">'+esc(g.grupo)+'</div>';
     g.lecciones.forEach(function(l){
       var inner=ico(l.icono||'page')+'<span>'+esc(l.titulo)+'</span>';
-      if(l===actual)h+='<a class="nv on" href="'+esc(l.archivo)+'" aria-current="page">'+inner+'</a>';
-      else if(l.archivo)h+='<a class="nv" href="'+esc(l.archivo)+'">'+inner+'</a>';
+      if(l===actual)h+='<a class="nv on" href="'+esc(LECC+l.archivo)+'" aria-current="page" data-id="'+esc(l.id)+'">'+inner+'</a>';
+      else if(l.archivo)h+='<a class="nv" href="'+esc(LECC+l.archivo)+'" data-id="'+esc(l.id)+'">'+inner+'</a>';
       else h+='<span class="nv soon" aria-disabled="true">'+inner+'<em>Pronto</em></span>';
     });
   });
@@ -103,8 +107,8 @@ AT.leccion=actual;
   }
 
   var t=esc(actual.titulo);
-  document.body.insertAdjacentHTML('beforeend',
-    '<div class="scrim" id="scrim"></div>'+
+  document.body.insertAdjacentHTML('beforeend','<div class="scrim" id="scrim"></div>');
+  if(!ES_INICIO)document.body.insertAdjacentHTML('beforeend',
     '<section class="sheet" id="sheet" data-state="closed" aria-label="Apuntes de la lección">'+
       '<div class="sh-grab" id="shGrab"><div class="sh-in">'+
         '<span class="sh-handle" aria-hidden="true"></span>'+
@@ -293,7 +297,9 @@ $$('[data-go]').forEach(function(b){
 /* ---------- Apuntes guardados en este dispositivo ---------- */
 var CLAVE_APUNTES='aprende-tecnologia:apuntes:';
 AT.apuntes={
-  leer:function(id){try{return localStorage.getItem(CLAVE_APUNTES+id)||''}catch(e){return ''}}
+  leer:function(id){try{return localStorage.getItem(CLAVE_APUNTES+id)||''}catch(e){return ''}},
+  /* Fecha ISO de la última edición, o '' si no se sabe (notas anteriores al hito 4) */
+  editado:function(id){try{return localStorage.getItem(CLAVE_APUNTES+id+':editado')||''}catch(e){return ''}}
 };
 function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}
 
@@ -338,7 +344,7 @@ function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}
         if(!t.trim())return;
         var linea=t.trim().split(/\n/)[0].trim(),n=contarPalabras(t),aqui=l===actual;
         if(linea.length>90)linea=linea.slice(0,90)+'…';
-        h+='<li><a class="nota'+(aqui?' on':'')+'" href="'+esc(l.archivo)+'#apuntes"'+(aqui?' data-aqui="1"':'')+'>'+
+        h+='<li><a class="nota'+(aqui?' on':'')+'" href="'+esc(LECC+l.archivo)+'#apuntes"'+(aqui?' data-aqui="1"':'')+'>'+
           '<b>'+esc(l.titulo)+'</b><span>'+esc(linea)+'</span><small>'+(n===1?'1 palabra':n+' palabras')+'</small></a></li>';
       });
     });
@@ -388,13 +394,14 @@ AT.repaso=function(opt){
     ex.hidden=false;
     ex.textContent=(j===q.a?'Correcto. ':'No exactamente. ')+q.e;
     score.textContent=done<qs.length?'Aciertos: '+ok+' de '+done+' respondidas.':'Resultado final: '+ok+' de '+qs.length+'.';
+    if(done===qs.length)document.dispatchEvent(new CustomEvent('repaso-terminado',{detail:{ok:ok,total:qs.length}}));
   });
   if(opt.reset)$(opt.reset).addEventListener('click',build);
   build();
 };
 
-/* ---------- Hoja de apuntes ---------- */
-(function(){
+/* ---------- Hoja de apuntes (solo en las lecciones) ---------- */
+if(!ES_INICIO)(function(){
   var LS_KEY=CLAVE_APUNTES+actual.id;
   var LS_PEND=LS_KEY+':pendiente';
   var sheet=sheetEl,grab=$('#shGrab'),mainBtn=$('#shMain'),mainUse=$('#shMainUse'),hideBtn=$('#shHide'),hint=$('#shHint');
@@ -555,7 +562,7 @@ AT.repaso=function(opt){
   }
   ta.addEventListener('input',function(){
     dirty=true;fails=0;
-    lsSet(LS_KEY,ta.value);lsSet(LS_PEND,'1');
+    lsSet(LS_KEY,ta.value);lsSet(LS_PEND,'1');lsSet(LS_KEY+':editado',new Date().toISOString());
     updateCount();
     AT.refrescarNotas();
     setStat('','Escribiendo…');
@@ -623,7 +630,7 @@ AT.repaso=function(opt){
     }
     disarm();
     ta.value='';dirty=true;
-    lsSet(LS_KEY,'');lsSet(LS_PEND,'1');
+    lsSet(LS_KEY,'');lsSet(LS_PEND,'1');lsSet(LS_KEY+':editado',new Date().toISOString());
     updateCount();
     AT.refrescarNotas();
     flush();

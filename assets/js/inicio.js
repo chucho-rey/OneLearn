@@ -1,0 +1,84 @@
+/* Pantalla de inicio de OneLearn: continúa donde te quedaste, tus notas recientes y explorar temas.
+   La primera visita (sin avance ni notas) muestra una bienvenida que sugiere empezar por Memoria RAM.
+   Usa AT.avance (avance.js) y AT.apuntes (comun.js). */
+(function(){
+'use strict';
+var AT=window.AT,$=AT.$,esc=AT.esc,ico=AT.ico,LECC=AT.rutas.lecciones;
+var lecciones=[],porId={};
+AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){lecciones.push(l);porId[l.id]=l})});
+var disponibles=lecciones.filter(function(l){return l.archivo});
+
+function saludo(){
+  var h=new Date().getHours();
+  return h>=5&&h<12?'Buenos días':h>=12&&h<19?'Buenas tardes':'Buenas noches';
+}
+function url(l,hash){return esc(LECC+l.archivo+(hash?'#'+hash:''))}
+function hayNotas(){return disponibles.some(function(l){return AT.apuntes.leer(l.id).trim()})}
+
+function pintarContinuar(){
+  var cont=$('#continuar'),bienv=$('#bienvenida');
+  var u=AT.avance.ultima(),l=u&&porId[u.id];
+  if(!l||!l.archivo){
+    cont.hidden=true;
+    bienv.hidden=hayNotas();
+    return;
+  }
+  bienv.hidden=true;cont.hidden=false;
+  var p=AT.avance.porcentaje(l.id),h;
+  var sig=disponibles[disponibles.indexOf(l)+1];
+  if(p>=100&&sig&&AT.avance.porcentaje(sig.id)<100){
+    /* Terminaste esta lección: se sugiere la siguiente */
+    var ps=AT.avance.porcentaje(sig.id);
+    h='<a class="cont" href="'+url(sig)+'"><span class="cont-l">Terminaste '+esc(l.titulo)+'. Sigue con</span>'+
+      '<b>'+esc(sig.titulo)+'</b>'+
+      '<span class="cont-bar" aria-hidden="true"><i style="width:'+ps+'%"></i></span>'+
+      '<span class="cont-p">'+(ps?ps+'% leído':'Sin empezar')+'</span></a>';
+  }else{
+    var r=u.repaso;
+    h='<a class="cont" href="'+url(l,p>=100?'':u.seccion)+'"><span class="cont-l">Continúa donde te quedaste</span>'+
+      '<b>'+esc(l.titulo)+'</b>'+
+      (u.seccionTitulo&&p<100?'<span class="cont-s">'+esc(u.seccionTitulo)+'</span>':'')+
+      '<span class="cont-bar" aria-hidden="true"><i style="width:'+p+'%"></i></span>'+
+      '<span class="cont-p">'+p+'% leído'+(r?' · repaso: '+r.ok+' de '+r.total:'')+'</span></a>';
+  }
+  cont.innerHTML=h;
+}
+
+function pintarNotas(){
+  var notas=disponibles.map(function(l){return {l:l,t:AT.apuntes.leer(l.id),f:AT.apuntes.editado(l.id)}})
+    .filter(function(n){return n.t.trim()})
+    .sort(function(a,b){return a.f===b.f?0:a.f<b.f?1:-1})
+    .slice(0,3);
+  var ul=$('#recientes');
+  if(!notas.length){
+    ul.innerHTML='<li class="ini-vacio">Aún no tienes apuntes. Se escriben desde cada lección, en «Apuntes», abajo.</li>';
+    return;
+  }
+  ul.innerHTML=notas.map(function(n){
+    var linea=n.t.trim().split(/\n/)[0].trim();
+    if(linea.length>120)linea=linea.slice(0,120)+'…';
+    var w=n.t.trim().split(/\s+/).length;
+    return '<li><a class="nota" href="'+url(n.l,'apuntes')+'"><b>'+esc(n.l.titulo)+'</b><span>'+esc(linea)+'</span><small>'+(w===1?'1 palabra':w+' palabras')+'</small></a></li>';
+  }).join('');
+}
+
+function pintarExplorar(){
+  $('#explorar').innerHTML=AT.catalogo.map(function(g){
+    return '<div class="exp-g"><h3 class="exp-t">'+esc(g.grupo)+'</h3><ul class="exp">'+g.lecciones.map(function(l){
+      var icono=ico(l.icono||'page');
+      if(!l.archivo)return '<li><span class="exp-i soon">'+icono+'<span>'+esc(l.titulo)+'</span><em>Pronto</em></span></li>';
+      var p=AT.avance.porcentaje(l.id);
+      return '<li><a class="exp-i" href="'+url(l)+'">'+icono+'<span>'+esc(l.titulo)+'</span>'+
+        '<span class="mini" aria-hidden="true"><i style="width:'+p+'%"></i></span><em>'+(p?p+'%':'Sin empezar')+'</em></a></li>';
+    }).join('')+'</ul></div>';
+  }).join('');
+}
+
+function pintar(){pintarContinuar();pintarNotas();pintarExplorar()}
+$('#saludo').textContent=saludo();
+pintar();
+AT.avance.on(pintar);
+window.addEventListener('storage',function(e){if(e.key&&e.key.indexOf('aprende-tecnologia:apuntes:')===0)pintar()});
+/* Al volver con «atrás» desde una lección, el navegador puede mostrar una copia vieja: se actualiza */
+window.addEventListener('pageshow',function(e){if(e.persisted)location.reload()});
+})();

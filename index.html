@@ -2,15 +2,50 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>OneLearn</title>
-<meta http-equiv="refresh" content="0; url=lecciones/ram.html">
-<style>
-  :root{color-scheme:light dark}
-  body{margin:0;padding:40px 16px;font:16px/1.55 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:Canvas;color:CanvasText}
-</style>
+<meta name="description" content="Aprende cómo funciona la tecnología con lecciones y laboratorios interactivos. Tu avance y tus apuntes se guardan en tu dispositivo.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<script src="assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="assets/css/base.css">
 </head>
-<body>
-<p>Abriendo la primera lección… Si no se abre sola, entra a <a href="lecciones/ram.html">Memoria RAM</a>.</p>
+<body data-pagina="inicio">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page inicio">
+      <h1 id="saludo">Hola</h1>
+      <p class="ini-sub">Qué quieres aprender hoy.</p>
+
+      <div class="bienv" id="bienvenida">
+        <p>OneLearn explica cómo funciona la tecnología con lecciones cortas y laboratorios que puedes tocar. Tu avance y tus apuntes se guardan en este dispositivo.</p>
+        <a class="btn pri" href="lecciones/ram.html">Empieza por Memoria RAM</a>
+      </div>
+      <div id="continuar" hidden></div>
+
+      <section class="ini-sec" aria-labelledby="t-notas">
+        <h2 id="t-notas">Tus notas recientes</h2>
+        <ul class="ini-notas" id="recientes"></ul>
+      </section>
+
+      <section class="ini-sec" aria-labelledby="t-explorar">
+        <h2 id="t-explorar">Explorar temas</h2>
+        <div id="explorar"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/catalogo.js"></script>
+<script src="assets/js/comun.js"></script>
+<script src="assets/js/avance.js"></script>
+<script src="assets/js/inicio.js"></script>
 </body>
 </html>

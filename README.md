@@ -7,13 +7,15 @@ Es un sitio estático: no necesita compilación ni dependencias. Abre `index.htm
 ## Estructura
 
 ```
-index.html                  Portada: abre la primera lección
+index.html                  Inicio: continúa donde te quedaste, notas recientes y explorar temas
 assets/
   css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
   fonts/                    Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí; solo se descargan si alguien las elige
   js/catalogo.js            Temario: grupos y lecciones de la barra lateral
-  js/comun.js               Arma la barra lateral, la barra superior y los apuntes; tema, navegación, repaso y utilidades (AT.*)
+  js/comun.js               Arma la barra lateral, la barra superior y los apuntes; panel Lectura, navegación, repaso y utilidades (AT.*)
+  js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
+  js/inicio.js              Pantalla de inicio
 lecciones/
   ram.html                  Contenido de la lección «Memoria RAM»
   ram.css                   Estilos de sus demos
