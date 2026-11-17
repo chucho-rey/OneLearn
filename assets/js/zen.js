@@ -1,4 +1,4 @@
-/* Modo zen y atajos de teclado de OneLearn (en las lecciones y en tus documentos).
+/* Modo zen y atajos de teclado de OneLearn (en las lecciones, en tus documentos y en «Cómo está hecho»).
    Modo zen: oculta la barra lateral, la barra superior, el mapa y la barra de apuntes; deja el texto y una línea
    fina de avance arriba, y usa la pantalla completa del navegador donde se puede. Una barra discreta (que aparece
    al mover el ratón o con Tab) cambia el tamaño de letra y el ancho, abre la nota rápida y sale.
@@ -11,7 +11,7 @@
 var AT=window.AT,$=AT.$,$$=AT.$$,ico=AT.ico,aj=AT.ajustes,root=document.documentElement;
 var page=$('.page');
 var conNota=!!document.body.getAttribute('data-leccion');
-if(!page||!(conNota||AT.rutas.pagina==='documento'))return;
+if(!page||!(conNota||AT.rutas.pagina==='documento'||AT.rutas.pagina==='acerca'))return;
 
 /* Avisos para lectores de pantalla */
 var aviso=document.createElement('div');

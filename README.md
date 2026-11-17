@@ -9,6 +9,7 @@ Es un sitio estático: no necesita servidor propio ni dependencias para funciona
 ```
 index.html                  Inicio: continúa donde te quedaste, tus documentos, notas recientes y explorar temas
 documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
+acerca.html                 «Cómo está hecho OneLearn»: las tecnologías del sitio explicadas para estudiantes de programación
 manifest.webmanifest        Datos para instalar OneLearn como app
 sw.js                       Service worker: guarda el sitio para usarlo sin conexión
 assets/
@@ -44,9 +45,13 @@ lecciones/
   cpu.html / .css / .js     Lección «Procesador (CPU)»
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
+
+## «Cómo está hecho OneLearn»
+
+`acerca.html` explica a estudiantes de programación con qué está hecho el sitio: HTML, CSS con variables, JavaScript sin framework, el formato de bloques, Tiptap y esbuild, IndexedDB, el service worker, la accesibilidad, las pruebas y la publicación, con ejemplos del código real y preguntas de repaso. Se abre desde la barra lateral («Cómo está hecho») y desde Inicio, y la búsqueda la incluye. Su contenido es un documento en el formato de bloques, como una lección: **si cambias algo de la arquitectura, actualiza también esta página.**
 
 ## Formato de bloques
 

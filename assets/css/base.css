@@ -240,7 +240,7 @@ p{margin:.6em 0;max-width:68ch}
 ul.pl{margin:.6em 0;padding-left:1.3em}
 ul.pl li{margin:.25em 0}
 code,.mono{font-family:var(--font-mono);font-size:.88em}
-code{background:var(--bg-soft);color:var(--fg);padding:1px 0.3125rem;border-radius:0.25rem;border:1px solid var(--line)}
+code{background:var(--bg-soft);color:var(--fg);padding:1px 0.3125rem;border-radius:0.25rem;border:1px solid var(--line);overflow-wrap:anywhere}
 hr{border:0;border-top:1px solid var(--line);margin:1.125rem 0}
 .link{border:0;background:none;padding:0;font:inherit;color:var(--accent-ink);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:0.1875rem;cursor:pointer;text-align:left}
 .link:hover{text-decoration-color:var(--accent-ink)}
@@ -308,7 +308,7 @@ details.tg .tg-b p{margin:.3em 0}
 .callout ol{margin:.5em 0 0;padding-left:1.4em}
 blockquote{margin:1em 0;padding:0.125rem 0 0.125rem 1rem;border-left:0.1875rem solid var(--line-strong);color:var(--fg-2)}
 pre.codigo{margin:1em 0;padding:0.75rem 1rem;overflow-x:auto;background:var(--bg-side);border:1px solid var(--line);border-radius:0.5rem;font-size:0.875rem;line-height:1.5}
-pre.codigo code{padding:0;border:0;background:none;font-size:inherit;white-space:pre}
+pre.codigo code{padding:0;border:0;background:none;font-size:inherit;white-space:pre;overflow-wrap:normal}
 mark{background:var(--warn-bg);color:var(--fg);padding:0 0.125rem;border-radius:0.125rem}
 ul.tareas{list-style:none;padding-left:0;margin:.6em 0}
 li.tarea{display:flex;gap:0.625rem;align-items:flex-start;margin:.3em 0}
@@ -648,8 +648,8 @@ dialog.tus-datos{width:min(31rem,calc(100vw - 2rem))}
 .td-msg.err{color:var(--bad-ink)}
 
 /* ---------- Aviso (por ejemplo, «OneLearn se actualizó») ---------- */
-.aviso{position:fixed;z-index:60;left:50%;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:0.75rem;width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}
-.aviso>span{min-width:0}
+.aviso-app{position:fixed;z-index:60;left:50%;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:0.75rem;width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}
+.aviso-app>span{min-width:0}
 .aviso-x{display:grid;place-items:center;flex:none;width:2rem;height:2rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);cursor:pointer}
 .aviso-x:hover{background:var(--hover);color:var(--fg)}
 
