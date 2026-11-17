@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Qué es la inteligencia artificial · OneLearn</title>
+<meta name="description" content="Qué es la inteligencia artificial, su historia, la diferencia entre programar reglas y aprender de ejemplos, dónde se usa hoy, sus límites y cómo usarla con criterio, con demos interactivas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="que-es-ia.css">
+</head>
+<body data-leccion="que-es-ia">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="ia-reglas">
+<p class="hint">Estos 12 mensajes ya están clasificados. Activa reglas: un mensaje se marca como spam si cumple <b>alguna</b> de las que elegiste. Luego deja que el programa aprenda de los ejemplos.</p>
+<div class="rg-r" id="rgReglas" role="group" aria-label="Reglas">
+  <label class="chk"><input type="checkbox" data-r="0"> Dice «gratis»</label>
+  <label class="chk"><input type="checkbox" data-r="1"> Dice «gana» o «premio»</label>
+  <label class="chk"><input type="checkbox" data-r="2"> Trae un enlace</label>
+  <label class="chk"><input type="checkbox" data-r="3"> Tiene varias palabras EN MAYÚSCULAS</label>
+  <label class="chk"><input type="checkbox" data-r="4"> Dice «urgente»</label>
+</div>
+<div class="tbl-wrap"><table class="rg-t"><thead><tr><th>Mensaje</th><th>Es</th><th>Filtro</th></tr></thead><tbody id="rgTab"></tbody></table></div>
+<div class="kpis">
+  <div class="kpi"><span>Aciertos</span><b id="rgOk"></b><div class="bar"><i id="rgBar"></i></div></div>
+  <div class="kpi"><span>Mensajes normales marcados como spam</span><b id="rgFp"></b></div>
+  <div class="kpi"><span>Spam que se coló</span><b id="rgFn"></b></div>
+</div>
+<div class="ctl"><button class="btn pri" type="button" id="rgAprender">Aprender de los ejemplos</button><button class="btn" type="button" id="rgManual">Volver a mis reglas</button></div>
+<div class="rg-p" id="rgPesos" hidden></div>
+<p class="msg" id="rgMsg" aria-live="polite"></p>
+</template>
+<template data-lab="ia-donde">
+<p class="hint">¿Cuáles de estos usan inteligencia artificial?</p>
+<p class="dn-q" id="dnQ"></p>
+<div class="ctl">
+  <button class="btn" type="button" id="dnSi">Sí, es IA</button>
+  <button class="btn" type="button" id="dnNo">No es IA</button>
+  <span class="lbl" id="dnCuenta"></span>
+</div>
+<div class="status" id="dnStat" data-k="" aria-live="polite"><span class="dot"></span><span id="dnMsg"></span></div>
+<div class="ctl"><button class="btn pri" type="button" id="dnSig" hidden>Siguiente</button></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "que-es-ia",
+ "titulo": "Qué es la inteligencia artificial",
+ "icono": "chispa",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Inteligencia artificial",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "12 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 demos y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-ia001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-ia002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Qué es la inteligencia artificial?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La "
+     },
+     {
+      "type": "text",
+      "text": "inteligencia artificial",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (IA) es el campo de la computación que busca que las máquinas hagan tareas que asociamos con la inteligencia: reconocer una cara, entender una pregunta, traducir, recomendar una canción, manejar un auto o escribir un texto."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Casi toda la IA de hoy funciona con "
+     },
+     {
+      "type": "text",
+      "text": "aprendizaje automático",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": en lugar de que una persona escriba todas las reglas, el programa las aprende a partir de muchos ejemplos."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia004"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-ia005"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Percibir",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Reconocer imágenes, voz y texto: tu celular sabe que en la foto hay un perro."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Predecir y decidir",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Calcular qué video te va a gustar, si un correo es spam o qué ruta tiene menos tráfico."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Generar",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crear texto, imágenes, música o código nuevos a partir de lo que aprendió."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tipos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Especializada o general"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Toda la IA que existe hoy es "
+     },
+     {
+      "type": "text",
+      "text": "especializada",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " en cierto tipo de tareas: la que juega ajedrez no sabe manejar, y la que reconoce caras no sabe traducir. Los modelos de lenguaje hacen muchas cosas distintas, pero siguen teniendo límites claros: se equivocan con seguridad, no tienen experiencias propias y no aprenden de cada conversación como una persona."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia006"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una IA "
+     },
+     {
+      "type": "text",
+      "text": "general",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que pudiera aprender y razonar en cualquier ámbito como una persona, es una meta de investigación y un tema de mucho debate: no hay acuerdo sobre si llegará, ni cuándo."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia007"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-historia",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Una historia breve"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-ia008"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Año"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué pasó"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1950"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Alan Turing pregunta «¿pueden pensar las máquinas?» y propone una prueba para saberlo."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1956"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En una reunión en Dartmouth (Estados Unidos) se le pone nombre al campo: inteligencia artificial."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1966"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ELIZA, un programa que conversaba siguiendo reglas sencillas, sorprende a sus usuarios."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1997"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Deep Blue, de IBM, le gana al campeón mundial de ajedrez Garry Kasparov."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2012"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una red neuronal entrenada con GPU (AlexNet) arrasa en un concurso de reconocimiento de imágenes."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2016"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "AlphaGo le gana a Lee Sedol, uno de los mejores jugadores de Go del mundo."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2017"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se publica la arquitectura "
+           },
+           {
+            "type": "text",
+            "text": "Transformer",
+            "marks": [
+             {
+              "type": "italic"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", la base de los modelos de lenguaje actuales."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2022"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ChatGPT pone los modelos de lenguaje al alcance de cualquiera; le siguen muchos otros."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Hubo también dos «inviernos de la IA», épocas en que las promesas no se cumplieron y se acabó el dinero para investigar. Lo que cambió desde 2012 fueron tres cosas juntas: muchísimos datos, "
+     },
+     {
+      "type": "text",
+      "text": "GPU",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "gpu.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " potentes y mejores algoritmos."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia009"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-reglas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Reglas contra ejemplos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Imagina que quieres un filtro de spam. Puedes escribir "
+     },
+     {
+      "type": "text",
+      "text": "reglas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " a mano: «si dice "
+     },
+     {
+      "type": "text",
+      "text": "gratis",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", es spam». Pero los mensajes normales también dicen "
+     },
+     {
+      "type": "text",
+      "text": "gratis",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", y el spam aprende a esquivar tus reglas. La alternativa es darle al programa muchos "
+     },
+     {
+      "type": "text",
+      "text": "ejemplos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ya clasificados y dejar que él encuentre qué pesa más."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia010"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-ia011",
+     "nombre": "ia-reglas",
+     "titulo": "Reglas contra ejemplos"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Eso es, en pequeño, lo que hace el "
+     },
+     {
+      "type": "text",
+      "text": "aprendizaje automático",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "aprendizaje-automatico.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": ajustar números (pesos) para equivocarse lo menos posible con los ejemplos. Con millones de ejemplos y millones de pesos, el mismo principio reconoce caras o traduce idiomas."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia012"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-hoy",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Dónde está la IA?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La IA está en más lugares de los que parece, y también se le dice IA a cosas que no lo son. Un programa es IA cuando su comportamiento sale de lo que aprendió de datos o resuelve tareas de percepción, lenguaje o decisión complejas; no cuando simplemente sigue una regla fija."
+     }
+    ],
+    "attrs": {
+     "id": "b-ia013"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-ia014",
+     "nombre": "ia-donde",
+     "titulo": "¿Es inteligencia artificial?"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-limites",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Límites y riesgos"
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-ia015"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sesgos:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " si los datos de entrenamiento tienen prejuicios, el modelo los aprende. Un sistema de contratación entrenado con decisiones pasadas puede discriminar igual que ellas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Errores con seguridad:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " los modelos de lenguaje a veces inventan datos, citas o fuentes con total confianza. A eso se le llama "
+         },
+         {
+          "type": "text",
+          "text": "alucinar",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Privacidad:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " lo que escribes en un servicio de IA puede guardarse o usarse para entrenar, según sus condiciones."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Contenido falso:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " imágenes, voces y videos generados ("
+         },
+         {
+          "type": "text",
+          "text": "deepfakes",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ") que parecen reales."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Consumo de energía:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " entrenar y usar modelos grandes requiere centros de datos con mucha electricidad y agua para enfriarlos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-ia016",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Una respuesta de IA puede sonar segura y estar mal. Para tareas escolares, decisiones de salud, dinero o temas legales, verifica siempre en fuentes confiables."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-usar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Usarla con criterio"
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-ia017"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Úsala para aprender, no para saltarte el aprendizaje:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " pídele que te explique, te haga preguntas o revise tu razonamiento."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Verifica",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " los datos importantes y pide fuentes que puedas revisar tú."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No compartas",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " datos personales, contraseñas ni información de otras personas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sé transparente:",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " si tu escuela o trabajo lo pide, di cuándo y cómo usaste IA."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ia018"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿La IA piensa o entiende?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Depende de qué entiendas por «pensar». Los modelos actuales encuentran patrones estadísticos en enormes cantidades de datos y con eso logran resultados que parecen comprensión. Si eso es entender de verdad es una pregunta abierta, que discuten científicos y filósofos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ia019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿La IA me va a quitar el trabajo?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cambiará muchos trabajos: algunas tareas se automatizan y aparecen otras. Lo que más protege es saber usar estas herramientas con criterio y desarrollar lo que la IA hace peor: juicio, trato con personas, responsabilidad y entender a fondo un tema."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ia020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Necesito muchas matemáticas para trabajar en IA?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para usarla, no. Para construir modelos, ayudan el álgebra lineal (vectores y matrices), la estadística y el cálculo. Se puede empezar con programación (Python es lo más común) e ir aprendiendo las matemáticas en el camino."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-ia021",
+     "preguntas": [
+      {
+       "q": "¿Cómo funciona casi toda la IA actual?",
+       "o": [
+        "Siguiendo reglas que una persona escribe una por una",
+        "Aprendiendo patrones a partir de muchos ejemplos",
+        "Copiando el cerebro humano neurona por neurona"
+       ],
+       "a": 1,
+       "e": "El aprendizaje automático ajusta un modelo con ejemplos en lugar de programar todas las reglas a mano."
+      },
+      {
+       "q": "¿Cuál de estos es un ejemplo de IA?",
+       "o": [
+        "Un semáforo con temporizador",
+        "El filtro de spam de tu correo",
+        "Una calculadora"
+       ],
+       "a": 1,
+       "e": "El filtro aprendió de millones de correos qué distingue al spam; el semáforo y la calculadora siguen reglas fijas."
+      },
+      {
+       "q": "¿Qué es una alucinación de un modelo de lenguaje?",
+       "o": [
+        "Cuando se apaga",
+        "Cuando inventa datos o fuentes con total seguridad",
+        "Cuando tarda en responder"
+       ],
+       "a": 1,
+       "e": "Por eso conviene verificar lo importante en fuentes confiables."
+      },
+      {
+       "q": "¿Por qué un modelo puede tener sesgos?",
+       "o": [
+        "Porque aprende de datos que ya tienen esos sesgos",
+        "Porque se calienta",
+        "Porque usa GPU"
+       ],
+       "a": 0,
+       "e": "El modelo refleja los datos con los que se entrenó, incluidos sus prejuicios."
+      },
+      {
+       "q": "¿Qué tres cosas impulsaron la IA desde 2012?",
+       "o": [
+        "Más datos, GPU potentes y mejores algoritmos",
+        "Internet, teléfonos y televisión",
+        "Robots, satélites y fibra óptica"
+       ],
+       "a": 0,
+       "e": "Las redes neuronales ya existían; faltaban datos y potencia de cálculo para entrenarlas a gran escala."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-ia022"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La IA busca que las máquinas hagan tareas como reconocer, predecir, decidir y generar."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Casi toda funciona con aprendizaje automático: aprende de ejemplos en vez de reglas escritas a mano."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Toda la IA actual es especializada; la IA general es una meta y un debate."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tiene límites y riesgos: sesgos, alucinaciones, privacidad y contenido falso."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Úsala para aprender, verifica lo importante y no compartas datos personales."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="que-es-ia.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

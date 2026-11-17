@@ -34,9 +34,9 @@ window.AT.catalogo=[
     {id:'malware',titulo:'Malware y cómo protegerte',archivo:'malware.html',icono:'bicho'}
   ]},
   {grupo:'Inteligencia artificial',lecciones:[
-    {id:'que-es-ia',titulo:'Qué es la inteligencia artificial'},
-    {id:'aprendizaje-automatico',titulo:'Aprendizaje automático'},
-    {id:'redes-neuronales',titulo:'Redes neuronales'},
-    {id:'modelos-lenguaje',titulo:'Modelos de lenguaje (LLM)'}
+    {id:'que-es-ia',titulo:'Qué es la inteligencia artificial',archivo:'que-es-ia.html',icono:'chispa'},
+    {id:'aprendizaje-automatico',titulo:'Aprendizaje automático',archivo:'aprendizaje-automatico.html',icono:'grafica'},
+    {id:'redes-neuronales',titulo:'Redes neuronales',archivo:'redes-neuronales.html',icono:'red'},
+    {id:'modelos-lenguaje',titulo:'Modelos de lenguaje (LLM)',archivo:'modelos-lenguaje.html',icono:'chat'}
   ]}
 ];

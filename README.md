@@ -44,8 +44,8 @@ lecciones/
   ram.css                   Estilos de sus laboratorios
   ram.js                    Sus laboratorios (AT.labs)
   cpu.html / .css / .js     Lección «Procesador (CPU)»
-  almacenamiento.html / .css / .js   Lección «Almacenamiento»
-  gpu.html / .css / .js     Lección «Tarjeta gráfica»
+  <id>.html / .css / .js    Una lección por tema del catálogo (21 en total): hardware, electrónica, software,
+                            redes, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios
 ```
 
 Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`.
@@ -77,8 +77,9 @@ Las lecciones y los documentos que crea cada estudiante usan el mismo formato, y
 
 1. En `assets/js/catalogo.js`, agrega `archivo` a la lección (por ejemplo, `archivo:'gpu.html'`). Así deja de mostrarse como «Pronto» y aparece en la barra lateral y en «Siguiente lección».
 2. Copia `lecciones/ram.html` como `lecciones/gpu.html`, cambia el `<title>` y la descripción, pon `data-leccion="gpu"` en el `<body>` (igual al `id` del catálogo) y reemplaza el JSON de `<script type="application/json" id="documento">` por el de la lección nueva.
-3. Si la lección tiene laboratorios, crea `lecciones/gpu.css` y `lecciones/gpu.js`. Cada laboratorio es un bloque `{"type": "laboratorio", "attrs": {"id": "...", "nombre": "gpu-algo", "titulo": "..."}}`, una plantilla `<template data-lab="gpu-algo">` con su HTML y una función `AT.labs['gpu-algo']=function(raiz){...}` en el script. Tienes `AT.$`, `AT.$$`, `AT.fmt`, `AT.esc`, `AT.setPressed` y `AT.reduce`. Las preguntas de repaso van en el bloque `repaso` del JSON.
+3. Si la lección tiene laboratorios, crea `lecciones/gpu.css` y `lecciones/gpu.js`. Cada laboratorio es un bloque `{"type": "laboratorio", "attrs": {"id": "...", "nombre": "gpu-algo", "titulo": "..."}}`, una plantilla `<template data-lab="gpu-algo">` con su HTML y una función `AT.labs['gpu-algo']=function(raiz){...}` en el script. Tienes `AT.$`, `AT.$$`, `AT.fmt`, `AT.esc`, `AT.setPressed`, `AT.elegir` (un grupo de botones que elige un valor) y `AT.reduce`, y en `base.css` las piezas comunes de los laboratorios (`.kpis`, `.barras`/`.br`, `.msg`, `.campo`, `.status`, `.chips`, `.seg`). Las preguntas de repaso van en el bloque `repaso` del JSON.
 4. Agrega los archivos nuevos a `ARCHIVOS` en `sw.js` y sube `VERSION`, para que la lección funcione sin conexión.
+5. Agrega sus comprobaciones en `pruebas/comprobaciones.js` (los cálculos clave de cada laboratorio). `pruebas/13-temas.js` revisa sola cualquier lección del catálogo: contraste, desbordes y cada control de cada laboratorio.
 
 No cambies el `id` de una lección ya publicada: es la clave con la que se guardan sus apuntes.
 

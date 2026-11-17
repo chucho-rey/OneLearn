@@ -20,14 +20,14 @@ Todo lo que no ayude a contestar esto puede esperar.
 
 | Área | Estado |
 |---|---|
-| Lecciones interactivas | 4 publicadas (Memoria RAM, Procesador, Almacenamiento y Tarjeta gráfica), con laboratorios, repaso y resumen |
+| Lecciones interactivas | Las 21 del temario, en seis grupos (Hardware, Electrónica, Software, Redes, Ciberseguridad e Inteligencia artificial), cada una con laboratorios, repaso y resumen |
 | Lectura | Temas claro y oscuro, alto contraste, 5 tamaños de letra, fuentes para dislexia, modo zen, atajos de teclado |
 | Avance | Secciones leídas, «Continúa donde te quedaste», resultado del repaso |
 | Apuntes | Nota rápida en cada lección; libretas, notas y apuntes de clase con el editor de bloques |
 | Marcadores, citas y búsqueda | Marcadores en cualquier bloque, citas con «@» y búsqueda con Ctrl K, incluso sin conexión |
 | Tus datos | Todo en el navegador (IndexedDB), con respaldo e importación, espacio usado y disponible |
 | App | Instalable (PWA) y funciona sin conexión |
-| Calidad | 12 archivos de pruebas automáticas, más de mil comprobaciones (contraste, desbordes, funciones) |
+| Calidad | 13 archivos de pruebas automáticas, más de mil comprobaciones (contraste, desbordes, funciones) |
 | Costo | 0: GitHub Pages, sin servidor |
 
 La base técnica es sólida. **Lo que más falta es contenido, saber qué pasa con los usuarios y algunos requisitos legales.**
@@ -36,13 +36,12 @@ La base técnica es sólida. **Lo que más falta es contenido, saber qué pasa c
 
 Ordenado por importancia. Lo marcado como **Necesario** bloquea el lanzamiento; lo marcado como **Recomendado** se puede hacer en paralelo o justo después.
 
-### 3.1 Contenido: un recorrido completo · Necesario
+### 3.1 Contenido: un recorrido completo · Hecho
 
-Hoy hay 4 lecciones de 21 en el temario (seis grupos, incluidos Ciberseguridad e Inteligencia artificial), y el resto dice «Pronto». Un estudiante que termina las cuatro de Hardware no tiene a dónde ir, así que no se puede medir si regresa.
+Las 21 lecciones del temario están publicadas. Lo que falta aquí es **revisarlas con personas**: que alguien que sepa de cada tema (un profesor, un estudiante avanzado) lea al menos las de su área y confirme que no hay errores ni explicaciones confusas.
 
-- **Propuesta:** terminar el grupo **Hardware** (solo falta Placa base). Así hay un recorrido completo de 5 lecciones, con un principio y un final.
-- Esconder del temario los grupos que no tienen ninguna lección publicada, o dejar uno solo como «Próximo tema», para que el sitio no se vea vacío.
-- Cada lección nueva sigue los pasos del `README.md` («Cómo agregar una lección») y trae su prueba.
+- Cada lección nueva sigue los pasos del `README.md` («Cómo agregar una lección») y trae sus comprobaciones.
+- Con tantos temas, conviene pensar en **rutas sugeridas** (por ejemplo, «Empieza aquí si estudias programación») para que nadie se pierda.
 
 ### 3.2 «Cómo funciona OneLearn» (hito 7) · Necesario
 
@@ -129,7 +128,7 @@ Si una meta no se cumple, la tabla te dice dónde mirar: el contenido, las razon
 
 1. Aviso de privacidad, analítica y botón de comentarios (unos días).
 2. Hito 7: «Cómo funciona OneLearn» (una semana).
-3. La lección que falta de Hardware, Placa base (una o dos semanas, según los laboratorios).
+3. Revisión del contenido con personas que conozcan cada tema.
 4. Recordatorio de respaldo y almacenamiento persistente.
 5. Pruebas en dispositivos reales.
 6. Lanzamiento con un grupo pequeño (un salón, un club de programación, un servidor de Discord).
