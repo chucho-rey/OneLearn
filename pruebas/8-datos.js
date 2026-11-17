@@ -151,4 +151,25 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   await revisar(h,r,'Tus datos ×1.5 OpenDyslexic oscuro/alto');
   await cerrar(h);
   fs.rmSync(archivo,{force:true});fs.rmSync(malo,{force:true});
+
+  /* Recordatorio de respaldo en Inicio */
+  const rr=await pagina(browser,{ancho:1280});
+  await rr.goto(base+'index.html');await listo(rr);
+  r.cumple(await rr.isHidden('#iniRespaldo'),'sin documentos ni notas, Inicio no pide respaldo');
+  await rr.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-rec',titulo:'Algo',contenido:{type:'doc',content:[]}})});
+  await rr.reload();await listo(rr);
+  r.cumple(await rr.isVisible('#iniRespaldo')&&/Todavía no has descargado/.test(await rr.textContent('#iniRespaldoTxt')),'con un documento y sin respaldo, Inicio lo recuerda');
+  await revisar(rr,r,'Inicio con recordatorio de respaldo');
+  await rr.click('#iniRespaldoNo');
+  r.cumple(await rr.isHidden('#iniRespaldo')&&await rr.evaluate(function(){return document.activeElement.id})==='t-docs','«Recordármelo en una semana» lo esconde y el foco no se pierde');
+  await rr.reload();await listo(rr);
+  r.cumple(await rr.isHidden('#iniRespaldo'),'pospuesto, no vuelve a salir al recargar');
+  await rr.evaluate(function(){localStorage.removeItem('aprende-tecnologia:recordar-respaldo');localStorage.setItem('aprende-tecnologia:ultimo-respaldo',new Date(Date.now()-20*864e5).toISOString())});
+  await rr.reload();await listo(rr);
+  r.cumple(/hace 20 días/.test(await rr.textContent('#iniRespaldoTxt')),'si el último respaldo es de hace 20 días, lo dice');
+  const [bajada]=await Promise.all([rr.waitForEvent('download'),rr.click('#iniRespaldoSi')]);
+  await rr.waitForTimeout(200);
+  r.cumple(/onelearn-respaldo/.test(bajada.suggestedFilename())&&await rr.isHidden('#iniRespaldo'),'«Descargar respaldo» lo descarga y el recordatorio desaparece',bajada.suggestedFilename());
+  r.cumple(rr.errores.length===0,'recordatorio sin errores',rr.errores);
+  await cerrar(rr);
 });

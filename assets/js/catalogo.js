@@ -6,6 +6,9 @@
    en Inicio, los grupos sin lecciones publicadas se juntan en «Próximos temas». */
 window.AT=window.AT||{};
 window.AT.catalogo=[
+  {grupo:'OneLearn',lecciones:[
+    {id:'como-funciona',titulo:'Cómo funciona OneLearn',archivo:'como-funciona.html',icono:'info'}
+  ]},
   {grupo:'Hardware',lecciones:[
     {id:'ram',titulo:'Memoria RAM',archivo:'ram.html',icono:'ram'},
     {id:'cpu',titulo:'Procesador (CPU)',archivo:'cpu.html',icono:'cpu'},

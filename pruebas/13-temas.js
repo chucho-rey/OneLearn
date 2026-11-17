@@ -48,6 +48,8 @@ prueba('Todos los temas',async function({browser,base,r}){
         if(tipo==='range')await e.evaluate(function(x){x.value=x.max;x.dispatchEvent(new Event('input',{bubbles:true}));x.dispatchEvent(new Event('change',{bubbles:true}))});
         else if(tipo==='select')await e.evaluate(function(x){x.selectedIndex=x.options.length-1;x.dispatchEvent(new Event('change',{bubbles:true}))});
         else await e.click();
+        /* Si el control abrió una ventana (por ejemplo, «Tus datos»), se cierra para seguir con los demás */
+        await m.evaluate(function(){document.querySelectorAll('dialog[open]').forEach(function(d){d.close()})});
         pulsados++;
       }
     }

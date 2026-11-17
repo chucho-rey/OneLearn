@@ -1,0 +1,13 @@
+/* Estilos propios de las demos de la lección «Cómo funciona OneLearn». Las piezas comunes están en base.css. */
+
+/* Prueba los atajos */
+.ca-l{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:0.375rem}
+.ca-l li{display:flex;align-items:center;gap:0.625rem;padding:0.5rem 0.625rem;border:1px solid var(--line);border-radius:0.375rem;font-size:0.875rem}
+.ca-l kbd{flex:none;min-width:2.25rem;text-align:center}
+.ca-l span{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.ca-l b{flex:none;font-size:0.75rem;font-weight:600}
+.ca-l li.ok{background:var(--good-bg);border-color:transparent;color:var(--good-ink)}
+
+/* Instala OneLearn */
+.ci-pasos{margin:0.875rem 0 0;padding-left:1.5rem;font-size:0.9375rem}
+.ci-pasos li{padding:0.125rem 0}
