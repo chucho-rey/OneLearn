@@ -69,8 +69,8 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   let gs=await grupos();
   r.igual(gs.join(' '),'hardware:abierto electronica:cerrado:oculto software:cerrado:oculto redes:cerrado:oculto ciberseguridad:cerrado:oculto inteligencia-artificial:cerrado:oculto',
     'la primera vez solo se abre el grupo con lecciones; Ciberseguridad e Inteligencia artificial están en el temario');
-  r.igual(await g.textContent('#grpb-hardware em'),'2/5','el grupo dice cuántas lecciones tiene disponibles');
-  r.cumple(/2 de 5 lecciones disponibles/.test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
+  r.igual(await g.textContent('#grpb-hardware em'),'4/5','el grupo dice cuántas lecciones tiene disponibles');
+  r.cumple(/4 de 5 lecciones disponibles/.test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
   await g.click('#grpb-ciberseguridad');await g.waitForTimeout(100);
   r.cumple(await g.isVisible('#grp-ciberseguridad .nv.soon'),'al tocar un grupo se abre y muestra sus lecciones');
   await g.focus('#grpb-hardware');await g.keyboard.press('Enter');await g.waitForTimeout(100);

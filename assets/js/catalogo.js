@@ -9,8 +9,8 @@ window.AT.catalogo=[
   {grupo:'Hardware',lecciones:[
     {id:'ram',titulo:'Memoria RAM',archivo:'ram.html',icono:'ram'},
     {id:'cpu',titulo:'Procesador (CPU)',archivo:'cpu.html',icono:'cpu'},
-    {id:'almacenamiento',titulo:'Almacenamiento'},
-    {id:'gpu',titulo:'Tarjeta gráfica'},
+    {id:'almacenamiento',titulo:'Almacenamiento',archivo:'almacenamiento.html',icono:'disco'},
+    {id:'gpu',titulo:'Tarjeta gráfica',archivo:'gpu.html',icono:'gpu'},
     {id:'placa-base',titulo:'Placa base'}
   ]},
   {grupo:'Electrónica',lecciones:[

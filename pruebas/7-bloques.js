@@ -4,7 +4,7 @@
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
 prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
-  for(const lid of ['ram','cpu']){
+  for(const lid of ['ram','cpu','almacenamiento','gpu']){
     const p=await pagina(browser);
     await p.goto(base+'lecciones/'+lid+'.html');await listo(p);
     const d=await p.evaluate(function(){
@@ -18,6 +18,8 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
         h1:page.querySelector('h1').textContent,props:page.querySelectorAll('.props>div').length,
         toc:Array.from(page.querySelectorAll('.toc [data-go]')).map(function(b){return b.dataset.go}),
         secciones:AT.bloques.secciones(doc).map(function(s){return s.id}),
+        labsDoc:doc.contenido.content.filter(function(b){return b.type==='laboratorio'}).length,
+        preguntasDoc:(doc.contenido.content.filter(function(b){return b.type==='repaso'})[0]||{attrs:{preguntas:[]}}).attrs.preguntas.length,
         labs:page.querySelectorAll('.demo').length,labsVivos:Array.from(page.querySelectorAll('.demo-b')).filter(function(b){return b.children.length>1}).length,
         preguntas:page.querySelectorAll('#qz .q').length,
         resumen:!!page.querySelector('.resumen h2:not([id])'),
@@ -29,8 +31,8 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
     r.igual(d.enPagina,d.total,lid+': cada bloque se dibuja con su identificador como ancla');
     r.cumple(d.props===4&&d.h1.length>3,lid+': título y ficha de la lección',d);
     r.igual(d.toc.join(','),d.secciones.join(','),lid+': el índice lista las secciones del documento');
-    r.cumple(d.labs===5&&d.labsVivos===5,lid+': los 5 laboratorios se dibujan y arrancan',d);
-    r.igual(d.preguntas,4,lid+': el repaso tiene sus 4 preguntas');
+    r.cumple(d.labsDoc>=4&&d.labs===d.labsDoc&&d.labsVivos===d.labsDoc,lid+': los '+d.labsDoc+' laboratorios se dibujan y arrancan',d);
+    r.cumple(d.preguntasDoc>=4&&d.preguntas===d.preguntasDoc,lid+': el repaso tiene sus '+d.preguntasDoc+' preguntas',d);
     r.cumple(d.resumen,lid+': el resumen no cuenta como sección');
     r.igual(d.siguiente,'next',lid+': el enlace a la siguiente lección queda al final');
     /* El índice lleva a su sección */
