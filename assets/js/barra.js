@@ -16,6 +16,7 @@ var grupo=AT.grupoActual,orden=AT.orden;
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
+    '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
       '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
       '<button class="tab" type="button" role="tab" id="tab-apuntes" aria-controls="pn-apuntes">Mis apuntes</button>'+
@@ -37,6 +38,8 @@ var grupo=AT.grupoActual,orden=AT.orden;
       '<ul class="docs" id="docsLista"></ul>'+
       '<div class="grp">Notas de las lecciones</div>'+
       '<ul class="notas" id="notasLista"></ul>'+
+      '<div class="grp">Marcadores</div>'+
+      '<ul class="docs marcs" id="marcLista"></ul>'+
       '<p class="side-txt">Todo se guarda en este dispositivo.</p>'+
     '</div>'+
     '<div class="tabp" role="tabpanel" id="pn-comunidad" aria-labelledby="tab-comunidad" hidden>'+
@@ -181,16 +184,61 @@ document.addEventListener('click',function(e){
   /* Se dibuja al instante con las notas ya cargadas y después se confirma con la base;
      si no cambió nada, no se toca la lista (así no se pierde el foco) */
   var pintando=0,cache=null,ultimo='',docsCache=null,ultimoDocs='',listaDocs=$('#docsLista',sideEl);
+  var marcCache=null,ultimoMarc='',listaMarc=$('#marcLista',sideEl);
   function pintarNotas(){
     if(cache)pintarNotasCon(cache);
     if(docsCache)pintarDocsCon(docsCache);
+    if(marcCache)pintarMarcCon(marcCache);
     var n0=++pintando;
-    Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos()]).then(function(r){
-      cache=r[0];docsCache=r[1];
-      if(n0===pintando&&!$('#pn-apuntes').hidden){pintarNotasCon(r[0]);pintarDocsCon(r[1])}
+    Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos()]).then(function(r){
+      cache=r[0];docsCache=r[1];marcCache=r[2];
+      if(n0===pintando&&!$('#pn-apuntes').hidden){pintarNotasCon(r[0]);pintarDocsCon(r[1]);pintarMarcCon(r[2])}
     });
   }
-  Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos()]).then(function(r){if(!cache)cache=r[0];if(!docsCache)docsCache=r[1]});
+  Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos()]).then(function(r){if(!cache)cache=r[0];if(!docsCache)docsCache=r[1];if(!marcCache)marcCache=r[2]});
+  /* Marcadores: los más nuevos primero, con un botón para quitarlos */
+  function pintarMarcCon(ms){
+    var h=htmlMarc(ms);
+    if(h!==ultimoMarc){listaMarc.innerHTML=h;ultimoMarc=h}
+  }
+  function htmlMarc(ms){
+    ms=ms.slice().sort(function(a,b){return (b.creado||'')<(a.creado||'')?-1:(b.creado||'')>(a.creado||'')?1:0});
+    var h=ms.map(function(m){
+      return '<li class="marc-li"><a class="nv marc" href="'+esc(RAIZ+m.url+'#'+m.bloque)+'">'+ico('marcador')+'<span><b>'+esc(m.texto)+'</b><small>'+esc(m.docTitulo)+'</small></span></a>'+
+        '<button type="button" class="marc-x" data-marc="'+esc(m.id)+'" aria-label="Quitar el marcador «'+esc(m.texto.slice(0,60))+'»" title="Quitar marcador">'+ico('close')+'</button></li>';
+    }).join('');
+    return h||'<li class="side-txt">Guarda bloques de las lecciones con el botón de marcador que aparece a su lado, o con la tecla M.</li>';
+  }
+  listaMarc.addEventListener('click',function(e){
+    var x=e.target.closest('.marc-x');
+    if(x){
+      var li=x.closest('li'),sig=li.nextElementSibling||li.previousElementSibling,mid=x.getAttribute('data-marc');
+      AT.datos.marcadores.borrar(mid).then(function(){
+        /* Se quita de la lista aquí mismo, para que el foco pase al vecino sin redibujar todo */
+        marcCache=(marcCache||[]).filter(function(m){return m.id!==mid});
+        li.remove();
+        if(!marcCache.length){pintarMarcCon(marcCache);$('#tab-apuntes').focus();return}
+        ultimoMarc=htmlMarc(marcCache);
+        var f=sig&&$('.marc',sig);
+        if(f)f.focus();
+      });
+      return;
+    }
+    var a=e.target.closest('a.marc');
+    if(!a)return;
+    /* Un marcador de esta misma página: solo se va al bloque */
+    var u=new URL(a.href,location.href);
+    if(u.pathname===location.pathname&&u.hash){
+      var b=document.getElementById(decodeURIComponent(u.hash.slice(1)));
+      if(b){
+        e.preventDefault();setNav(false);
+        history.replaceState(null,'',u.hash);
+        if(b.tagName==='DETAILS')b.open=true;
+        b.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+        b.classList.remove('llegada');void b.offsetWidth;b.classList.add('llegada');
+      }
+    }
+  });
   /* Documentos: los más recientes primero; el que está abierto, marcado */
   function pintarDocsCon(docs){
     var abierto=AT.documentoAbierto||'';
@@ -230,7 +278,7 @@ document.addEventListener('click',function(e){
   });
   var espera=null;
   AT.refrescarNotas=function(){clearTimeout(espera);espera=setTimeout(function(){if(!$('#pn-apuntes').hidden)pintarNotas()},400)};
-  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='*')AT.refrescarNotas()});
+  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='marcadores'||c.almacen==='*')AT.refrescarNotas()});
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
   elegir(aj.get('pestana'));

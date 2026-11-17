@@ -27,6 +27,8 @@ assets/
   js/crear.js               «Crear»: tipos de documento, sus plantillas y la ventana «¿Qué quieres crear?» (AT.crear)
   js/editor.js              El editor de bloques sobre Tiptap: bloques propios, barra, menú «/», asa para mover (AT.editor)
   js/documento.js           Página de un documento: modos Editar y Leer, autoguardado, Markdown, duplicar y eliminar
+  js/marcadores.js          Marcadores a bloques de las lecciones (botón junto al bloque o tecla M); AT.marcadores
+  js/buscar.js              Búsqueda con Ctrl K en lecciones, documentos, notas y marcadores; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
@@ -42,7 +44,7 @@ lecciones/
   cpu.html / .css / .js     Lección «Procesador (CPU)»
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js` y después los de cada página.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
@@ -99,6 +101,12 @@ Cada documento se abre en `documento.html?id=...` con dos modos: **Editar** (tí
 - **Asa del bloque** (al pasar el ratón): «+» inserta debajo; «⋮⋮» se arrastra para mover el bloque o abre sus opciones.
 - Atajos: Alt+↑/↓ mueven el bloque, Ctrl+Mayús+D lo duplica, Ctrl+Z deshace, Esc suelta el editor (y otro Esc sale del modo zen).
 - «⋯» descarga el documento como Markdown, lo duplica o lo elimina (con «Deshacer»).
+
+## Marcadores, citas y búsqueda
+
+- **Marcadores:** en una lección, al pasar el ratón (o tocar) un bloque aparece un botón para guardarlo; la tecla M guarda la sección que estás leyendo. Se listan en «Mis apuntes» y se quitan desde ahí o con el mismo botón.
+- **Citas:** en el editor, «@» busca entre tus marcadores, las secciones de las lecciones y tus documentos, e inserta una cita. Al leer, tocar la cita lleva a ese bloque, resaltado (`lecciones/ram.html#b-...`).
+- **Búsqueda:** Ctrl K (⌘K en Mac) o «Buscar» en la barra lateral. Busca sin acentos y con varias palabras en las lecciones (leídas de sus propios archivos, así funciona sin conexión), tus documentos, las notas rápidas y los marcadores. En el editor, Ctrl K con texto seleccionado crea un enlace.
 
 ## El editor (Tiptap)
 

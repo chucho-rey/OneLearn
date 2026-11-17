@@ -35,6 +35,7 @@ DETALLE=1 node 2-lectura.js   # muestra también cada comprobación que pasa
 | `7-bloques.js` | El formato de bloques: las lecciones dibujadas desde su JSON, sus laboratorios y repaso, y que un documento no pueda inyectar código |
 | `8-datos.js` | Tus datos: las notas de antes pasan a IndexedDB, guardado y recarga, otras pestañas, respaldo (descargar, navegador limpio, importar) y uso sin IndexedDB |
 | `9-editor.js` | «Crear» y el editor: una libreta con secciones, callout, tabla y repaso que se ve como una lección; autoguardado, deshacer, mover, duplicar y arrastrar bloques, menú «/», barra con teclado, Markdown, duplicar, eliminar y deshacer, apuntes de clase y notas en celular |
+| `10-marcadores.js` | Marcadores (ratón, tecla M y celular), su lista en Mis apuntes, la búsqueda con Ctrl K y citar un bloque de la RAM con «@» en una libreta que lleva de vuelta a ese bloque |
 | `lib.js` | Servidor, navegador, auditoría de contraste y utilidades compartidas |
 
 La auditoría de contraste revisa todo el texto visible contra su fondo real y exige 4.5:1 (7:1 con alto contraste), como pide WCAG.
