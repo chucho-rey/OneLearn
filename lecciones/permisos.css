@@ -1,0 +1,14 @@
+/* Estilos propios de los laboratorios de «Archivos, permisos y usuarios». La terminal está en assets/css/terminal.css. */
+
+/* Calculadora de permisos */
+.pc-t{margin-top:0.875rem;min-width:0}
+.pc-t th,.pc-t td{text-align:center;vertical-align:middle;padding:0.375rem 0.5rem}
+.pc-t thead th{text-transform:none;letter-spacing:0;font-family:var(--font-ui);font-size:0.8125rem;line-height:1.25}
+.pc-t thead small{display:block;font-family:var(--font-mono);font-size:0.75rem;color:var(--fg-2)}
+.pc-t tbody th{text-align:left}
+.pc-t input{width:1.25rem;height:1.25rem;margin:0;cursor:pointer;accent-color:var(--accent)}
+.pc-s{font-family:var(--font-mono);font-size:1.125rem;font-weight:700;color:var(--accent-ink)}
+#pcPre{margin-top:0.875rem}
+.pc-que{margin:0.875rem 0 0;padding-left:1.25rem;font-size:0.9375rem}
+.pc-que li{padding:0.0625rem 0}
+#pcNum[aria-invalid="true"]{border-color:var(--bad)}

@@ -37,8 +37,10 @@ DETALLE=1 node 2-lectura.js   # muestra también cada comprobación que pasa
 | `9-editor.js` | «Crear» y el editor: una libreta con secciones, callout, tabla y repaso que se ve como una lección; autoguardado, deshacer, mover, duplicar y arrastrar bloques, menú «/», barra con teclado, Markdown, duplicar, eliminar y deshacer, apuntes de clase y notas en celular |
 | `10-marcadores.js` | Marcadores (ratón, tecla M y celular), su lista en Mis apuntes, la búsqueda con Ctrl K y citar un bloque de la RAM con «@» en una libreta que lleva de vuelta a ese bloque |
 | `14-proyectos.js` | Proyectos: todos los del catálogo (fases completas, diagramas funcionando, enlaces que existen); la lista, las 8 fases del portafolio, tareas que se guardan, la fase donde te quedaste, el entregable solo https, el respaldo, Inicio y la búsqueda |
-| `13-temas.js` | Todas las demás lecciones del catálogo (lo lee de `catalogo.js`): variantes de lectura, cada control de cada laboratorio sin errores ni desbordes, y los cálculos de `comprobaciones.js`. `LECCIONES=dns,cifrado node 13-temas.js` revisa solo esas |
+| `13-temas.js` | Todas las demás lecciones del catálogo (lo lee de `catalogo.js`): variantes de lectura, cada control de cada laboratorio sin errores ni desbordes, y los cálculos de `comprobaciones.js` (en las lecciones de Linux, cada ejercicio de la terminal se resuelve escribiendo los comandos). `LECCIONES=dns,cifrado node 13-temas.js` revisa solo esas |
 | `12-hardware.js` | Las lecciones «Almacenamiento» y «Tarjeta gráfica»: todas las variantes de lectura y los cálculos de sus 8 laboratorios |
+| `15-rutas.js` | Rutas de aprendizaje: que la ruta coincida con el catálogo, la página en todas las variantes, «qué sigue» con y sin avance, el aviso al final de las lecciones, Inicio, la barra lateral y la búsqueda |
+| `16-terminal.js` | La terminal simulada: Tab, historial, Escape y Ctrl+C, errores, tuberías y redirecciones, la contraseña de sudo oculta, nano, ejercicios que se guardan, entran al respaldo y se reinician, teclas en pantalla para celular y el contraste de los colores de la salida |
 | `11-acerca.js` | «Cómo está hecho OneLearn»: se ve bien en todos los temas y anchos, su índice, ejemplos y repaso, el modo zen, el acceso desde Inicio y la búsqueda |
 | `lib.js` | Servidor, navegador, auditoría de contraste y utilidades compartidas |
 

@@ -173,7 +173,20 @@ function pintarProyectos(){
       '<a class="btn pri" href="proyectos/'+esc(p.archivo)+'">'+(fin?'Ver el proyecto':h?'Continuar':'Empezar el proyecto')+'</a></div></div>';
   }).join('');
 }
-function pintar(){pintarContinuar();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
+/* Rutas: la primera, con su avance y qué sigue */
+function pintarRutas(){
+  var c=$('#iniRutas');if(!c)return;
+  c.innerHTML=(AT.caminos||[]).slice(0,1).map(function(r){
+    var a=AT.avance.camino(r),pct=a.total?Math.round(a.terminadas/a.total*100):0,s=a.sig;
+    var dest=s?(s.tipo==='proyecto'?'proyectos/'+s.archivo:LECC+s.archivo):'rutas.html#'+r.id;
+    return '<div class="ini-rt">'+ico(r.icono||'ruta','pj-card-ic')+'<div class="pj-card-c"><h3>'+esc(r.titulo)+'</h3><p>'+esc(r.descripcion)+'</p>'+
+      '<div class="pj-bar" aria-hidden="true"><i style="width:'+pct+'%"></i></div>'+
+      '<p class="pj-card-e">'+(a.terminadas?'Llevas '+pct+' % · '+a.terminadas+' de '+a.total+' terminados':esc(r.nivel)+' · '+r.modulos.length+' módulos')+'</p>'+
+      '<div class="ini-rt-b">'+(s?'<a class="btn pri" href="'+esc(dest)+'">'+(s.pct||a.terminadas?'Sigue con':'Empieza por')+': '+esc(s.titulo)+'</a>':'')+
+      '<a class="btn" href="rutas.html#'+esc(r.id)+'">Ver los módulos</a></div></div></div>';
+  }).join('');
+}
+function pintar(){pintarContinuar();pintarRutas();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 $('#saludo').textContent=saludo();
 pintar();

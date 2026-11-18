@@ -5,6 +5,21 @@
 module.exports=function(txt,demo){
   function clic(p,n,sel){return demo(p,n).locator(sel).first().click()}
   async function rango(p,sel,v){await p.$eval(sel,function(x,v){x.value=v;x.dispatchEvent(new Event('input',{bubbles:true}))},v)}
+  /* Terminal simulada: escribe una línea en la terminal del laboratorio n y contesta lo que pregunte (contraseñas, S/n).
+     Espera a que vuelva a mostrar un prompt: el de la terminal o el de una pregunta. */
+  async function esperar(d){await d.locator('.term-ps-v').evaluate(function(e){return new Promise(function(res){(function f(){if(e.textContent)res();else setTimeout(f,25)})()})})}
+  async function teclear(p,n,linea,resp){
+    const d=demo(p,n),inp=d.locator('.term-cmd');
+    await inp.fill(linea);await inp.press('Enter');await esperar(d);
+    for(const v of resp||[]){await inp.fill(v);await inp.press('Enter');await esperar(d)}
+  }
+  async function sesion(p,r,n,lineas,total,etiqueta){
+    for(const l of lineas){if(Array.isArray(l))await teclear(p,n,l[0],l.slice(1));else await teclear(p,n,l)}
+    const d=demo(p,n),hechas=(await d.locator('.term-ej-n').textContent()).trim();
+    r.cumple(hechas===total+' de '+total&&await d.locator('.term-fin').isVisible(),etiqueta+': se completan los '+total+' ejercicios escribiendo los comandos',
+      {hechas:hechas,pendiente:await d.locator('.term-ej-l li.act').textContent().catch(function(){return ''}),salida:(await d.locator('.term-log').textContent()).slice(-600)});
+    return d;
+  }
   return {
 
   'placa-base':async function(p,r){
@@ -302,6 +317,53 @@ module.exports=function(txt,demo){
     r.cumple(/príncipe, princesa, reina/.test(await txt(p,'#veMsg')),'las vecinas de «rey» son príncipe, princesa y reina');
     await p.click('#veAnalogia');
     r.cumple(/caes justo en «reina»/.test(await txt(p,'#veMsg')),'rey − hombre + mujer ≈ reina');
+  },
+
+  'terminal':async function(p,r){
+    await clic(p,0,'[data-v="2"]');
+    r.cumple(await p.locator('#tpLista li').count()===4&&/«error»/.test(await txt(p,'#tpMsg')),'grep -i error app.log tiene 4 partes y se explica');
+    r.igual(await p.locator('#tpLinea .tp-o').count(),1,'-i se marca como opción');
+    await sesion(p,r,1,['pwd','ls','cd Documentos','ls -l','cd escuela','cat tarea-redes.txt','cd /etc','ls','cd','ls -a'],7,'Tus primeros pasos');
+    await sesion(p,r,2,['cd Descargas','ls','mkdir Fotos PDF','mv *.jpg Fotos/','mv *.pdf PDF/','cp notas-clase.txt ~/Documentos/','rm instalador-zoom.deb','mv captura.png pantalla.png','echo "Ordenado" > leeme.txt'],8,'Ordena tu carpeta');
+    const d=await sesion(p,r,3,['cd registros','head -n 5 app.log','tail -n 3 app.log','grep ERROR app.log','grep ERROR app.log | wc -l','grep ERROR app.log > errores.txt','grep -c "login marta" app.log','find ~ -name "*.log"'],7,'Investiga un registro');
+    r.cumple(/\n4\n/.test(await d.locator('.term-log').textContent()),'grep ERROR app.log | wc -l da 4');
+  },
+
+  'permisos':async function(p,r){
+    await p.fill('#pcNum','750');
+    r.igual(await txt(p,'#pcLetras'),'-rwxr-x---','750 son -rwxr-x---');
+    r.igual(await txt(p,'#pcCmdL'),'chmod u=rwx,g=rx,o= archivo','y en letras, u=rwx,g=rx,o=');
+    await p.check('[data-q="o"][data-p="r"]');
+    r.igual(await p.inputValue('#pcNum'),'754','marcar «Otros: leer» suma 4: 754');
+    await clic(p,0,'#pcPre [data-v="777"]');
+    r.igual(await p.getAttribute('#pcStat','data-k'),'bad','777 es un riesgo');
+    await clic(p,0,'#pcTipo [data-v="d"]');await p.fill('#pcNum','744');
+    r.cumple(await p.getAttribute('#pcStat','data-k')==='warn'&&/sin x/.test(await txt(p,'#pcMsg')),'una carpeta 744 avisa que r sin x no deja entrar');
+    await sesion(p,r,1,['ls -l','./respaldo.sh','chmod +x respaldo.sh','./respaldo.sh','chmod 600 diario.txt','chmod 770 compartido','cat /etc/shadow',['sudo cat /etc/shadow','clave'],'ls -l /etc/shadow'],8,'Permisos en la práctica');
+    const d=await sesion(p,r,2,[['sudo adduser luis','clave','secreto123','secreto123','Luis',''],'sudo useradd -m marta','sudo groupadd contabilidad','sudo usermod -aG contabilidad luis','sudo usermod -aG contabilidad marta',
+      'sudo mkdir /srv/contabilidad','sudo chown root:contabilidad /srv/contabilidad','sudo chmod 770 /srv/contabilidad','sudo -u marta touch /srv/contabilidad/prueba.txt','ls /srv/contabilidad'],8,'Carpeta de contabilidad');
+    r.cumple(/'\/srv\/contabilidad': Permiso denegado/.test(await d.locator('.term-log').textContent()),'ana, que no es del grupo, no puede ver la carpeta');
+  },
+
+  'procesos':async function(p,r){
+    await sesion(p,r,0,['uptime','top','kill 2290','ps aux | grep reporte','sleep 300 &','jobs','kill %1','free -h','df -h'],8,'La computadora va lenta');
+    await p.click('#paReinicio');
+    r.cumple(await p.getAttribute('#paStat','data-k')==='warn'&&/nginx estaba encendido pero no habilitado/.test(await txt(p,'#paMsg'))&&/cups estaba apagado pero habilitado/.test(await txt(p,'#paMsg')),
+      'al reiniciar, nginx (no habilitado) se apaga y cups (habilitado) arranca');
+    r.igual(await txt(p,'#paAct'),'3 de 4','quedan encendidos los 3 habilitados');
+    await p.click('#paReinicio');
+    r.igual(await p.getAttribute('#paStat','data-k'),'good','un segundo reinicio ya no cambia nada');
+    await sesion(p,r,2,['systemctl status ssh','journalctl -u ssh',['sudo systemctl start ssh','clave'],'sudo systemctl enable ssh','ss -tln','grep systemctl /var/log/auth.log','sudo systemctl restart cron'],7,'Nadie se puede conectar');
+  },
+
+  'apt':async function(p,r){
+    r.igual(await txt(p,'#adN'),'2','nginx en un Ubuntu normal: 2 paquetes nuevos');
+    await p.check('#adMin');
+    r.igual(await txt(p,'#adN'),'3','en un servidor mínimo también falta libssl3t64');
+    await clic(p,0,'#adPq [data-v="git"]');
+    r.igual(await txt(p,'#adN'),'6','git en un servidor mínimo: 6 paquetes');
+    await sesion(p,r,1,['tree',['sudo apt install tree','clave'],'sudo apt update','sudo apt install tree','tree','apt search procesos','apt show htop',['sudo apt install htop',''],'htop',['sudo apt upgrade','']],8,'Instala tus herramientas');
+    await sesion(p,r,2,[['sudo apt install nginx','clave',''],'systemctl status nginx','curl localhost','ss -tln','echo "<h1>Hola desde mi servidor</h1>" | sudo tee /var/www/html/index.html','curl localhost',['sudo apt remove nginx',''],['sudo apt autoremove','']],7,'Instala un servidor web');
   }
 
   };

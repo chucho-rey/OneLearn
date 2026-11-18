@@ -39,7 +39,36 @@ AT.avance={
   hayDatos:function(){return Object.keys(datos.lecciones).length>0},
   on:function(fn){oyentes.push(fn)},
   /* Vuelve a leer lo guardado (después de importar un respaldo, por ejemplo) */
-  recargar:recargar
+  recargar:recargar,
+  /* Avance de una ruta de aprendizaje (AT.caminos): cada módulo con sus lecciones y proyectos,
+     cuántos hay terminados y cuál sigue (el primero publicado que no has terminado) */
+  camino:function(c){
+    var porId={},proy={},res={modulos:[],total:0,publicadas:0,terminadas:0,sig:null};
+    (AT.catalogo||[]).forEach(function(g){g.lecciones.forEach(function(l){porId[l.id]=l})});
+    (AT.proyectos||[]).forEach(function(p){proy[p.id]=p});
+    c.modulos.forEach(function(m,i){
+      var mod={titulo:m.titulo,meta:m.meta||'',n:i+1,items:[],hechas:0,publicadas:0};
+      (m.lecciones||[]).forEach(function(id){
+        var l=porId[id];if(!l)return;
+        var pct=l.archivo?AT.avance.porcentaje(id):0;
+        mod.items.push({tipo:'leccion',id:id,titulo:l.titulo,icono:l.icono,archivo:l.archivo||'',pct:pct,hecho:pct>=100,modulo:i+1});
+      });
+      (m.proyectos||[]).forEach(function(id){
+        var p=proy[id];if(!p)return;
+        var h=AT.proyectosAvance?AT.proyectosAvance.hechas(id):0,pct=p.tareas?Math.round(h/p.tareas*100):0;
+        mod.items.push({tipo:'proyecto',id:id,titulo:p.titulo,icono:p.icono||'proyecto',archivo:p.archivo,pct:pct,hecho:pct>=100,modulo:i+1,nivel:p.nivel,duracion:p.duracion});
+      });
+      mod.items.forEach(function(it){
+        res.total++;
+        if(it.archivo){res.publicadas++;mod.publicadas++}
+        if(it.hecho){res.terminadas++;mod.hechas++}
+        if(!res.sig&&it.archivo&&!it.hecho)res.sig=it;
+      });
+      mod.completo=mod.items.length>0&&mod.hechas===mod.items.length;
+      res.modulos.push(mod);
+    });
+    return res;
+  }
 };
 function recargar(){
   datos=leerTodo();if(!datos.lecciones)datos.lecciones={};

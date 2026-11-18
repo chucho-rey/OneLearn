@@ -1,0 +1,16 @@
+/* Estilos propios de los laboratorios de «Instalar software con apt». La terminal está en assets/css/terminal.css. */
+
+/* Qué instala apt de verdad */
+.ad-min{margin-top:0.75rem}
+.ad-arbol{list-style:none;margin:0.875rem 0 0;padding:0.625rem 0.75rem;border:1px solid var(--line);border-radius:0.5rem;font-size:0.875rem}
+.ad-arbol li{display:flex;flex-wrap:wrap;align-items:baseline;gap:0.25rem 0.625rem;padding:0.25rem 0}
+.ad-arbol code{font-weight:600}
+.ad-arbol li>span:not(.ad-rama){flex:1 1 10rem;min-width:0;color:var(--fg-2);overflow-wrap:anywhere}
+.ad-arbol em{font-style:normal;font-family:var(--font-mono);font-size:0.8125rem;color:var(--fg-2)}
+.ad-rama{font-family:var(--font-mono);color:var(--fg-2)}
+.ad-d{padding-left:0.25rem}
+.ad-d.ya code{color:var(--fg-2);font-weight:400}
+.ad-tag{flex:none;padding:0 0.375rem;border-radius:0.25rem;background:var(--bg-soft);color:var(--fg-2);font-size:0.75rem;font-weight:600}
+.ad-tag.nuevo{background:var(--accent-bg);color:var(--accent-ink)}
+.ad-sal-t{display:block;margin:0.875rem 0 0.25rem}
+.ad-sal{margin:0;padding:0.625rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg-side);color:var(--fg);font-family:var(--font-mono);font-size:0.8125rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}

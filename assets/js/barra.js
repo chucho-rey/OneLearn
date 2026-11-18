@@ -30,6 +30,7 @@ function guardarGrupos(){
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
+    '<a class="nv'+(R.pagina==='rutas'?' on" aria-current="page':'')+'" href="'+RAIZ+'rutas.html" id="sideRutas">'+ico('ruta')+'<span>Rutas</span></a>'+
     '<a class="nv'+(R.pagina==='proyectos'||R.pagina==='proyecto'?' on" aria-current="page':'')+'" href="'+RAIZ+'proyectos/index.html" id="sideProyectos">'+ico('proyecto')+'<span>Proyectos</span></a>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
       '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
@@ -96,6 +97,16 @@ function guardarGrupos(){
     if(!sig)nx.outerHTML='<a class="next" href="'+RAIZ+'index.html">'+ico('home')+'<span>Terminaste todo el temario. Volver al inicio</span></a>';
     else if(sig.archivo)nx.outerHTML='<a class="next" href="'+esc(sig.archivo)+'">'+ico('page')+'<span>Siguiente lección: '+esc(sig.titulo)+'</span></a>';
     else nx.outerHTML='<div class="next">'+ico('page')+'<span>Siguiente lección: '+esc(sig.titulo)+'</span><em>Pronto</em></div>';
+    /* Si la lección es parte de una ruta, se dice en qué módulo está y cuál sigue en la ruta (si no es la misma) */
+    var cm=AT.caminoDe(actual.id);
+    if(cm){
+      var lista=[];cm.camino.modulos.forEach(function(m){(m.lecciones||[]).forEach(function(id){lista.push(id)})});
+      var porId={};orden.forEach(function(l){porId[l.id]=l});
+      var sigR=porId[lista[lista.indexOf(actual.id)+1]];
+      var h='<div class="ruta-nota">'+ico('ruta','ruta-nota-ic')+'<div><p>Parte de la ruta <a href="'+RAIZ+'rutas.html#'+esc(cm.camino.id)+'">'+esc(cm.camino.titulo)+'</a> · Módulo '+cm.n+': '+esc(cm.modulo.titulo)+'</p>';
+      if(sigR&&sigR!==sig)h+=sigR.archivo?'<p><a href="'+esc(sigR.archivo)+'">Siguiente en la ruta: '+esc(sigR.titulo)+'</a></p>':'<p>Siguiente en la ruta: '+esc(sigR.titulo)+' <em>(pronto)</em></p>';
+      $('.page').insertAdjacentHTML('beforeend',h+'</div></div>');
+    }
   }
 
   document.body.insertAdjacentHTML('beforeend','<div class="scrim" id="scrim"></div>');

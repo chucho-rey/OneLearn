@@ -207,7 +207,7 @@ function exportar(){
     return {
       app:'OneLearn',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],
-      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos')
+      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal')
     };
   });
 }
@@ -234,7 +234,7 @@ function importar(datos){
   if(!esObjeto(datos)||datos.app!=='OneLearn'||typeof datos.formato!=='number')
     return Promise.reject(new Error('El archivo no es un respaldo de OneLearn.'));
   if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneLearn. Actualiza la página e inténtalo otra vez.'));
-  var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false};
+  var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false,terminal:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
     return esObjeto(d)&&idValido(d.id)&&esObjeto(d.contenido)&&d.contenido.type==='doc'&&(d.contenido.content==null||Array.isArray(d.contenido.content));
@@ -290,6 +290,17 @@ function importar(datos){
           if(!a.fase&&typeof e.fase==='string'&&/^f\d{1,2}$/.test(e.fase))a.fase=e.fase;
         });
         lsSet(PREF+'proyectos',JSON.stringify(pa));
+      }
+      /* Ejercicios de la terminal simulada: se suman los terminados */
+      if(esObjeto(datos.terminal)){
+        var ta=leerJSON(PREF+'terminal')||{};
+        Object.keys(datos.terminal).forEach(function(id){
+          var e=datos.terminal[id];
+          if(!idValido(id)||!esObjeto(e))return;
+          var a=esObjeto(ta[id])?ta[id]:(ta[id]={});
+          Object.keys(e).forEach(function(t){if(idValido(t)&&!a[t]){a[t]=String(e[t]).slice(0,40);res.terminal=true}});
+        });
+        lsSet(PREF+'terminal',JSON.stringify(ta));
       }
       /* Ajustes: solo si en este navegador no has cambiado ninguno */
       if(esObjeto(datos.ajustes)&&AT.ajustes&&AT.ajustes.esInicial()&&lsGet(PREF+'ajustes')===null){

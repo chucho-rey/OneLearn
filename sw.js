@@ -4,12 +4,13 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-17';
+const VERSION='onelearn-21';
 const ARCHIVOS=[
   './',
   'index.html',
   'documento.html',
   'acerca.html',
+  'rutas.html',
   'proyectos/index.html',
   'proyectos/portafolio.html',
   'proyectos/seguridad-negocio.html',
@@ -21,6 +22,7 @@ const ARCHIVOS=[
   'manifest.webmanifest',
   'assets/css/base.css',
   'assets/css/editor.css',
+  'assets/css/terminal.css',
   'assets/js/ajustes.js',
   'assets/js/catalogo.js',
   'assets/js/base.js',
@@ -40,6 +42,8 @@ const ARCHIVOS=[
   'assets/js/inicio.js',
   'assets/js/zen.js',
   'assets/js/proyecto.js',
+  'assets/js/rutas.js',
+  'assets/js/terminal.js',
   'lecciones/ram.html',
   'lecciones/ram.css',
   'lecciones/ram.js',
@@ -106,6 +110,18 @@ const ARCHIVOS=[
   'lecciones/como-funciona.html',
   'lecciones/como-funciona.css',
   'lecciones/como-funciona.js',
+  'lecciones/terminal.html',
+  'lecciones/terminal.css',
+  'lecciones/terminal.js',
+  'lecciones/permisos.html',
+  'lecciones/permisos.css',
+  'lecciones/permisos.js',
+  'lecciones/procesos.html',
+  'lecciones/procesos.css',
+  'lecciones/procesos.js',
+  'lecciones/apt.html',
+  'lecciones/apt.css',
+  'lecciones/apt.js',
   'assets/vendor/tiptap.min.js',
   'assets/icons/icono.svg',
   'assets/icons/icono-maskable.svg',
