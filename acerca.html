@@ -2662,7 +2662,7 @@
     "content": [
      {
       "type": "text",
-      "text": "Las lecciones de Linux traen una terminal de Ubuntu que corre completa en el navegador ("
+      "text": "Las lecciones de Linux, redes y servidores traen una terminal de Ubuntu que corre completa en el navegador ("
      },
      {
       "type": "text",
@@ -2976,6 +2976,121 @@
     ],
     "attrs": {
      "id": "b-act005"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "También simula la red. Cada computadora conoce su IP, su puerta de enlace y sus rutas, y "
+     },
+     {
+      "type": "text",
+      "text": "ping",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", "
+     },
+     {
+      "type": "text",
+      "text": "traceroute",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", "
+     },
+     {
+      "type": "text",
+      "text": "dig",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", "
+     },
+     {
+      "type": "text",
+      "text": "curl",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y "
+     },
+     {
+      "type": "text",
+      "text": "ssh",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " recorren ese mapa: un internet de ejemplo con su DNS y otros equipos de la red local, cada uno con sus servicios, su firewall ("
+     },
+     {
+      "type": "text",
+      "text": "ufw",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") y su nginx. Así una lección puede romper la red a propósito (apagar la tarjeta, borrar la ruta por defecto, detener el DNS) y pedirte que la arregles con las mismas herramientas que en un servidor real."
+     }
+    ],
+    "attrs": {
+     "id": "b-act006"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las lecciones de subredes, enrutamiento y VPN usan además "
+     },
+     {
+      "type": "text",
+      "text": "assets/js/red.js",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Ahí una dirección IPv4 es un número de 32 bits, y una subred, un bloque de números: saber si una IP está en una red es dividir y comparar. También dibuja redes en SVG y calcula el camino de un paquete: en cada salto, el router busca en su tabla la ruta más específica, con rutas escritas a mano o calculadas como OSPF, con una búsqueda en anchura del camino más corto."
+     }
+    ],
+    "attrs": {
+     "id": "b-act007"
     }
    },
    {

@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Virtualización y contenedores · OneLearn</title>
+<meta name="description" content="Qué es una máquina virtual y qué es un contenedor, en qué se diferencian, y cómo correr contenedores con Docker: imágenes, puertos, volúmenes, Dockerfile y Compose.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="contenedores.css">
+</head>
+<body data-leccion="contenedores">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="ct-compara">
+<p class="hint">Mueve el control para correr más aplicaciones en el mismo servidor y compara las dos formas.</p>
+<div class="ctl" style="margin-top:0"><label class="lbl" for="cpN">Aplicaciones</label><input class="slider" id="cpN" type="range" min="1" max="6" step="1" value="3"><b class="mono" id="cpNV"></b></div>
+<div class="cp-g">
+  <div><p class="lbl">Máquinas virtuales</p><div class="cp-pila" id="cpVm"></div></div>
+  <div><p class="lbl">Contenedores</p><div class="cp-pila" id="cpCt"></div></div>
+</div>
+<p class="lbl cp-t">Memoria</p><div class="barras" id="cpRam"></div>
+<p class="lbl cp-t">Disco</p><div class="barras" id="cpDisco"></div>
+<div class="status" data-k="" aria-live="polite"><span class="dot"></span><span id="cpMsg"></span></div>
+</template>
+<template data-lab="ct-terminal">
+<p class="hint">Docker ya está instalado. En tu carpeta hay una página en ~/sitio/index.html.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "contenedores",
+ "titulo": "Virtualización y contenedores",
+ "icono": "contenedor",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Servidores y nube",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "25 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 laboratorios, 6 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-ct001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-ct002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-virtualizacion",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Muchas computadoras en una"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un servidor moderno tiene decenas de núcleos y cientos de gigabytes de memoria: demasiado para una sola aplicación. La "
+     },
+     {
+      "type": "text",
+      "text": "virtualización",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " lo reparte en varias "
+     },
+     {
+      "type": "text",
+      "text": "máquinas virtuales",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (VM), cada una con su propio sistema operativo, como si fueran computadoras independientes. El programa que lo hace posible es el "
+     },
+     {
+      "type": "text",
+      "text": "hipervisor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-ct003"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-ct004"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cómo funciona"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo 1",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (nativo)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se instala directo sobre el hardware. Es lo que usan los centros de datos y la nube"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "VMware ESXi, Proxmox (KVM), Microsoft Hyper-V"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo 2",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (alojado)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Es un programa dentro de tu sistema operativo. Ideal para practicar en tu computadora"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "VirtualBox, VMware Workstation, UTM"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las VM se pueden copiar, mover de un servidor físico a otro y respaldar completas con "
+     },
+     {
+      "type": "text",
+      "text": "instantáneas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "snapshots",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "). Si una actualización sale mal, vuelves a la instantánea en segundos."
+     }
+    ],
+    "attrs": {
+     "id": "b-ct005"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-contenedores",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Contenedores: más ligeros"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "contenedor",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " también aísla una aplicación, pero no trae su propio sistema operativo: todos los contenedores comparten el "
+     },
+     {
+      "type": "text",
+      "text": "kernel",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " del sistema anfitrión. Cada uno ve solo sus archivos, sus procesos y su red, gracias a funciones del kernel de Linux ("
+     },
+     {
+      "type": "text",
+      "text": "namespaces",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y "
+     },
+     {
+      "type": "text",
+      "text": "cgroups",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "). Por eso arrancan en menos de un segundo y ocupan megabytes, no gigabytes."
+     }
+    ],
+    "attrs": {
+     "id": "b-ct006"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-ct007",
+     "nombre": "ct-compara",
+     "titulo": "Máquinas virtuales contra contenedores"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-ct008"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Usa una VM cuando…"
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Necesitas otro sistema operativo (Windows en un servidor Linux), un aislamiento fuerte entre clientes, o una computadora completa para administrar."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Usa contenedores cuando…"
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Quieres empacar una aplicación con todo lo que necesita y correrla igual en tu laptop, en pruebas y en producción."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-docker",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Imágenes y contenedores"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Docker",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es la herramienta más conocida para contenedores. Hay dos ideas clave:"
+     }
+    ],
+    "attrs": {
+     "id": "b-ct009"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-ct010"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una "
+         },
+         {
+          "type": "text",
+          "text": "imagen",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " es la plantilla: un sistema de archivos mínimo con la aplicación y sus dependencias. No cambia. Se bajan de un registro, como Docker Hub."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un "
+         },
+         {
+          "type": "text",
+          "text": "contenedor",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " es una imagen en ejecución. Puedes crear muchos contenedores de la misma imagen, y borrarlos sin afectarla."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-ct011",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "docker run -d --name web -p 8080:80 nginx   # crea y arranca un contenedor\ndocker ps                                   # los que están corriendo (-a: todos)\ndocker logs web                             # lo que ha escrito\ndocker stop web && docker rm web            # lo detiene y lo borra\ndocker images                               # las imágenes que tienes"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-ct012"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Opción"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué hace"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "-d",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En segundo plano ("
+           },
+           {
+            "type": "text",
+            "text": "detached",
+            "marks": [
+             {
+              "type": "italic"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "--name web",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Le pone un nombre; si no, Docker inventa uno"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "-p 8080:80",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Publica el puerto 80 del contenedor en el 8080 de tu computadora"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "-v ~/sitio:/ruta",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Monta una carpeta tuya dentro del contenedor (un "
+           },
+           {
+            "type": "text",
+            "text": "volumen",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "-e CLAVE=valor",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una variable de entorno, como la contraseña de una base de datos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-ct013",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Lo que un contenedor escribe dentro de sí mismo "
+       },
+       {
+        "type": "text",
+        "text": "se pierde al borrarlo",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Los datos que deben sobrevivir, como una base de datos, van en un volumen."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-ct014",
+     "nombre": "ct-terminal",
+     "titulo": "Tus primeros contenedores"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dockerfile",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tu propia imagen y Compose"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "Dockerfile",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es la receta de una imagen. Y "
+     },
+     {
+      "type": "text",
+      "text": "Docker Compose",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " describe en un archivo varios contenedores que trabajan juntos:"
+     }
+    ],
+    "attrs": {
+     "id": "b-ct015"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-ct016",
+     "language": "dockerfile"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "# Dockerfile\nFROM node:22-alpine           # parte de una imagen con Node.js\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci                    # instala dependencias\nCOPY . .\nEXPOSE 3000\nCMD [\"node\", \"server.js\"]"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-ct017",
+     "language": "yaml"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "# compose.yaml: la tienda y su base de datos\nservices:\n  app:\n    build: .\n    ports: [\"8080:3000\"]\n    depends_on: [db]\n  db:\n    image: postgres:16\n    environment:\n      POSTGRES_PASSWORD: cambiala\n    volumes: [\"datos:/var/lib/postgresql/data\"]\nvolumes:\n  datos:"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con "
+     },
+     {
+      "type": "text",
+      "text": "docker compose up -d",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " se levanta todo. Cuando hay cientos de contenedores en muchos servidores, se usa un "
+     },
+     {
+      "type": "text",
+      "text": "orquestador",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " como "
+     },
+     {
+      "type": "text",
+      "text": "Kubernetes",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que los reparte, los reinicia si fallan y los escala según la carga."
+     }
+    ],
+    "attrs": {
+     "id": "b-ct018"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ct019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Un contenedor es tan seguro como una VM?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No del todo: comparten el kernel, así que una falla grave en él podría afectar a todos. Para separar a clientes que no confían entre sí, se usan VM (o contenedores dentro de VM, como hacen los proveedores de nube)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ct020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Docker funciona en Windows y Mac?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sí, con Docker Desktop, que por dentro corre una pequeña VM con Linux. Los contenedores de Linux necesitan un kernel Linux."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-ct021"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Docker o Podman?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Podman hace lo mismo con los mismos comandos ("
+         },
+         {
+          "type": "text",
+          "text": "podman run …",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "), sin un servicio corriendo como root. En Red Hat y Fedora viene por defecto."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-ct022",
+     "preguntas": [
+      {
+       "q": "¿Qué comparten todos los contenedores de un servidor?",
+       "o": [
+        "El sistema de archivos",
+        "El kernel del sistema operativo",
+        "La dirección IP"
+       ],
+       "a": 1,
+       "e": "Por eso son ligeros: no cargan un sistema operativo propio."
+      },
+      {
+       "q": "¿Qué diferencia hay entre una imagen y un contenedor?",
+       "o": [
+        "Son lo mismo",
+        "La imagen es la plantilla; el contenedor, una imagen en ejecución",
+        "El contenedor es más grande"
+       ],
+       "a": 1,
+       "e": "De una imagen salen muchos contenedores."
+      },
+      {
+       "q": "¿Qué hace -p 8080:80?",
+       "o": [
+        "Publica el puerto 80 del contenedor en el 8080 de tu computadora",
+        "Limita la memoria a 8080 MB",
+        "Abre 80 conexiones"
+       ],
+       "a": 0,
+       "e": "El primero es tu computadora; el segundo, el contenedor."
+      },
+      {
+       "q": "Borras el contenedor de una base de datos sin volumen. ¿Qué pasa con los datos?",
+       "o": [
+        "Se guardan en la imagen",
+        "Se pierden",
+        "Pasan al siguiente contenedor"
+       ],
+       "a": 1,
+       "e": "Lo que se escribe dentro del contenedor desaparece con él. Para eso están los volúmenes."
+      },
+      {
+       "q": "¿Qué hipervisor es de tipo 2?",
+       "o": [
+        "VMware ESXi",
+        "VirtualBox",
+        "Hyper-V"
+       ],
+       "a": 1,
+       "e": "VirtualBox corre como un programa dentro de tu sistema operativo."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-ct023"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un hipervisor reparte un servidor en máquinas virtuales, cada una con su propio sistema operativo."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los contenedores comparten el kernel: arrancan en un segundo y ocupan megabytes."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Imagen = plantilla; contenedor = imagen en ejecución."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "docker run -d --name … -p … -v … imagen",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "ps",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "logs",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "stop",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "rm",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los datos que deben sobrevivir van en volúmenes; Compose y Kubernetes manejan muchos contenedores."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="contenedores.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>
