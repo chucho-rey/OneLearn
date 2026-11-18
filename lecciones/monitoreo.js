@@ -31,13 +31,14 @@ AT.labs['mo-alerta']=function(raiz){
     var svg=el('svg',{viewBox:'0 0 '+W+' '+H,'class':'ma-svg',role:'img','aria-label':'Gráfica de CPU durante 60 minutos con el umbral en '+u+' % y '+alertas.length+' alertas'},g);
     el('rect',{x:x(40),y:PY,width:x(52)-x(40),height:H-PY-24,'class':'ma-inc'},svg);
     [0,50,100].forEach(function(t){el('line',{x1:PX,x2:W-8,y1:y(t),y2:y(t),'class':'ma-eje'},svg);var tx=el('text',{x:PX-6,y:y(t)+4,'text-anchor':'end','class':'ma-tx'},svg);tx.textContent=t+'%'});
-    [0,15,30,45,59].forEach(function(m){var tx=el('text',{x:x(m),y:H-6,'text-anchor':'middle','class':'ma-tx'},svg);tx.textContent=m+' min'});
+    [0,15,30,45,59].forEach(function(m){var tx=el('text',{x:x(m),y:H-6,'text-anchor':m===0?'start':m===59?'end':'middle','class':'ma-tx'},svg);tx.textContent=m+' min'});
     el('polyline',{points:CPU.map(function(v,i){return x(i)+','+y(v)}).join(' '),'class':'ma-linea'},svg);
     el('line',{x1:PX,x2:W-8,y1:y(u),y2:y(u),'class':'ma-umbral'},svg);
     alertas.forEach(function(a){el('circle',{cx:x(a.min),cy:y(CPU[a.min]),r:6,'class':a.de>=40&&a.de<=52?'ma-ok':'ma-falsa'},svg)});
     $('#maN',raiz).textContent=alertas.length;
     $('#maF',raiz).textContent=falsas;
-    $('#maR',raiz).textContent=reales.length?'minuto '+reales[0].min+' (a los '+(reales[0].min-40+1)+' min)':'nunca';
+    var tarde=reales.length?reales[0].min-40:0;
+    $('#maR',raiz).textContent=reales.length?'minuto '+reales[0].min+(tarde?' ('+tarde+' min después)':' (al instante)'):'nunca';
     var st=$('#maStat',raiz),m;
     if(!reales.length){st.setAttribute('data-k','bad');m='La alerta no avisó del problema real: el umbral es muy alto o pide demasiada duración, y la CPU baja de vez en cuando del umbral, lo que reinicia la cuenta.'}
     else if(falsas){st.setAttribute('data-k','warn');m='Avisa del problema, pero también manda '+falsas+' falsa'+(falsas===1?'':'s')+' alarma'+(falsas===1?'':'s')+'. Con tantas, la gente deja de hacer caso. Pide que dure más.'}
