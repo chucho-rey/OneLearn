@@ -1,0 +1,26 @@
+/* Estilos propios de los laboratorios de «TCP, UDP y puertos». La terminal está en assets/css/terminal.css. */
+
+/* La conexión TCP */
+.ts-c{display:flex;flex-direction:column;gap:0.375rem;margin-top:0.25rem}
+.ts-v{margin:0;color:var(--fg-2);max-width:none}
+.ts-m{display:flex;flex-wrap:wrap;gap:0.125rem 0.75rem;align-items:baseline;max-width:85%;padding:0.375rem 0.75rem;border:1px solid var(--line);border-left-width:4px;border-radius:0.375rem;font-size:0.875rem}
+.ts-m.cli{border-left-color:var(--accent)}
+.ts-m.srv{margin-left:auto;border-left-color:var(--c5)}
+.ts-m.ult{background:var(--bg-side)}
+.ts-m b{font-family:var(--font-mono)}
+.ts-m span{color:var(--fg-2)}
+.ts-m code{flex-basis:100%;background:none;padding:0;overflow-wrap:anywhere}
+@media (max-width:480px){.ts-m{max-width:none}}
+
+/* TCP contra UDP */
+.tp-filas{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.875rem}
+.tp-f{display:flex;align-items:center;gap:0.75rem}
+.tp-f>b{flex:none;width:2.5rem;font-family:var(--font-mono)}
+.tp-c{flex:1 1 0;min-width:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:0.25rem}
+.tp-c span{display:grid;place-items:center;height:1.75rem;border-radius:0.25rem;font-family:var(--font-mono);font-size:0.75rem;font-weight:600}
+.tp-ok{background:var(--good-bg);color:var(--good-ink)}
+.tp-re{background:var(--warn-bg);color:var(--warn-ink);outline:2px dashed var(--warn);outline-offset:-2px}
+.tp-pe{background:var(--bad-bg);color:var(--bad-ink);text-decoration:line-through}
+.leg i.tp-ok{background:var(--good)}
+.leg i.tp-re{background:var(--warn)}
+.leg i.tp-pe{background:var(--bad)}

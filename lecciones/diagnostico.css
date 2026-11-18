@@ -1,0 +1,4 @@
+/* Estilos propios de los laboratorios de «Diagnóstico de red». La terminal está en assets/css/terminal.css. */
+.dp-q{margin:0.25rem 0 0.5rem;font-size:1rem;font-weight:600;max-width:none}
+.dp-pre{margin:0 0 0.75rem;padding:0.625rem 0.75rem;border:1px solid var(--line);border-radius:0.375rem;background:var(--bg-side);font-family:var(--font-mono);font-size:0.8125rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.dg-desc{margin:0.75rem 0 0;font-size:0.9375rem;color:var(--fg-2);max-width:none}

@@ -1,0 +1,2253 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TCP, UDP y puertos · OneLearn</title>
+<meta name="description" content="Qué es un puerto y para qué sirve, cómo TCP entrega todo completo y en orden (el saludo de tres pasos, confirmaciones y reenvíos), por qué UDP es mejor para tiempo real y cómo ver puertos con ss y nc.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="tcp-udp.css">
+</head>
+<body data-leccion="tcp-udp">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="tu-saludo">
+<p class="hint">Tu navegador (puerto 51514) se conecta a un servidor web (puerto 80), pide una página y cierra. Avanza paso a paso.</p>
+<div class="ts-c" id="tsCaja"></div>
+<div class="kpis">
+  <div class="kpi"><span>Estado del navegador</span><b id="tsCli"></b></div>
+  <div class="kpi"><span>Estado del servidor</span><b id="tsSrv"></b></div>
+</div>
+<div class="status" id="tsStat" data-k="" aria-live="polite"><span class="dot"></span><span id="tsMsg"></span></div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="tsSig">Siguiente paso</button>
+  <button class="btn" type="button" id="tsReset">Empezar de nuevo</button>
+  <span class="lbl" id="tsPaso"></span>
+</div>
+</template>
+<template data-lab="tu-perdida">
+<p class="hint">Se mandan 12 paquetes por una red que pierde algunos. Compara qué pasa con TCP y con UDP.</p>
+<div class="ctl" style="margin-top:0"><span class="lbl">Qué mandas</span><div class="seg" id="tpQue" role="group" aria-label="Qué mandas"><button type="button" data-v="archivo" aria-pressed="true">Un archivo</button><button type="button" data-v="llamada" aria-pressed="false">Una videollamada</button></div></div>
+<div class="ctl"><label class="lbl" for="tpPerd">Paquetes perdidos</label><input class="slider" id="tpPerd" type="range" min="0" max="30" step="5" value="15"><b class="mono" id="tpPerdV"></b></div>
+<div class="tp-filas" id="tpFilas"></div>
+<div class="leg"><span><i class="tp-ok"></i>Llegó</span><span><i class="tp-re"></i>Se perdió y TCP la reenvió</span><span><i class="tp-pe"></i>Se perdió</span></div>
+<div class="kpis">
+  <div class="kpi"><span>TCP tarda</span><b id="tpTcp"></b></div>
+  <div class="kpi"><span>UDP tarda</span><b id="tpUdp"></b></div>
+  <div class="kpi"><span>UDP perdió</span><b id="tpPerdidos"></b></div>
+</div>
+<div class="status" id="tpStat" data-k="" aria-live="polite"><span class="dot"></span><span id="tpMsg"></span></div>
+</template>
+<template data-lab="tu-puertos">
+<p class="hint">En la red hay un servidor con varios servicios. Averigua qué puertos tiene abiertos y por qué. La contraseña de ana en el servidor es servidor123.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "tcp-udp",
+ "titulo": "TCP, UDP y puertos",
+ "icono": "puertos",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "20 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 laboratorios, 6 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-tu001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-tu002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-puertos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Puertos: a qué programa va cada paquete"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La dirección IP lleva el paquete a la "
+     },
+     {
+      "type": "text",
+      "text": "computadora",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " correcta. Pero en esa computadora corren muchos programas a la vez: el navegador, el correo, un juego, el servidor SSH. El "
+     },
+     {
+      "type": "text",
+      "text": "puerto",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es un número de 0 a 65535 que dice a qué "
+     },
+     {
+      "type": "text",
+      "text": "programa",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " va cada paquete, como el número de departamento en una dirección."
+     }
+    ],
+    "attrs": {
+     "id": "b-tu003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La combinación de IP y puerto, por ejemplo "
+     },
+     {
+      "type": "text",
+      "text": "203.0.113.10:443",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", se llama "
+     },
+     {
+      "type": "text",
+      "text": "socket",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Una conexión queda definida por cuatro datos: IP y puerto de origen, IP y puerto de destino. Así tu computadora puede tener diez pestañas abiertas en el mismo sitio sin confundirlas: cada una usa un puerto de origen distinto."
+     }
+    ],
+    "attrs": {
+     "id": "b-tu004"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-tu005"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Rango"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Nombre"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para qué"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "0 a 1023"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Bien conocidos",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Servicios estándar. En Linux, solo root puede escuchar en ellos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1024 a 49151"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Registrados",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Programas conocidos: bases de datos, juegos, aplicaciones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "49152 a 65535"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Efímeros",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los que elige tu sistema para el origen de cada conexión (Linux usa del 32768 al 60999)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-tu006"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Puerto"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Protocolo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Servicio"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "22"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "SSH",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ": terminal remota"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "25 / 587"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "SMTP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ": enviar correo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "53"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP y TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "DNS",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "67 / 68"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "DHCP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "80"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "HTTP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ": la web sin cifrar"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "123"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NTP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ": la hora"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "443"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP y UDP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "HTTPS",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ": la web cifrada (UDP para HTTP/3)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3306"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "MySQL / MariaDB",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "5432"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "PostgreSQL",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3389"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Escritorio remoto",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " de Windows"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "51820"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "WireGuard",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (VPN)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tcp",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "TCP: la entrega confiable"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "TCP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "Transmission Control Protocol",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") garantiza que todo llegue, completo y en orden. Para lograrlo:"
+     }
+    ],
+    "attrs": {
+     "id": "b-tu007"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-tu008"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Abre una conexión",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " antes de mandar datos, con el "
+         },
+         {
+          "type": "text",
+          "text": "saludo de tres pasos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": SYN, SYN-ACK, ACK."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Numera cada byte ("
+         },
+         {
+          "type": "text",
+          "text": "número de secuencia",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ") para reordenar lo que llegue desordenado."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El receptor "
+         },
+         {
+          "type": "text",
+          "text": "confirma",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " lo que recibe (ACK). Lo que no se confirma a tiempo, se "
+         },
+         {
+          "type": "text",
+          "text": "reenvía",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Controla el ritmo: si la red se congestiona, manda más despacio ("
+         },
+         {
+          "type": "text",
+          "text": "control de congestión",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ")."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Al terminar, "
+         },
+         {
+          "type": "text",
+          "text": "cierra",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " la conexión de forma ordenada (FIN)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-tu009",
+     "nombre": "tu-saludo",
+     "titulo": "La conexión TCP paso a paso"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-udp",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "UDP: rápido y sin garantías"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "UDP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "User Datagram Protocol",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") manda y se olvida: no abre conexión, no confirma, no reenvía, no ordena. Parece peor, pero es justo lo que necesitan las aplicaciones de "
+     },
+     {
+      "type": "text",
+      "text": "tiempo real",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": en una videollamada, un pedazo de audio que llega tarde ya no sirve, así que es mejor saltarlo que esperar a que se reenvíe."
+     }
+    ],
+    "attrs": {
+     "id": "b-tu010"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-tu011"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Conexión"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sí, con saludo de 3 pasos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Confirma y reenvía"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sí"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Orden"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Garantizado"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Encabezado"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "20 bytes o más"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "8 bytes"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para qué"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Web, correo, SSH, descargas, bases de datos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "DNS, videollamadas, juegos, streaming en vivo, VPN, HTTP/3"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-tu012",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "HTTP/3",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " corre sobre "
+       },
+       {
+        "type": "text",
+        "text": "QUIC",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", un protocolo construido sobre UDP que hace él mismo las confirmaciones y el cifrado. Es más rápido para abrir conexiones y aguanta mejor los cambios de red, como pasar del Wi-Fi a los datos del celular."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-tu013",
+     "nombre": "tu-perdida",
+     "titulo": "TCP contra UDP con pérdidas"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-ver",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Ver puertos y conexiones"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-tu014",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "ss -tln          # puertos TCP donde esta computadora espera conexiones\nsudo ss -tlnp    # ... y qué programa abrió cada uno\nss -tn           # conexiones TCP establecidas ahora\nnc -zv servidor 22 80 443   # ¿qué puertos de otra computadora están abiertos?"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-tu015"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Respuesta de nc"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué significa"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "succeeded"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Hay un programa escuchando en ese puerto"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Connection refused"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La computadora contestó, pero nadie escucha en ese puerto"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Connection timed out"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Nadie contestó: un firewall descarta los paquetes, o el equipo está apagado"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un detalle importante en "
+     },
+     {
+      "type": "text",
+      "text": "ss",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": un servicio que escucha en "
+     },
+     {
+      "type": "text",
+      "text": "0.0.0.0",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " acepta conexiones de cualquier red; uno que escucha en "
+     },
+     {
+      "type": "text",
+      "text": "127.0.0.1",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " solo acepta conexiones de la propia computadora. Las bases de datos suelen configurarse así a propósito."
+     }
+    ],
+    "attrs": {
+     "id": "b-tu016"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-tu017",
+     "nombre": "tu-puertos",
+     "titulo": "Puertos de un servidor"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tu018"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Puedo cambiar el puerto de un servicio?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sí: un servidor web puede escuchar en el 8080 en lugar del 80, y entonces la dirección lleva el puerto: "
+         },
+         {
+          "type": "text",
+          "text": "http://servidor:8080",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Los puertos estándar existen para no tener que escribirlo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tu019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Dos programas pueden usar el mismo puerto?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No en la misma IP y el mismo protocolo: el segundo programa recibe el error «Address already in use». Pero el 53 de TCP y el 53 de UDP son puertos distintos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-tu020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cerrar puertos me hace invulnerable?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ayuda mucho: un puerto cerrado es un programa menos que atacar. Pero los servicios que sí expones deben estar actualizados y bien configurados. Lo verás en la lección "
+         },
+         {
+          "type": "text",
+          "text": "Firewalls",
+          "marks": [
+           {
+            "type": "link",
+            "attrs": {
+             "href": "firewalls.html"
+            }
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-tu021",
+     "preguntas": [
+      {
+       "q": "¿Para qué sirve el puerto?",
+       "o": [
+        "Para saber a qué computadora va el paquete",
+        "Para saber a qué programa de la computadora va",
+        "Para cifrar los datos"
+       ],
+       "a": 1,
+       "e": "La IP lleva a la computadora; el puerto, al programa dentro de ella."
+      },
+      {
+       "q": "¿Cuáles son los tres pasos con que TCP abre una conexión?",
+       "o": [
+        "SYN, SYN-ACK, ACK",
+        "GET, OK, FIN",
+        "Discover, Offer, Ack"
+       ],
+       "a": 0,
+       "e": "El saludo de tres pasos: SYN, SYN-ACK y ACK."
+      },
+      {
+       "q": "¿Por qué una videollamada usa UDP?",
+       "o": [
+        "Porque es más seguro",
+        "Porque un dato que llega tarde ya no sirve, y es mejor no esperar reenvíos",
+        "Porque TCP no funciona en celulares"
+       ],
+       "a": 1,
+       "e": "En tiempo real, reenviar lo perdido llega demasiado tarde. UDP lo salta y sigue."
+      },
+      {
+       "q": "nc -zv servidor 5432 dice «Connection refused». ¿Qué significa?",
+       "o": [
+        "Que un firewall lo bloquea",
+        "Que la computadora contestó, pero nadie escucha en ese puerto",
+        "Que el servidor está apagado"
+       ],
+       "a": 1,
+       "e": "Refused es una respuesta: el equipo existe, pero ese puerto está cerrado. Un firewall suele dar timeout."
+      },
+      {
+       "q": "¿Qué puerto usa HTTPS?",
+       "o": [
+        "80",
+        "443",
+        "22"
+       ],
+       "a": 1,
+       "e": "443. HTTP sin cifrar usa el 80 y SSH el 22."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-tu022"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El puerto (0 a 65535) dice a qué programa va un paquete; IP + puerto es un socket."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP abre conexión (SYN, SYN-ACK, ACK), numera, confirma, reenvía y cierra: entrega todo, completo y en orden."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UDP manda sin conexión ni confirmaciones: ideal para DNS, voz, video, juegos y QUIC."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Puertos clave: 22 SSH, 53 DNS, 80 HTTP, 443 HTTPS."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ss -tln",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " muestra lo que escucha tu computadora; "
+           },
+           {
+            "type": "text",
+            "text": "nc -zv",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " prueba puertos de otra: refused (cerrado) contra timeout (filtrado)."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="tcp-udp.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

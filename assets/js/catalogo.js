@@ -43,10 +43,10 @@ window.AT.catalogo=[
     {id:'subredes',titulo:'Subredes y CIDR',archivo:'subredes.html',icono:'subred'},
     {id:'dhcp-nat',titulo:'DHCP y NAT',archivo:'dhcp-nat.html',icono:'nat'},
     {id:'ipv6',titulo:'IPv6 en la práctica',archivo:'ipv6.html',icono:'ipv6'},
-    {id:'tcp-udp',titulo:'TCP, UDP y puertos'},
-    {id:'enrutamiento',titulo:'Enrutamiento'},
-    {id:'http',titulo:'HTTP y la web por dentro'},
-    {id:'diagnostico',titulo:'Diagnóstico de red'},
+    {id:'tcp-udp',titulo:'TCP, UDP y puertos',archivo:'tcp-udp.html',icono:'puertos'},
+    {id:'enrutamiento',titulo:'Enrutamiento',archivo:'enrutamiento.html',icono:'router'},
+    {id:'http',titulo:'HTTP y HTTPS',archivo:'http.html',icono:'http'},
+    {id:'diagnostico',titulo:'Diagnóstico de red',archivo:'diagnostico.html',icono:'diagnostico'},
     {id:'vlan',titulo:'VLAN y segmentación'}
   ]},
   {grupo:'Servidores y nube',lecciones:[

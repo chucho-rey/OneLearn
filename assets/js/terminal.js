@@ -2274,7 +2274,7 @@ S.resolver=function(h){
 function puertoEstado(dest,puerto,origen){
   var propio=/^127\./.test(origen)||origen===dest.red.ip;
   if(!propio&&dest.ufw.activo&&!ufwPermite(dest,puerto,origen))return 'filtrado';
-  var escucha=Object.keys(dest.servicios).some(function(k){var v=dest.servicios[k];return v.activo&&v.puertos.indexOf(puerto)>=0&&(!v.paquete||dest.instalado(v.paquete))});
+  var escucha=Object.keys(dest.servicios).some(function(k){var v=dest.servicios[k];return v.activo&&v.puertos.indexOf(puerto)>=0&&(!v.paquete||dest.instalado(v.paquete))&&(!v.local||propio)});
   return escucha?'abierto':'cerrado';
 }
 function nombreIp(s,ip){
@@ -2410,7 +2410,7 @@ cmd('resolvectl',{d:'muestra qué servidores DNS usa la computadora',uso:'resolv
   var up=s.red.dnsSup||s.red.salida||'—';
   x.out('Global\n         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\n  resolv.conf mode: stub\n\nLink 2 ('+s.red.iface+')\n    Current Scopes: DNS\n         Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\nCurrent DNS Server: '+up+'\n       DNS Servers: '+up+'\n');
 });
-cmd('ip',{d:'muestra y cambia las direcciones, rutas y tarjetas de red',uso:'ip a | ip route | ip link | ip neigh',ops:[['a','direcciones de cada tarjeta de red'],['-br a','lo mismo, resumido'],['route','la tabla de rutas'],['neigh','las MAC de los vecinos (ARP)'],['link set X up','enciende una tarjeta (con sudo)'],['route add default via IP','pone la puerta de enlace (con sudo)']],cat:'Red'},function(x){
+cmd('ip',{d:'muestra y cambia las direcciones, rutas y tarjetas de red',uso:'ip a | ip route | ip link | ip neigh',ops:[['a','direcciones de cada tarjeta de red'],['-br a','lo mismo, resumido'],['route','la tabla de rutas'],['route get IP','qué ruta se usaría para llegar a IP'],['neigh','las MAC de los vecinos (ARP)'],['link set X up','enciende una tarjeta (con sudo)'],['route add default via IP','pone la puerta de enlace (con sudo)']],cat:'Red'},function(x){
   var a=x.args.slice(1).filter(function(v){return v!=='-c'&&v!=='-color'}),s=x.sis,r=s.red,br=false,fam=0;
   while(a.length&&/^-(br|brief|4|6)$/.test(a[0])){if(a[0]==='-4')fam=4;else if(a[0]==='-6')fam=6;else br=true;a.shift()}
   var obj=a[0]||'',acc=a[1]||'show';
@@ -2464,6 +2464,14 @@ cmd('ip',{d:'muestra y cambia las direcciones, rutas y tarjetas de red',uso:'ip 
     r.rutas=r.rutas.filter(function(rt){return rt.destino!==dest});
     r.rutas.push({destino:redDe(kd.red,kd.bits)+'/'+kd.bits,via:via});
     return;
+  }
+  if(/^(r|ro|route)$/.test(obj)&&acc==='get'){
+    var dg=a[2];
+    if(!esIp(dg)){x.err('Error: any valid prefix is expected rather than "'+(dg||'')+'".\n');return 1}
+    if(/^127\./.test(dg)||dg===r.ip){x.out('local '+dg+' dev lo src '+(dg===r.ip?r.ip:'127.0.0.1')+' uid '+(x.u==='root'?0:1000)+'\n    cache <local>\n');return}
+    var rg=s.rutaPara(dg);
+    if(!rg||!r.arriba||!r.ip){x.err('RTNETLINK answers: Network is unreachable\n');return 2}
+    x.out(dg+(rg.directa?'':' via '+rg.via)+' dev '+r.iface+' src '+r.ip+' uid '+(x.u==='root'?0:1000)+'\n    cache\n');return;
   }
   if(/^(r|ro|route)$/.test(obj)){
     var t='';
@@ -3492,5 +3500,5 @@ AT.terminal.color=c;
 AT.terminal.util={opts:opts,pad:pad,tabla:tabla,plano:plano,leer:leer,fuentes:fuentes,lineasDe:lineasDe,ordenar:ordenar,
   ipNum:ipNum,numIp:numIp,esIp:esIp,enRed:enRed,cidr:cidr,redDe:redDe,difusion:difusion,privada:privada,
   respuesta:respuesta,paginaError:paginaError,HTTP_TXT:HTTP_TXT,PUERTOS:PUERTOS,puertoEstado:puertoEstado,bytesDe:bytesDe,
-  comando:function(n){return CMD[n]||null},paquete:function(n,def){PAQ[n]=def}};
+  comando:function(n){return CMD[n]||null},paquete:function(n,def){PAQ[n]=def},instalar:instalarEfectos};
 })();

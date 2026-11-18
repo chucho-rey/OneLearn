@@ -187,7 +187,7 @@ SP.camino=function(origenId,ip,dinamico){
   var s=this,n=s.porId[origenId],saltos=[],ttl=64,enlaces=[];
   for(var paso=0;paso<16;paso++){
     if(n.ifaces.some(function(f){return f.ip===ip})){saltos.push({nodo:n,texto:n.nombre+' recibe el paquete: es para su dirección '+ip+'.'});return {ok:true,saltos:saltos,enlaces:enlaces,ttl:ttl}}
-    var tb=s.tabla(n,dinamico),e=coincidencia(tb,ip);
+    var tb=s.tabla(n,dinamico&&n.tipo==='router'),e=coincidencia(tb,ip);
     if(!e){saltos.push({nodo:n,texto:n.nombre+' no tiene una ruta hacia '+ip+' ni ruta por defecto: descarta el paquete y responde «Network unreachable».'});return {ok:false,fin:'sin-ruta',saltos:saltos,enlaces:enlaces}}
     var siguiente=e.via?e.via:ip,v=s.vecinoConIp(n,siguiente);
     var desc=e.destino==='0.0.0.0/0'?'la ruta por defecto (0.0.0.0/0)':e.destino+(e.tipo==='C'?' (red conectada)':e.tipo==='O'?' (aprendida por OSPF)':' (ruta estática)');
@@ -222,9 +222,10 @@ SP.mostrar=function(res){
   var s=this;
   Object.keys(s.lineas).forEach(function(k){s.lineas[k].classList.remove('activo','fallo')});
   Object.keys(s.grupos).forEach(function(k){s.grupos[k].classList.remove('activo','fallo')});
-  var ms=AT.reduce?0:350,i=0;
+  var ms=AT.reduce?0:350,i=0,tok=s.turno=(s.turno||0)+1;
   return new Promise(function(fin){
     (function sig(){
+      if(tok!==s.turno)return fin();
       if(i<res.saltos.length){var sa=res.saltos[i];s.grupos[sa.nodo.id].classList.add(i===res.saltos.length-1&&!res.ok?'fallo':'activo');}
       if(i<res.enlaces.length)s.lineas[res.enlaces[i]].classList.add('activo');
       i++;
