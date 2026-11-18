@@ -36,6 +36,10 @@ assets/
   js/crear.js               «Crear»: tipos de documento, sus plantillas y la ventana «¿Qué quieres crear?» (AT.crear)
   js/editor.js              El editor de bloques sobre Tiptap: bloques propios, barra, menú «/», asa para mover (AT.editor)
   js/documento.js           Página de un documento: modos Editar y Leer, autoguardado, Markdown, duplicar y eliminar
+  js/fuentes.js             Fuentes de una tesis: formato APA 7 en español, citas y bibliografía, importar BibTeX y RIS,
+                            buscar por DOI (Crossref) o ISBN (Open Library) y la ventana «Fuentes» (AT.fuentes)
+  js/autoria.js             Registro de autoría de una tesis: sesiones, lo pegado y su origen, ventana «Autoría» y
+                            constancia con huella SHA-256 (AT.autoria)
   js/marcadores.js          Marcadores a bloques de las lecciones (botón junto al bloque o tecla M); AT.marcadores
   js/buscar.js              Búsqueda con Ctrl K en lecciones, documentos, notas y marcadores; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
@@ -83,6 +87,15 @@ La primera ruta es **Redes y sistemas**, en 7 módulos: Linux y la terminal, fun
 ## Terminal simulada
 
 Las lecciones de Linux, redes y servidores tienen laboratorios con una terminal de Ubuntu que corre en el navegador (`assets/js/terminal.js`, sin servidor). Simula también la red: la puerta de enlace, un internet de ejemplo con DNS, y otros equipos (`remotos`) a los que se entra con `ssh`, cada uno con sus servicios, su firewall (`ufw`) y su nginx. Un laboratorio la crea con `AT.terminal(contenedor, opciones)`: `archivos` agrega archivos y carpetas al escenario, `preparar(sis, t)` ajusta procesos, servicios o usuarios, y `tareas` son los ejercicios, cada uno con `ok(sis, ultimo, t)`, una función que revisa el estado después de cada comando (por ejemplo, `sis.permisos('~/diario.txt')==='600'` o `ultimo.uso('grep', /ERROR/)`). Los ejercicios terminados se guardan en `localStorage` (`aprende-tecnologia:terminal`) y entran en el respaldo. Otros módulos pueden agregar comandos con `AT.terminal.comando(nombres, meta, fn)` (así agrega `docker` la lección de contenedores) y usar las piezas de `AT.terminal.util`; `s.red.web[ip]` y `s.red.dns[nombre]` agregan sitios y nombres de ejemplo, como la API de la lección de HTTP.
+
+## Tesis y autoría
+
+La tesis es el primer tipo académico de «Crear» (en `crear.js`, `academico:true`). Empieza con índice, la **declaración de autoría**, resumen, cinco capítulos, conclusiones, referencias y anexos; los datos de la portada (autor, universidad, programa, asesor, año) son propiedades. El plan completo de la fase y la investigación de herramientas están en `docs/tesis.md`.
+
+- **Fuentes** (`fuentes.js`): viven en el documento (`doc.fuentes`). Se agregan a mano, por DOI (Crossref) o ISBN (Open Library), o importando BibTeX o RIS de Zotero y Mendeley. El formato es APA 7 en español: «y» entre autores, «et al.» desde tres, «s. f.», 2020a y 2020b para el mismo autor y año, y el formato de 2025 para conversaciones con IA.
+- **Citas y bibliografía**: el nodo en línea `referencia` ({fuente, pagina, narrativa}) dibuja «(Pérez, 2020, p. 15)» o «Pérez (2020)», y el bloque `bibliografia` lista las fuentes citadas en orden alfabético, con sangría francesa. Se insertan con «Citar», con «/» o desde «Insertar»; solo los documentos académicos los ofrecen.
+- **Declaración de autoría** (bloque `declaracion`, {ia, usos}): declara que el trabajo es propio y, si se usó IA, cuál y para qué. Al leer se ve como una declaración formal con el nombre del autor.
+- **Registro de autoría** (`autoria.js`, `doc.autoria`): una extensión del editor cuenta por sesión lo tecleado, borrado y pegado (solo números; deshacer no cuenta). Al pegar un texto largo, una barra pregunta de dónde viene (de ti, de una fuente para citarla, o de una IA). La ventana «Autoría» resume el registro y descarga una **constancia** en HTML con sesiones, orígenes, la declaración y la huella SHA-256 del texto.
 
 ## Proyectos
 
@@ -143,7 +156,7 @@ OneLearn se puede instalar como app desde el navegador (en iPhone, con Compartir
 
 ## Crear y editar
 
-«Crear» (barra lateral e inicio) pregunta qué quieres crear: **libreta de estudio** (índice, secciones, preguntas de repaso y resumen, como una lección), **notas** (una página en blanco) o **apuntes de clase** (materia, profesor y fecha arriba; tareas al final). Libro, documento de investigación, tesis, guía para examen, bitácora, presentación y documento en blanco llegan en la fase 3.
+«Crear» (barra lateral e inicio) pregunta qué quieres crear: **libreta de estudio** (índice, secciones, preguntas de repaso y resumen, como una lección), **notas** (una página en blanco), **apuntes de clase** (materia, profesor y fecha arriba; tareas al final) o **tesis** (ver «Tesis y autoría» abajo). Libro, documento de investigación, guía para examen, bitácora, presentación y documento en blanco llegan después.
 
 Cada documento se abre en `documento.html?id=...` con dos modos: **Editar** (título, propiedades y el editor) y **Leer** (dibujado con `bloques.js`, igual que una lección; la tecla E vuelve a editar). Se guarda solo, unos instantes después de cada cambio. En el editor:
 

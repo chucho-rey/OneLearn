@@ -1,6 +1,7 @@
 /* OneLearn: «Crear».
    Pregunta qué quieres crear y empieza el documento con la estructura de ese tipo. Hoy: libreta de estudio,
-   notas y apuntes de clase; libro, investigación, tesis y los demás llegan en la fase 3.
+   notas, apuntes de clase y tesis (con fuentes, citas en APA 7 y registro de autoría); libro, investigación
+   y los demás llegan después.
    Todos los tipos usan el mismo formato de bloques (bloques.js), así que después se podrán convertir.
    Se abre desde «Crear» en la barra lateral y en el inicio. Expone AT.tiposDoc y AT.crear. */
 (function(){
@@ -13,7 +14,7 @@ var TIPOS=AT.tiposDoc={
   clase:{nombre:'Apuntes de clase',icono:'clase',desc:'Materia, profesor y fecha arriba; tareas al final.',listo:true},
   libro:{nombre:'Libro',icono:'libro',desc:'Portada, partes y capítulos.'},
   investigacion:{nombre:'Documento de investigación',icono:'investigacion',desc:'Resumen, método, resultados y referencias.'},
-  tesis:{nombre:'Tesis',icono:'tesis',desc:'Portada, índices, capítulos y anexos.'},
+  tesis:{nombre:'Tesis',icono:'tesis',desc:'Capítulos, fuentes y citas en APA 7, y registro de autoría.',listo:true,academico:true},
   guia:{nombre:'Guía para examen',icono:'guia',desc:'Temas, preguntas y repaso hasta la fecha del examen.'},
   bitacora:{nombre:'Bitácora de laboratorio',icono:'bitacora',desc:'Entradas con fecha, objetivo y resultados.'},
   presentacion:{nombre:'Presentación',icono:'presentacion',desc:'Diapositivas hechas con los mismos bloques.'},
@@ -35,6 +36,17 @@ var PLANTILLAS={
     {type:'resumen',attrs:{id:id()},content:[{type:'bulletList',content:[{type:'listItem',content:[{type:'paragraph'}]}]}]}
   ]}},
   notas:function(){return {titulo:'Notas sin título',props:[],contenido:[P()]}},
+  tesis:function(){
+    function cap(t){return [H(t),P()]}
+    return {titulo:'Tesis sin título',props:[
+      {nombre:'Autor(a)',valor:'',estilo:'texto'},{nombre:'Universidad',valor:'',estilo:'texto'},{nombre:'Programa',valor:'',estilo:'texto'},
+      {nombre:'Asesor(a)',valor:'',estilo:'texto'},{nombre:'Año',valor:String(new Date().getFullYear()),estilo:'texto'}],
+      fuentes:[],autoria:{v:1,sesiones:[],pegados:[]},
+      contenido:[{type:'indice',attrs:{id:id()}},{type:'declaracion',attrs:{id:id(),ia:'no',usos:[]}}]
+        .concat(cap('Resumen'),cap('Introducción'),cap('Capítulo 1. Planteamiento del problema'),cap('Capítulo 2. Marco teórico'),
+          cap('Capítulo 3. Metodología'),cap('Capítulo 4. Resultados'),cap('Capítulo 5. Discusión'),cap('Conclusiones'),
+          [H('Referencias'),{type:'bibliografia',attrs:{id:id(),todas:false}}],cap('Anexos'))};
+  },
   clase:function(){return {titulo:'Clase del '+hoy(),props:[
       {nombre:'Materia',valor:'',estilo:'etiqueta'},{nombre:'Profesor',valor:'',estilo:'texto'},{nombre:'Fecha',valor:hoy(),estilo:'texto'}],contenido:[
     H(''),P(),
@@ -57,6 +69,8 @@ function nuevo(tipo){
   var base=pl(),ahora=new Date().toISOString();
   var doc={formato:1,tipo:tipo,id:idDoc(),titulo:base.titulo,props:base.props,creado:ahora,editado:ahora,
     contenido:{type:'doc',content:base.contenido}};
+  if(base.fuentes)doc.fuentes=base.fuentes;
+  if(base.autoria)doc.autoria=base.autoria;
   return AT.datos.documentos.guardar(doc,{conservarFecha:true}).then(function(d){
     try{sessionStorage.setItem('onelearn:recien-creado',d.id)}catch(e){}
     location.href=RAIZ+'documento.html?id='+encodeURIComponent(d.id);
@@ -78,7 +92,7 @@ function crearVentana(){
       var t=TIPOS[k];
       return '<button type="button" class="crear-o" data-tipo="'+k+'">'+ico(t.icono)+'<span><b>'+esc(t.nombre)+'</b><small>'+esc(t.desc)+'</small></span></button>';
     }).join('')+'</div>'+
-    '<h3 class="crear-h">Llegan en la fase 3</h3>'+
+    '<h3 class="crear-h">Llegan después</h3>'+
     '<ul class="crear-p">'+pronto.map(function(k){
       var t=TIPOS[k];
       return '<li>'+ico(t.icono)+'<span>'+esc(t.nombre)+'</span></li>';

@@ -87,6 +87,8 @@ function textoPlano(n){
   if(n.type==='hardBreak')return '\n';
   if(n.type==='repaso')return (attrs(n).preguntas||[]).map(function(q){return [q.q].concat(q.o||[],[q.e||'']).join(' ')}).join(' ');
   if(n.type==='cita')return attrs(n).texto||'';
+  if(n.type==='referencia')return AT.fuentes&&AT.docActual?AT.fuentes.cita(attrs(n),AT.docActual.fuentes):'';
+  if(n.type==='declaracion')return AT.fuentes?[].concat.apply([],AT.fuentes.declaracion(attrs(n),'')).join(' '):'';
   var sep=/^(paragraph|heading|listItem|taskItem|tableCell|tableHeader|codeBlock|desplegableTitulo)$/.test(n.type)?'\n':'';
   return hijos(n).map(textoPlano).join(n.type==='tableRow'?' ':'')+sep;
 }
@@ -202,6 +204,28 @@ var TIPOS={
     d.appendChild(h);d.appendChild(cal);
     return d;
   },
+  referencia:function(n,c){
+    var e=el('span','ref');
+    e.textContent=AT.fuentes?AT.fuentes.cita(attrs(n),(c.doc||{}).fuentes):'';
+    return e;
+  },
+  bibliografia:function(n,c){
+    var l=AT.fuentes?AT.fuentes.bibliografia(c.doc||{},attrs(n).todas):[];
+    if(!l.length)return null;
+    var ul=el('ul','biblio');
+    l.forEach(function(r){ul.appendChild(AT.fuentes.pintarTrozos(r.trozos,el('li')))});
+    return ul;
+  },
+  declaracion:function(n,c){
+    if(!AT.fuentes)return null;
+    var d=el('div','declaracion'),h=el('h2');
+    h.textContent='Declaración de autoría';d.appendChild(h);
+    AT.fuentes.declaracion(attrs(n),AT.fuentes.autorDe(c.doc)).forEach(function(x){
+      if(Array.isArray(x)){var ul=el('ul');x.forEach(function(y){var li=el('li');li.textContent=y;ul.appendChild(li)});d.appendChild(ul)}
+      else{var p=el('p');p.textContent=x;d.appendChild(p)}
+    });
+    return d;
+  },
   cita:function(n){
     var a=attrs(n),h=hrefSeguro(a.href);
     var e=el(h?'a':'span','cita',h?{href:h}:null);
@@ -233,7 +257,7 @@ var ESTILOS={etiqueta:'tag',verde:'tag green',amarillo:'tag yellow',rojo:'tag re
               encabezado: false para omitir ícono, título y propiedades} */
 function dibujar(doc,cont,op){
   op=op||{};
-  var ctx={labs:[],repasos:[],indices:[],hayRepaso:false};
+  var ctx={labs:[],repasos:[],indices:[],hayRepaso:false,doc:doc};
   var frag=document.createDocumentFragment();
   if(op.encabezado!==false){
     if(doc.icono){

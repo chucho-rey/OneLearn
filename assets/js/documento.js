@@ -9,12 +9,14 @@ var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico;
 var page=$('#docPage'),topbar=$('#topbar');
 var params=new URLSearchParams(location.search),ID=params.get('id')||'';
 var CLAVE_MODOS='aprende-tecnologia:modos';
-var doc=null,modo='editar',ed=null,guardando=0,pendiente=false,timer=null;
+var doc=null,modo='editar',ed=null,guardando=0,pendiente=false,timer=null,registro=null;
 
 function lsJSON(k){try{return JSON.parse(localStorage.getItem(k)||'{}')||{}}catch(e){return {}}}
 function modoGuardado(){return lsJSON(CLAVE_MODOS)[ID]}
 function recordarModo(m){var x=lsJSON(CLAVE_MODOS);x[ID]=m;try{localStorage.setItem(CLAVE_MODOS,JSON.stringify(x))}catch(e){}}
 function tipo(){return AT.tiposDoc[doc&&doc.tipo]||{nombre:'Documento',icono:'page'}}
+/* Tesis (y después investigación): fuentes, citas, bibliografía y registro de autoría */
+function academico(){return !!tipo().academico&&!!AT.fuentes&&!!AT.autoria}
 
 /* ---------- Barra superior: modo, estado y más opciones ---------- */
 var estado=document.createElement('span');
@@ -62,6 +64,7 @@ function pintarEditar(){
   page.innerHTML='<div class="page-icon">'+ico(tipo().icono)+'</div>'+
     '<textarea class="doc-titulo" id="docTitulo" rows="1" aria-label="Título del documento" placeholder="Sin título" spellcheck="true"></textarea>'+
     '<div class="doc-props" id="docProps"></div>'+
+    (academico()?'<div class="ts-barra" id="tsBarra" role="group" aria-label="Herramientas de la tesis"></div>':'')+
     '<div class="doc-barra" id="docBarra"></div>'+
     '<div class="doc-cuerpo" id="docCuerpo"></div>';
   var tit=$('#docTitulo');
@@ -75,12 +78,16 @@ function pintarEditar(){
     if(e.key==='Enter'||(e.key==='ArrowDown'&&tit.selectionStart===tit.value.length)){e.preventDefault();ed.enfocar('start')}
   });
   pintarProps();
+  registro=academico()?AT.autoria.extension(doc,{alCambiar:cambio,editor:function(){return ed&&ed.tiptap}}):null;
   ed=AT.editor.crear({
     host:$('#docCuerpo'),barra:$('#docBarra'),contenido:doc.contenido,
     etiqueta:'Contenido de '+(doc.titulo||'el documento'),
-    alCambiar:function(){guardar()},
+    extensiones:registro?[registro.extension]:[],
+    alCambiar:function(){guardar();pintarTesis()},
     alEscribir:function(){pendiente=true;ponerEstado('Sin guardar')}
   });
+  if(registro)registro.activar();
+  pintarTesis();
   /* Esc dentro del editor (sin menús abiertos) suelta el foco: así el siguiente Esc sale del modo zen */
   /* (ProseMirror siempre marca Esc como atendido; por eso se mira si había un menú abierto al pulsarla) */
   var menuAlPulsar=false,vd=ed.tiptap.view.dom;
@@ -89,6 +96,27 @@ function pintarEditar(){
     if(e.key==='Escape'&&!menuAlPulsar&&!AT.menu.abierto())vd.blur();
   });
 }
+/* Barra de la tesis: fuentes, citar, autoría y palabras */
+function pintarTesis(){
+  var b=$('#tsBarra');if(!b)return;
+  var n=(doc.fuentes||[]).length,w=ed?ed.palabras():AT.bloques.palabras(doc);
+  if(!b.firstChild)b.innerHTML='<button class="btn" type="button" data-ts="fuentes">'+ico('libro')+'<span>Fuentes</span><span class="ts-n"></span></button>'+
+    '<button class="btn" type="button" data-ts="citar">'+ico('comillas')+'<span>Citar</span></button>'+
+    '<button class="btn" type="button" data-ts="autoria">'+ico('tesis')+'<span>Autoría</span></button>'+
+    '<span class="ts-palabras" aria-live="off"></span>';
+  $('.ts-n',b).textContent=n?String(n):'';
+  $('[data-ts="fuentes"]',b).setAttribute('aria-label','Fuentes: '+n);
+  $('.ts-palabras',b).textContent=AT.fmt(w)+(w===1?' palabra':' palabras');
+}
+function abrirFuentes(){AT.fuentes.dialogo({doc:doc,alCambiar:function(){cambio();pintarTesis()}})}
+function abrirAutoria(){if(ed)doc.contenido=ed.json();AT.autoria.panel(doc,{alCambiar:cambio})}
+page.addEventListener('click',function(e){
+  var b=e.target.closest('[data-ts]');if(!b)return;
+  var k=b.getAttribute('data-ts');
+  if(k==='fuentes')abrirFuentes();
+  else if(k==='autoria')abrirAutoria();
+  else if(ed)ed.citarFuente();
+});
 function pintarProps(){
   var cont=$('#docProps');
   var props=doc.props||(doc.props=[]);
@@ -106,6 +134,7 @@ page.addEventListener('input',function(e){
   if(e.target.classList.contains('dp-n')){p.nombre=e.target.value;$('.dp-v',f).setAttribute('aria-label',p.nombre||'Valor')}
   else p.valor=e.target.value;
   cambio();
+  if(AT.fuentes)AT.fuentes.refrescar();
 });
 page.addEventListener('click',function(e){
   var b=e.target.closest('[data-dp]');
@@ -137,7 +166,7 @@ function pintarLeer(){
 
 /* ---------- Cambiar de modo ---------- */
 function ponerModo(m,enfocar){
-  if(ed){doc.contenido=ed.json();if(pendiente||timer)guardar();ed.destruir();ed=null}
+  if(ed){doc.contenido=ed.json();if(pendiente||timer)guardar();if(registro){registro.desactivar();registro=null}ed.destruir();ed=null}
   modo=m;recordarModo(m);
   document.documentElement.classList.toggle('doc-editando',m==='editar');
   modoBtn.innerHTML=m==='editar'?ico('ojo')+'<span>Leer</span>':ico('note')+'<span>Editar</span>';
@@ -165,12 +194,15 @@ function titulo(){
 
 /* ---------- Más opciones ---------- */
 masBtn.addEventListener('click',function(){
-  AT.menu.abrir(masBtn,[
+  AT.menu.abrir(masBtn,(academico()?[
+    {t:'Fuentes',i:'libro',d:'Agregar, importar y editar',f:abrirFuentes},
+    {t:'Autoría y constancia',i:'tesis',d:'Cómo escribiste este documento',f:abrirAutoria},
+    {sep:true}]:[]).concat([
     {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
     {sep:true},
     {t:'Eliminar documento',i:'basura',peligro:true,f:eliminar}
-  ],{etiqueta:'Más opciones del documento',devolver:masBtn,alElegir:function(it){it.f()}});
+  ]),{etiqueta:'Más opciones del documento',devolver:masBtn,alElegir:function(it){it.f()}});
 });
 function nombreArchivo(ext){
   var s=(doc.titulo||'documento').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -219,6 +251,7 @@ function mdTexto(lista){
   return (lista||[]).map(function(n){
     if(n.type==='hardBreak')return '  \n';
     if(n.type==='cita')return '['+((n.attrs||{}).texto||'cita')+']('+((n.attrs||{}).href||'')+')';
+    if(n.type==='referencia')return AT.fuentes?AT.fuentes.cita(n.attrs||{},mdDoc.fuentes):'';
     if(n.type!=='text')return '';
     var t=n.text||'',ms=(n.marks||[]).map(function(m){return m.type});
     if(ms.indexOf('code')>=0)t='`'+t+'`';
@@ -257,6 +290,8 @@ function mdBloque(n,pre){
     case 'desplegable':return '**'+mdTexto((c[0]||{}).content)+'**\n\n'+mdBloques((c[1]||{}).content);
     case 'resumen':return '## Resumen\n\n'+mdBloques(c);
     case 'indice':return '';
+    case 'bibliografia':return AT.fuentes?AT.fuentes.bibliografia(mdDoc,a.todas).map(function(r){return AT.fuentes.trozosMarkdown(r.trozos)}).join('\n\n'):'';
+    case 'declaracion':return AT.fuentes?'## Declaración de autoría\n\n'+AT.fuentes.declaracion(a,AT.fuentes.autorDe(mdDoc)).map(function(x){return Array.isArray(x)?x.map(function(y){return '- '+y}).join('\n'):x}).join('\n\n'):'';
     case 'laboratorio':return '*Laboratorio: '+(a.titulo||'')+'*';
     case 'repaso':
       return (a.preguntas||[]).filter(function(q){return q.q}).map(function(q,i){
@@ -270,7 +305,9 @@ function mdBloque(n,pre){
     default:return mdBloques(c);
   }
 }
+var mdDoc={};
 function aMarkdown(d){
+  mdDoc=d;
   var props=(d.props||[]).filter(function(p){return p.nombre&&p.valor}).map(function(p){return '- **'+p.nombre+':** '+p.valor}).join('\n');
   return '# '+(d.titulo||'Sin título')+'\n\n'+(props?props+'\n\n':'')+mdBloques((d.contenido||{}).content)+'\n';
 }
@@ -289,6 +326,8 @@ AT.datos.documentos.leer(ID).then(function(d){
   if(!d||!d.contenido){noEncontrado();return}
   doc=d;
   if(!doc.props)doc.props=[];
+  if(tipo().academico&&!Array.isArray(doc.fuentes))doc.fuentes=[];
+  AT.docActual=doc;AT.docCambio=cambio;
   titulo();
   modoBtn.hidden=masBtn.hidden=false;
   var nuevo=false;
