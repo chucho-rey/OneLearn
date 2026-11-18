@@ -21,7 +21,7 @@ Todo lo que no ayude a contestar esto puede esperar.
 | Área | Estado |
 |---|---|
 | Lecciones interactivas | 25 de tecnología, en siete grupos (Hardware, Electrónica, Software, Linux, Redes, Ciberseguridad e Inteligencia artificial), cada una con laboratorios, repaso y resumen |
-| Rutas de aprendizaje | «Redes y sistemas», de básico a intermedio en 7 módulos; el módulo 1 (Linux y la terminal) ya está completo, con una terminal simulada y ejercicios que se califican solos |
+| Rutas de aprendizaje | «Redes y sistemas», de básico a intermedio en 7 módulos, completa: 27 lecciones y 2 proyectos, con una terminal simulada (red, SSH, firewall, nginx, docker) y ejercicios que se califican solos |
 | Lectura | Temas claro y oscuro, alto contraste, 5 tamaños de letra, fuentes para dislexia, modo zen, atajos de teclado |
 | Avance | Secciones leídas, «Continúa donde te quedaste», resultado del repaso |
 | Apuntes | Nota rápida en cada lección; libretas, notas y apuntes de clase con el editor de bloques |
@@ -39,10 +39,10 @@ Ordenado por importancia. Lo marcado como **Necesario** bloquea el lanzamiento; 
 
 ### 3.1 Contenido: un recorrido completo · Hecho
 
-Las lecciones del temario original están publicadas, y la ruta «Redes y sistemas» se agrega por módulos. Lo que falta aquí es **revisarlas con personas**: que alguien que sepa de cada tema (un profesor, un estudiante avanzado) lea al menos las de su área y confirme que no hay errores ni explicaciones confusas.
+Las lecciones del temario original y las de la ruta «Redes y sistemas» están publicadas. Lo que falta aquí es **revisarlas con personas**: que alguien que sepa de cada tema (un profesor, un estudiante avanzado) lea al menos las de su área y confirme que no hay errores ni explicaciones confusas.
 
 - Cada lección nueva sigue los pasos del `README.md` («Cómo agregar una lección») y trae sus comprobaciones.
-- Las **rutas** ya existen (`rutas.html`): la primera es «Redes y sistemas» y se publica por módulos. Otra ruta útil sería «Empieza aquí si estudias programación».
+- Las **rutas** ya existen (`rutas.html`): la primera, «Redes y sistemas», está completa. Otra ruta útil sería «Empieza aquí si estudias programación».
 
 ### 3.2 «Cómo funciona OneLearn» (hito 7) · Hecho
 

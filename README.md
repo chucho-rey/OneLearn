@@ -21,6 +21,7 @@ assets/
   css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
   css/editor.css            Estilos del editor (solo documento.html): barra de herramientas, asa de bloque, menús y formularios
   css/terminal.css          Estilos de la terminal simulada (solo en las lecciones que la usan)
+  css/red.css               Estilos de los diagramas del simulador de red (solo en las lecciones que lo usan)
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
   js/catalogo.js            Temario: grupos y lecciones (en la barra lateral, cada grupo se pliega y se recuerda cuáles dejaste abiertos),
@@ -43,7 +44,10 @@ assets/
   js/proyecto.js            Proyectos: la lista y cada proyecto por fases, con tareas que se guardan (AT.proyectosAvance en base.js)
   js/rutas.js               Página de rutas: módulos, avance y «qué sigue» (el cálculo es AT.avance.camino, en avance.js)
   js/terminal.js            Terminal Linux simulada para los laboratorios (AT.terminal): archivos, permisos, usuarios, sudo, procesos,
-                            systemctl, apt, nano, tuberías y redirecciones, y ejercicios que se califican solos
+                            systemctl, apt, nano, tuberías y redirecciones, scripts, cron, red (ip, ping, dig, curl, nc, ss),
+                            SSH entre varios equipos, ufw y nginx, y ejercicios que se califican solos
+  js/red.js                 Direcciones IPv4 e IPv6 (AT.ip: subredes, binario, abreviar, EUI-64) y simulador de red (AT.red):
+                            dibuja una topología en SVG y calcula el camino de un paquete con rutas estáticas u OSPF
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
   icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
@@ -56,12 +60,13 @@ lecciones/
   ram.js                    Sus laboratorios (AT.labs)
   cpu.html / .css / .js     Lección «Procesador (CPU)»
   como-funciona.html / .css / .js   «Cómo funciona OneLearn» (grupo OneLearn): guía de uso con laboratorios que usan los controles reales
-  <id>.html / .css / .js    Una lección por tema del catálogo (25 publicadas): hardware, electrónica, software, Linux,
-                            redes, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios.
-                            Las de Linux (terminal, permisos, procesos, apt) también cargan la terminal simulada
+  <id>.html / .css / .js    Una lección por tema del catálogo (45 publicadas): hardware, electrónica, software, Linux,
+                            redes, servidores y nube, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios.
+                            Las que tienen práctica en la terminal cargan terminal.css y terminal.js; las de subredes,
+                            IPv6, enrutamiento y VPN, red.css y red.js (antes del script de la lección)
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`. En `rutas.html`: `avance.js` y `rutas.js`. Las lecciones con terminal cargan `terminal.js` antes de su script de laboratorios.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`. En `rutas.html`: `avance.js` y `rutas.js`. Las lecciones con terminal o con simulador de red cargan `red.js` y `terminal.js` (las que usen) antes de su script de laboratorios.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
@@ -73,11 +78,11 @@ Todos los tamaños del CSS van en `rem`, para que la página entera crezca con e
 
 Una ruta (`AT.caminos` en `catalogo.js`) ordena lecciones de varios grupos y proyectos en módulos, de lo básico a lo intermedio. `rutas.html` dibuja cada ruta con su avance (lecciones leídas al 100 % y proyectos terminados) y el botón «Qué sigue» (la primera lección o proyecto publicado que no has terminado). Inicio muestra la ruta con su siguiente paso, y al final de cada lección de una ruta se dice en qué módulo está y cuál sigue en la ruta, si no es la misma que la siguiente del temario.
 
-La primera ruta es **Redes y sistemas**, en 7 módulos: Linux y la terminal, fundamentos de redes, direcciones, comunicación, servicios y administración, intermedio y proyectos. Se publica por módulos; las lecciones que faltan están en el catálogo sin `archivo` y salen como «Pronto».
+La primera ruta es **Redes y sistemas**, en 7 módulos: Linux y la terminal, fundamentos de redes, direcciones, comunicación, servicios y administración, intermedio y proyectos. Están publicadas sus 27 lecciones y sus dos proyectos. Si una ruta futura incluye lecciones que todavía no existen, van en el catálogo sin `archivo` y salen como «Pronto».
 
 ## Terminal simulada
 
-Las lecciones de Linux tienen laboratorios con una terminal de Ubuntu que corre en el navegador (`assets/js/terminal.js`, sin servidor). Un laboratorio la crea con `AT.terminal(contenedor, opciones)`: `archivos` agrega archivos y carpetas al escenario, `preparar(sis, t)` ajusta procesos, servicios o usuarios, y `tareas` son los ejercicios, cada uno con `ok(sis, ultimo, t)`, una función que revisa el estado después de cada comando (por ejemplo, `sis.permisos('~/diario.txt')==='600'` o `ultimo.uso('grep', /ERROR/)`). Los ejercicios terminados se guardan en `localStorage` (`aprende-tecnologia:terminal`) y entran en el respaldo. Otros módulos pueden agregar comandos con `AT.terminal.comando(nombres, meta, fn)`.
+Las lecciones de Linux, redes y servidores tienen laboratorios con una terminal de Ubuntu que corre en el navegador (`assets/js/terminal.js`, sin servidor). Simula también la red: la puerta de enlace, un internet de ejemplo con DNS, y otros equipos (`remotos`) a los que se entra con `ssh`, cada uno con sus servicios, su firewall (`ufw`) y su nginx. Un laboratorio la crea con `AT.terminal(contenedor, opciones)`: `archivos` agrega archivos y carpetas al escenario, `preparar(sis, t)` ajusta procesos, servicios o usuarios, y `tareas` son los ejercicios, cada uno con `ok(sis, ultimo, t)`, una función que revisa el estado después de cada comando (por ejemplo, `sis.permisos('~/diario.txt')==='600'` o `ultimo.uso('grep', /ERROR/)`). Los ejercicios terminados se guardan en `localStorage` (`aprende-tecnologia:terminal`) y entran en el respaldo. Otros módulos pueden agregar comandos con `AT.terminal.comando(nombres, meta, fn)` (así agrega `docker` la lección de contenedores) y usar las piezas de `AT.terminal.util`; `s.red.web[ip]` y `s.red.dns[nombre]` agregan sitios y nombres de ejemplo, como la API de la lección de HTTP.
 
 ## Proyectos
 
