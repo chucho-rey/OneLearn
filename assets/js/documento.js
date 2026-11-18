@@ -46,6 +46,7 @@ function guardar(){
   return AT.datos.documentos.guardar(doc).then(function(d){
     doc.editado=d.editado;doc.creado=d.creado;
     if(n===guardando&&!pendiente)ponerEstado('Guardado','ok');
+    if(AT.proteger&&academico())AT.proteger.guardado(doc);
   },function(){
     ponerEstado('No se pudo guardar','err');
   });
@@ -103,11 +104,27 @@ function pintarTesis(){
   if(!b.firstChild)b.innerHTML='<button class="btn" type="button" data-ts="fuentes">'+ico('libro')+'<span>Fuentes</span><span class="ts-n"></span></button>'+
     '<button class="btn" type="button" data-ts="citar">'+ico('comillas')+'<span>Citar</span></button>'+
     '<button class="btn" type="button" data-ts="autoria">'+ico('tesis')+'<span>Autoría</span></button>'+
+    (AT.proteger?'<button class="btn ts-resp" type="button" data-ts="respaldo">'+ico('escudo')+'<span class="ts-resp-t">Respaldo</span></button>':'')+
     '<span class="ts-palabras" aria-live="off"></span>';
   $('.ts-n',b).textContent=n?String(n):'';
   $('[data-ts="fuentes"]',b).setAttribute('aria-label','Fuentes: '+n);
   $('.ts-palabras',b).textContent=AT.fmt(w)+(w===1?' palabra':' palabras');
+  pintarRespaldo(w);
 }
+/* «Respaldo»: cuándo fue la última copia fuera del navegador; se marca si hace falta otra */
+var palabrasTesis=0;
+function pintarRespaldo(w){
+  var r=$('[data-ts="respaldo"]',page);if(!r||!AT.proteger)return;
+  if(w!=null)palabrasTesis=w;
+  AT.proteger.resumen(doc,palabrasTesis).then(function(x){
+    $('.ts-resp-t',r).textContent=x.texto;
+    r.classList.toggle('ts-aviso',!!x.aviso);
+    r.title=x.titulo;
+    r.setAttribute('aria-label',x.texto+(x.aviso?'. Conviene hacer una copia':'')+'. Proteger '+(tipo().nombre==='Tesis'?'tu tesis':'el documento'));
+  });
+}
+if(AT.proteger)AT.proteger.vigilar(function(){pintarRespaldo()});
+function abrirProteger(){if(ed)doc.contenido=ed.json();AT.proteger.dialogo(doc,{antes:function(){if(ed)doc.contenido=ed.json()}})}
 function abrirFuentes(){AT.fuentes.dialogo({doc:doc,alCambiar:function(){cambio();pintarTesis()}})}
 function abrirAutoria(){if(ed)doc.contenido=ed.json();AT.autoria.panel(doc,{alCambiar:cambio})}
 page.addEventListener('click',function(e){
@@ -115,6 +132,7 @@ page.addEventListener('click',function(e){
   var k=b.getAttribute('data-ts');
   if(k==='fuentes')abrirFuentes();
   else if(k==='autoria')abrirAutoria();
+  else if(k==='respaldo')abrirProteger();
   else if(ed)ed.citarFuente();
 });
 function pintarProps(){
@@ -197,6 +215,7 @@ masBtn.addEventListener('click',function(){
   AT.menu.abrir(masBtn,(academico()?[
     {t:'Fuentes',i:'libro',d:'Agregar, importar y editar',f:abrirFuentes},
     {t:'Autoría y constancia',i:'tesis',d:'Cómo escribiste este documento',f:abrirAutoria},
+    {t:'Proteger y respaldar',i:'escudo',d:'Copias fuera de este navegador',f:abrirProteger},
     {sep:true}]:[]).concat([
     {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
@@ -252,6 +271,7 @@ function mdTexto(lista){
     if(n.type==='hardBreak')return '  \n';
     if(n.type==='cita')return '['+((n.attrs||{}).texto||'cita')+']('+((n.attrs||{}).href||'')+')';
     if(n.type==='referencia')return AT.fuentes?AT.fuentes.cita(n.attrs||{},mdDoc.fuentes):'';
+    if(AT.piezas&&AT.piezas.md[n.type])return AT.piezas.md[n.type](n,mdAyuda);
     if(n.type!=='text')return '';
     var t=n.text||'',ms=(n.marks||[]).map(function(m){return m.type});
     if(ms.indexOf('code')>=0)t='`'+t+'`';
@@ -302,14 +322,21 @@ function mdBloque(n,pre){
       if(!filas.length)return '';
       var cab=filas[0],sep=cab.map(function(){return '---'});
       return ['| '+cab.join(' | ')+' |','| '+sep.join(' | ')+' |'].concat(filas.slice(1).map(function(f){return '| '+f.join(' | ')+' |'})).join('\n');
-    default:return mdBloques(c);
+    default:
+      if(AT.piezas&&AT.piezas.md[n.type])return AT.piezas.md[n.type](n,mdAyuda);
+      return mdBloques(c);
   }
 }
-var mdDoc={};
+/* Figuras, tablas numeradas, ecuaciones y notas al pie (piezas.js): numeración y notas del documento */
+var mdDoc={},mdAyuda={bloques:function(l){return mdBloques(l)},notas:[],piezas:{lista:[],por:{}},doc:{}};
 function aMarkdown(d){
   mdDoc=d;
+  mdAyuda.notas=[];mdAyuda.doc=d;
+  mdAyuda.piezas=AT.piezas?AT.piezas.numerar(d.contenido):{lista:[],por:{}};
   var props=(d.props||[]).filter(function(p){return p.nombre&&p.valor}).map(function(p){return '- **'+p.nombre+':** '+p.valor}).join('\n');
-  return '# '+(d.titulo||'Sin título')+'\n\n'+(props?props+'\n\n':'')+mdBloques((d.contenido||{}).content)+'\n';
+  var cuerpo=mdBloques((d.contenido||{}).content);
+  var notas=mdAyuda.notas.map(function(t,i){return '[^'+(i+1)+']: '+t.replace(/\n+/g,' ')}).join('\n');
+  return '# '+(d.titulo||'Sin título')+'\n\n'+(props?props+'\n\n':'')+cuerpo+'\n'+(notas?'\n'+notas+'\n':'');
 }
 AT.documentoMarkdown=aMarkdown;
 

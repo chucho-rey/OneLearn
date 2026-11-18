@@ -104,7 +104,7 @@ Estas ideas son buenas, pero no ayudan a contestar las preguntas de la sección 
 
 - **Cuentas y sincronización entre dispositivos.** Requieren un servidor y una base de datos, con su costo y su responsabilidad legal. El respaldo en JSON cubre el MVP. Si las entrevistas dicen que es lo que más falta, son lo primero después del MVP.
 - **Comunidad** (publicar temas, explorar los de otros). Depende de las cuentas y necesita moderación.
-- **Libro, investigación, EPUB y DOCX** (fase 3, hitos 3.3 a 3.5). La **tesis** ya tiene su primera entrega (estructura, fuentes y citas en APA 7, registro y constancia de autoría); el resto de su fase está en `docs/tesis.md`.
+- **Libro, investigación, EPUB y DOCX** (fase 3, hitos 3.3 a 3.5). La **tesis** ya tiene estructura, fuentes y citas en APA 7, registro y constancia de autoría, piezas académicas (figuras, tablas numeradas, ecuaciones, notas al pie, índices y referencias cruzadas) y protección de datos; falta exportar (T4) y lo demás de `docs/tesis.md`.
 - **Historial de versiones** (hito 3.6).
 - **Conector con Claude** (ver `docs/conector-claude.md`). Depende de las cuentas.
 - **Apps nativas en las tiendas.** La PWA ya se instala; una app de tienda tiene sentido cuando haya usuarios que la pidan.

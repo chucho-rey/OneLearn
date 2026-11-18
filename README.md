@@ -40,6 +40,9 @@ assets/
                             buscar por DOI (Crossref) o ISBN (Open Library) y la ventana «Fuentes» (AT.fuentes)
   js/autoria.js             Registro de autoría de una tesis: sesiones, lo pegado y su origen, ventana «Autoría» y
                             constancia con huella SHA-256 (AT.autoria)
+  js/piezas.js              Piezas académicas: figuras con imagen comprimida, tablas numeradas, ecuaciones y fórmulas (KaTeX),
+                            notas al pie, índices de figuras y tablas, y referencias cruzadas (AT.piezas)
+  js/proteger.js            «Respaldo» de la tesis: aviso, copia descargable y copia automática en un archivo (AT.proteger)
   js/marcadores.js          Marcadores a bloques de las lecciones (botón junto al bloque o tecla M); AT.marcadores
   js/buscar.js              Búsqueda con Ctrl K en lecciones, documentos, notas y marcadores; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
@@ -55,7 +58,9 @@ assets/
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
   icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
+  vendor/katex/             KaTeX (MIT) con sus fuentes WOFF2: se carga solo cuando un documento tiene ecuaciones
 herramientas/tiptap/        Cómo se compila assets/vendor/tiptap.min.js (esbuild)
+herramientas/katex/         Cómo se copia KaTeX a assets/vendor/katex (npm run copiar)
 pruebas/                    Pruebas automáticas con Playwright (ver pruebas/README.md)
 docs/                       Planeación: qué falta para el MVP (MVP.md) y la idea del conector con Claude (conector-claude.md)
 lecciones/
@@ -70,7 +75,7 @@ lecciones/
                             IPv6, enrutamiento y VPN, red.css y red.js (antes del script de la lección)
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`. En `rutas.html`: `avance.js` y `rutas.js`. Las lecciones con terminal o con simulador de red cargan `red.js` y `terminal.js` (las que usen) antes de su script de laboratorios.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `fuentes.js`, `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `piezas.js`, `autoria.js`, `proteger.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`. En `rutas.html`: `avance.js` y `rutas.js`. Las lecciones con terminal o con simulador de red cargan `red.js` y `terminal.js` (las que usen) antes de su script de laboratorios.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
@@ -90,12 +95,14 @@ Las lecciones de Linux, redes y servidores tienen laboratorios con una terminal 
 
 ## Tesis y autoría
 
-La tesis es el primer tipo académico de «Crear» (en `crear.js`, `academico:true`). Empieza con índice, la **declaración de autoría**, resumen, cinco capítulos, conclusiones, referencias y anexos; los datos de la portada (autor, universidad, programa, asesor, año) son propiedades. El plan completo de la fase y la investigación de herramientas están en `docs/tesis.md`.
+La tesis es el primer tipo académico de «Crear» (en `crear.js`, `academico:true`). Empieza con índice, índice de figuras, índice de tablas, la **declaración de autoría**, resumen, cinco capítulos, conclusiones, referencias y anexos; los datos de la portada (autor, universidad, programa, asesor, año) son propiedades. El plan completo de la fase y la investigación de herramientas están en `docs/tesis.md`.
 
 - **Fuentes** (`fuentes.js`): viven en el documento (`doc.fuentes`). Se agregan a mano, por DOI (Crossref) o ISBN (Open Library), o importando BibTeX o RIS de Zotero y Mendeley. El formato es APA 7 en español: «y» entre autores, «et al.» desde tres, «s. f.», 2020a y 2020b para el mismo autor y año, y el formato de 2025 para conversaciones con IA.
 - **Citas y bibliografía**: el nodo en línea `referencia` ({fuente, pagina, narrativa}) dibuja «(Pérez, 2020, p. 15)» o «Pérez (2020)», y el bloque `bibliografia` lista las fuentes citadas en orden alfabético, con sangría francesa. Se insertan con «Citar», con «/» o desde «Insertar»; solo los documentos académicos los ofrecen.
 - **Declaración de autoría** (bloque `declaracion`, {ia, usos}): declara que el trabajo es propio y, si se usó IA, cuál y para qué. Al leer se ve como una declaración formal con el nombre del autor.
-- **Registro de autoría** (`autoria.js`, `doc.autoria`): una extensión del editor cuenta por sesión lo tecleado, borrado y pegado (solo números; deshacer no cuenta). Al pegar un texto largo, una barra pregunta de dónde viene (de ti, de una fuente para citarla, o de una IA). La ventana «Autoría» resume el registro y descarga una **constancia** en HTML con sesiones, orígenes, la declaración y la huella SHA-256 del texto.
+- **Registro de autoría** (`autoria.js`, `doc.autoria`): una extensión del editor cuenta por sesión lo tecleado, borrado y pegado (solo números; deshacer no cuenta). Al pegar un texto largo, una barra pregunta de dónde viene (de ti, de una fuente para citarla, o de una IA). La ventana «Autoría» resume el registro y descarga una **constancia** en HTML con sesiones, orígenes, las figuras y tablas con su nota de origen, la declaración y la huella SHA-256 del texto (y de las imágenes, si hay).
+- **Piezas académicas** (`piezas.js`): `figura` (imagen comprimida en el dispositivo a WebP de hasta 1600 px, con título, texto alternativo y nota de origen; se inserta con «/imagen», pegando o arrastrando), `tablaNumerada` (una tabla con «Tabla N», título y nota), `ecuacion` y `formula` (LaTeX dibujado con KaTeX, que se carga solo si hace falta; «$$» y `$x^2$` al escribir), `notaPie` (Ctrl+Alt+F; al leer, las notas van al final con enlaces de ida y vuelta), `indicePiezas` y `refCruzada` («Figura 3», «Tabla 2», «Ecuación (4)» o una sección; se renumeran solas). Figuras, tablas y ecuaciones llevan `attrs.clave`, única en todo el documento, que es el destino de las referencias. Imágenes, ecuaciones y notas están en todos los documentos; la numeración de figuras, las tablas numeradas, los índices y las referencias cruzadas, solo en los académicos. `AT.bloques.registrar` agrega su dibujo al leer.
+- **Proteger la tesis** (`proteger.js`): el botón «Respaldo» de la barra dice cuándo fue la última copia fuera del navegador y avisa si no hay una reciente. Su ventana descarga una copia de la tesis (se recupera con «Importar respaldo»), activa la **copia automática** en un archivo de la computadora (File System Access, en Chrome y Edge de escritorio; el enlace al archivo se guarda en IndexedDB, base `onelearn-archivos`) y pide al navegador que conserve los datos.
 
 ## Proyectos
 

@@ -162,6 +162,8 @@ function panel(doc,op){
             '<label class="au-o"><span class="vh">Origen del texto pegado el '+fechaHora(p.t)+'</span><select data-i="'+i+'">'+Object.keys(ORIGEN).map(function(k){return '<option value="'+k+'"'+((p.o||'')===k?' selected':'')+'>'+ORIGEN[k]+'</option>'}).join('')+'</select></label></li>';
         }).join('')+'</ul>';
     }
+    var sn=figurasSinNota(doc);
+    if(sn)h+='<p class="hint au-fig">'+(sn===1?'1 figura no tiene':sn+' figuras no tienen')+' nota de origen. Escríbela debajo de la imagen (por ejemplo, «Elaboración propia» o de dónde la tomaste): queda en tu constancia.</p>';
     h+='<p class="au-decl">'+esc(estadoDeclaracion(doc))+'</p>'+
       '<div class="td-bt"><button class="btn pri" type="button" data-au="constancia">'+ico('descargar')+'Descargar constancia</button><button class="btn" type="button" data-au="cerrar">Cerrar</button></div>';
     d.innerHTML=h;
@@ -190,8 +192,16 @@ function huella(texto){
     return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2)}).join('');
   },function(){return ''});
 }
+/* Figuras y tablas del documento (piezas.js), con su nota de origen */
+function piezas(doc){return AT.piezas?AT.piezas.inventario(doc):[]}
+function figurasSinNota(doc){return piezas(doc).filter(function(x){return x.clase==='figura'&&!x.nota}).length}
+/* Lo que cubre la huella: el texto y, si hay, las imágenes (así cambiar una imagen también cambia la huella) */
+function contenidoHuella(doc){
+  var im=AT.piezas?AT.piezas.imagenes(doc):[];
+  return AT.bloques.texto(doc)+(im.length?'\n'+im.join('\n'):'');
+}
 function constancia(doc){
-  var texto=AT.bloques.texto(doc);
+  var texto=contenidoHuella(doc),pz=piezas(doc),conImagenes=AT.piezas&&AT.piezas.imagenes(doc).length>0;
   return huella(texto).then(function(h){
     var r=resumen(doc),ahora=new Date(),props=(doc.props||[]).filter(function(p){return p.nombre&&String(p.valor||'').trim()});
     var dec=declaraciones(doc)[0],decTxt=dec&&AT.fuentes?AT.fuentes.declaracion(dec,AT.fuentes.autorDe(doc)):null;
@@ -220,8 +230,11 @@ function constancia(doc){
         var fu=p.f&&(doc.fuentes||[]).filter(function(x){return x.id===p.f})[0];
         return '<tr><td>'+esc(fechaHora(p.t))+'</td><td>'+aprox(p.n)+'</td><td>'+esc(ORIGEN[p.o||''])+(fu&&AT.fuentes?': '+esc(AT.fuentes.referenciaTexto(fu)):'')+'</td><td>«'+esc(p.m||'')+'»</td></tr>';
       }).join('')+'</tbody></table>':'<p>No se pegaron textos largos.</p>')+
+      (pz.length?'<h2>Figuras y tablas</h2><table><thead><tr><th>Pieza</th><th>Título</th><th>Nota de origen</th></tr></thead><tbody>'+
+        pz.map(function(x){return '<tr><td>'+esc(AT.piezas.etiqueta(x))+'</td><td>'+esc(x.titulo||'Sin título')+'</td><td>'+esc(x.nota||(x.clase==='figura'?'Sin indicar':'—'))+'</td></tr>'}).join('')+
+        '</tbody></table>':'')+
       '<h2>Declaración de autoría</h2>'+(decTxt?decTxt.map(function(x){return Array.isArray(x)?'<ul>'+x.map(function(y){return '<li>'+esc(y)+'</li>'}).join('')+'</ul>':'<p>'+esc(x)+'</p>'}).join(''):'<p>El documento no tiene declaración de autoría.</p>')+
-      '<h2>Huella del texto</h2><p>SHA-256 del texto del documento al emitir esta constancia:</p><p><code>'+(h||'No disponible en este navegador')+'</code></p>'+
+      '<h2>Huella del texto</h2><p>SHA-256 del texto del documento'+(conImagenes?' y de sus imágenes':'')+' al emitir esta constancia:</p><p><code>'+(h||'No disponible en este navegador')+'</code></p>'+
       '<p class="m">Si el texto cambia, aunque sea una letra, la huella cambia. Sirve para comprobar que esta constancia corresponde a la versión que entregaste.</p>'+
       '<h2>Qué demuestra y qué no</h2><p class="m">El registro muestra cómo se escribió el documento dentro de OneLearn, en este dispositivo: cuándo, cuánto se tecleó y cuánto se pegó, y el origen que la autora o el autor indicó para lo pegado. No registra lo que pasa en otros programas ni en otros dispositivos. Es evidencia del proceso de escritura, no un detector.</p>'+
       '</body></html>';
@@ -234,5 +247,5 @@ function constancia(doc){
   });
 }
 
-AT.autoria={extension:extension,panel:panel,resumen:resumen,constancia:constancia,huella:huella,estadoDeclaracion:estadoDeclaracion,ORIGEN:ORIGEN};
+AT.autoria={extension:extension,panel:panel,resumen:resumen,constancia:constancia,huella:huella,contenidoHuella:contenidoHuella,estadoDeclaracion:estadoDeclaracion,ORIGEN:ORIGEN};
 })();

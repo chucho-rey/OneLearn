@@ -1,0 +1,11 @@
+{
+  "name": "onelearn-katex",
+  "private": true,
+  "description": "Copia KaTeX (las ecuaciones de la tesis) a assets/vendor/katex: solo lo que usa el sitio",
+  "scripts": {
+    "copiar": "node copiar.js"
+  },
+  "devDependencies": {
+    "katex": "0.19.1"
+  }
+}

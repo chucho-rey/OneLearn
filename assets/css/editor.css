@@ -237,6 +237,85 @@ dialog.au-dlg{width:min(36rem,calc(100vw - 2rem))}
 .au-bar p{margin:0;max-width:none}
 .au-ops{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem}
 
+/* «Respaldo» en la barra de la tesis y ventana «Proteger» */
+.ts-barra .ts-aviso{border-color:var(--warn);background:var(--warn-bg);color:var(--warn-ink)}
+.ts-barra .ts-aviso .ico{color:var(--warn-ink)}
+dialog.pr-dlg{width:min(32rem,calc(100vw - 2rem))}
+.pr-dlg .td-bt .btn{display:inline-flex;align-items:center;gap:0.375rem}
+.pr-ult{font-size:0.9375rem}
+.pr-rec{margin:0.75rem 0 0;font-size:0.875rem}
+
+/* ---------- Piezas académicas (piezas.js): figuras, tablas numeradas, ecuaciones, notas al pie ---------- */
+/* Al leer */
+.fig{margin:1.5em 0;padding:0;min-width:0}
+.fig .ancla{display:block;scroll-margin-top:5rem}
+.fig-cap{margin:0 0 0.5rem;font-size:0.9375rem}
+.fig-n{display:block;font-weight:700}
+.fig-t{display:block;font-style:italic}
+.fig img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:0.25rem}
+.fig-nota{margin:0.5rem 0 0;font-size:0.875rem;color:var(--fg-2);max-width:none}
+.tabla-num .tbl-wrap{margin:0.25rem 0 0}
+.ecu{position:relative;display:flex;align-items:center;gap:1rem;margin:1.25em 0;min-width:0}
+.ecu .ancla{position:absolute;top:0;scroll-margin-top:5rem}
+.ecu-f{flex:1 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;text-align:center}
+.ecu-f .katex-display{margin:0}
+.ecu-n{flex:none;font-family:var(--font-mono);font-size:0.875rem;color:var(--fg-2)}
+.formula{white-space:normal}
+.formula.err,.ecu-f.err{font-family:var(--font-mono);font-size:0.875em;color:var(--bad-ink);text-decoration:underline wavy var(--bad)}
+.formula.vacia,.ecu-f.vacia{font-size:0.875rem;color:var(--fg-2);font-style:italic}
+.nota-ref{line-height:0;font-size:0.75em}
+.nota-ref a{padding:0 0.125rem;font-weight:600;text-decoration:none;color:var(--accent-ink)}
+.nota-ref a:hover{text-decoration:underline}
+.notas-pie{margin:2.5rem 0 0;padding-top:1rem;border-top:1px solid var(--line);font-size:0.9375rem}
+.notas-pie h2{font-size:1.125rem}
+.notas-pie li{margin:0 0 0.375rem;scroll-margin-top:5rem}
+.nota-vuelta{display:inline-grid;place-items:center;vertical-align:middle;width:1.5rem;height:1.5rem;border-radius:0.25rem;color:var(--accent-ink)}
+.nota-vuelta:hover{background:var(--hover)}
+.xref{color:var(--accent-ink)}
+.xref.rota{color:var(--bad-ink);font-style:italic}
+.indice-piezas{margin:1.5em 0}
+.indice-piezas h2{margin-top:0}
+
+/* En el editor */
+.ed-fig,.ed-ecu{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
+.ed-fig.ProseMirror-selectednode,.ed-ecu.ProseMirror-selectednode,.ed-tnum.ProseMirror-selectednode{outline:2px solid var(--accent);outline-offset:2px}
+.ed-fig-h{display:flex;align-items:center;gap:0.5rem}
+.ed-fig-tit{width:100%;min-width:0;margin:0.25rem 0 0.5rem;padding:0.25rem 0.375rem;border:1px solid transparent;border-radius:0.375rem;background:transparent;color:var(--fg);font:inherit;font-style:italic}
+.ed-fig-tit:hover{border-color:var(--line)}
+.ed-fig-tit:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);font-style:normal}
+.ed-fig-img img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:0.25rem}
+.ed-fig-img .btn{display:inline-flex;align-items:center;gap:0.375rem}
+.ed-fig-c{margin-top:0.625rem}
+.ed-fig-c .ed-campo{margin:0 0 0.375rem}
+.ed-fig input[type="text"]:not(.ed-fig-tit),.ed-tnum-p input,.ed-ecu textarea,.pz-form textarea{width:100%;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.ed-ecu textarea,.pz-form textarea[spellcheck="false"]{font-family:var(--font-mono);font-size:0.875rem;resize:vertical}
+.pz-form textarea{resize:vertical}
+.ed-fig input:focus,.ed-tnum-p input:focus,.ed-ecu textarea:focus,.pz-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ed-fig-bt{display:flex;justify-content:flex-end}
+.ed-tnum{margin:1em 0}
+.ed-tnum-h{display:flex;flex-direction:column}
+.ed-tnum-h .ed-fig-tit{margin-bottom:0}
+.ed-tnum-c .tableWrapper,.ed-tnum-c table.ed-tabla{margin:0.25rem 0 0.5rem}
+.ed-tnum-p .ed-campo{margin:0}
+.ed-ecu-v{display:flex;align-items:center;gap:1rem;width:100%;padding:0.25rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg);font:inherit;text-align:center;cursor:pointer}
+.ed-ecu-v:hover{background:var(--hover)}
+.ed-ecu-v .ecu-f{flex:1 1 auto}
+.ed-ecu-e{margin-top:0.5rem}
+.ed-ecu-e .ed-campo{margin-bottom:0.25rem}
+.ed-cuerpo .ed-formula{padding:0 0.125rem;border-radius:0.1875rem;cursor:pointer}
+.ed-cuerpo .ed-formula:hover,.ed-cuerpo .xref:hover{background:var(--hover)}
+.ed-cuerpo .ed-formula.ProseMirror-selectednode,.ed-cuerpo .ed-nota.ProseMirror-selectednode,.ed-cuerpo .xref.ProseMirror-selectednode{outline:2px solid var(--accent)}
+.ed-cuerpo .ed-nota{padding:0 0.1875rem;border-radius:0.1875rem;background:var(--accent-bg);color:var(--accent-ink);font-weight:600;cursor:pointer}
+.ed-cuerpo .xref{padding:0 0.125rem;border-radius:0.1875rem;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:0.2em}
+.pz-vista{min-height:1.5rem;padding:0.375rem 0.5rem;border-radius:0.375rem;background:var(--bg-side);overflow-x:auto;max-width:min(26rem,calc(100vw - 3rem))}
+.pz-form .ed-ayuda{margin:0}
+.ed-notas{margin:2rem 0 0;padding-top:0.75rem;border-top:1px solid var(--line)}
+.ed-notas[hidden]{display:none}
+.ed-notas ol{margin:0.375rem 0 0;padding-left:1.5rem}
+.ed-nota-i{display:block;width:100%;padding:0.125rem 0.25rem;border:0;border-radius:0.25rem;background:transparent;color:var(--fg);font:inherit;font-size:0.9375rem;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.ed-nota-i:hover{background:var(--hover)}
+.au-fig{margin:0.75rem 0 0}
+
 /* Modo lectura de un documento vacío */
 .doc-vacio{margin-top:1.5rem}
 
@@ -244,4 +323,6 @@ dialog.au-dlg{width:min(36rem,calc(100vw - 2rem))}
 [data-contrast="high"] .tb-btn[aria-pressed="true"]{outline:1px solid var(--accent)}
 [data-contrast="high"] .ed-indice,[data-contrast="high"] .ed-repaso,[data-contrast="high"] .ed-q,[data-contrast="high"] .ed-biblio{border-color:var(--line-strong)}
 [data-contrast="high"] .au-bar{border-width:2px}
+[data-contrast="high"] .ed-fig,[data-contrast="high"] .ed-ecu{border-color:var(--line-strong)}
+[data-contrast="high"] .ts-barra .ts-aviso{border-width:2px}
 [data-contrast="high"] .menu{border-width:2px}
