@@ -1,0 +1,2096 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>IPv6 en la práctica · OneLearn</title>
+<meta name="description" content="Qué es IPv6 y por qué existe, cómo se escribe y se abrevia una dirección, sus tipos (global, enlace local, ULA, multicast), cómo se arma una dirección con SLAAC y EUI-64, y cómo usarlo desde la terminal.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/red.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="ipv6.css">
+</head>
+<body data-leccion="ipv6">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="v6-abrevia">
+<p class="hint">Escribe una dirección IPv6, completa o abreviada. Verás sus dos formas y de qué tipo es. Después practica abreviando.</p>
+<div class="ctl" style="margin-top:0"><label class="lbl" for="vaIn">Dirección</label><input class="campo mono" id="vaIn" type="text" value="2001:0db8:0000:0000:0000:ff00:0042:8329" autocomplete="off" spellcheck="false"></div>
+<div class="kpis">
+  <div class="kpi"><span>Completa</span><b id="vaComp"></b></div>
+  <div class="kpi"><span>Abreviada</span><b id="vaAbr"></b></div>
+  <div class="kpi"><span>Tipo</span><b id="vaTipo"></b></div>
+</div>
+<div class="va-pr">
+  <p class="lbl">Practica: escribe la forma abreviada de</p>
+  <p class="mono va-q" id="vaQ"></p>
+  <div class="ctl"><label class="vh" for="vaResp">Tu respuesta</label><input class="campo mono" id="vaResp" type="text" autocomplete="off" spellcheck="false" placeholder="Forma abreviada">
+  <button class="btn pri" type="button" id="vaRev">Revisar</button><button class="btn" type="button" id="vaOtra">Otra</button></div>
+  <div class="status" id="vaStat" data-k="" aria-live="polite"><span class="dot"></span><span id="vaMsg"></span></div>
+</div>
+</template>
+<template data-lab="v6-slaac">
+<p class="hint">El router anuncia el prefijo y la computadora completa los últimos 64 bits. Elige un prefijo y una MAC.</p>
+<div class="ctl" style="margin-top:0"><span class="lbl">Prefijo</span><div class="chips" id="vsPre" role="group" aria-label="Prefijo">
+  <button class="chip mono" type="button" data-v="2001:db8:4a1:20" aria-pressed="true">2001:db8:4a1:20::/64</button>
+  <button class="chip mono" type="button" data-v="fd12:3456:789a:1" aria-pressed="false">fd12:3456:789a:1::/64 (ULA)</button>
+  <button class="chip mono" type="button" data-v="fe80:0:0:0" aria-pressed="false">fe80::/64 (enlace local)</button>
+</div></div>
+<div class="ctl"><label class="lbl" for="vsMac">MAC</label><input class="campo mono" id="vsMac" type="text" value="08:00:27:3a:5c:91" autocomplete="off" spellcheck="false" maxlength="17"></div>
+<label class="chk"><input type="checkbox" id="vsPriv"> Usar un identificador aleatorio (privacidad)</label>
+<ol class="vs-pasos" id="vsPasos"></ol>
+<div class="kpis"><div class="kpi"><span>Tu dirección</span><b id="vsDir"></b></div></div>
+<div class="status" id="vsStat" data-k="" aria-live="polite"><span class="dot"></span><span id="vsMsg"></span></div>
+</template>
+<template data-lab="v6-terminal">
+<p class="hint">Esta computadora tiene doble pila: IPv4 e IPv6. Explórala desde la terminal.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "ipv6",
+ "titulo": "IPv6 en la práctica",
+ "icono": "ipv6",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "15 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 laboratorios, 5 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-v6001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-v6002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-porque",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Por qué IPv6?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "IPv4 tiene 32 bits: unos "
+     },
+     {
+      "type": "text",
+      "text": "4,300 millones",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " de direcciones. Parecían muchísimas en 1981, pero hoy hay más celulares que personas, y además computadoras, televisiones, cámaras y focos conectados. Las direcciones IPv4 libres se acabaron en la década de 2010; desde entonces se reparten las que sobran, se compran y venden, y se estiran con NAT y CGNAT."
+     }
+    ],
+    "attrs": {
+     "id": "b-v6003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "IPv6",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " usa "
+     },
+     {
+      "type": "text",
+      "text": "128 bits",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": unos 340 sextillones de direcciones (3.4 × 10"
+     },
+     {
+      "type": "text",
+      "text": "38",
+      "marks": [
+       {
+        "type": "superscript"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "). Alcanza para dar miles de millones de direcciones a cada persona del planeta, así que cada equipo puede tener una dirección pública propia, sin NAT. Hoy cerca de la mitad del tráfico de internet ya va por IPv6, sobre todo en celulares."
+     }
+    ],
+    "attrs": {
+     "id": "b-v6004"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-v6005"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": []
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "IPv4"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "IPv6"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tamaño"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "32 bits"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "128 bits"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cómo se escribe"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "4 números decimales: "
+           },
+           {
+            "type": "text",
+            "text": "192.168.1.50",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "8 grupos hexadecimales: "
+           },
+           {
+            "type": "text",
+            "text": "2001:db8:4a1:20::50",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Direcciones"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "≈ 4,300 millones"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "≈ 340 sextillones"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NAT"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Casi siempre"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No hace falta"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Configuración automática"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "DHCP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "SLAAC (el equipo arma la suya) o DHCPv6"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Difusión (broadcast)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sí"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "No existe: se usa multicast"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-escritura",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cómo se escribe una IPv6"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Son 8 grupos de 4 dígitos hexadecimales (0-9 y a-f) separados por dos puntos:"
+     }
+    ],
+    "attrs": {
+     "id": "b-v6006"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-v6007",
+     "language": "text"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "2001:0db8:0000:0000:0000:ff00:0042:8329"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Como es larga, hay dos reglas para abreviarla:"
+     }
+    ],
+    "attrs": {
+     "id": "b-v6008"
+    }
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-v6009"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Se pueden quitar los "
+         },
+         {
+          "type": "text",
+          "text": "ceros a la izquierda",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de cada grupo: "
+         },
+         {
+          "type": "text",
+          "text": "0db8",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " es "
+         },
+         {
+          "type": "text",
+          "text": "db8",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", "
+         },
+         {
+          "type": "text",
+          "text": "0042",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " es "
+         },
+         {
+          "type": "text",
+          "text": "42",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " y "
+         },
+         {
+          "type": "text",
+          "text": "0000",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " es "
+         },
+         {
+          "type": "text",
+          "text": "0",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una sola vez, la "
+         },
+         {
+          "type": "text",
+          "text": "serie más larga de grupos en cero",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " se cambia por "
+         },
+         {
+          "type": "text",
+          "text": "::",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Solo una vez, porque si no, no sabrías cuántos ceros van en cada hueco."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-v6010",
+     "language": "text"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "2001:0db8:0000:0000:0000:ff00:0042:8329  →  2001:db8::ff00:42:8329"
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-v6011",
+     "nombre": "v6-abrevia",
+     "titulo": "Abrevia y expande"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tipos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tipos de dirección"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-v6012"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Prefijo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para qué"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Global",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2000::/3",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2001:db8:4a1:20::50",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Pública: se ve desde internet, como una IPv4 pública"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Enlace local",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "fe80::/10",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "fe80::a00:27ff:fe3a:5c91",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Toda tarjeta tiene una, siempre. Solo sirve dentro de la misma red, y el router la usa para anunciarse"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Local única",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (ULA)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "fc00::/7",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "fd12:3456:789a::1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Privada, como 192.168: para redes internas"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Loopback",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "::1/128",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "::1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La propia computadora, como 127.0.0.1"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Multicast",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ff00::/8",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ff02::1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un grupo de equipos. "
+           },
+           {
+            "type": "text",
+            "text": "ff02::1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " son todos los de la red local"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Documentación",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2001:db8::/32",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2001:db8::10",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para ejemplos, como las de esta lección"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-v6013",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un equipo con IPv6 tiene "
+       },
+       {
+        "type": "text",
+        "text": "varias direcciones a la vez",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ": la de enlace local, una o más globales (algunas temporales, que cambian para proteger tu privacidad) y quizá una ULA. Es normal ver tres o cuatro en "
+       },
+       {
+        "type": "text",
+        "text": "ip -6 a",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-slaac",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cómo obtiene su dirección"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En IPv6 casi siempre es el propio equipo el que arma su dirección, con "
+     },
+     {
+      "type": "text",
+      "text": "SLAAC",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "autoconfiguración sin estado",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "):"
+     }
+    ],
+    "attrs": {
+     "id": "b-v6014"
+    }
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-v6015"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El router anuncia el "
+         },
+         {
+          "type": "text",
+          "text": "prefijo",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de la red: los primeros 64 bits, por ejemplo "
+         },
+         {
+          "type": "text",
+          "text": "2001:db8:4a1:20::/64",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El equipo agrega sus propios 64 bits, el "
+         },
+         {
+          "type": "text",
+          "text": "identificador de interfaz",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Puede salir de su MAC (método EUI-64) o ser aleatorio."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Antes de usarla, pregunta a la red si alguien más la tiene (detección de duplicados)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con "
+     },
+     {
+      "type": "text",
+      "text": "EUI-64",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", la MAC de 48 bits se parte a la mitad, se inserta "
+     },
+     {
+      "type": "text",
+      "text": "ff:fe",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " en medio y se invierte el séptimo bit. El problema es que la MAC queda a la vista y te pueden seguir de una red a otra; por eso los sistemas actuales usan identificadores "
+     },
+     {
+      "type": "text",
+      "text": "aleatorios",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " para salir a internet."
+     }
+    ],
+    "attrs": {
+     "id": "b-v6016"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-v6017",
+     "nombre": "v6-slaac",
+     "titulo": "Arma tu dirección"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En IPv6 las redes son casi siempre "
+     },
+     {
+      "type": "text",
+      "text": "/64",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", y a una casa u oficina el proveedor le da un bloque "
+     },
+     {
+      "type": "text",
+      "text": "/56",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " o "
+     },
+     {
+      "type": "text",
+      "text": "/48",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", del que salen 256 o 65,536 redes /64. Dividir redes se vuelve sencillo: se cambia un grupo."
+     }
+    ],
+    "attrs": {
+     "id": "b-v6018"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-practica",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "IPv6 en la práctica"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-v6019",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "ip -6 a                  # tus direcciones IPv6\nping -6 example.com      # ping por IPv6\ndig AAAA example.com     # el registro DNS de IPv6 se llama AAAA\ncurl -6 https://example.com"
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-v6020"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La mayoría de las redes usan "
+         },
+         {
+          "type": "text",
+          "text": "doble pila",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "dual stack",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "): IPv4 e IPv6 a la vez. Si un sitio tiene las dos, el sistema prefiere IPv6."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sin NAT, cada equipo es alcanzable desde internet: el "
+         },
+         {
+          "type": "text",
+          "text": "firewall",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " del router es lo que bloquea las conexiones que nadie pidió. Revisa que esté activo para IPv6."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En una URL, la dirección va entre corchetes para no confundir los dos puntos con el puerto: "
+         },
+         {
+          "type": "text",
+          "text": "http://[2001:db8::10]:8080/",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-v6021",
+     "nombre": "v6-terminal",
+     "titulo": "IPv6 desde la terminal"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-v6022"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Tengo que dejar de usar IPv4?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No. Las dos van a convivir muchos años. Casi todo funciona en doble pila y el sistema elige solo. Lo que sí conviene es saber leer y configurar las dos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-v6023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cómo sé si tengo IPv6?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En la terminal, "
+         },
+         {
+          "type": "text",
+          "text": "ip -6 a",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": si ves una dirección que empieza con 2 o 3 (global), lo tienes. Desde el navegador, hay sitios de prueba que te lo dicen. En México, varios proveedores de fibra y casi todos los de celular ya lo dan."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-v6024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿IPv6 es más seguro?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No por sí mismo. Trae algunas mejoras, pero sin NAT tus equipos son alcanzables si el firewall lo permite. La seguridad depende de configurarlo bien, igual que en IPv4."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-v6025",
+     "preguntas": [
+      {
+       "q": "¿Cuántos bits tiene una dirección IPv6?",
+       "o": [
+        "32",
+        "64",
+        "128"
+       ],
+       "a": 2,
+       "e": "128 bits, escritos como 8 grupos de 4 dígitos hexadecimales."
+      },
+      {
+       "q": "¿Cuál es la forma abreviada de 2001:0db8:0000:0000:0000:0000:0000:0001?",
+       "o": [
+        "2001:db8::1",
+        "2001:db8:0:0::1:",
+        "2001::db8::1"
+       ],
+       "a": 0,
+       "e": "Se quitan los ceros a la izquierda y la serie de grupos en cero se cambia por :: una sola vez."
+      },
+      {
+       "q": "Una dirección que empieza con fe80:: es…",
+       "o": [
+        "Global",
+        "De enlace local: solo sirve en la misma red",
+        "Privada de internet"
+       ],
+       "a": 1,
+       "e": "fe80::/10 es de enlace local: toda tarjeta tiene una y no sale de la red local."
+      },
+      {
+       "q": "¿Cómo se llama el registro DNS que guarda una dirección IPv6?",
+       "o": [
+        "A",
+        "AAAA",
+        "MX"
+       ],
+       "a": 1,
+       "e": "A es para IPv4 y AAAA para IPv6 (cuatro veces más grande)."
+      },
+      {
+       "q": "Sin NAT, ¿qué protege a tus equipos de conexiones que nadie pidió?",
+       "o": [
+        "Nada, IPv6 no las permite",
+        "El firewall",
+        "El DNS"
+       ],
+       "a": 1,
+       "e": "En IPv6 todos tienen dirección pública: el firewall del router es indispensable."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-v6026"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "IPv6 tiene 128 bits: direcciones de sobra para que cada equipo tenga una pública, sin NAT."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Se escribe en 8 grupos hexadecimales: se quitan ceros a la izquierda y la serie de ceros más larga se vuelve :: una vez."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tipos: global (2000::/3), enlace local (fe80::/10), local única (fc00::/7), loopback (::1) y multicast (ff00::/8). No hay difusión."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Con SLAAC el equipo arma su dirección: prefijo /64 del router más su identificador (EUI-64 o aleatorio)."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Doble pila: IPv4 e IPv6 conviven. "
+           },
+           {
+            "type": "text",
+            "text": "ip -6 a",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "ping -6",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y "
+           },
+           {
+            "type": "text",
+            "text": "dig AAAA",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " son tus herramientas."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/red.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="ipv6.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

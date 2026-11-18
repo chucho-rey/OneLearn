@@ -1,0 +1,4 @@
+/* Estilos propios de los laboratorios de «Qué es una red». El diagrama está en assets/css/red.css. */
+.qc-info{margin-top:0.75rem;padding:0.625rem 0.875rem;border:1px solid var(--line);border-radius:0.5rem;font-size:0.9375rem}
+.qc-info p{margin:0.25rem 0 0;max-width:none;color:var(--fg-2)}
+#qtBarras{margin-top:0.875rem}

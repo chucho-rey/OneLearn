@@ -1,0 +1,19 @@
+/* OneLearn: diagramas del simulador de red (assets/js/red.js). Colores solo con los tokens de base.css. */
+.rd-svg{display:block;width:100%;height:auto;max-height:26rem;margin-top:0.75rem;border:1px solid var(--line);border-radius:0.5rem;background:var(--bg-side)}
+.rd-enl line{stroke:var(--line-strong);stroke-width:3}
+.rd-enl.caido line{stroke:var(--bad);stroke-dasharray:6 5}
+.rd-enl.activo line{stroke:var(--accent);stroke-width:5}
+.rd-et{font-family:var(--font-mono);font-size:10px;fill:var(--fg-2)}
+.rd-nodo rect,.rd-nodo circle,.rd-nodo path:not(.rd-ic){fill:var(--bg);stroke:var(--fg-2);stroke-width:1.6}
+.rd-nodo .rd-ic{fill:none;stroke:var(--fg-2);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rd-router circle{stroke:var(--accent-ink)}
+.rd-nodo.activo rect,.rd-nodo.activo circle,.rd-nodo.activo path:not(.rd-ic){fill:var(--accent-bg);stroke:var(--accent);stroke-width:2.4}
+.rd-nodo.fallo rect,.rd-nodo.fallo circle,.rd-nodo.fallo path:not(.rd-ic){fill:var(--bad-bg);stroke:var(--bad);stroke-width:2.4}
+.rd-nom{font-family:var(--font-ui);font-size:12px;font-weight:600;fill:var(--fg)}
+.rd-ip{font-family:var(--font-mono);font-size:10px;fill:var(--fg-2)}
+.rd-pasos{margin:0.75rem 0 0;padding-left:1.375rem;font-size:0.9375rem}
+.rd-pasos li{padding:0.125rem 0}
+.rd-pasos li.mal{color:var(--bad-ink)}
+.rd-tabla code{white-space:nowrap}
+.rd-tabla tr.usada td{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}
+.rd-tabla tr.coincide td{background:var(--bg-soft)}

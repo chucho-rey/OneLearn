@@ -42,6 +42,26 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-procesos" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M6 13h2.5l1.5-3.5 3 7 1.5-3.5H18"/></symbol>'+
 '<symbol id="i-apt" viewBox="0 0 24 24"><path d="M4.5 9.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V9.5"/><path d="M3 5h18v4.5H3zM12 11.5v5.5M9.5 14.5 12 17l2.5-2.5"/></symbol>'+
 '<symbol id="i-ruta" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8"/></symbol>'+
+'<symbol id="i-lan" viewBox="0 0 24 24"><rect x="2.5" y="3.5" width="7" height="5" rx="1"/><rect x="14.5" y="3.5" width="7" height="5" rx="1"/><rect x="8.5" y="15.5" width="7" height="5" rx="1"/><path d="M6 8.5V12h12V8.5M12 12v3.5"/></symbol>'+
+'<symbol id="i-osi" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="4" rx="1"/><rect x="4" y="10" width="16" height="4" rx="1"/><rect x="4" y="17" width="16" height="4" rx="1"/><path d="M7 5h.01M7 12h.01M7 19h.01" stroke-width="2.4"/></symbol>'+
+'<symbol id="i-ethernet" viewBox="0 0 24 24"><path d="M6 21v-4H4V8h4V5h8v3h4v9h-2v4"/><path d="M9 12v2M12 12v2M15 12v2"/></symbol>'+
+'<symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0"/><path d="M12 19.5h.01" stroke-width="2.6"/></symbol>'+
+'<symbol id="i-subred" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M3 12h18"/><path d="M7.5 7.5h.01M16.5 16.5h.01" stroke-width="2.4"/></symbol>'+
+'<symbol id="i-nat" viewBox="0 0 24 24"><path d="M4 8h13M14 5l3 3-3 3M20 16H7M10 13l-3 3 3 3"/></symbol>'+
+'<symbol id="i-ipv6" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5z"/><path d="M14 8.5h-2.5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-.5a2 2 0 0 0-2-2H9.5"/></symbol>'+
+'<symbol id="i-puertos" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10v4M10 10v4M14 10v4M17 10v4"/></symbol>'+
+'<symbol id="i-router" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7 10h9M13 7l3 3-3 3M17 14H8M11 11l-3 3 3 3"/></symbol>'+
+'<symbol id="i-http" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8.5h18M6 6.3h.01M8.5 6.3h.01" /><path d="M8 13l-2 2 2 2M16 13l2 2-2 2M13 12l-2 6"/></symbol>'+
+'<symbol id="i-diagnostico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M6.5 11h2l1.2-2.5 2 5 1.3-2.5h1.5"/></symbol>'+
+'<symbol id="i-ssh" viewBox="0 0 24 24"><rect x="2.5" y="4" width="13" height="11" rx="1.5"/><path d="M5.5 8l2 1.8-2 1.8M9.5 12h3"/><circle cx="17.5" cy="16.5" r="2.5"/><path d="M19.3 18.3 22 21M20.5 19.5l-1 1"/></symbol>'+
+'<symbol id="i-servidor" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="7" rx="1.5"/><rect x="4" y="14" width="16" height="7" rx="1.5"/><path d="M8 6.5h.01M8 17.5h.01" stroke-width="2.4"/><path d="M12 6.5h5M12 17.5h5"/></symbol>'+
+'<symbol id="i-firewall" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9.3h18M3 14.7h18M9 4v5.3M15 4v5.3M6 9.3v5.4M12 9.3v5.4M18 9.3v5.4M9 14.7V20M15 14.7V20"/></symbol>'+
+'<symbol id="i-vpn" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6z"/><path d="M8.5 12.5h7M13 10l2.5 2.5L13 15"/></symbol>'+
+'<symbol id="i-script" viewBox="0 0 24 24"><path d="M6 3.5h9.5l3.5 3.5v13.5H6z"/><path d="M15.5 3.5V7H19M9 12l2 2-2 2M13 16h3"/></symbol>'+
+'<symbol id="i-vlan" viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="8" rx="1.5"/><path d="M6 11v2M9 11v2M12 11v2M15 11v2M18 11v2M6 16v4M18 16v4M6 4v4M18 4v4"/></symbol>'+
+'<symbol id="i-contenedor" viewBox="0 0 24 24"><path d="M3 7.5l9-4.5 9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9M7.5 9.8v9M16.5 9.8v9"/></symbol>'+
+'<symbol id="i-monitoreo" viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6M2.5 18h19"/></symbol>'+
+'<symbol id="i-nube" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.4-1.2A5 5 0 0 1 17.5 18.5z"/></symbol>'+
 '<symbol id="i-proyecto" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8.5 7V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2V7M3 12.5h18M10.5 12.5v2h3v-2"/></symbol>'+
 '<symbol id="i-placa" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="6.5" height="6.5" rx=".5"/><path d="M16 6.5v11M18.5 6.5v11M6.5 16.5h6.5"/></symbol>'+
 '<symbol id="i-resistencia" viewBox="0 0 24 24"><path d="M2 12h4l1.5-3.5 3 7 3-7 3 7 1.5-3.5h4"/></symbol>'+
