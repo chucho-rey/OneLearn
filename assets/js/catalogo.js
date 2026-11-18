@@ -31,7 +31,7 @@ window.AT.catalogo=[
     {id:'permisos',titulo:'Archivos, permisos y usuarios',archivo:'permisos.html',icono:'permisos'},
     {id:'procesos',titulo:'Procesos y servicios',archivo:'procesos.html',icono:'procesos'},
     {id:'apt',titulo:'Instalar software con apt',archivo:'apt.html',icono:'apt'},
-    {id:'scripts',titulo:'Scripts, cron y respaldos'}
+    {id:'scripts',titulo:'Scripts, cron y respaldos',archivo:'scripts.html',icono:'script'}
   ]},
   {grupo:'Redes',lecciones:[
     {id:'que-es-red',titulo:'Qué es una red',archivo:'que-es-red.html',icono:'lan'},
@@ -50,10 +50,10 @@ window.AT.catalogo=[
     {id:'vlan',titulo:'VLAN y segmentación'}
   ]},
   {grupo:'Servidores y nube',lecciones:[
-    {id:'ssh',titulo:'SSH y acceso remoto'},
-    {id:'servidor-web',titulo:'Servidor web con Nginx'},
-    {id:'firewalls',titulo:'Firewalls'},
-    {id:'vpn',titulo:'VPN'},
+    {id:'ssh',titulo:'SSH y acceso remoto',archivo:'ssh.html',icono:'ssh'},
+    {id:'servidor-web',titulo:'Servidor web con Nginx',archivo:'servidor-web.html',icono:'servidor'},
+    {id:'firewalls',titulo:'Firewalls',archivo:'firewalls.html',icono:'firewall'},
+    {id:'vpn',titulo:'VPN',archivo:'vpn.html',icono:'vpn'},
     {id:'contenedores',titulo:'Virtualización y contenedores'},
     {id:'monitoreo',titulo:'Monitoreo y registros'},
     {id:'nube',titulo:'Introducción a la nube'}

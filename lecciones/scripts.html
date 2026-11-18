@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Scripts, cron y respaldos · OneLearn</title>
+<meta name="description" content="Cómo automatizar tareas con scripts de bash (variables, argumentos, if y for), cómo programarlas con cron y cómo hacer respaldos que de verdad se puedan restaurar.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="scripts.css">
+</head>
+<body data-leccion="scripts">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="sc-cron">
+<p class="hint">Elige un ejemplo o escribe los cinco campos. Mira qué significa y cuándo correrá, si hoy es miércoles 18 de noviembre de 2026 a las 10:30.</p>
+<div class="chips" id="ccEj" role="group" aria-label="Ejemplos"></div>
+<div class="cc-f" id="ccF">
+  <label><span>Minuto</span><input class="campo mono" type="text" data-k="0" value="30" autocomplete="off" spellcheck="false"></label>
+  <label><span>Hora</span><input class="campo mono" type="text" data-k="1" value="2" autocomplete="off" spellcheck="false"></label>
+  <label><span>Día del mes</span><input class="campo mono" type="text" data-k="2" value="*" autocomplete="off" spellcheck="false"></label>
+  <label><span>Mes</span><input class="campo mono" type="text" data-k="3" value="*" autocomplete="off" spellcheck="false"></label>
+  <label><span>Día de la semana</span><input class="campo mono" type="text" data-k="4" value="*" autocomplete="off" spellcheck="false"></label>
+</div>
+<p class="cc-linea"><code id="ccLinea"></code></p>
+<div class="status" id="ccStat" data-k="" aria-live="polite"><span class="dot"></span><span id="ccMsg"></span></div>
+<p class="lbl cc-pt">Próximas ejecuciones</p>
+<ol class="cc-prox" id="ccProx"></ol>
+</template>
+<template data-lab="sc-terminal">
+<p class="hint">En tu carpeta hay un script de respaldo, respaldo.sh, y la carpeta Documentos.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "scripts",
+ "titulo": "Scripts, cron y respaldos",
+ "icono": "script",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Linux",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "25 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 laboratorios, 6 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-sc001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-sc002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-por-que",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Por qué automatizar"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Lo que haces más de dos veces a mano, tarde o temprano lo vas a hacer mal: un día se te olvida, otro día te equivocas de carpeta. Un "
+     },
+     {
+      "type": "text",
+      "text": "script",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es un archivo con comandos que se corren en orden, igual que si los escribieras tú. Con "
+     },
+     {
+      "type": "text",
+      "text": "cron",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", además, se corren solos a la hora que digas. Respaldos, limpieza de registros, reportes y revisiones de salud de los servidores se hacen así."
+     }
+    ],
+    "attrs": {
+     "id": "b-sc003"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-primero",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tu primer script"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sc004",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "#!/bin/bash\n# saludo.sh: la primera línea (shebang) dice qué programa lo ejecuta\nNOMBRE=\"$1\"                 # el primer argumento\nHOY=$(date +%F)             # $( ) guarda la salida de un comando\necho \"Hola, $NOMBRE. Hoy es $HOY.\""
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sc005",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "chmod +x saludo.sh     # permiso de ejecución\n./saludo.sh Ana        # ./ porque no está en el PATH\nHola, Ana. Hoy es 2026-11-18."
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-sc006"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Escribes"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Significa"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "VAR=\"valor\"",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Guarda un valor. Sin espacios alrededor del "
+           },
+           {
+            "type": "text",
+            "text": "=",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "\"$VAR\"",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Usa el valor. Siempre entre comillas dobles, por si trae espacios"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "$1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "$2",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "$#",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los argumentos del script y cuántos son"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "$(comando)",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La salida de un comando"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "$?",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El código de salida del último comando: 0 es éxito"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-control",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Decisiones y ciclos"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sc007",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "if [ ! -d \"$ORIGEN\" ]; then        # -d: ¿existe la carpeta?  !: no\n  echo \"No existe $ORIGEN\"\n  exit 1                           # termina con código de error\nfi\n\nfor f in *.log; do                 # repite para cada archivo\n  gzip \"$f\"\ndone\n\nping -c 1 servidor > /dev/null && echo \"arriba\" || echo \"caído\""
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-sc008"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Prueba"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Es verdad si…"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "[ -f archivo ]",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Existe y es un archivo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "[ -d carpeta ]",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Existe y es una carpeta"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "[ -z \"$VAR\" ]",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La variable está vacía"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "[ \"$A\" = \"$B\" ]",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los textos son iguales"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "[ \"$N\" -gt 10 ]",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El número es mayor que 10 ("
+           },
+           {
+            "type": "text",
+            "text": "-lt",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "-eq",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "-ge",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "…)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-respaldo",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Un script de respaldo"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un buen respaldo tiene la fecha en el nombre, revisa sus datos antes de empezar y avisa si algo falla:"
+     }
+    ],
+    "attrs": {
+     "id": "b-sc009"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sc010",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "#!/bin/bash\n# respaldo.sh: respalda una carpeta en ~/respaldos con la fecha en el nombre\nORIGEN=\"$1\"\nDESTINO=\"$HOME/respaldos\"\nFECHA=$(date +%F)\n\nif [ -z \"$ORIGEN\" ]; then\n  echo \"Uso: $0 carpeta\"\n  exit 1\nfi\nif [ ! -d \"$ORIGEN\" ]; then\n  echo \"No existe la carpeta $ORIGEN\"\n  exit 1\nfi\n\nmkdir -p \"$DESTINO\"\nARCHIVO=\"$DESTINO/$(basename \"$ORIGEN\")-$FECHA.tar.gz\"\ntar -czf \"$ARCHIVO\" \"$ORIGEN\"\necho \"Respaldo listo: $ARCHIVO\""
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-sc011",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un respaldo que nunca has restaurado es solo una esperanza. Prueba de vez en cuando a recuperar los archivos en otra carpeta: "
+       },
+       {
+        "type": "text",
+        "text": "tar -xzf respaldo.tar.gz -C /tmp/prueba",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ". Y guarda una copia "
+       },
+       {
+        "type": "text",
+        "text": "en otro lugar",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ": un respaldo en el mismo disco se pierde con el disco."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-cron",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "cron: a la hora que digas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "cron",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " revisa cada minuto una lista de tareas. Cada usuario tiene la suya, que se edita con "
+     },
+     {
+      "type": "text",
+      "text": "crontab -e",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y se ve con "
+     },
+     {
+      "type": "text",
+      "text": "crontab -l",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Cada línea tiene cinco campos de tiempo y el comando:"
+     }
+    ],
+    "attrs": {
+     "id": "b-sc012"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sc013",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "# ┌ minuto (0-59)\n# │  ┌ hora (0-23)\n# │  │ ┌ día del mes (1-31)\n# │  │ │ ┌ mes (1-12)\n# │  │ │ │ ┌ día de la semana (0-7; 0 y 7 son domingo)\n  30 2 * * *  /home/ana/respaldo.sh /home/ana/Documentos >> /home/ana/respaldo.log 2>&1"
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-sc014",
+     "nombre": "sc-cron",
+     "titulo": "Arma una línea de cron"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-sc015"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "cron corre con un entorno mínimo: usa "
+         },
+         {
+          "type": "text",
+          "text": "rutas completas",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " para el script y los archivos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Lo que el script imprime no se ve en ninguna pantalla: mándalo a un archivo con "
+         },
+         {
+          "type": "text",
+          "text": ">> archivo.log 2>&1",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En los sistemas con systemd también existen los "
+         },
+         {
+          "type": "text",
+          "text": "timers",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "systemctl list-timers",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "), que hacen lo mismo con registros en "
+         },
+         {
+          "type": "text",
+          "text": "journalctl",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-practica",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Práctica: respaldos automáticos"
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-sc016",
+     "nombre": "sc-terminal",
+     "titulo": "Respalda, programa y restaura"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-sc017"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cómo borro los respaldos viejos?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Por ejemplo, para quedarte con los 7 más recientes: "
+         },
+         {
+          "type": "text",
+          "text": "ls -1t ~/respaldos/*.tar.gz | tail -n +8 | xargs -r rm",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". "
+         },
+         {
+          "type": "text",
+          "text": "ls -t",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " los ordena del más nuevo al más viejo y "
+         },
+         {
+          "type": "text",
+          "text": "tail -n +8",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " deja pasar del octavo en adelante."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-sc018"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "Mi script funciona a mano pero no desde cron. ¿Por qué?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Casi siempre es una ruta relativa o una variable que cron no tiene. Usa rutas completas, guarda la salida en un archivo de registro y revisa "
+         },
+         {
+          "type": "text",
+          "text": "grep CRON /var/log/syslog",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-sc019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Bash o Python?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Bash es ideal para juntar comandos: copiar, comprimir, reiniciar servicios. Cuando el script necesita procesar datos, hacer cálculos o crece más allá de unas decenas de líneas, Python es más fácil de leer y de mantener."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-sc020",
+     "preguntas": [
+      {
+       "q": "¿Para qué sirve la línea #!/bin/bash al inicio?",
+       "o": [
+        "Es un comentario sin efecto",
+        "Dice qué programa ejecuta el script",
+        "Da permiso de ejecución"
+       ],
+       "a": 1,
+       "e": "Es el shebang: el sistema lo lee para saber con qué correrlo."
+      },
+      {
+       "q": "¿Qué guarda $1?",
+       "o": [
+        "El primer argumento del script",
+        "El código de salida",
+        "El número de argumentos"
+       ],
+       "a": 0,
+       "e": "$1 es el primer argumento; $# es cuántos hay y $? el código del último comando."
+      },
+      {
+       "q": "¿Cuándo corre la línea de cron «0 8 * * 1-5»?",
+       "o": [
+        "Cada 8 minutos",
+        "A las 8:00 de lunes a viernes",
+        "El día 8 de cada mes"
+       ],
+       "a": 1,
+       "e": "Minuto 0, hora 8, cualquier día del mes, cualquier mes, días 1 a 5 de la semana."
+      },
+      {
+       "q": "¿Por qué conviene usar rutas completas en cron?",
+       "o": [
+        "Porque cron no entiende las relativas",
+        "Porque cron corre con un entorno mínimo y en otra carpeta",
+        "Porque son más rápidas"
+       ],
+       "a": 1,
+       "e": "cron no sabe en qué carpeta estabas ni carga tu configuración."
+      },
+      {
+       "q": "¿Qué es lo más importante de un respaldo?",
+       "o": [
+        "Que esté comprimido",
+        "Haber probado que se puede restaurar",
+        "Que tenga la fecha"
+       ],
+       "a": 1,
+       "e": "Si nunca lo has restaurado, no sabes si sirve."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-sc021"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un script es un archivo con comandos: shebang, "
+           },
+           {
+            "type": "text",
+            "text": "chmod +x",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y "
+           },
+           {
+            "type": "text",
+            "text": "./script.sh",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Variables entre comillas, "
+           },
+           {
+            "type": "text",
+            "text": "$1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " para argumentos, "
+           },
+           {
+            "type": "text",
+            "text": "$( )",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " para la salida de un comando."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "if [ … ]",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "for",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y los códigos de salida permiten tomar decisiones."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "cron corre tareas a la hora que digas: cinco campos de tiempo y el comando, con rutas completas."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un respaldo sirve solo si se puede restaurar y está en otro lugar."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="scripts.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>
