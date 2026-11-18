@@ -1,0 +1,24 @@
+/* Estilos propios de los laboratorios de «DHCP y NAT». La terminal está en assets/css/terminal.css. */
+
+/* DORA */
+.dd-c{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.875rem}
+.dd-v{margin:0;color:var(--fg-2);max-width:none}
+.dd-m{padding:0.5rem 0.75rem;border:1px solid var(--line);border-left-width:4px;border-radius:0.375rem;font-size:0.875rem;max-width:88%}
+.dd-m.srv{margin-left:auto;border-left-color:var(--c5)}
+.dd-m.cli{border-left-color:var(--accent)}
+.dd-m.ult{background:var(--bg-side)}
+.dd-m b{font-family:var(--font-mono);margin-right:0.5rem}
+.dd-m>span{color:var(--fg-2)}
+.dd-m dl,.dd-res dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0.125rem 0.75rem;margin:0.375rem 0 0}
+.dd-m dt,.dd-res dt{color:var(--fg-2);font-size:0.8125rem}
+.dd-m dd,.dd-res dd{margin:0;overflow-wrap:anywhere}
+.dd-m p{margin:0.375rem 0 0;max-width:none}
+.dd-res{padding:0.625rem 0.75rem;border-radius:0.5rem;font-size:0.9375rem}
+.dd-res.ok{background:var(--good-bg);color:var(--good-ink)}
+.dd-res.mal{background:var(--bad-bg);color:var(--bad-ink)}
+.dd-res.ok dt,.dd-res.mal dt{color:inherit}
+@media (max-width:480px){.dd-m{max-width:none}}
+
+/* Tabla NAT */
+.dn-t td,.dn-t th{font-size:0.875rem}
+#dnFwd{margin-top:0.75rem}

@@ -364,6 +364,100 @@ module.exports=function(txt,demo){
     r.igual(await txt(p,'#adN'),'6','git en un servidor mínimo: 6 paquetes');
     await sesion(p,r,1,['tree',['sudo apt install tree','clave'],'sudo apt update','sudo apt install tree','tree','apt search procesos','apt show htop',['sudo apt install htop',''],'htop',['sudo apt upgrade','']],8,'Instala tus herramientas');
     await sesion(p,r,2,[['sudo apt install nginx','clave',''],'systemctl status nginx','curl localhost','ss -tln','echo "<h1>Hola desde mi servidor</h1>" | sudo tee /var/www/html/index.html','curl localhost',['sudo apt remove nginx',''],['sudo apt autoremove','']],7,'Instala un servidor web');
+    },
+  'que-es-red':async function(p,r){
+    await p.click('#qcFalla');
+    r.cumple(await p.getAttribute('#qcStat','data-k')==='bad'&&/Sin internet: PC, Impresora, NAS, Celular, Laptop/.test(await txt(p,'#qcMsg')),'si falla el router, nadie tiene internet');
+    await clic(p,0,'#qcEq [data-v="switch"]');await p.click('#qcFalla');
+    r.cumple(/Sin internet: PC, Impresora, NAS\./.test(await txt(p,'#qcMsg')),'si falla el switch, solo los equipos con cable se quedan sin internet');
+    await clic(p,1,'#qtArch [data-v="2000"]');
+    r.cumple(/Fibra · 53\.3 s/.test(await txt(p,'#qtRapida')),'una película de 2 GB tarda 53.3 s por fibra de 300 Mbps');
+    await sesion(p,r,2,['ip a','ip route','ping -c 3 192.168.1.1','ping -c 3 example.com','resolvectl status','hostname -I','ip neigh'],7,'Conoce tu red');
+  },
+
+  'modelo-osi':async function(p,r){
+    for(let k=0;k<3;k++)await p.click('#oeSig');
+    r.igual(await txt(p,'#oeTam'),'178 bytes','con HTTP, TCP, IP y Ethernet el paquete mide 178 bytes');
+    r.cumple(await p.locator('#oePq .oe-c').count()===4,'se ven las cuatro capas encapsuladas');
+    const resp=[1,2,3,2,3,4,4,7,1,3,7,6];
+    for(let k=0;k<resp.length;k++)await p.click('#ocLista button[data-k="'+k+'"][data-v="'+resp[k]+'"]');
+    r.cumple(/Resultado: 12 de 12/.test(await txt(p,'#ocPunt')),'con todas bien, 12 de 12');
+  },
+
+  'ethernet':async function(p,r){
+    await p.fill('#emIn','b8:27:eb:12:9a:04');
+    r.igual(await txt(p,'#emOui'),'Raspberry Pi Foundation','b8:27:eb es de Raspberry Pi');
+    await p.fill('#emIn','ff:ff:ff:ff:ff:ff');
+    r.igual(await txt(p,'#emDest'),'Todos (difusión)','ff:ff:ff:ff:ff:ff es la difusión');
+    await p.fill('#emIn','3a:7f:c2:51:0e:aa');
+    r.igual(await txt(p,'#emAsig'),'El sistema (local)','una MAC aleatoria tiene el bit de dirección local');
+    await p.click('#esEnviar');
+    r.cumple(await p.getAttribute('#esStat','data-k')==='warn'&&await p.locator('#esTabla tr').count()===1,'A → C con la tabla vacía: el switch inunda y aprende a A');
+    await clic(p,1,'#esDe [data-v="2"]');await clic(p,1,'#esA [data-v="0"]');await p.click('#esEnviar');
+    r.cumple(await p.getAttribute('#esStat','data-k')==='good'&&await p.locator('.es-pc.rec').count()===1,'C → A: ya conoce a A y se la entrega solo a ella');
+    await p.check('#esHub');await p.click('#esEnviar');
+    r.igual(await p.locator('.es-pc.rec').count(),3,'un hub la repite a todos');
+    await sesion(p,r,2,['ip link','ethtool enp0s3','ip neigh','ping -c 2 192.168.1.30','ip neigh','ping -c 2 192.168.1.99'],6,'La MAC de tus vecinos');
+  },
+
+  'wifi':async function(p,r){
+    r.igual(await p.getAttribute('#wcStat','data-k'),'bad','el canal 3 se encima con los vecinos');
+    await rango(p,'#wcCan',11);
+    r.igual(await p.getAttribute('#wcStat','data-k'),'good','el canal 11 es buena elección');
+    r.cumple(/6 GHz/.test(await txt(p,'#wsBarras .br.on')),'cerca y sin muros, gana 6 GHz');
+    await rango(p,'#wsDist',25);await rango(p,'#wsMuros',3);
+    r.cumple(/2\.4 GHz/.test(await txt(p,'#wsBarras .br.on'))&&/única que aguanta/.test(await txt(p,'#wsMsg')),'a 25 m y con 3 muros, solo aguanta 2.4 GHz');
+    r.igual(await p.getAttribute('#wqStat','data-k'),'bad','el router de fábrica es inseguro');
+    await clic(p,2,'#wqCif [data-v="wpa3"]');await clic(p,2,'#wqClave [data-v="larga"]');
+    await p.uncheck('#wqWps');await p.uncheck('#wqAdmin');await p.check('#wqInv');await p.check('#wqFw');
+    r.cumple(await txt(p,'#wqPunt')==='100 de 100'&&await p.getAttribute('#wqStat','data-k')==='good','con todo corregido: 100 de 100');
+  },
+
+  'subredes':async function(p,r){
+    await p.fill('#scIn','10.20.30.40/20');
+    r.cumple(await txt(p,'#scRed')==='10.20.16.0/20'&&await txt(p,'#scDif')==='10.20.31.255'&&await txt(p,'#scHosts')==='4,094','10.20.30.40/20: red 10.20.16.0, difusión 10.20.31.255, 4,094 equipos');
+    await p.fill('#scIn','10.1.2.3 255.255.240.0');
+    r.igual(await txt(p,'#scRed'),'10.1.0.0/20','también entiende la máscara escrita completa');
+    r.cumple(await p.getAttribute('#svStat','data-k')==='good'&&/192\.168\.10\.0\/26/.test(await txt(p,'#svTabla tr:first-child')),'VLSM: Ventas (50) recibe la primera /26');
+    await p.fill('#svIn input[data-i="0"]','200');
+    r.igual(await p.getAttribute('#svStat','data-k'),'bad','con 200 equipos en Ventas ya no cabe en la /24');
+    const ip=await txt(p,'#spIp');
+    const esp=await p.evaluate(function(t){const k=t.split('/');return AT.ip.calcular(k[0],+k[1])},ip);
+    await p.fill('#spRed',esp.red);await p.fill('#spDif',esp.difusion);await p.fill('#spPri',esp.primera);await p.fill('#spUlt',esp.ultima);await p.fill('#spHosts',String(esp.hosts));
+    await p.click('#spRev');
+    r.cumple(await p.getAttribute('#spStat','data-k')==='good'&&await txt(p,'#spPunt')==='1 de 1 ejercicios completos','un ejercicio al azar se califica bien ('+ip+')');
+    await p.click('#spOtro');await p.fill('#spRed','1.2.3.4');await p.click('#spRev');
+    r.igual(await p.getAttribute('#spStat','data-k'),'bad','las respuestas en blanco o mal se marcan');
+  },
+
+  'dhcp-nat':async function(p,r){
+    for(let k=0;k<4;k++)await p.click('#ddSig');
+    r.cumple(await p.getAttribute('#ddStat','data-k')==='good'&&await p.isVisible('.dd-res.ok'),'DORA completo: la laptop tiene IP');
+    await clic(p,0,'#ddEsc [data-v="apagado"]');
+    for(let k=0;k<3;k++)await p.click('#ddSig');
+    r.cumple(await p.getAttribute('#ddStat','data-k')==='bad'&&/169\.254/.test(await txt(p,'#ddCaja')),'sin servidor DHCP, se pone una 169.254');
+    await clic(p,1,'#dnAcc [data-v="laptop"]');
+    r.cumple(/192\.168\.1\.20/.test(await txt(p,'#dnTabla'))&&/198\.51\.100\.77:40001/.test(await txt(p,'#dnTabla')),'la laptop sale como 198.51.100.77:40001');
+    await clic(p,1,'#dnAcc [data-v="respuesta"]');
+    r.cumple(/Laptop/.test(await txt(p,'#dnMsg')),'la respuesta vuelve a la laptop');
+    await clic(p,1,'#dnAcc [data-v="externo"]');
+    r.igual(await p.getAttribute('#dnStat','data-k'),'bad','sin reenvío, una conexión de afuera se descarta');
+    await p.check('#dnFwd');await clic(p,1,'#dnAcc [data-v="externo"]');
+    r.igual(await p.getAttribute('#dnStat','data-k'),'good','con reenvío, llega a la NAS');
+    const yaml='network:\\n  version: 2\\n  ethernets:\\n    enp0s3:\\n      dhcp4: false\\n      addresses: [192.168.1.60/24]\\n      routes:\\n        - to: default\\n          via: 192.168.1.1\\n      nameservers:\\n        addresses: [192.168.1.1]\\n';
+    await sesion(p,r,2,['ip a','curl ifconfig.me',['sudo dhclient -v','x'],'sudo cat /etc/netplan/50-cloud-init.yaml','printf "'+yaml+'" | sudo tee /etc/netplan/50-cloud-init.yaml','sudo netplan apply','ip a','ping -c 2 example.com'],7,'IP fija para el servidor');
+  },
+
+  'ipv6':async function(p,r){
+    await p.fill('#vaIn','2001:db8::1');
+    r.cumple(await txt(p,'#vaComp')==='2001:0db8:0000:0000:0000:0000:0000:0001'&&/Documentación/.test(await txt(p,'#vaTipo')),'2001:db8::1 completa tiene 8 grupos y es de documentación');
+    const q=await txt(p,'#vaQ');
+    await p.fill('#vaResp',await p.evaluate(function(t){return AT.ip.comprimir6(t)},q));await p.click('#vaRev');
+    r.igual(await p.getAttribute('#vaStat','data-k'),'good','la práctica de abreviar se califica bien ('+q+')');
+    r.igual(await txt(p,'#vsDir'),'2001:db8:4a1:20:a00:27ff:fe3a:5c91','EUI-64 de 08:00:27:3a:5c:91');
+    await p.check('#vsPriv');
+    r.igual(await p.getAttribute('#vsStat','data-k'),'good','con privacidad, identificador aleatorio');
+    await sesion(p,r,2,['ip -6 a','ip -br a','ping -c 2 ::1','dig AAAA example.com +short','ping -6 -c 2 example.com'],5,'IPv6 desde la terminal');
   }
 
   };

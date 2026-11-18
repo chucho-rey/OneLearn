@@ -105,6 +105,7 @@ var PAQ={
   'liberror-perl':{v:'0.17029-2',sec:'main/perl',tam:25.6,ocupa:79,desc:'manejo de errores para Perl',dep:true},
   nginx:{v:'1.24.0-2ubuntu7.1',sec:'main/httpd',tam:520,ocupa:1497,desc:'servidor web pequeño, potente y escalable',cmds:['nginx'],deps:['nginx-common'],servicio:'nginx'},
   'nginx-common':{v:'1.24.0-2ubuntu7.1',sec:'main/httpd',tam:43.4,ocupa:184,desc:'archivos comunes de nginx',dep:true},
+  traceroute:{v:'1:2.1.5-1',sec:'universe/net',tam:45.6,ocupa:154,desc:'muestra el camino que siguen los paquetes por la red',cmds:['traceroute']},
   'net-tools':{v:'2.10-0.1ubuntu4',sec:'main/net',tam:204,ocupa:812,desc:'herramientas de red antiguas: ifconfig, netstat y route',cmds:['ifconfig']},
   curl:{v:'8.5.0-2ubuntu10.4',nueva:'8.5.0-2ubuntu10.5',sec:'main/web',tam:226,ocupa:534,desc:'descarga y envía datos por HTTP y otros protocolos',cmds:['curl'],base:true},
   openssl:{v:'3.0.13-0ubuntu3.4',nueva:'3.0.13-0ubuntu3.5',sec:'main/utils',tam:1003,ocupa:2177,desc:'herramientas de cifrado TLS',base:true},
@@ -119,8 +120,14 @@ var PAQ={
 function Sistema(op){
   var s=this;
   s.host=op.host||'ubuntu';
-  s.red={iface:'enp0s3',ip:'192.168.1.50',bits:24,puerta:'192.168.1.1',mac:'08:00:27:3a:5c:91',hosts:{}};
+  s.red={iface:'enp0s3',ip:'192.168.1.50',bits:24,puerta:'192.168.1.1',mac:'08:00:27:3a:5c:91',hosts:{},arriba:true,internet:true,dhcp:true,
+    vecinos:{'192.168.1.1':'c8:3a:35:1b:92:e0','192.168.1.20':'3c:52:82:4f:aa:10'},rutas:[],detras:{},dns:{},web:{},tls:{},ip6:'2001:db8:4a1:20::50',conocidos:{}};
   if(op.red)Object.keys(op.red).forEach(function(k){s.red[k]=op.red[k]});
+  if(!op.red||!('salida' in op.red))s.red.salida=s.red.puerta;
+  s.red.ipDhcp=s.red.ip;
+  if(s.red.vecinos[s.red.puerta])s.red.conocidos[s.red.puerta]=s.red.vecinos[s.red.puerta];
+  s.mundo={sistemas:[s],porIp:function(ip){for(var i=0;i<this.sistemas.length;i++){var o=this.sistemas[i];if(o.red.ip===ip&&o.red.arriba)return o}return null}};
+  s.ufw={activo:false,entrada:'deny',reglas:[]};s.crontabs={};s.sudoHasta=0;
   s.usuarios={};s.grupos={};s.procesos=[];s.servicios={};s.paquetes={};s.diario=[];s.trabajos=[];
   s.sigPid=2301;s.listas=op.listas!==false;
   s.arranque=Date.now()-(3*86400+2*3600+14*60)*1000;
@@ -139,7 +146,7 @@ function Sistema(op){
   s.poner('/root/',null,{modo:0o700});
   s.poner('/tmp/',null,{modo:0o1777,f:new Date()});
   s.poner('/var/tmp/',null,{modo:0o1777});
-  [['bin','usr/bin'],['lib','usr/lib'],['sbin','usr/sbin']].forEach(function(l){s.raiz.h[l[0]]={t:'l',u:'root',g:'root',modo:0o777,dest:'/'+l[1],m:ANTES}});
+  [['bin','usr/bin'],['lib','usr/lib'],['sbin','usr/sbin']].forEach(function(l){s.raiz.h[l[0]]={t:'l',u:'root',g:'root',modo:0o777,dest:'/'+l[1],txt:l[1],m:ANTES}});
   s.poner('/dev/');
   s.buscar('/dev','root').n.h['null']={t:'c',u:'root',g:'root',modo:0o666,m:ANTES,num:'1, 3'};
   s.poner('/etc/hostname',s.host+'\n');
@@ -152,6 +159,8 @@ function Sistema(op){
   s.poner('/etc/ssh/sshd_config','# Configuración del servidor SSH. Cambios: sudo nano /etc/ssh/sshd_config\nInclude /etc/ssh/sshd_config.d/*.conf\n\n#Port 22\n#PermitRootLogin prohibit-password\nPasswordAuthentication yes\nKbdInteractiveAuthentication no\nUsePAM yes\nX11Forwarding yes\nPrintMotd no\nSubsystem\tsftp\t/usr/lib/openssh/sftp-server\n');
   s.poner('/etc/crontab','# /etc/crontab: tareas programadas del sistema\nSHELL=/bin/sh\n# m h dom mon dow user\tcommand\n17 *\t* * *\troot\tcd / && run-parts --report /etc/cron.hourly\n25 6\t* * *\troot\ttest -x /usr/sbin/anacron || run-parts --report /etc/cron.daily\n');
   s.poner('/etc/apt/sources.list.d/ubuntu.sources','Types: deb\nURIs: http://mx.archive.ubuntu.com/ubuntu/\nSuites: noble noble-updates noble-backports\nComponents: main restricted universe multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.ubuntu.com/ubuntu/\nSuites: noble-security\nComponents: main restricted universe multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n');
+  s.poner('/etc/resolv.conf','# Lo administra systemd-resolved: los programas preguntan a 127.0.0.53, que reenvía\n# las consultas a los servidores DNS de la red. Para ver cuáles: resolvectl status\nnameserver 127.0.0.53\noptions edns0 trust-ad\nsearch .\n');
+  s.poner('/etc/netplan/50-cloud-init.yaml','network:\n  version: 2\n  ethernets:\n    '+s.red.iface+':\n      dhcp4: true\n',{modo:0o600});
   s.poner('/etc/fstab','# <file system> <mount point> <type> <options> <dump> <pass>\n/dev/disk/by-uuid/5b1e2c1a-7f3d-4c8e-9a1b-2d6e8f0a4c11 / ext4 defaults 0 1\n/dev/disk/by-uuid/9C3A-1F2B /boot/efi vfat defaults 0 1\n/swap.img\tnone\tswap\tsw\t0\t0\n');
   s.poner('/root/.bashrc','# ~/.bashrc del administrador\nalias ll=\'ls -alF\'\n',{modo:0o644});
   var ahora=Date.now(),hh=function(h,m){return new Date(ahora-((h*60+(m||0))*60e3))};
@@ -169,7 +178,7 @@ function Sistema(op){
     [hh(0,49),'sshd[1993]: Failed password for root from 203.0.113.77 port 40130 ssh2']].map(function(l){return fechaLog(l[0])+' '+s.host+' '+l[1]}).join('\n')+'\n',{u:'syslog',g:'adm',modo:0o640});
 
   /* Usuario del estudiante y su carpeta personal */
-  s.usuarioNuevo(yo,{uid:1000,grupos:['adm','sudo','users'],nombre:op.nombre||(yo.charAt(0).toUpperCase()+yo.slice(1))});
+  s.usuarioNuevo(yo,{uid:1000,grupos:['adm','sudo','users'],nombre:op.nombre||(yo.charAt(0).toUpperCase()+yo.slice(1)),clave:op.contrasena||null});
   s.crearCasa(yo,hh(72));
   ['Documentos','Descargas','Escritorio'].forEach(function(d){s.poner('/home/'+yo+'/'+d+'/',null,{u:yo,g:yo,modo:0o755,f:hh(70)})});
   s.poner('/home/'+yo+'/notas.txt','Pendientes de esta semana:\n- Repasar la lección de redes\n- Comprar café\n- Llamar a soporte por la impresora\n',{u:yo,g:yo,modo:0o664,f:hh(5,12)});
@@ -184,7 +193,7 @@ function Sistema(op){
   s.proc({pid:352,cmd:'/usr/lib/systemd/systemd-udevd',stat:'Ss',mem:0.2});
   s.proc({pid:590,cmd:'/usr/lib/systemd/systemd-resolved',u:'systemd-resolve',stat:'Ss',mem:0.3});
   s.servicio('cron',{desc:'Regular background program processing daemon',cmd:'/usr/sbin/cron -f -P',activo:true,habilitado:true,pid:603,mem:'0.4M'});
-  s.servicio('ssh',{desc:'OpenBSD Secure Shell server',cmd:'sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups',nombreProc:'sshd',activo:true,habilitado:true,pid:611,puertos:[22],alias:['sshd'],mem:'2.3M',paquete:'openssh-server'});
+  s.servicio('ssh',{validar:function(s2){return {conf:sshdConf(s2)}},desc:'OpenBSD Secure Shell server',cmd:'sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups',nombreProc:'sshd',activo:true,habilitado:true,pid:611,puertos:[22],alias:['sshd'],mem:'2.3M',paquete:'openssh-server'});
   s.servicio('rsyslog',{desc:'System Logging Service',cmd:'/usr/sbin/rsyslogd -n -iNONE',nombreProc:'rsyslogd',u:'syslog',activo:true,habilitado:true,pid:702,mem:'1.1M',alias:['syslog']});
   s.servicio('systemd-resolved',{desc:'Network Name Resolution',cmd:'/usr/lib/systemd/systemd-resolved',activo:true,habilitado:true,sinProc:true,mem:'5.6M',puertos:[]});
   s.servicio('ufw',{desc:'Uncomplicated firewall',tipo:'oneshot',activo:true,habilitado:true,sinProc:true,paquete:'ufw'});
@@ -286,7 +295,7 @@ S.puede=function(n,u,q){
   return !!(m&bit);
 };
 S.contenido=function(n){return n.gen?n.gen(this):n.t==='c'?'':n.c||''};
-S.tam=function(n){return n.t==='d'?4096:n.t==='l'?n.dest.length-1:bytesDe(this.contenido(n))};
+S.tam=function(n){return n.t==='d'?4096:n.t==='l'?(n.txt||n.dest).length:bytesDe(this.contenido(n))};
 S.modoTexto=function(n){
   var t=n.t==='d'?'d':n.t==='l'?'l':n.t==='c'?'c':'-',m=n.modo,r='';
   for(var k=2;k>=0;k--){var b=(m>>(k*3))&7;r+=(b&4?'r':'-')+(b&2?'w':'-')+(b&1?'x':'-')}
@@ -350,6 +359,19 @@ S.servicio=function(n,o){
 S.log=function(unidad,txt,f){this.diario.push({f:f||new Date(),u:unidad,txt:txt})};
 S.arrancar=function(v,silencio,pid){
   var s=this,f=silencio?new Date(s.arranque+40e3):new Date();
+  if(v.validar){
+    var rv=v.validar(s);
+    if(rv.err){
+      v.activo=false;v.fallo='exit-code';v.desde=f;v.pid=0;
+      s.log(v.nombre,'systemd[1]: Starting '+v.nombre+'.service - '+v.desc+'...',f);
+      s.log(v.nombre,(v.nombreProc||v.nombre)+'[2410]: '+(v.nombreProc||v.nombre)+': [emerg] '+rv.err,f);
+      s.log(v.nombre,'systemd[1]: '+v.nombre+'.service: Control process exited, code=exited, status=1/FAILURE',f);
+      s.log(v.nombre,'systemd[1]: '+v.nombre+'.service: Failed with result \'exit-code\'.',f);
+      s.log(v.nombre,'systemd[1]: Failed to start '+v.nombre+'.service - '+v.desc+'.',f);
+      return false;
+    }
+    v.conf=rv.conf;
+  }
   v.activo=true;v.fallo='';v.desde=f;
   if(!v.sinProc&&v.tipo!=='oneshot'){
     var p=s.proc({pid:pid,cmd:v.cmd,nombre:v.nombreProc||v.nombre,u:v.u,serv:v.nombre,stat:'Ss',mem:0.2,inicio:f});
@@ -359,6 +381,7 @@ S.arrancar=function(v,silencio,pid){
   s.log(v.nombre,'systemd[1]: Starting '+v.nombre+'.service - '+v.desc+'...',f);
   (v.alArrancar||[]).forEach(function(l){s.log(v.nombre,l.replace('PID',v.pid),f)});
   s.log(v.nombre,'systemd[1]: Started '+v.nombre+'.service - '+v.desc+'.',f);
+  return true;
 };
 S.detener=function(v,senal){
   var s=this;
@@ -390,7 +413,8 @@ S.proceso=function(fn){return this.procesos.filter(typeof fn==='function'?fn:fun
 var OPS=['2>&1','2>>','&&','||','>>','2>','|','&',';','>','<'];
 function lex(s){
   var toks=[],w=null,i=0,n=s.length;
-  function seg(txt,q,sub){if(!w)w={segs:[]};var l=w.segs[w.segs.length-1];if(!sub&&l&&!l.sub&&l.q===q)l.t+=txt;else w.segs.push({t:txt,q:q,sub:!!sub})}
+  function seg(txt,q,sub,ar){if(!w)w={segs:[]};var l=w.segs[w.segs.length-1];if(!sub&&l&&!l.sub&&l.q===q)l.t+=txt;else w.segs.push({t:txt,q:q,sub:!!sub,ar:!!ar})}
+  function aritFin(j){var prof=0;for(var k=j+1;k<n;k++){if(s[k]==='(')prof++;else if(s[k]===')'){prof--;if(!prof)return k}}throw 'se encontró EOF inesperado mientras se buscaba un «))» coincidente'}
   function fin(){if(w){toks.push({tipo:'p',segs:w.segs});w=null}}
   function cierre(j){
     var prof=0;
@@ -409,6 +433,7 @@ function lex(s){
       var k=i+1,b='';if(!w)w={segs:[]};
       while(k<n&&s[k]!=='"'){
         if(s[k]==='\\'&&k+1<n&&'"\\$`'.indexOf(s[k+1])>=0){b+=s[k+1]==='$'?'\u0003':s[k+1];k+=2;continue}
+        if(s.substr(k,3)==='$(('){if(b){seg(b,2);b=''}var fa=aritFin(k);seg(s.slice(k+3,fa-1),2,true,true);k=fa+1;continue}
         if(s[k]==='$'&&s[k+1]==='('){if(b){seg(b,2);b=''}var e=cierre(k);seg(s.slice(k+2,e),2,true);k=e+1;continue}
         b+=s[k];k++;
       }
@@ -416,6 +441,7 @@ function lex(s){
       seg(b,2);i=k+1;continue;
     }
     if(ch==='\\'){if(i+1<n){seg(s[i+1]==='$'?'\u0003':s[i+1],1);i+=2}else i++;continue}
+    if(s.substr(i,3)==='$(('){var fa2=aritFin(i);seg(s.slice(i+3,fa2-1),0,true,true);i=fa2+1;continue}
     if(ch==='$'&&s[i+1]==='('){var e2=cierre(i);seg(s.slice(i+2,e2),0,true);i=e2+1;continue}
     if(ch===' '||ch==='\t'){fin();i++;continue}
     if(ch==='#'&&!w)break;
@@ -538,9 +564,19 @@ T.reiniciar=function(borrar){
   t.sis=new Sistema(op);
   t.sis.t=t;
   t.pila=[{u:t.sis.yo,cwd:t.sis.home(t.sis.yo),vars:{},pid:t.sis.shellPid}];
+  /* Otras computadoras de la red, para entrar con ssh: {op: opciones de Sistema, preparar(sis, t)} */
+  t.remotos={};
+  (op.remotos||[]).forEach(function(r){
+    var rs=new Sistema(r.op),loc=t.sis;
+    rs.mundo=loc.mundo;loc.mundo.sistemas.push(rs);
+    loc.red.hosts[rs.host]=rs.red.ip;rs.red.hosts[loc.host]=loc.red.ip;
+    rs.red.vecinos[loc.red.ip]=loc.red.mac;
+    t.remotos[rs.host]=rs;
+  });
   t.codigo=0;t.sudoHasta=0;t.dichos={};t.historial=[];t.pos=0;
   t.log.textContent='';
   if(op.preparar)op.preparar(t.sis,t);
+  (op.remotos||[]).forEach(function(r){if(r.preparar)r.preparar(t.remotos[r.op.host],t)});
   t.escribir(c('h',op.bienvenida||'Terminal simulada de OneLearn: Ubuntu 24.04 LTS. Escribe help para ver los comandos.')+'\n');
   var g=guardados();
   if(borrar&&op.clave){delete g[op.clave];try{localStorage.setItem(CLAVE,JSON.stringify(g))}catch(e){}}
@@ -675,7 +711,7 @@ T.ejecutar=function(linea){
   t.psV.textContent='';t.psL.textContent='Comando en curso';
   t.salida='';
   t.ultimo={linea:ex,cmds:[],codigo:0,salida:'',uso:function(n,re){return this.cmds.some(function(a){return a[0]===n&&(!re||re.test(a.slice(1).join(' ')))})}};
-  return t.correrLinea(ex).catch(function(e){
+  return t.correrTexto(ex).catch(function(e){
     if(e==='cancelado')return 130;
     if(window.console)console.error('Terminal:',e);
     t.escribir(c('e','bash: error interno de la terminal simulada')+'\n');
@@ -724,6 +760,7 @@ T.expandirPalabra=function(w){
   var t=this;
   return Promise.all(w.segs.map(function(sg){
     if(!sg.sub)return sg;
+    if(sg.ar)return {t:aritmetica(sg.t,t),q:sg.q,lit:true};
     var cap={buf:''};
     return t.correrLinea(sg.t,cap).then(function(){return {t:cap.buf.replace(/\n+$/,''),q:sg.q,lit:true}});
   })).then(function(segs){
@@ -854,7 +891,7 @@ T.correrRuta=function(args,x){
   return t.correrScript(t.sis.contenido(r.n),args,x);
 };
 T.correrScript=function(txt,args,x,mismo){
-  var t=this,fr=t.frame(),lineas=txt.split('\n'),cod=0,salir=false;
+  var t=this,fr=t.frame();
   if(!mismo){
     var nuevo={u:x.u,cwd:fr.cwd,vars:{},pid:t.sis.sigPid++,script:true};
     Object.keys(fr.vars).forEach(function(k){nuevo.vars[k]=fr.vars[k]});
@@ -862,17 +899,12 @@ T.correrScript=function(txt,args,x,mismo){
     nuevo.vars['#']=String(args.length-1);nuevo.vars['@']=args.slice(1).join(' ');
     t.pila.push(nuevo);
   }
-  var tty=x.tty;
-  return lineas.reduce(function(p,l){
-    return p.then(function(){
-      if(salir||t.cancelado)return;
-      l=l.trim();
-      if(!l||l.charAt(0)==='#')return;
-      if(/^exit(\s+\d+)?$/.test(l)){salir=true;cod=+(l.split(/\s+/)[1]||0);return}
-      var cap=tty?null:{buf:''};
-      return t.correrLinea(l,cap).then(function(c2){cod=c2;if(cap)x.out(cap.buf)});
-    });
-  },Promise.resolve()).then(function(){if(!mismo)t.pila.pop();return cod},function(e){if(!mismo)t.pila.pop();throw e});
+  var cap=x.tty?null:{buf:''};
+  function fin(){if(!mismo)t.pila.pop();if(cap)x.out(cap.buf)}
+  return t.correrTexto(txt,cap).then(function(cod){fin();return cod},function(e){
+    if(e&&e.salir!=null){fin();return e.salir}
+    fin();throw e;
+  });
 };
 T.esperar=function(ms){
   var t=this;
@@ -907,19 +939,19 @@ T.trabajosTerminados=function(){
   s.trabajos=s.trabajos.filter(function(j){return !j.hecho});
 };
 T.autenticar=function(x){
-  var t=this,u=t.sis.usuarios[x.u];
-  if(x.u==='root'||Date.now()<t.sudoHasta)return Promise.resolve(true);
+  var t=this,u=x.sis.usuarios[x.u];
+  if(x.u==='root'||Date.now()<x.sis.sudoHasta)return Promise.resolve(true);
   var intentos=0;
   function pedir(){
     return t.pedir('[sudo] contraseña para '+x.u+': ',true).then(function(v){
-      if(v&&(!u||!u.clave||u.clave===v)){t.sudoHasta=Date.now()+15*60e3;return true}
+      if(v&&(!u||!u.clave||u.clave===v)){x.sis.sudoHasta=Date.now()+15*60e3;return true}
       intentos++;
       if(intentos>=3){x.err('sudo: 3 intentos de contraseña incorrectos\n');return false}
       t.escribir('Lo siento, pruebe otra vez.\n');
       return pedir();
     });
   }
-  t.consejo('sudo-clave','al escribir la contraseña no se ve nada en pantalla: es normal. Aquí sirve cualquier contraseña, salvo que le pongas una nueva con passwd.');
+  t.consejo('sudo-clave',u&&u.clave?'al escribir la contraseña no se ve nada en pantalla: es normal.':'al escribir la contraseña no se ve nada en pantalla: es normal. Aquí sirve cualquier contraseña, salvo que le pongas una nueva con passwd.');
   return pedir();
 };
 
@@ -1077,7 +1109,12 @@ cmd('echo',{d:'escribe un texto',uso:'echo [-n] texto...',ops:[['-n','sin salto 
 });
 cmd('exit logout',{d:'cierra la sesión actual (después de sudo -i o su)',cat:'La terminal',interna:true},function(x){
   var t=x.t;
-  if(t.pila.length>1){var fr=t.pila.pop();x.sis.procesos=x.sis.procesos.filter(function(p){return p.pid!==fr.pid});x.out('logout\n');return 0}
+  if(t.pila.length>1){
+    var fr=t.pila.pop();x.sis.procesos=x.sis.procesos.filter(function(p){return p.pid!==fr.pid});
+    x.out('logout\n');
+    if(fr.sisPrevio){t.sis=fr.sisPrevio;x.out('Connection to '+fr.host+' closed.\n')}
+    return 0;
+  }
   x.consejo('exit','esta terminal es parte de la lección y no se cierra. Para limpiarla usa clear.');
 });
 cmd('alias',{d:'crea atajos para comandos',uso:"alias nombre='comando'",cat:'La terminal',interna:true},function(x){
@@ -1154,7 +1191,7 @@ cmd('ls',{d:'lista lo que hay en una carpeta',uso:'ls [opciones] [carpeta...]',o
     var filas=ents.map(function(e){
       var n=e.n,k=n.t==='d'?2+Object.keys(n.h).filter(function(h){return n.h[h].t==='d'}).length:1;
       var tam=n.t==='c'?n.num:f.h?humano(s.tam(n)):String(s.tam(n));
-      var r={m:s.modoTexto(n),k:String(k),u:n.u,g:n.g,t:tam,f:fechaLs(n.m),nom:nombreColor(s,n,e.nombre,x.tty,F)+(n.t==='l'?' -> '+n.dest.slice(1):'')};
+      var r={m:s.modoTexto(n),k:String(k),u:n.u,g:n.g,t:tam,f:fechaLs(n.m),nom:nombreColor(s,n,e.nombre,x.tty,F)+(n.t==='l'?' -> '+(n.txt||n.dest):'')};
       w.k=Math.max(w.k,r.k.length);w.u=Math.max(w.u,r.u.length);w.g=Math.max(w.g,r.g.length);w.t=Math.max(w.t,r.t.length);
       return r;
     });
@@ -1473,9 +1510,9 @@ cmd('file',{d:'dice qué tipo de archivo es',uso:'file archivo...',cat:'Archivos
     var r=x.buscar(p,true),n=r.n,t;
     if(!n)t="cannot open `"+p+"' (No such file or directory)";
     else if(n.t==='d')t='directory';
-    else if(n.t==='l')t='symbolic link to '+n.dest.slice(1);
+    else if(n.t==='l')t='symbolic link to '+(n.txt||n.dest);
     else if(n.t==='c')t='character special (1/3)';
-    else{var tx=x.sis.contenido(n);t=!tx?'empty':tx.charAt(0)==='\u007f'?'ELF 64-bit LSB pie executable, x86-64':/^#!.*bash/.test(tx)?'Bourne-Again shell script, '+(/[^\x00-\x7f]/.test(tx)?'Unicode text, UTF-8 text':'ASCII text')+' executable':/^</.test(tx.trim())?'HTML document, ASCII text':/[^\x00-\x7f]/.test(tx)?'Unicode text, UTF-8 text':'ASCII text'}
+    else{var tx=x.sis.contenido(n);t=!tx?'empty':tx.indexOf(MARCA_TAR)===0?(JSON.parse(tx.slice(MARCA_TAR.length)).z?'gzip compressed data, from Unix, original size modulo 2^32 10240':'POSIX tar archive (GNU)'):tx.charAt(0)==='\u007f'?'ELF 64-bit LSB pie executable, x86-64':/^#!.*bash/.test(tx)?'Bourne-Again shell script, '+(/[^\x00-\x7f]/.test(tx)?'Unicode text, UTF-8 text':'ASCII text')+' executable':/^</.test(tx.trim())?'HTML document, ASCII text':/[^\x00-\x7f]/.test(tx)?'Unicode text, UTF-8 text':'ASCII text'}
     x.out(p+': '+t+'\n');
   });
 });
@@ -1923,13 +1960,17 @@ cmd('systemctl',{d:'controla los servicios (programas que corren en segundo plan
       if(['start','stop','restart','reload','enable','disable','mask'].indexOf(acc)<0){x.err('Unknown command verb \''+acc+'\'.\n');cod=1;return}
       if(x.u!=='root'){cod=sinPermiso(x,acc,v);return}
       return (acc==='start'||acc==='restart'||acc==='reload'?x.esperar(250):Promise.resolve()).then(function(){
-        if(acc==='start'){if(!v.activo)s.arrancar(v)}
+        if(acc==='start'){if(!v.activo&&!s.arrancar(v)){x.err('Job for '+v.nombre+'.service failed because the control process exited with error code.\nSee "systemctl status '+v.nombre+'.service" and "journalctl -xeu '+v.nombre+'.service" for details.\n');cod=1;}}
         else if(acc==='stop'){if(v.activo)s.detener(v)}
-        else if(acc==='restart'){if(v.activo)s.detener(v);s.arrancar(v)}
-        else if(acc==='reload'){if(!v.activo){x.err('Job for '+v.nombre+'.service failed: the service is not active.\n');cod=1}else s.log(v.nombre,'systemd[1]: Reloaded '+v.nombre+'.service - '+v.desc+'.')}
+        else if(acc==='restart'){if(v.activo)s.detener(v);if(!s.arrancar(v)){x.err('Job for '+v.nombre+'.service failed because the control process exited with error code.\nSee "systemctl status '+v.nombre+'.service" and "journalctl -xeu '+v.nombre+'.service" for details.\n');cod=1;}}
+        else if(acc==='reload'){
+          if(!v.activo){x.err('Job for '+v.nombre+'.service failed: the service is not active.\n');cod=1}
+          else{var rv=v.validar?v.validar(s):{};
+            if(rv.err){s.log(v.nombre,(v.nombreProc||v.nombre)+'[2415]: '+(v.nombreProc||v.nombre)+': [emerg] '+rv.err);s.log(v.nombre,'systemd[1]: '+v.nombre+'.service: Control process exited, code=exited, status=1/FAILURE');s.log(v.nombre,'systemd[1]: Reload failed for '+v.nombre+'.service - '+v.desc+'.');x.err('Job for '+v.nombre+'.service failed because the control process exited with error code.\nSee "systemctl status '+v.nombre+'.service" and "journalctl -xeu '+v.nombre+'.service" for details.\n');cod=1}
+            else{if(rv.conf)v.conf=rv.conf;s.log(v.nombre,'systemd[1]: Reloading '+v.nombre+'.service - '+v.desc+'...');s.log(v.nombre,'systemd[1]: Reloaded '+v.nombre+'.service - '+v.desc+'.')}}}
         else if(acc==='enable'){
           if(!v.habilitado)x.out('Synchronizing state of '+v.nombre+'.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.\nExecuting: /usr/lib/systemd/systemd-sysv-install enable '+v.nombre+'\nCreated symlink /etc/systemd/system/multi-user.target.wants/'+v.nombre+'.service → /usr/lib/systemd/system/'+v.nombre+'.service.\n');
-          v.habilitado=true;if(o.largo.now&&!v.activo)s.arrancar(v);
+          v.habilitado=true;if(o.largo.now&&!v.activo&&!s.arrancar(v)){x.err('Job for '+v.nombre+'.service failed because the control process exited with error code.\nSee "systemctl status '+v.nombre+'.service" and "journalctl -xeu '+v.nombre+'.service" for details.\n');cod=1;}
         }
         else if(acc==='disable'){
           if(v.habilitado)x.out('Synchronizing state of '+v.nombre+'.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.\nExecuting: /usr/lib/systemd/systemd-sysv-install disable '+v.nombre+'\nRemoved "/etc/systemd/system/multi-user.target.wants/'+v.nombre+'.service".\n');
@@ -1978,11 +2019,11 @@ function instalarEfectos(s,n){
     s.poner('/etc/nginx/nginx.conf','user www-data;\nworker_processes auto;\npid /run/nginx.pid;\n\nevents {\n\tworker_connections 768;\n}\n\nhttp {\n\tsendfile on;\n\tinclude /etc/nginx/mime.types;\n\taccess_log /var/log/nginx/access.log;\n\terror_log /var/log/nginx/error.log;\n\tinclude /etc/nginx/sites-enabled/*;\n}\n');
     s.poner('/etc/nginx/sites-available/default','server {\n\tlisten 80 default_server;\n\tlisten [::]:80 default_server;\n\n\troot /var/www/html;\n\tindex index.html index.htm index.nginx-debian.html;\n\n\tserver_name _;\n\n\tlocation / {\n\t\ttry_files $uri $uri/ =404;\n\t}\n}\n');
     s.poner('/etc/nginx/sites-enabled/');
-    s.buscar('/etc/nginx/sites-enabled','root').n.h['default']={t:'l',u:'root',g:'root',modo:0o777,dest:'/etc/nginx/sites-available/default',m:new Date()};
+    s.buscar('/etc/nginx/sites-enabled','root').n.h['default']={t:'l',u:'root',g:'root',modo:0o777,dest:'/etc/nginx/sites-available/default',txt:'/etc/nginx/sites-available/default',m:new Date()};
     s.poner('/var/www/html/index.nginx-debian.html',PAGINA_NGINX);
     s.poner('/var/log/nginx/access.log','',{u:'www-data',g:'adm',modo:0o640});
     s.poner('/var/log/nginx/error.log','',{u:'www-data',g:'adm',modo:0o640});
-    var v=s.servicios.nginx||s.servicio('nginx',{desc:'A high performance web server and a reverse proxy server',cmd:'nginx: master process /usr/sbin/nginx -g daemon on; master_process on;',nombreProc:'nginx',puertos:[80],mem:'2.9M',paquete:'nginx',
+    var v=s.servicios.nginx||s.servicio('nginx',{validar:nginxConfig,desc:'A high performance web server and a reverse proxy server',cmd:'nginx: master process /usr/sbin/nginx -g daemon on; master_process on;',nombreProc:'nginx',puertos:[80],mem:'2.9M',paquete:'nginx',
       hijos:[{cmd:'nginx: worker process',nombre:'nginx',u:'www-data'},{cmd:'nginx: worker process',nombre:'nginx',u:'www-data'}]});
     v.habilitado=true;if(!v.activo)s.arrancar(v);
   }
@@ -2142,110 +2183,1245 @@ cmd('dpkg',{d:'administra paquetes uno por uno (apt lo usa por debajo)',uso:'dpk
   x.err('dpkg: error: necesita una opción que indique qué hacer\n');return 2;
 });
 
-/* --- Red --- */
-function resolver(s,h){
-  if(/^\d+\.\d+\.\d+\.\d+$/.test(h))return h;
-  if(h==='localhost')return '127.0.0.1';
-  if(h===s.host)return '127.0.1.1';
-  if(s.red.hosts[h])return s.red.hosts[h];
-  if(/\.[a-z]{2,}$/i.test(h)){var n=0;for(var i=0;i<h.length;i++)n=(n*31+h.charCodeAt(i))%250;return '203.0.113.'+(n+2)}
-  return null;
-}
-function rtt(s,ip,seq){
-  if(/^127\./.test(ip)||ip===s.red.ip)return 0.03+seq%3*0.01;
-  var red=s.red.ip.split('.').slice(0,3).join('.');
-  if(ip.indexOf(red+'.')===0){
-    if(ip===s.red.puerta||s.red.vecinos&&s.red.vecinos.indexOf(ip)>=0||ip===red+'.20')return 1.2+(seq*7%5)*0.3;
-    return null;
+/* --- Red: direcciones, alcance, DNS --- */
+function ipNum(ip){var p=String(ip).split('.');if(p.length!==4)return null;var n=0;for(var i=0;i<4;i++){if(!/^\d{1,3}$/.test(p[i])||+p[i]>255)return null;n=n*256+(+p[i])}return n}
+function numIp(n){return [Math.floor(n/16777216)%256,Math.floor(n/65536)%256,Math.floor(n/256)%256,n%256].join('.')}
+function esIp(t){return ipNum(t)!==null}
+function enRed(ip,red,bits){var a=ipNum(ip),b=ipNum(red);if(a===null||b===null)return false;var t=Math.pow(2,32-bits);return Math.floor(a/t)===Math.floor(b/t)}
+function cidr(t){var p=String(t).split('/');return {red:p[0],bits:p.length>1?+p[1]:32}}
+function redDe(ip,bits){var t=Math.pow(2,32-bits);return numIp(Math.floor(ipNum(ip)/t)*t)}
+function difusion(ip,bits){var t=Math.pow(2,32-bits);return numIp(Math.floor(ipNum(ip)/t)*t+t-1)}
+function privada(ip){return enRed(ip,'10.0.0.0',8)||enRed(ip,'172.16.0.0',12)||enRed(ip,'192.168.0.0',16)||enRed(ip,'100.64.0.0',10)}
+function dentro(ip,lista){return (lista||[]).some(function(c2){var k=cidr(c2);return enRed(ip,k.red,k.bits)})}
+var PUERTOS={20:'ftp-data',21:'ftp',22:'ssh',23:'telnet',25:'smtp',53:'domain',67:'bootps',80:'http',110:'pop3',123:'ntp',143:'imap',443:'https',465:'submissions',587:'submission',993:'imaps',3306:'mysql',3389:'ms-wbt-server',5432:'postgresql',8080:'http-alt'};
+var NOMBRES_PUERTO={ssh:22,http:80,https:443,domain:53,dns:53,smtp:25,ftp:21,mysql:3306,postgresql:5432,ntp:123};
+var DNS_BASE={
+  'example.com':{A:['203.0.113.10'],AAAA:['2001:db8::10'],MX:['10 mail.example.com.'],NS:['a.iana-servers.net.','b.iana-servers.net.'],TXT:['"v=spf1 -all"']},
+  'www.example.com':{CNAME:['example.com.']},
+  'mail.example.com':{A:['203.0.113.11']},
+  'ubuntu.com':{A:['203.0.113.30'],AAAA:['2001:db8::30']},
+  'mx.archive.ubuntu.com':{A:['203.0.113.31']},
+  'security.ubuntu.com':{A:['203.0.113.32']}
+};
+function sintetica(h){var n=0;for(var i=0;i<h.length;i++)n=(n*31+h.charCodeAt(i))%250;return '203.0.113.'+(n+2)}
+/* Ruta para una IP: la red conectada, la ruta más específica o la ruta por defecto */
+S.rutaPara=function(ip){
+  var r=this.red,mejor=null;
+  if(r.ip&&r.arriba&&enRed(ip,r.ip,r.bits))mejor={bits:r.bits,directa:true};
+  r.rutas.forEach(function(rt){var k=cidr(rt.destino);if(enRed(ip,k.red,k.bits)&&(!mejor||k.bits>mejor.bits))mejor={bits:k.bits,via:rt.via}});
+  if(!mejor&&r.puerta)mejor={bits:0,via:r.puerta};
+  return mejor;
+};
+S.vecino=function(ip){var r=this.red;return !!(r.vecinos[ip]||this.mundo.porIp(ip))};
+/* ¿Llega un paquete a ip? {ok, rtt, saltos:[{ip, nombre}], ttl, sis} o {err:'red'|'host'|'timeout', saltos} */
+S.alcance=function(ip){
+  var s=this,r=s.red;
+  if(/^127\./.test(ip)||ip===r.ip&&r.ip)return {ok:true,rtt:0.04,saltos:[],ttl:64,sis:s};
+  if(!r.arriba||!r.ip)return {err:'red'};
+  var ruta=s.rutaPara(ip);
+  if(!ruta)return {err:'red'};
+  if(ruta.directa){
+    if(!s.vecino(ip))return {err:'host'};
+    r.conocidos[ip]=r.vecinos[ip]||s.mundo.porIp(ip).red.mac;
+    return {ok:true,rtt:1.1,saltos:[],ttl:64,sis:s.mundo.porIp(ip)};
   }
-  return 18+(seq*13%7)*1.1;
+  var gw=ruta.via;
+  if(!enRed(gw,r.ip,r.bits)||!s.vecino(gw))return {err:'host'};
+  r.conocidos[gw]=r.vecinos[gw]||s.mundo.porIp(gw).red.mac;
+  if(dentro(ip,r.detras[gw]))return {ok:true,rtt:2.6,saltos:[{ip:gw}],ttl:63,sis:s.mundo.porIp(ip)};
+  if(gw===r.salida&&!privada(ip)&&r.internet!==false)
+    return {ok:true,rtt:19,saltos:[{ip:gw,nombre:'_gateway'},{ip:'10.20.0.1'},{ip:null},{ip:'198.51.100.9'}],ttl:56,sis:s.mundo.porIp(ip)};
+  return {err:'timeout',saltos:[{ip:gw,nombre:gw===r.salida?'_gateway':gw}]};
+};
+S.dnsServidor=function(){var n=this.nodo('/etc/resolv.conf'),m=n?this.contenido(n).match(/^\s*nameserver\s+(\S+)/m):null;return m?m[1]:null};
+/* Consulta DNS: {ok:[valores], srv} o {err:'nx'|'sin', srv} */
+S.dns=function(nombre,tipo,servidor){
+  var s=this,ns=servidor||s.dnsServidor();
+  nombre=String(nombre).replace(/\.$/,'').toLowerCase();tipo=tipo||'A';
+  if(!ns)return {err:'sin',srv:null};
+  if(ns==='127.0.0.53'&&!servidor){
+    var v=s.servicio('systemd-resolved');
+    if(!v||!v.activo)return {err:'sin',srv:ns};
+    var up=s.red.dnsSup||s.red.salida;
+    if(!up||!s.alcance(up).ok)return {err:'sin',srv:ns};
+  }else if(!s.alcance(ns).ok)return {err:'sin',srv:ns};
+  var reg=s.red.dns[nombre]||DNS_BASE[nombre];
+  if(!reg&&!privada(ns)&&s.red.internet===false)return {err:'sin',srv:ns};
+  if(!reg&&s.red.internet===false&&!s.red.dns[nombre])return {err:'sin',srv:ns};
+  if(reg){
+    if(reg.CNAME&&tipo!=='CNAME'){var dest=s.dns(reg.CNAME[0],tipo,servidor);return {ok:dest.ok||[],cname:reg.CNAME[0],srv:ns}}
+    return {ok:reg[tipo]||[],srv:ns};
+  }
+  if(/\.(example|test|invalid|local)$/.test(nombre)||!/\.[a-z]{2,}$/.test(nombre))return {err:'nx',srv:ns};
+  if(tipo==='A')return {ok:[sintetica(nombre)],srv:ns};
+  if(tipo==='AAAA')return {ok:['2001:db8:'+sintetica(nombre).split('.')[3]+'::1'],srv:ns};
+  return {ok:[],srv:ns};
+};
+/* Nombre a IP como lo hace un programa: IP escrita, /etc/hosts, nombres de la red local y DNS */
+S.resolver=function(h){
+  var s=this;
+  if(esIp(h))return {ip:h};
+  if(h==='localhost')return {ip:'127.0.0.1'};
+  var hosts=s.nodo('/etc/hosts'),t=hosts?s.contenido(hosts):'',enc=null;
+  t.split('\n').some(function(l){l=l.replace(/#.*/,'').trim();if(!l)return;var p=l.split(/\s+/);if(p.slice(1).indexOf(h)>=0&&esIp(p[0])){enc=p[0];return true}});
+  if(enc)return {ip:enc};
+  if(s.red.hosts[h])return {ip:s.red.hosts[h]};
+  var r=s.dns(h,'A');
+  if(r.err)return {err:r.err};
+  return r.ok.length?{ip:r.ok[0]}:{err:'nx'};
+};
+/* Puerto de un sistema visto desde otra IP: 'abierto', 'cerrado' (nadie escucha) o 'filtrado' (firewall) */
+function puertoEstado(dest,puerto,origen){
+  var propio=/^127\./.test(origen)||origen===dest.red.ip;
+  if(!propio&&dest.ufw.activo&&!ufwPermite(dest,puerto,origen))return 'filtrado';
+  var escucha=Object.keys(dest.servicios).some(function(k){var v=dest.servicios[k];return v.activo&&v.puertos.indexOf(puerto)>=0&&(!v.paquete||dest.instalado(v.paquete))});
+  return escucha?'abierto':'cerrado';
 }
+function nombreIp(s,ip){
+  if(ip===s.red.salida||ip===s.red.puerta)return '_gateway';
+  var d=s.mundo.porIp(ip);if(d)return d.host;
+  for(var k in s.red.hosts)if(s.red.hosts[k]===ip)return k;
+  return ip;
+}
+
 cmd('ping',{d:'comprueba si otra computadora responde',uso:'ping [-c N] equipo',ops:[['-c 4','envía solo 4 paquetes']],cat:'Red'},function(x){
-  var o=opts(x.args,'cWi'),h=o.pos[0],s=x.sis;
+  var seis=x.args.indexOf('-6')>0,o=opts(x.args.filter(function(v){return v!=='-6'&&v!=='-4'}),'cWi'),h=o.pos[0],s=x.sis;
   if(!h){x.err('ping: usage error: Destination address required\n');return 1}
-  var ip=resolver(s,h);
-  if(!ip){x.err('ping: '+h+': Nombre o servicio desconocido\n');return 2}
-  if(s.red.ping){var r=s.red.ping(ip,x);if(r)return r}
+  if(seis||h.indexOf(':')>=0)return ping6(x,h,o);
+  var rs=s.resolver(h);
+  if(rs.err==='sin'){x.err('ping: '+h+': Fallo temporal en la resolución del nombre\n');x.consejo('ping-dns','el nombre no se pudo traducir a una IP: revisa el DNS (resolvectl status, /etc/resolv.conf) o prueba con una IP, como ping 1.1.1.1.');return 2}
+  if(rs.err){x.err('ping: '+h+': Nombre o servicio desconocido\n');return 2}
+  var ip=rs.ip,al=s.alcance(ip);
+  if(al.err==='red'){x.err('ping: connect: La red es inaccesible\n');return 2}
   var n=o.val.c?parseInt(o.val.c,10):AT.reduce?4:100,i=0,ok=0,tiempos=[];
   x.out('PING '+h+' ('+ip+') 56(84) bytes of data.\n');
-  if(/^203\.0\.113\./.test(ip))x.consejo('ping-sim','esta terminal simula internet: la dirección de cada sitio es un ejemplo.');
+  if(/^203\.0\.113\./.test(ip)&&!s.red.dns[h])x.consejo('ping-sim','esta terminal simula internet: la dirección de cada sitio es un ejemplo.');
   if(!o.val.c&&!AT.reduce)x.consejo('ping-c','ping sigue enviando hasta que pulses Ctrl+C. Con -c 4 envía solo 4.');
   function fin(){
-    var perd=Math.round((i-ok)/Math.max(1,i)*100);
-    x.out('\n--- '+h+' ping statistics ---\n'+i+' packets transmitted, '+ok+' received, '+(ok<i?'+'+(i-ok)+' errors, ':'')+perd+'% packet loss, time '+(i?(i-1)*1001:0)+'ms\n'+
+    var perd=Math.round((i-ok)/Math.max(1,i)*100),errs=al.err==='host'?i-ok:0;
+    x.out('\n--- '+h+' ping statistics ---\n'+i+' packets transmitted, '+ok+' received, '+(errs?'+'+errs+' errors, ':'')+perd+'% packet loss, time '+(i?(i-1)*1001:0)+'ms\n'+
       (ok?'rtt min/avg/max/mdev = '+Math.min.apply(null,tiempos).toFixed(3)+'/'+(tiempos.reduce(function(a,b){return a+b},0)/ok).toFixed(3)+'/'+Math.max.apply(null,tiempos).toFixed(3)+'/0.412 ms\n':''));
     return ok?0:1;
   }
   function uno(){
     if(i>=n)return Promise.resolve(fin());
     i++;
-    var t=rtt(s,ip,i);
+    var t=al.ok?al.rtt*(1+((i*7)%5)*0.08):null;
     return x.esperar(i===1?150:900).then(function(){
-      if(t==null)x.out('From '+s.red.ip+' icmp_seq='+i+' Destination Host Unreachable\n');
-      else{ok++;tiempos.push(t);x.out('64 bytes from '+(h===ip?ip:h+' ('+ip+')')+': icmp_seq='+i+' ttl='+(/^127\./.test(ip)?64:ip.indexOf(s.red.ip.split('.').slice(0,3).join('.'))===0?64:56)+' time='+(t<1?t.toFixed(3):t.toFixed(1))+' ms\n')}
+      if(al.err==='host')x.out('From '+s.red.ip+' icmp_seq='+i+' Destination Host Unreachable\n');
+      else if(al.ok){ok++;tiempos.push(t);x.out('64 bytes from '+(h===ip?ip:h+' ('+ip+')')+': icmp_seq='+i+' ttl='+al.ttl+' time='+(t<1?t.toFixed(3):t.toFixed(1))+' ms\n')}
       return uno();
     },function(e){if(e==='cancelado')fin();throw e});
   }
   return uno();
 });
-cmd('ip',{d:'muestra las direcciones y rutas de red',uso:'ip a | ip route',ops:[['a','direcciones de cada tarjeta de red'],['-br a','lo mismo, resumido'],['route','por dónde salen los paquetes']],cat:'Red'},function(x){
-  var a=x.args.slice(1).filter(function(v){return v!=='-c'}),s=x.sis,r=s.red,br=a[0]==='-br';
-  if(br)a.shift();
-  var obj=a[0]||'',red=r.ip.split('.').slice(0,3).join('.');
-  if(/^(a|addr|address)$/.test(obj)){
-    if(br){x.out(pad('lo',16)+' UNKNOWN        127.0.0.1/8 ::1/128\n'+pad(r.iface,16)+' '+c('g','UP')+'             '+r.ip+'/'+r.bits+' fe80::a00:27ff:fe3a:5c91/64\n');return}
-    x.out('1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n    inet 127.0.0.1/8 scope host lo\n       valid_lft forever preferred_lft forever\n    inet6 ::1/128 scope host noprefixroute\n       valid_lft forever preferred_lft forever\n'+
-      '2: '+r.iface+': <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state '+c('g','UP')+' group default qlen 1000\n    link/ether '+r.mac+' brd ff:ff:ff:ff:ff:ff\n    inet '+c('b',r.ip+'/'+r.bits)+' brd '+red+'.255 scope global dynamic '+r.iface+'\n       valid_lft 85912sec preferred_lft 85912sec\n    inet6 fe80::a00:27ff:fe3a:5c91/64 scope link\n       valid_lft forever preferred_lft forever\n');
+/* ping por IPv6: la propia computadora, el router (fe80::1) o internet si hay dirección global */
+function ping6(x,h,o){
+  var s=x.sis,r=s.red,ip=h,n=o.val.c?parseInt(o.val.c,10):4;
+  if(h.indexOf(':')<0){var d=s.dns(h,'AAAA');if(d.err||!d.ok.length){x.err('ping: '+h+': '+(d.err==='sin'?'Fallo temporal en la resolución del nombre':'La dirección no está asociada al nombre')+'\n');return 2}ip=d.ok[0]}
+  var local=ip==='::1'||r.ip6&&ip===r.ip6,enlace=/^fe80:/i.test(ip),ok=local||r.arriba&&(enlace?/^fe80::1(%|$)/i.test(ip):!!r.ip6&&r.internet!==false&&!!r.puerta);
+  if(!local&&!r.arriba){x.err('ping: connect: La red es inaccesible\n');return 2}
+  if(!local&&!enlace&&!r.ip6){x.err('ping: connect: La red es inaccesible\n');x.consejo('ping6','esta computadora no tiene dirección IPv6 global: tu red o tu proveedor no dan IPv6.');return 2}
+  x.out('PING '+h+'('+(h===ip?ip:ip)+') 56 data bytes\n');
+  var i=0,t=local?0.04:enlace?0.9:21;
+  function uno(){
+    if(i>=n){x.out('\n--- '+h+' ping statistics ---\n'+n+' packets transmitted, '+(ok?n:0)+' received, '+(ok?0:100)+'% packet loss, time '+(n-1)*1001+'ms\n'+(ok?'rtt min/avg/max/mdev = '+t.toFixed(3)+'/'+(t*1.05).toFixed(3)+'/'+(t*1.1).toFixed(3)+'/0.210 ms\n':''));return Promise.resolve(ok?0:1)}
+    i++;
+    return x.esperar(i===1?150:900).then(function(){if(ok)x.out('64 bytes from '+ip+': icmp_seq='+i+' ttl='+(local||enlace?64:57)+' time='+(t<1?t.toFixed(3):(t*(1+i*0.03)).toFixed(1))+' ms\n');return uno()});
+  }
+  return uno();
+}
+function lineaSalto(k,ip,nombre,base){
+  if(!ip)return pad(k,2,true)+'  * * *\n';
+  var ms=[0,1,2].map(function(j){return (base*(1+j*0.04)).toFixed(3)+' ms'}).join('  ');
+  return pad(k,2,true)+'  '+(nombre||ip)+' ('+ip+')  '+ms+'\n';
+}
+function traza(x,nombreCmd){
+  var o=opts(x.args,'mqw'),h=o.pos[0],s=x.sis;
+  if(!h){x.err('Usage: '+nombreCmd+' [OPTION...] HOST\n');return 2}
+  var rs=s.resolver(h);
+  if(rs.err){x.err(h+': '+(rs.err==='sin'?'Fallo temporal en la resolución del nombre':'Nombre o servicio desconocido')+'\nCannot handle "host" cmdline arg `'+h+"' on position 1 (argc 1)\n");return 2}
+  var ip=rs.ip,al=s.alcance(ip);
+  x.out('traceroute to '+h+' ('+ip+'), 30 hops max, 60 byte packets\n');
+  if(al.err==='red'){x.err('connect: La red es inaccesible\n');return 1}
+  var saltos=(al.saltos||[]).slice(),lineas=[];
+  saltos.forEach(function(sa,k){lineas.push(lineaSalto(k+1,sa.ip,sa.nombre||(sa.ip&&nombreIp(s,sa.ip)!==sa.ip?nombreIp(s,sa.ip):null),1.4+k*4.5))});
+  if(al.ok)lineas.push(lineaSalto(saltos.length+1,ip,h!==ip?h:nombreIp(s,ip)!==ip?nombreIp(s,ip):null,al.rtt));
+  else if(al.err==='host')lineas.push(pad(saltos.length+1,2,true)+'  '+s.host+' ('+s.red.ip+')  3069.611 ms !H  3069.580 ms !H  3069.556 ms !H\n');
+  else for(var k=saltos.length+1;k<=saltos.length+6;k++)lineas.push(pad(k,2,true)+'  * * *\n');
+  return lineas.reduce(function(p,l){return p.then(function(){x.out(l);return x.esperar(120)})},Promise.resolve()).then(function(){
+    if(al.err==='timeout')x.consejo('traceroute','traceroute sigue hasta 30 saltos; aquí cortamos antes. Los asteriscos son saltos que no contestan: el problema está después del último que sí respondió.');
+    if(al.ok&&saltos.some(function(sa){return !sa.ip}))x.consejo('traceroute-estrella','un salto con * * * en medio de un camino que llega no es una falla: muchos routers no contestan a traceroute.');
+    return al.ok?0:1;
+  });
+}
+cmd('traceroute',{d:'muestra los routers por los que pasan tus paquetes hasta un destino',uso:'traceroute equipo',cat:'Red',paq:'traceroute'},function(x){return traza(x,'traceroute')});
+cmd('tracepath',{d:'como traceroute, sin instalar nada',uso:'tracepath equipo',cat:'Red'},function(x){return traza(x,'tracepath')});
+function digTxt(x,nombre,tipo,srv,r){
+  var d=new Date(),ok=!r.err;
+  var o='\n; <<>> DiG 9.18.28-0ubuntu0.24.04.1-Ubuntu <<>> '+nombre+(tipo!=='A'?' '+tipo:'')+'\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: '+(r.err==='nx'?'NXDOMAIN':'NOERROR')+', id: 41236\n;; flags: qr rd ra; QUERY: 1, ANSWER: '+(ok?r.ok.length+(r.cname?1:0):0)+', AUTHORITY: '+(r.err==='nx'?1:0)+', ADDITIONAL: 1\n\n;; QUESTION SECTION:\n;'+nombre+'.\t\t\tIN\t'+tipo+'\n';
+  if(ok&&(r.ok.length||r.cname)){
+    o+='\n;; ANSWER SECTION:\n';
+    if(r.cname)o+=nombre+'.\t\t3600\tIN\tCNAME\t'+r.cname+'\n';
+    r.ok.forEach(function(v){o+=(r.cname||nombre+'.').replace(/\.?$/,'.')+'\t\t3600\tIN\t'+tipo+'\t'+v+'\n'});
+  }
+  if(r.err==='nx')o+='\n;; AUTHORITY SECTION:\n'+nombre.split('.').slice(-1)[0]+'.\t\t86400\tIN\tSOA\ta.root-servers.net. nstld.verisign-grs.com. 2026111800 1800 900 604800 86400\n';
+  o+='\n;; Query time: '+(ok?23:41)+' msec\n;; SERVER: '+srv+'#53('+srv+') (UDP)\n;; WHEN: '+DIAS_ES[d.getDay()]+' '+MESES[d.getMonth()]+' '+dos(d.getDate())+' '+hora(d)+' CST '+d.getFullYear()+'\n;; MSG SIZE  rcvd: 56\n\n';
+  return o;
+}
+cmd('dig',{d:'pregunta al DNS (con todos los detalles)',uso:'dig nombre [A|AAAA|MX|NS|TXT] [@servidor] [+short]',ops:[['+short','solo la respuesta'],['MX','el tipo de registro'],['@1.1.1.1','pregunta a otro servidor DNS']],cat:'Red'},function(x){
+  var s=x.sis,nombre=null,tipo='A',srv=null,corto=false;
+  x.args.slice(1).forEach(function(a){if(a==='+short')corto=true;else if(a.charAt(0)==='@')srv=a.slice(1);else if(/^(A|AAAA|MX|NS|TXT|CNAME|ANY|SOA)$/i.test(a))tipo=a.toUpperCase();else if(a.charAt(0)!=='+'&&a.charAt(0)!=='-')nombre=a});
+  if(!nombre){nombre='.';tipo='NS'}
+  var r=s.dns(nombre,tipo==='ANY'?'A':tipo,srv),usado=srv||r.srv||s.dnsServidor()||'127.0.0.53';
+  if(r.err==='sin'){x.out(';; communications error to '+usado+'#53: timed out\n;; communications error to '+usado+'#53: timed out\n;; communications error to '+usado+'#53: timed out\n\n; <<>> DiG 9.18.28-0ubuntu0.24.04.1-Ubuntu <<>> '+nombre+'\n;; global options: +cmd\n;; no servers could be reached\n');return x.esperar(400).then(function(){return 9})}
+  if(corto){x.out((r.cname?r.cname+'\n':'')+(r.ok||[]).map(function(v){return v+'\n'}).join(''));return 0}
+  x.out(digTxt(x,nombre,tipo,usado,r));
+  return 0;
+});
+cmd('nslookup',{d:'pregunta al DNS la dirección de un nombre',uso:'nslookup nombre [servidor]',cat:'Red'},function(x){
+  var s=x.sis,a=x.args.slice(1).filter(function(v){return v.charAt(0)!=='-'}),tipo=(x.args.join(' ').match(/-(?:type|query)=(\w+)/)||[])[1],nombre=a[0],srv=a[1]||null;
+  if(!nombre){x.consejo('nslookup','escribe el nombre a buscar: nslookup example.com');return 1}
+  tipo=(tipo||'A').toUpperCase();
+  var r=s.dns(nombre,tipo,srv),usado=srv||s.dnsServidor()||'127.0.0.53';
+  if(r.err==='sin'){x.out(';; communications error to '+usado+'#53: timed out\n;; communications error to '+usado+'#53: timed out\n;; no servers could be reached\n\n');return 1}
+  var o='Server:\t\t'+usado+'\nAddress:\t'+usado+'#53\n\n';
+  if(r.err==='nx'){x.out(o+"** server can't find "+nombre+': NXDOMAIN\n\n');return 1}
+  o+='Non-authoritative answer:\n';
+  if(r.cname)o+=nombre+'\tcanonical name = '+r.cname+'\n';
+  if(tipo==='MX')o+=r.ok.map(function(v){return nombre+'\tmail exchanger = '+v+'\n'}).join('');
+  else o+=r.ok.map(function(v){return 'Name:\t'+(r.cname?r.cname.replace(/\.$/,''):nombre)+'\nAddress: '+v+'\n'}).join('');
+  x.out(o+'\n');
+});
+cmd('host',{d:'pregunta al DNS de forma breve',uso:'host nombre',cat:'Red'},function(x){
+  var s=x.sis,n=x.args[1];
+  if(!n){x.err('Usage: host [-t type] hostname [server]\n');return 1}
+  var r=s.dns(n,'A');
+  if(r.err==='sin'){x.out(';; communications error to '+(s.dnsServidor()||'127.0.0.53')+'#53: timed out\n;; no servers could be reached\n');return 1}
+  if(r.err==='nx'){x.out('Host '+n+' not found: 3(NXDOMAIN)\n');return 1}
+  var o=r.cname?n+' is an alias for '+r.cname+'\n':'';
+  o+=r.ok.map(function(v){return (r.cname?r.cname.replace(/\.$/,''):n)+' has address '+v+'\n'}).join('');
+  (s.dns(n,'MX').ok||[]).forEach(function(v){o+=n+' mail is handled by '+v+'\n'});
+  x.out(o);
+});
+cmd('resolvectl',{d:'muestra qué servidores DNS usa la computadora',uso:'resolvectl status',cat:'Red'},function(x){
+  var s=x.sis,v=s.servicio('systemd-resolved');
+  if(!v||!v.activo){x.err("Failed to get global data: Unit dbus-org.freedesktop.resolve1.service not found.\n");x.consejo('resolved','el servicio systemd-resolved está apagado, así que nadie atiende las consultas DNS en 127.0.0.53. Enciéndelo con sudo systemctl start systemd-resolved.');return 1}
+  var up=s.red.dnsSup||s.red.salida||'—';
+  x.out('Global\n         Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\n  resolv.conf mode: stub\n\nLink 2 ('+s.red.iface+')\n    Current Scopes: DNS\n         Protocols: +DefaultRoute -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\nCurrent DNS Server: '+up+'\n       DNS Servers: '+up+'\n');
+});
+cmd('ip',{d:'muestra y cambia las direcciones, rutas y tarjetas de red',uso:'ip a | ip route | ip link | ip neigh',ops:[['a','direcciones de cada tarjeta de red'],['-br a','lo mismo, resumido'],['route','la tabla de rutas'],['neigh','las MAC de los vecinos (ARP)'],['link set X up','enciende una tarjeta (con sudo)'],['route add default via IP','pone la puerta de enlace (con sudo)']],cat:'Red'},function(x){
+  var a=x.args.slice(1).filter(function(v){return v!=='-c'&&v!=='-color'}),s=x.sis,r=s.red,br=false,fam=0;
+  while(a.length&&/^-(br|brief|4|6)$/.test(a[0])){if(a[0]==='-4')fam=4;else if(a[0]==='-6')fam=6;else br=true;a.shift()}
+  var obj=a[0]||'',acc=a[1]||'show';
+  function soloRootIp(){if(x.u!=='root'){x.err('RTNETLINK answers: Operation not permitted\n');x.consejo('ip-sudo','cambiar la configuración de red necesita sudo.');return false}return true}
+  var estado=r.arriba?c('g','UP'):'DOWN',flags=r.arriba?'<BROADCAST,MULTICAST,UP,LOWER_UP>':'<BROADCAST,MULTICAST>';
+  if(/^(a|ad|addr|address)$/.test(obj)&&(acc==='show'||acc==='list'||acc==='s'||acc==='dev')){
+    var v6=r.arriba&&r.ip6;
+    if(br){x.out(pad('lo',16)+' UNKNOWN        '+(fam!==6?'127.0.0.1/8 ':'')+(fam!==4?'::1/128':'')+'\n'+pad(r.iface,16)+' '+pad(estado,15)+(fam!==6&&r.ip?r.ip+'/'+r.bits+' ':'')+(fam!==4&&r.arriba?(r.ip6?r.ip6+'/64 ':'')+'fe80::a00:27ff:fe3a:5c91/64':'')+'\n');return}
+    var o='1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n'+(fam!==6?'    inet 127.0.0.1/8 scope host lo\n       valid_lft forever preferred_lft forever\n':'')+(fam!==4?'    inet6 ::1/128 scope host noprefixroute\n       valid_lft forever preferred_lft forever\n':'');
+    o+='2: '+r.iface+': '+flags+' mtu 1500 qdisc fq_codel state '+estado+' group default qlen 1000\n    link/ether '+r.mac+' brd ff:ff:ff:ff:ff:ff\n';
+    if(fam!==6&&r.ip)o+='    inet '+c('b',r.ip+'/'+r.bits)+' brd '+difusion(r.ip,r.bits)+' scope global '+(r.dhcp?'dynamic ':'')+r.iface+'\n       valid_lft '+(r.dhcp?'85912sec preferred_lft 85912sec':'forever preferred_lft forever')+'\n';
+    if(fam!==4&&v6)o+='    inet6 '+c('b',r.ip6+'/64')+' scope global dynamic mngtmpaddr noprefixroute\n       valid_lft 86172sec preferred_lft 14172sec\n';
+    if(fam!==4&&r.arriba)o+='    inet6 fe80::a00:27ff:fe3a:5c91/64 scope link\n       valid_lft forever preferred_lft forever\n';
+    x.out(o);return;
+  }
+  if(/^(a|ad|addr|address)$/.test(obj)&&(acc==='add'||acc==='del'||acc==='flush')){
+    if(!soloRootIp())return 2;
+    if(acc==='flush'){r.ip=null;return}
+    var k=cidr(a[2]||'');
+    if(!esIp(k.red)){x.err('Error: any valid prefix is expected rather than "'+(a[2]||'')+'".\n');return 1}
+    if(acc==='add'){if(r.ip&&r.ip===k.red){x.err('RTNETLINK answers: File exists\n');return 2}r.ip=k.red;r.bits=k.bits||24;r.dhcp=false}
+    else{if(r.ip!==k.red){x.err('RTNETLINK answers: Cannot assign requested address\n');return 2}r.ip=null}
     return;
   }
-  if(/^(r|route)$/.test(obj)){x.out('default via '+r.puerta+' dev '+r.iface+' proto dhcp src '+r.ip+' metric 100\n'+red+'.0/'+r.bits+' dev '+r.iface+' proto kernel scope link src '+r.ip+' metric 100\n');return}
-  if(/^(l|link)$/.test(obj)){x.out('1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 state UNKNOWN\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n2: '+r.iface+': <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 state UP\n    link/ether '+r.mac+' brd ff:ff:ff:ff:ff:ff\n');return}
-  x.err('Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }\nwhere  OBJECT := { address | route | link | ... }\n');
+  if(/^(l|link)$/.test(obj)&&acc==='set'){
+    if(!soloRootIp())return 2;
+    var dev=a[2]==='dev'?a[3]:a[2],st=a[a.length-1];
+    if(dev!==r.iface&&dev!=='lo'){x.err('Cannot find device "'+dev+'"\n');return 1}
+    if(dev===r.iface&&(st==='up'||st==='down'))r.arriba=st==='up';
+    return;
+  }
+  if(/^(l|link)$/.test(obj)){
+    if(br){x.out(pad('lo',16)+' UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP>\n'+pad(r.iface,16)+' '+pad(estado,15)+r.mac+' '+flags+'\n');return}
+    x.out('1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n2: '+r.iface+': '+flags+' mtu 1500 qdisc fq_codel state '+estado+' mode DEFAULT group default qlen 1000\n    link/ether '+c('b',r.mac)+' brd ff:ff:ff:ff:ff:ff\n');return;
+  }
+  if(/^(r|ro|route)$/.test(obj)&&(acc==='add'||acc==='del'||acc==='replace')){
+    if(!soloRootIp())return 2;
+    var dest=a[2],via=a[a.indexOf('via')+1];
+    if(!dest){x.err('Command line is not complete. Try option "help"\n');return 255}
+    if(acc==='del'){
+      if(dest==='default'){if(!r.puerta){x.err('RTNETLINK answers: No such process\n');return 2}r.puerta=null;return}
+      var antes=r.rutas.length;r.rutas=r.rutas.filter(function(rt){return rt.destino!==dest});
+      if(antes===r.rutas.length){x.err('RTNETLINK answers: No such process\n');return 2}return;
+    }
+    if(a.indexOf('via')<0||!esIp(via)){x.err('Error: inet prefix is expected rather than "'+(via||'')+'".\n');return 1}
+    if(!r.ip||!r.arriba||!enRed(via,r.ip,r.bits)){x.err('Error: Nexthop has invalid gateway.\n');return 2}
+    if(dest==='default'){if(r.puerta&&acc==='add'){x.err('RTNETLINK answers: File exists\n');return 2}r.puerta=via;return}
+    var kd=cidr(dest);
+    if(!esIp(kd.red)){x.err('Error: any valid prefix is expected rather than "'+dest+'".\n');return 1}
+    if(r.rutas.some(function(rt){return rt.destino===dest})&&acc==='add'){x.err('RTNETLINK answers: File exists\n');return 2}
+    r.rutas=r.rutas.filter(function(rt){return rt.destino!==dest});
+    r.rutas.push({destino:redDe(kd.red,kd.bits)+'/'+kd.bits,via:via});
+    return;
+  }
+  if(/^(r|ro|route)$/.test(obj)){
+    var t='';
+    if(r.puerta)t+='default via '+r.puerta+' dev '+r.iface+' proto '+(r.dhcp?'dhcp':'static')+(r.dhcp?' src '+r.ip:'')+' metric 100\n';
+    r.rutas.forEach(function(rt){t+=rt.destino+' via '+rt.via+' dev '+r.iface+' proto static\n'});
+    if(r.ip&&r.arriba)t+=redDe(r.ip,r.bits)+'/'+r.bits+' dev '+r.iface+' proto kernel scope link src '+r.ip+' metric 100\n';
+    x.out(t);return;
+  }
+  if(/^(n|ne|neigh|neighbor|neighbour)$/.test(obj)){
+    x.out(Object.keys(r.conocidos).sort(function(p,q){return ipNum(p)-ipNum(q)}).map(function(ip){return ip+' dev '+r.iface+' lladdr '+r.conocidos[ip]+' '+(ip===r.puerta?'REACHABLE':'STALE')}).join('\n')+(Object.keys(r.conocidos).length?'\n':''));return;
+  }
+  x.err('Object "'+obj+'" is unknown, try "ip help".\n');
   return 255;
 });
 cmd('ifconfig',{d:'muestra las tarjetas de red (forma antigua de ip a)',cat:'Red',paq:'net-tools',sbin:true},function(x){
-  var r=x.sis.red,red=r.ip.split('.').slice(0,3).join('.');
-  x.out(r.iface+': flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet '+r.ip+'  netmask 255.255.255.0  broadcast '+red+'.255\n        ether '+r.mac+'  txqueuelen 1000  (Ethernet)\n\nlo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536\n        inet 127.0.0.1  netmask 255.0.0.0\n        loop  txqueuelen 1000  (Local Loopback)\n');
+  var r=x.sis.red,mask=numIp(Math.pow(2,32)-Math.pow(2,32-r.bits));
+  x.out(r.iface+': flags='+(r.arriba?'4163<UP,BROADCAST,RUNNING,MULTICAST>':'4098<BROADCAST,MULTICAST>')+'  mtu 1500\n'+(r.ip?'        inet '+r.ip+'  netmask '+mask+'  broadcast '+difusion(r.ip,r.bits)+'\n':'')+'        ether '+r.mac+'  txqueuelen 1000  (Ethernet)\n\nlo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536\n        inet 127.0.0.1  netmask 255.0.0.0\n        loop  txqueuelen 1000  (Local Loopback)\n');
 });
-cmd('hostname',{d:'muestra el nombre de esta computadora',uso:'hostname [-I]',ops:[['-I','muestra sus direcciones IP']],cat:'Red'},function(x){x.out(x.args[1]==='-I'?x.sis.red.ip+' \n':x.sis.host+'\n')});
+cmd('hostname',{d:'muestra el nombre de esta computadora',uso:'hostname [-I]',ops:[['-I','muestra sus direcciones IP']],cat:'Red'},function(x){var r=x.sis.red;x.out(x.args[1]==='-I'?(r.arriba&&r.ip?r.ip+' '+(r.ip6?r.ip6+' ':''):'')+'\n':x.sis.host+'\n')});
 cmd('ss',{d:'muestra las conexiones y los puertos abiertos',uso:'ss -tulpn',ops:[['-t / -u','TCP / UDP'],['-l','solo los que esperan conexiones'],['-n','números en lugar de nombres'],['-p','qué programa (con sudo)']],cat:'Red'},function(x){
   var s=x.sis,f=(x.args.slice(1).join('')).replace(/-/g,''),conP=f.indexOf('p')>=0&&x.u==='root';
   var filas=[['Netid','State','Recv-Q','Send-Q','Local Address:Port','Peer Address:Port','Process']];
-  filas.push(['udp','UNCONN','0','0','127.0.0.53%lo:53','0.0.0.0:*',conP?'users:(("systemd-resolve",pid=590,fd=13))':'']);
+  var res=s.servicio('systemd-resolved');
+  if(res&&res.activo)filas.push(['udp','UNCONN','0','0','127.0.0.53%lo:53','0.0.0.0:*',conP?'users:(("systemd-resolve",pid=590,fd=13))':'']);
   Object.keys(s.servicios).sort().forEach(function(k){
     var v=s.servicios[k];if(!v.activo)return;
-    v.puertos.forEach(function(p){filas.push(['tcp','LISTEN','0',p===22?'4096':'511','0.0.0.0:'+p,'0.0.0.0:*',conP?'users:(("'+(v.nombreProc||k)+'",pid='+v.pid+',fd=3))':''])});
+    v.puertos.forEach(function(p){filas.push(['tcp','LISTEN','0',p===22?'4096':'511',(v.local?'127.0.0.1:':'0.0.0.0:')+p,'0.0.0.0:*',conP?'users:(("'+(v.nombreProc||k)+'",pid='+v.pid+',fd=3))':''])});
   });
   if(f.indexOf('t')>=0&&f.indexOf('u')<0)filas=filas.filter(function(r,i){return !i||r[0]==='tcp'});
+  if(f.indexOf('u')>=0&&f.indexOf('t')<0)filas=filas.filter(function(r,i){return !i||r[0]==='udp'});
   x.out(tabla(filas));
   if(f.indexOf('p')>=0&&x.u!=='root')x.consejo('ss-p','para ver qué programa abrió cada puerto, usa sudo ss -tulpn.');
 });
-cmd('curl',{d:'pide una página web (o un archivo) a un servidor',uso:'curl [-I] dirección',ops:[['-I','solo los encabezados de la respuesta'],['-o archivo','guarda lo que descargó']],cat:'Red'},function(x){
-  var o=opts(x.args,'oHXd'),u=o.pos[0],s=x.sis;
-  if(!u){x.err("curl: try 'curl --help' or 'curl --manual' for more information\n");return 2}
-  var m=u.match(/^(?:(https?):\/\/)?([^\/:]+)(?::(\d+))?(\/.*)?$/);
-  if(!m){x.err('curl: (3) URL rejected: Bad hostname\n');return 3}
-  var h=m[2],puerto=+(m[3]||(m[1]==='https'?443:80)),ip=resolver(s,h),cuerpo=null,cab='';
-  if(!ip){x.err('curl: (6) Could not resolve host: '+h+'\n');return 6}
-  if(/^127\./.test(ip)||ip===s.red.ip){
-    var v=s.servicio('nginx');
-    if(!v||!v.activo||puerto!==80){x.err('curl: (7) Failed to connect to '+h+' port '+puerto+' after 0 ms: Couldn\'t connect to server\n');return 7}
-    var ruta=(m[4]||'/').replace(/\?.*$/,'');
-    var dir=s.nodo('/var/www/html'),arch=null;
-    if(dir){if(/\/$/.test(ruta))['index.html','index.htm','index.nginx-debian.html'].some(function(n){var r2=s.nodo('/var/www/html'+ruta+n);if(r2){arch=r2;return true}});else arch=s.nodo('/var/www/html'+ruta)}
-    if(arch&&arch.t==='f'){cuerpo=s.contenido(arch);cab='HTTP/1.1 200 OK\nServer: nginx/1.24.0 (Ubuntu)\nContent-Type: text/html\nContent-Length: '+bytesDe(cuerpo)+'\n'}
-    else{cuerpo='<html>\n<head><title>404 Not Found</title></head>\n<body>\n<center><h1>404 Not Found</h1></center>\n<hr><center>nginx/1.24.0 (Ubuntu)</center>\n</body>\n</html>\n';cab='HTTP/1.1 404 Not Found\nServer: nginx/1.24.0 (Ubuntu)\nContent-Type: text/html\n'}
-    var ac=s.nodo('/var/log/nginx/access.log');
-    if(ac)ac.c+='127.0.0.1 - - ['+dos(new Date().getDate())+'/'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][new Date().getMonth()]+'/'+new Date().getFullYear()+':'+hora(new Date())+' -0600] "GET '+ruta+' HTTP/1.1" '+(/404/.test(cab)?404:200)+' '+bytesDe(cuerpo)+' "-" "curl/8.5.0"\n';
-  }else{
-    cuerpo='<!doctype html>\n<html>\n<head><title>'+h+'</title></head>\n<body>\n<h1>'+h+'</h1>\n<p>Página de ejemplo de la terminal simulada de OneLearn.</p>\n</body>\n</html>\n';
-    cab='HTTP/2 200\ncontent-type: text/html; charset=UTF-8\ncontent-length: '+bytesDe(cuerpo)+'\n';
-    x.consejo('curl-sim','esta terminal simula internet: las páginas de otros sitios son de ejemplo.');
+cmd('nc netcat',{d:'prueba si un puerto de otra computadora acepta conexiones',uso:'nc -zv equipo puerto',ops:[['-z','solo prueba, sin mandar datos'],['-v','dice qué pasó'],['-u','UDP en lugar de TCP']],cat:'Red'},function(x){
+  var o=opts(x.args,'w'),s=x.sis,h=o.pos[0],ps=o.pos.slice(1);
+  if(!h||!ps.length){x.err('usage: nc [-46CDdFhklNnrStUuvZz] [-I length] [-i interval] [-M ttl]\n\t  [-m minttl] [-O length] [-P proxy_username] [-p source_port]\n\t  [destination] [port]\n');return 1}
+  var rs=s.resolver(h);
+  if(rs.err){x.err('nc: getaddrinfo for host "'+h+'" port '+ps[0]+': '+(rs.err==='sin'?'Temporary failure in name resolution':'Name or service not known')+'\n');return 1}
+  var ip=rs.ip,al=s.alcance(ip),cod=0;
+  return ps.reduce(function(p,pt){return p.then(function(){
+    var n=+pt,srv=PUERTOS[n]||'*',proto=o.f.u?'udp':'tcp';
+    var est=!al.ok?(al.err==='timeout'?'filtrado':al.err==='red'?'red':'host'):al.sis?(o.f.u?'abierto':puertoEstado(al.sis,n,s.red.ip)):([80,443].indexOf(n)>=0?'abierto':'filtrado');
+    var nom=h===ip?ip:h+' ('+ip+')';
+    if(est==='abierto'){x.err('Connection to '+nom+' '+n+' port ['+proto+'/'+srv+'] succeeded!\n');return}
+    cod=1;
+    if(est==='cerrado'){x.err('nc: connect to '+nom+' port '+n+' ('+proto+') failed: Connection refused\n');return}
+    if(est==='red'){x.err('nc: connect to '+nom+' port '+n+' ('+proto+') failed: Network is unreachable\n');return}
+    if(est==='host'){x.err('nc: connect to '+nom+' port '+n+' ('+proto+') failed: No route to host\n');return}
+    return x.esperar(1200).then(function(){x.err('nc: connect to '+nom+' port '+n+' ('+proto+') failed: Connection timed out\n')});
+  })},Promise.resolve()).then(function(){return cod});
+});
+
+/* --- curl y los servidores web --- */
+var HTTP_TXT={200:'OK',201:'Created',204:'No Content',301:'Moved Permanently',302:'Found',304:'Not Modified',400:'Bad Request',401:'Unauthorized',403:'Forbidden',404:'Not Found',405:'Method Not Allowed',409:'Conflict',418:"I'm a teapot",429:'Too Many Requests',500:'Internal Server Error',502:'Bad Gateway',503:'Service Unavailable',504:'Gateway Timeout'};
+function paginaError(n,servidor){return '<html>\n<head><title>'+n+' '+HTTP_TXT[n]+'</title></head>\n<body>\n<center><h1>'+n+' '+HTTP_TXT[n]+'</h1></center>\n<hr><center>'+(servidor||'nginx/1.24.0 (Ubuntu)')+'</center>\n</body>\n</html>\n'}
+function respuesta(estado,cuerpo,cab){var c2={};Object.keys(cab||{}).forEach(function(k){c2[k]=cab[k]});return {estado:estado,cab:c2,cuerpo:cuerpo==null?'':cuerpo}}
+/* nginx: lee la configuración de /etc/nginx/sites-enabled y la revisa como nginx -t */
+var NGINX_DIR=['server','listen','server_name','root','index','location','try_files','return','proxy_pass','proxy_set_header','include','error_page','access_log','error_log','add_header','ssl_certificate','ssl_certificate_key','client_max_body_size','rewrite','autoindex','gzip','charset','alias','deny','allow','expires','user','worker_processes','pid','events','worker_connections','http','sendfile','keepalive_timeout','types_hash_max_size','default_type','ssl_protocols','gzip_types','limit_req','tcp_nopush','proxy_http_version','proxy_read_timeout'];
+var NGINX_BLOQUES=['server','location','http','events'];
+var NGINX_ARGS={root:[1,1],alias:[1,1],listen:[1,9],server_name:[1,99],index:[1,99],try_files:[2,99],'return':[1,2],proxy_pass:[1,1],location:[1,2],server:[0,0],autoindex:[1,1],include:[1,1],access_log:[1,3],error_log:[1,2],client_max_body_size:[1,1]};
+function nginxLeer(txt,archivo){
+  var toks=[],ln=1,i=0,n=txt.length;
+  while(i<n){
+    var ch=txt[i];
+    if(ch==='\n'){ln++;i++;continue}
+    if(/\s/.test(ch)){i++;continue}
+    if(ch==='#'){while(i<n&&txt[i]!=='\n')i++;continue}
+    if(ch==='{'||ch==='}'||ch===';'){toks.push({v:ch,l:ln});i++;continue}
+    if(ch==='"'||ch==="'"){var j=txt.indexOf(ch,i+1);if(j<0)j=n;toks.push({v:txt.slice(i+1,j),l:ln,q:true});i=j+1;continue}
+    var w='';while(i<n&&!/[\s{};]/.test(txt[i]))w+=txt[i++];toks.push({v:w,l:ln});
   }
-  if(o.f.I){x.out(cab+'\n');return 0}
-  if(o.val.o){var e=s.escribir(x.abs(o.val.o),cuerpo,x.u,false);if(e){x.err('curl: (23) Failure writing output to destination\n');return 23}
-    x.out('  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n100   '+pad(bytesDe(cuerpo),4,true)+'  100   '+pad(bytesDe(cuerpo),4,true)+'    0     0   612k      0 --:--:-- --:--:-- --:--:--  612k\n');return 0}
-  x.out(cuerpo);
+  var pila=[{hijos:[]}],cur=null;
+  for(var k=0;k<toks.length;k++){
+    var t=toks[k];
+    if(!t.q&&t.v==='}'){
+      if(cur)return {err:'directive "'+cur.nombre+'" is not terminated by ";" in '+archivo+':'+cur.l};
+      if(pila.length<2)return {err:'unexpected "}" in '+archivo+':'+t.l};
+      pila.pop();continue;
+    }
+    if(!t.q&&(t.v===';'||t.v==='{')){
+      if(!cur)return {err:'unexpected "'+t.v+'" in '+archivo+':'+t.l};
+      if(NGINX_DIR.indexOf(cur.nombre)<0)return {err:'unknown directive "'+cur.nombre+'" in '+archivo+':'+cur.l};
+      var bloque=NGINX_BLOQUES.indexOf(cur.nombre)>=0;
+      if(bloque&&t.v===';')return {err:'directive "'+cur.nombre+'" has no opening "{" in '+archivo+':'+t.l};
+      if(!bloque&&t.v==='{')return {err:'directive "'+cur.nombre+'" is not terminated by ";" in '+archivo+':'+t.l};
+      var na=NGINX_ARGS[cur.nombre];
+      if(na&&(cur.args.length<na[0]||cur.args.length>na[1]))return {err:'invalid number of arguments in "'+cur.nombre+'" directive in '+archivo+':'+t.l};
+      pila[pila.length-1].hijos.push(cur);
+      if(t.v==='{'){cur.hijos=[];pila.push(cur)}
+      cur=null;continue;
+    }
+    if(!cur)cur={nombre:t.v,args:[],l:t.l};else cur.args.push(t.v);
+  }
+  if(cur)return {err:'unexpected end of file, expecting ";" or "}" in '+archivo+':'+cur.l};
+  if(pila.length>1)return {err:'unexpected end of file, expecting "}" in '+archivo+':'+ln};
+  return {arbol:pila[0].hijos};
+}
+function nginxConfig(s){
+  var dir=s.nodo('/etc/nginx/sites-enabled'),servidores=[],avisos=[];
+  if(!dir||dir.t!=='d')return {conf:{servidores:[]}};
+  var nombres=Object.keys(dir.h).sort();
+  for(var i=0;i<nombres.length;i++){
+    var ruta='/etc/nginx/sites-enabled/'+nombres[i],n=s.nodo(ruta);
+    if(!n)return {err:'open() "'+ruta+'" failed (2: No such file or directory) in /etc/nginx/nginx.conf:60'};
+    if(n.t!=='f')continue;
+    var r=nginxLeer(s.contenido(n),ruta);
+    if(r.err)return {err:r.err};
+    for(var j=0;j<r.arbol.length;j++){
+      var b=r.arbol[j];
+      if(b.nombre!=='server'||!b.hijos)return {err:'"'+b.nombre+'" directive is not allowed here in '+ruta+':'+b.l};
+      var sv={archivo:ruta,puertos:[],defecto:false,nombres:[],root:'/var/www/html',index:['index.html'],ubic:[],ret:null,l:b.l,dirs:b.hijos};
+      b.hijos.forEach(function(d){
+        if(d.nombre==='listen'){var p=parseInt(String(d.args[0]).replace(/^\[::\]:/,'').replace(/.*:/,''),10);if(!/\[::\]/.test(d.args[0])){sv.puertos.push(p);if(d.args.indexOf('default_server')>=0)sv.defecto=true}}
+        else if(d.nombre==='server_name')sv.nombres=d.args;
+        else if(d.nombre==='root')sv.root=d.args[0];
+        else if(d.nombre==='index')sv.index=d.args;
+        else if(d.nombre==='return')sv.ret=d.args;
+        else if(d.nombre==='location'){var ex=d.args[0]==='=';sv.ubic.push({ruta:ex?d.args[1]:d.args[0],exacta:ex,dirs:d.hijos||[]})}
+      });
+      if(!sv.puertos.length)sv.puertos=[80];
+      for(var k=0;k<servidores.length;k++){
+        var o=servidores[k];
+        if(sv.defecto&&o.defecto&&o.puertos.some(function(p){return sv.puertos.indexOf(p)>=0}))return {err:'a duplicate default server for 0.0.0.0:'+sv.puertos[0]+' in '+ruta+':'+b.l};
+        sv.nombres.forEach(function(nm){if(nm!=='_'&&o.nombres.indexOf(nm)>=0)avisos.push('conflicting server name "'+nm+'" on 0.0.0.0:'+sv.puertos[0]+', ignored')});
+      }
+      servidores.push(sv);
+    }
+  }
+  return {conf:{servidores:servidores},avisos:avisos};
+}
+function dirDe(dirs,nombre){for(var i=0;i<dirs.length;i++)if(dirs[i].nombre===nombre)return dirs[i];return null}
+function logNginx(s,req,estado,tam){
+  var d=new Date(),ac=s.nodo('/var/log/nginx/access.log');
+  if(ac)ac.c+=(req.desde||'127.0.0.1')+' - - ['+dos(d.getDate())+'/'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'/'+d.getFullYear()+':'+hora(d)+' -0600] "'+req.metodo+' '+req.ruta+' HTTP/1.1" '+estado+' '+tam+' "-" "curl/8.5.0"\n';
+}
+function nginxServir(s,v,req,puerto){
+  var conf=v.conf||{servidores:[]},host=(req.cab.Host||'').replace(/:\d+$/,'');
+  var cand=conf.servidores.filter(function(sv){return sv.puertos.indexOf(puerto)>=0});
+  if(!cand.length)return null;
+  var sv=cand.filter(function(c2){return c2.nombres.indexOf(host)>=0})[0]||cand.filter(function(c2){return c2.defecto})[0]||cand[0];
+  var H={'Server':'nginx/1.24.0 (Ubuntu)'},ruta=req.ruta.replace(/\?.*$/,'');
+  function fin(r){logNginx(s,req,r.estado,bytesDe(r.cuerpo));return r}
+  function devolver(args){
+    var n=+args[0],u=(args[1]||'').replace(/\$host/g,host).replace(/\$request_uri/g,req.ruta).replace(/\$uri/g,ruta);
+    if(n>=300&&n<400){H.Location=u;H['Content-Type']='text/html';return fin(respuesta(n,paginaError(n),H))}
+    H['Content-Type']='text/plain';return fin(respuesta(n,u?u+'\n':paginaError(n),H));
+  }
+  if(sv.ret)return devolver(sv.ret);
+  var ub=null;
+  sv.ubic.forEach(function(u){if(u.exacta?ruta===u.ruta:ruta.indexOf(u.ruta)===0){if(!ub||u.ruta.length>ub.ruta.length||u.exacta)ub=u}});
+  var dirs=ub?ub.dirs:[],ret=dirDe(dirs,'return'),proxy=dirDe(dirs,'proxy_pass');
+  if(ret)return devolver(ret.args);
+  if(proxy){
+    var m=String(proxy.args[0]).match(/^https?:\/\/([^\/:]+)(?::(\d+))?(\/.*)?$/),pp=m?+(m[2]||80):0;
+    var hecho=m&&s.red.web[pp]&&puertoEstado(s,pp,'127.0.0.1')==='abierto'?s.red.web[pp]({metodo:req.metodo,ruta:m[3]?ruta.replace(ub.ruta,m[3]):ruta,cab:req.cab,cuerpo:req.cuerpo},s):null;
+    if(!hecho){var el=s.nodo('/var/log/nginx/error.log');if(el)el.c+=hora(new Date())+' [error] connect() failed (111: Connection refused) while connecting to upstream, upstream: "'+proxy.args[0]+'"\n';H['Content-Type']='text/html';return fin(respuesta(502,paginaError(502),H))}
+    Object.keys(hecho.cab).forEach(function(k){if(k!=='Server')H[k]=hecho.cab[k]});
+    return fin(respuesta(hecho.estado,hecho.cuerpo,H));
+  }
+  var root=(dirDe(dirs,'root')||{args:[sv.root]}).args[0].replace(/\/$/,''),index=(dirDe(dirs,'index')||{args:sv.index}).args;
+  var archivo=null,prueba=root+ruta;
+  var nodo=s.buscar(prueba,'www-data');
+  if(nodo.err==='permiso'){H['Content-Type']='text/html';return fin(respuesta(403,paginaError(403),H))}
+  if(nodo.n&&nodo.n.t==='d'){
+    var base=prueba.replace(/\/$/,'');
+    index.some(function(ix){var r2=s.buscar(base+'/'+ix,'www-data');if(r2.n&&r2.n.t==='f'){archivo=r2.n;return true}if(r2.err==='permiso'){archivo='403';return true}});
+    if(!archivo)archivo='403';
+  }else if(nodo.n&&nodo.n.t==='f')archivo=nodo.n;
+  if(archivo==='403'||archivo&&!s.puede(archivo,'www-data','r')){H['Content-Type']='text/html';return fin(respuesta(403,paginaError(403),H))}
+  if(!archivo){
+    var el2=s.nodo('/var/log/nginx/error.log');if(el2)el2.c+=hora(new Date())+' [error] open() "'+prueba+'" failed (2: No such file or directory)\n';
+    H['Content-Type']='text/html';return fin(respuesta(404,paginaError(404),H));
+  }
+  var cuerpo=s.contenido(archivo),ext=(ruta.match(/\.(\w+)$/)||[])[1];
+  H['Content-Type']={css:'text/css',js:'application/javascript',json:'application/json',txt:'text/plain',png:'image/png',jpg:'image/jpeg'}[ext]||'text/html';
+  H['Content-Length']=String(bytesDe(cuerpo));
+  return fin(respuesta(200,cuerpo,H));
+}
+/* Atiende una petición HTTP en un sistema: nginx o un programa propio (s.red.web[puerto]) */
+function servirHttp(dest,req,puerto){
+  var v=dest.servicio('nginx');
+  if(v&&v.activo&&dest.instalado('nginx')){var r=nginxServir(dest,v,req,puerto);if(r)return r}
+  if(dest.red.web[puerto])return dest.red.web[puerto](req,dest);
+  return null;
+}
+function paginaInternet(h){
+  var cuerpo='<!doctype html>\n<html>\n<head><title>'+h+'</title></head>\n<body>\n<h1>'+h+'</h1>\n<p>Página de ejemplo de la terminal simulada de OneLearn.</p>\n</body>\n</html>\n';
+  return respuesta(200,cuerpo,{'content-type':'text/html; charset=UTF-8','content-length':String(bytesDe(cuerpo))});
+}
+cmd('curl',{d:'hace peticiones a servidores web y muestra la respuesta',uso:'curl [opciones] dirección',ops:[['-I','solo los encabezados de la respuesta'],['-v','muestra la petición y la respuesta completas'],['-X POST','el método HTTP'],['-d datos','manda datos (y usa POST)'],['-H "Nombre: valor"','agrega un encabezado'],['-L','sigue las redirecciones'],['-o archivo','guarda lo que descargó']],cat:'Red'},function(x){
+  var a=x.args.slice(1),o={v:false,I:false,s:false,L:false,i:false,X:null,d:null,H:[],out:null},url=null;
+  for(var i=0;i<a.length;i++){
+    var v=a[i];
+    if(v==='-X'||v==='--request')o.X=a[++i];
+    else if(v==='-d'||v==='--data'||v==='--data-raw')o.d=a[++i];
+    else if(v==='-H'||v==='--header')o.H.push(a[++i]);
+    else if(v==='-o'||v==='--output')o.out=a[++i];
+    else if(v==='--head')o.I=true;else if(v==='--verbose')o.v=true;else if(v==='--silent')o.s=true;else if(v==='--location')o.L=true;else if(v==='--include')o.i=true;
+    else if(v==='-4'||v==='-6')continue;
+    else if(/^-[a-zA-Z]+$/.test(v))v.slice(1).split('').forEach(function(ch){if(ch==='v')o.v=true;else if(ch==='I')o.I=true;else if(ch==='s')o.s=true;else if(ch==='L')o.L=true;else if(ch==='i')o.i=true;else if(ch==='k')o.k=true});
+    else url=v;
+  }
+  if(!url){x.err("curl: try 'curl --help' or 'curl --manual' for more information\n");return 2}
+  var cab={};o.H.forEach(function(h){var k=h.indexOf(':');if(k>0)cab[h.slice(0,k).trim()]=h.slice(k+1).trim()});
+  var metodo=o.X||(o.I?'HEAD':o.d!=null?'POST':'GET');
+  if(o.d!=null&&!cab['Content-Type'])cab['Content-Type']='application/x-www-form-urlencoded';
+  return pedirHttp(x,url,{metodo:metodo,cab:cab,cuerpo:o.d||''},o,0);
+});
+function pedirHttp(x,url,req,o,saltos){
+  var s=x.sis,m=String(url).match(/^(?:(https?):\/\/)?([^\/:?#]+)(?::(\d+))?([^#]*)$/);
+  if(!m){x.err('curl: (3) URL rejected: Bad hostname\n');return 3}
+  var esq=m[1]||'http',h=m[2],puerto=+(m[3]||(esq==='https'?443:80)),ruta=m[4]||'/';
+  if(ruta.charAt(0)!=='/')ruta='/'+ruta;
+  var rs=s.resolver(h);
+  if(rs.err){x.err('curl: (6) Could not resolve host: '+h+'\n');return 6}
+  var ip=rs.ip,al=s.alcance(ip);
+  if(o.v)x.err('*   Trying '+ip+':'+puerto+'...\n');
+  if(al.err==='red'||al.err==='host'){x.err('curl: (7) Failed to connect to '+h+' port '+puerto+' after 3 ms: Couldn\'t connect to server\n');return 7}
+  var hdr={};Object.keys(req.cab).forEach(function(k){hdr[k]=req.cab[k]});
+  if(!hdr.Host)hdr.Host=h+(m[3]?':'+m[3]:'');
+  var pet={metodo:req.metodo,ruta:ruta,cab:hdr,cuerpo:req.cuerpo,desde:s.red.ip,esquema:esq,host:h};
+  var resp=null,dest=al.ok?al.sis:null;
+  if(al.err==='timeout')return x.esperar(1500).then(function(){x.err('curl: (28) Failed to connect to '+h+' port '+puerto+' after 130005 ms: Timeout was reached\n');return 28});
+  if(dest){
+    var est=puertoEstado(dest,puerto,dest===s?'127.0.0.1':s.red.ip);
+    if(est==='filtrado')return x.esperar(1500).then(function(){x.err('curl: (28) Failed to connect to '+h+' port '+puerto+' after 130005 ms: Timeout was reached\n');return 28});
+    if(est==='cerrado'){x.err('curl: (7) Failed to connect to '+h+' port '+puerto+' after 0 ms: Couldn\'t connect to server\n');return 7}
+    if(esq==='https'&&!(dest.red.tls&&dest.red.tls[puerto])){x.err('curl: (35) OpenSSL/3.0.13: error:0A00010B:SSL routines::wrong version number\n');return 35}
+    resp=servirHttp(dest,pet,puerto);
+    if(!resp){x.err('curl: (52) Empty reply from server\n');return 52}
+  }else if(s.red.web[ip])resp=s.red.web[ip](pet,s);
+  else{resp=paginaInternet(h);if(!s.red.dns[h])x.consejo('curl-sim','esta terminal simula internet: las páginas de otros sitios son de ejemplo.')}
+  var lineaEst='HTTP/'+(dest?'1.1':'2')+' '+resp.estado+(dest?' '+(HTTP_TXT[resp.estado]||''):'');
+  var cabTxt=Object.keys(resp.cab).map(function(k){return k+': '+resp.cab[k]}).join('\n');
+  if(o.v){
+    x.err('* Connected to '+h+' ('+ip+') port '+puerto+'\n> '+pet.metodo+' '+ruta+' HTTP/1.1\n> Host: '+hdr.Host+'\n> User-Agent: curl/8.5.0\n> Accept: */*\n'+
+      Object.keys(req.cab).filter(function(k){return k!=='Host'}).map(function(k){return '> '+k+': '+req.cab[k]+'\n'}).join('')+(req.cuerpo?'> Content-Length: '+bytesDe(req.cuerpo)+'\n':'')+'>\n< '+lineaEst+'\n'+(cabTxt?cabTxt.split('\n').map(function(l){return '< '+l}).join('\n')+'\n':'')+'<\n');
+  }
+  if(o.L&&resp.estado>=300&&resp.estado<400&&(resp.cab.Location||resp.cab.location)&&saltos<5){
+    var loc=resp.cab.Location||resp.cab.location;
+    if(loc.charAt(0)==='/')loc=esq+'://'+h+(m[3]?':'+m[3]:'')+loc;
+    return pedirHttp(x,loc,{metodo:pet.metodo==='POST'?'GET':pet.metodo,cab:req.cab,cuerpo:''},o,saltos+1);
+  }
+  if(o.I){x.out(lineaEst+'\n'+(cabTxt?cabTxt+'\n':'')+'\n');return 0}
+  var cuerpo=pet.metodo==='HEAD'?'':resp.cuerpo;
+  if(o.out){
+    var e=s.escribir(x.abs(o.out),cuerpo,x.u,false);
+    if(e){x.err('curl: (23) Failure writing output to destination\n');return 23}
+    if(!o.s)x.err('  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n100   '+pad(bytesDe(cuerpo),4,true)+'  100   '+pad(bytesDe(cuerpo),4,true)+'    0     0   612k      0 --:--:-- --:--:-- --:--:--  612k\n');
+    return 0;
+  }
+  x.out((o.i?lineaEst+'\n'+(cabTxt?cabTxt+'\n':'')+'\n':'')+cuerpo+(cuerpo&&!/\n$/.test(cuerpo)&&x.tty?'\n':''));
+  return 0;
+}
+cmd('wget',{d:'descarga un archivo de internet',uso:'wget dirección',cat:'Red'},function(x){
+  var url=x.args.filter(function(v,i){return i&&v.charAt(0)!=='-'})[0];
+  if(!url){x.err('wget: falta el URL\n');return 1}
+  var nombre=(url.replace(/[?#].*$/,'').split('/').slice(3).pop())||'index.html';
+  return pedirHttp(x,url,{metodo:'GET',cab:{},cuerpo:''},{s:true,out:nombre},0).then(function(r){if(!r)x.err('Guardando en: «'+nombre+'»\n\n'+nombre+'           100%[===================>]       en 0s\n\n«'+nombre+'» guardado\n');return r?4:0});
+});
+
+/* --- Firewall (ufw) --- */
+var UFW_APPS={'OpenSSH':[22],'Nginx HTTP':[80],'Nginx HTTPS':[443],'Nginx Full':[80,443]};
+function ufwPuertos(spec){
+  if(UFW_APPS[spec])return {p:UFW_APPS[spec].map(function(n){return {de:n,a:n}}),proto:'tcp',txt:spec};
+  var m=String(spec).match(/^([\w:,]+)(?:\/(tcp|udp))?$/);if(!m)return null;
+  var lista=[];
+  if(!m[1].split(',').every(function(pt){
+    if(NOMBRES_PUERTO[pt]!=null){lista.push({de:NOMBRES_PUERTO[pt],a:NOMBRES_PUERTO[pt]});return true}
+    var r=pt.match(/^(\d+)(?::(\d+))?$/);if(!r)return false;lista.push({de:+r[1],a:+(r[2]||r[1])});return true;
+  }))return null;
+  return {p:lista,proto:m[2]||'',txt:spec};
+}
+function ufwPermite(s,puerto,origen){
+  var u=s.ufw;if(!u.activo)return true;
+  for(var i=0;i<u.reglas.length;i++){
+    var r=u.reglas[i];
+    if(r.desde!=='any'&&!dentro(origen,[r.desde]))continue;
+    if(r.puertos&&!r.puertos.some(function(p){return puerto>=p.de&&puerto<=p.a}))continue;
+    return r.acc!=='deny'&&r.acc!=='reject';
+  }
+  return u.entrada==='allow';
+}
+function ufwTo(r){return r.puertos?r.txt+(r.proto&&!UFW_APPS[r.txt]&&r.txt.indexOf('/')<0?'/'+r.proto:''):'Anywhere'}
+cmd('ufw',{d:'el firewall de Ubuntu: decide qué conexiones entran',uso:'sudo ufw allow|deny|status|enable ...',ops:[['status','las reglas y si está activo'],['allow 22/tcp','deja entrar a un puerto'],['deny 80','bloquea un puerto'],['allow from 192.168.1.0/24','deja entrar a una red'],['enable / disable','enciende o apaga el firewall'],['delete 2','borra la regla número 2']],cat:'Red',sbin:true,paq:'ufw'},function(x){
+  var s=x.sis,u=s.ufw,a=x.args.slice(1);
+  if(x.u!=='root'){x.err('ERROR: You need to be root to run this script\n');x.consejo('ufw-sudo','el firewall se administra con sudo: sudo ufw status.');return 1}
+  var acc=a[0];
+  if(!acc||acc==='help'){x.out('Usage: ufw COMMAND\n\nCommands:\n enable\t\t\t\tenables the firewall\n disable\t\t\tdisables the firewall\n default ARG\t\t\tset default policy\n allow ARGS\t\t\tadd allow rule\n deny ARGS\t\t\tadd deny rule\n delete RULE|NUM\t\tdelete RULE\n status\t\t\t\tshow firewall status\n status numbered\t\tshow firewall status as numbered list of RULES\n status verbose\t\tshow verbose firewall status\n app list\t\t\tlist application profiles\n reset\t\t\t\treset firewall\n');return 0}
+  if(acc==='status'){
+    if(!u.activo){x.out('Status: inactive\n');return 0}
+    var num=a[1]==='numbered',o='Status: active\n';
+    if(a[1]==='verbose')o+='Logging: on (low)\nDefault: '+u.entrada+' (incoming), allow (outgoing), disabled (routed)\nNew profiles: skip\n';
+    if(u.reglas.length){
+      var w=26;
+      o+='\n'+(num?'     ':'')+pad('To',w)+' '+pad(a[1]==='verbose'?'Action':'Action',11)+' From\n'+(num?'     ':'')+pad('--',w)+' '+pad('------',11)+' ----\n';
+      u.reglas.forEach(function(r,i){o+=(num?'['+pad(i+1,2,true)+'] ':'')+pad(ufwTo(r),w)+' '+pad(r.acc.toUpperCase()+(num||a[1]==='verbose'?' IN':''),11)+' '+(r.desde==='any'?'Anywhere':r.desde)+'\n'});
+      if(!num)u.reglas.filter(function(r){return r.desde==='any'}).forEach(function(r){o+=pad(ufwTo(r)+' (v6)',w)+' '+pad(r.acc.toUpperCase()+(a[1]==='verbose'?' IN':''),11)+' Anywhere (v6)\n'});
+    }
+    x.out(o+'\n');return 0;
+  }
+  if(acc==='enable'){
+    if(u.activo){x.out('Firewall is active and enabled on system startup\n');return 0}
+    return x.pedir('Command may disrupt existing ssh connections. Proceed with operation (y|n)? ').then(function(r){
+      if(!/^[yYsS]/.test(r)){x.out('Aborted\n');return 1}
+      u.activo=true;x.out('Firewall is active and enabled on system startup\n');
+      if(!u.reglas.some(function(rg){return rg.acc!=='deny'&&rg.puertos&&rg.puertos.some(function(p){return 22>=p.de&&22<=p.a})}))x.consejo('ufw-ssh','activaste el firewall sin una regla para SSH (puerto 22). Si administras este servidor a distancia, ya nadie podrá entrar por SSH. Agrega sudo ufw allow OpenSSH.');
+      return 0;
+    });
+  }
+  if(acc==='disable'){u.activo=false;x.out('Firewall stopped and disabled on system startup\n');return 0}
+  if(acc==='reset'){return x.pedir('Resetting all rules to installed defaults. Proceed with operation (y|n)? ').then(function(r){if(!/^[yYsS]/.test(r)){x.out('Aborted\n');return 1}u.activo=false;u.reglas=[];u.entrada='deny';x.out('Backing up \'user.rules\' to \'/etc/ufw/user.rules.20261118_103000\'\n');return 0})}
+  if(acc==='default'){
+    var pol=a[1],dir=a[2]||'incoming';
+    if(['allow','deny','reject'].indexOf(pol)<0){x.err('ERROR: Unsupported default policy\n');return 1}
+    if(dir==='incoming')u.entrada=pol==='allow'?'allow':'deny';
+    x.out('Default '+dir+' policy changed to \''+pol+'\'\n(be sure to update your rules accordingly)\n');return 0;
+  }
+  if(acc==='app'&&a[1]==='list'){x.out('Available applications:\n'+Object.keys(UFW_APPS).filter(function(k){return k==='OpenSSH'||s.instalado('nginx')}).map(function(k){return '  '+k}).join('\n')+'\n');return 0}
+  if(acc==='delete'){
+    if(/^\d+$/.test(a[1]||'')){
+      var k=+a[1]-1,rg=u.reglas[k];
+      if(!rg){x.err('ERROR: Could not find rule \''+a[1]+'\'\n');return 1}
+      return x.pedir('Deleting:\n '+rg.acc+' '+ufwTo(rg)+'\nProceed with operation (y|n)? ').then(function(r){if(!/^[yYsS]/.test(r)){x.out('Aborted\n');return 1}u.reglas.splice(k,1);x.out('Rule deleted\n');return 0});
+    }
+    var txt=a.slice(1).join(' '),antes=u.reglas.length;
+    u.reglas=u.reglas.filter(function(r){return r.orig!==txt});
+    if(antes===u.reglas.length){x.err('Could not delete non-existent rule\n');return 1}
+    x.out('Rule deleted\nRule deleted (v6)\n');return 0;
+  }
+  var ins=null;
+  if(acc==='insert'){ins=+a[1]-1;a=a.slice(2);acc=a[0]}
+  if(['allow','deny','reject','limit'].indexOf(acc)<0){x.err('ERROR: Invalid syntax\n');return 1}
+  var resto=a.slice(1).filter(function(v){return v!=='in'}),regla={acc:acc,desde:'any',puertos:null,proto:'',txt:'',orig:a.join(' ')};
+  if(resto[0]==='from'||resto[0]==='proto'||resto[0]==='to'){
+    for(var i=0;i<resto.length;i++){
+      if(resto[i]==='from'){var d=resto[++i];regla.desde=d==='any'?'any':d}
+      else if(resto[i]==='port'){var pp=ufwPuertos(resto[++i]);if(!pp){x.err('ERROR: Bad port\n');return 1}regla.puertos=pp.p;regla.txt=pp.txt}
+      else if(resto[i]==='proto')regla.proto=resto[++i];
+      else if(resto[i]==='to')i++;
+    }
+    if(regla.desde!=='any'&&!esIp(cidr(regla.desde).red)){x.err('ERROR: Bad source address\n');return 1}
+    if(regla.puertos&&!regla.proto)regla.proto='';
+  }else{
+    var sp=ufwPuertos(resto[0]||'');
+    if(!sp){x.err(resto[0]&&/^[A-Z]/.test(resto[0])?'ERROR: Could not find a profile matching \''+resto.join(' ')+'\'\n':'ERROR: Bad port\n');return 1}
+    regla.puertos=sp.p;regla.proto=sp.proto;regla.txt=sp.txt;
+  }
+  if(!regla.txt&&regla.puertos)regla.txt=regla.puertos.map(function(p){return p.de===p.a?p.de:p.de+':'+p.a}).join(',');
+  if(u.reglas.some(function(r){return r.orig===regla.orig||ufwTo(r)===ufwTo(regla)&&r.acc===regla.acc&&r.desde===regla.desde})){x.out('Skipping adding existing rule\n'+(regla.desde==='any'?'Skipping adding existing rule (v6)\n':''));return 0}
+  if(ins!=null)u.reglas.splice(ins,0,regla);else u.reglas.push(regla);
+  x.out(ins!=null?'Rule inserted\n':'Rule added\n'+(regla.desde==='any'?'Rule added (v6)\n':''));
+  return 0;
+});
+
+/* --- SSH: llaves, conexión a otras computadoras y copia de archivos --- */
+function azar(n,alf){alf=alf||'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';var o='';for(var i=0;i<n;i++)o+=alf.charAt(Math.floor(Math.random()*alf.length));return o}
+function huella(pub){var h=2166136261;for(var i=0;i<pub.length;i++){h^=pub.charCodeAt(i);h=Math.imul(h,16777619)}var o='';for(var k=0;k<43;k++){h^=h<<13;h^=h>>>17;h^=h<<5;o+='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.charAt((h>>>0)%64)}return 'SHA256:'+o}
+function sshdConf(s){
+  var n=s.nodo('/etc/ssh/sshd_config'),t=n?s.contenido(n):'',c2={password:true,root:'prohibit-password',puerto:22,pubkey:true};
+  var dd=s.nodo('/etc/ssh/sshd_config.d');
+  if(dd&&dd.t==='d')Object.keys(dd.h).sort().forEach(function(k){if(dd.h[k].t==='f')t=s.contenido(dd.h[k])+'\n'+t});
+  var vistos={};
+  t.split('\n').forEach(function(l){
+    l=l.replace(/#.*/,'').trim();if(!l)return;var p=l.split(/\s+/),k=p[0].toLowerCase(),v=(p[1]||'').toLowerCase();
+    if(vistos[k])return;vistos[k]=1;
+    if(k==='passwordauthentication')c2.password=v==='yes';
+    else if(k==='permitrootlogin')c2.root=v;
+    else if(k==='port')c2.puerto=+v||22;
+    else if(k==='pubkeyauthentication')c2.pubkey=v!=='no';
+  });
+  return c2;
+}
+function llavesDe(s,u){
+  var home=s.home(u),out=[];
+  ['id_ed25519','id_rsa','id_ecdsa'].forEach(function(n){var priv=s.nodo(home+'/.ssh/'+n);if(priv&&priv.t==='f'){var pub=priv.llave?priv.llave.pub:(s.leer(home+'/.ssh/'+n+'.pub')||'').trim();out.push({ruta:home+'/.ssh/'+n,pub:pub,frase:priv.llave?priv.llave.frase:'',nodo:priv})}});
+  return out;
+}
+function conectarSsh(x,destTxt,opciones){
+  /* Resuelve, revisa el camino, el puerto, la huella del servidor y la autenticación. Promesa de {dest, usuario} o un código de error */
+  var s=x.sis,t=x.t,m=String(destTxt).match(/^(?:([^@]+)@)?(.+)$/),usuario=m[1]||x.u,h=m[2],puerto=opciones.puerto||22;
+  var rs=s.resolver(h);
+  if(rs.err){x.err('ssh: Could not resolve hostname '+h+': '+(rs.err==='sin'?'Temporary failure in name resolution':'Name or service not known')+'\n');return Promise.resolve(255)}
+  var ip=rs.ip,al=s.alcance(ip);
+  if(al.err==='red'){x.err('ssh: connect to host '+h+' port '+puerto+': Network is unreachable\n');return Promise.resolve(255)}
+  if(al.err==='host'){x.err('ssh: connect to host '+h+' port '+puerto+': No route to host\n');return Promise.resolve(255)}
+  var dest=al.ok?al.sis:null;
+  if(!dest||al.err)return x.esperar(1500).then(function(){x.err('ssh: connect to host '+h+' port '+puerto+': Connection timed out\n');return 255});
+  var v=dest.servicio('ssh'),conf=v&&v.conf||sshdConf(dest);
+  var est=puertoEstado(dest,puerto,s.red.ip);
+  if(est==='abierto'&&conf.puerto!==puerto)est='cerrado';
+  if(est==='filtrado')return x.esperar(1500).then(function(){x.err('ssh: connect to host '+h+' port '+puerto+': Connection timed out\n');x.consejo('ssh-timeout','el servidor no contesta en ese puerto: un firewall lo está bloqueando, o el servidor está apagado.');return 255});
+  if(est!=='abierto'){x.err('ssh: connect to host '+h+' port '+puerto+': Connection refused\n');return Promise.resolve(255)}
+  var home=s.home(x.u),kh=s.leer(home+'/.ssh/known_hosts')||'',fp=huella(dest.host+dest.red.ip);
+  var paso=Promise.resolve();
+  if(kh.indexOf(h+' ')<0&&kh.indexOf(ip+' ')<0){
+    paso=t.pedir("The authenticity of host '"+h+' ('+ip+")' can't be established.\nED25519 key fingerprint is "+fp+".\nThis key is not known by any other names.\nAre you sure you want to continue connecting (yes/no/[fingerprint])? ").then(function(r){
+      if(r!=='yes'&&r!==fp){if(/^(y|s)/i.test(r))x.err('Please type \'yes\', \'no\' or the fingerprint: \n');x.err('Host key verification failed.\n');throw 255}
+      if(!s.nodo(home+'/.ssh'))s.poner(home+'/.ssh/',null,{u:x.u,g:s.grupoPrin(x.u),modo:0o700,f:new Date()});
+      s.escribir(home+'/.ssh/known_hosts',h+' ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI'+azar(43)+'\n',x.u,true);
+      x.err("Warning: Permanently added '"+h+"' (ED25519) to the list of known hosts.\n");
+    });
+  }
+  var udest=dest.usuarios[usuario],auth=dest.nodo('/var/log/auth.log'),ahora=new Date();
+  function logAuth(txt){if(auth)auth.c+=fechaLog(ahora)+' '+dest.host+' sshd[2420]: '+txt+'\n'}
+  return paso.then(function(){
+    /* Llave pública: tiene que estar en authorized_keys, y la carpeta y el archivo no pueden ser escribibles por otros */
+    if(conf.pubkey&&udest&&!(usuario==='root'&&conf.root==='no')){
+      var ak=dest.nodo(udest.home+'/.ssh/authorized_keys'),sshd=dest.nodo(udest.home+'/.ssh'),seguro=ak&&sshd&&!(ak.modo&0o022)&&!(sshd.modo&0o022);
+      var txtAk=ak?dest.contenido(ak):'',ll=llavesDe(s,x.u).filter(function(k){return k.pub&&txtAk.indexOf(k.pub.split(' ').slice(0,2).join(' '))>=0});
+      if(ll.length&&!seguro)logAuth('Authentication refused: bad ownership or modes for file '+udest.home+'/.ssh/authorized_keys');
+      if(ll.length&&seguro){
+        var k=ll[0];
+        var frase=k.frase?t.pedir("Enter passphrase for key '"+k.ruta+"': ",true).then(function(f){if(f!==k.frase){throw 'mal'}}):Promise.resolve();
+        return frase.then(function(){logAuth('Accepted publickey for '+usuario+' from '+s.red.ip+' port 52311 ssh2: ED25519 '+huella(k.pub));return {dest:dest,usuario:usuario,llave:true}},function(e){if(e==='cancelado')throw e;x.err('Load key "'+k.ruta+'": incorrect passphrase supplied to decrypt private key\n');return intentarClave()});
+      }
+    }
+    return intentarClave();
+  }).catch(function(e){if(e===255)return 255;throw e});
+  function intentarClave(){
+    var permitida=conf.password&&!(usuario==='root'&&conf.root!=='yes');
+    if(!permitida){logAuth('Connection closed by authenticating user '+usuario+' '+s.red.ip+' port 52311 [preauth]');x.err(usuario+'@'+h+': Permission denied (publickey).\n');if(!llavesDe(s,x.u).length)x.consejo('ssh-llave','el servidor solo acepta llaves. Crea la tuya con ssh-keygen y pide a quien administra el servidor que la agregue (o cópiala con ssh-copy-id mientras las contraseñas sigan permitidas).');return 255}
+    var n=0;
+    function una(){
+      return t.pedir(usuario+'@'+h+"'s password: ",true).then(function(v2){
+        if(udest&&udest.clave&&v2===udest.clave){logAuth('Accepted password for '+usuario+' from '+s.red.ip+' port 52311 ssh2');return {dest:dest,usuario:usuario}}
+        logAuth('Failed password for '+(udest?'':'invalid user ')+usuario+' from '+s.red.ip+' port 52311 ssh2');
+        n++;
+        if(n>=3){x.err(usuario+'@'+h+': Permission denied (publickey,password).\n');return 255}
+        x.err('Permission denied, please try again.\n');return una();
+      });
+    }
+    return una();
+  }
+}
+cmd('ssh',{d:'entra a otra computadora por la red, de forma cifrada',uso:'ssh usuario@equipo [comando]',ops:[['-p 2222','otro puerto'],['-i llave','usa una llave en particular']],cat:'Red'},function(x){
+  var o=opts(x.args,'pil'),destTxt=o.pos[0],t=x.t;
+  if(!destTxt){x.err('usage: ssh [-46AaCfGgKkMNnqsTtVvXxYy] [-B bind_interface] [-b bind_address]\n           [-c cipher_spec] [-D [bind_address:]port] [-E log_file]\n           destination [command [argument ...]]\n');return 255}
+  if(o.val.l&&destTxt.indexOf('@')<0)destTxt=o.val.l+'@'+destTxt;
+  return conectarSsh(x,destTxt,{puerto:o.val.p?+o.val.p:22}).then(function(r){
+    if(typeof r==='number')return r;
+    var d=r.dest,u=d.usuarios[r.usuario],cmdRemoto=o.pos.slice(1).join(' ');
+    if(cmdRemoto){
+      var previo=t.sis;t.sis=d;t.pila.push({u:r.usuario,cwd:u.home,vars:{},pid:d.sigPid++,sisPrevio:previo,remoto:true});
+      var cap=x.tty?null:{buf:''};
+      return t.correrTexto(cmdRemoto,cap).then(function(c2){t.pila.pop();t.sis=previo;if(cap)x.out(cap.buf);return c2},function(e){t.pila.pop();t.sis=previo;throw e});
+    }
+    var ult=d.ultimoLogin;
+    x.out('Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-49-generic x86_64)\n\n * Documentation:  https://help.ubuntu.com\n * Management:     https://landscape.canonical.com\n\n'+(ult?'Last login: '+DIAS[ult.getDay()]+' '+MESES[ult.getMonth()]+' '+dos(ult.getDate())+' '+hora(ult)+' 2026 from '+x.sis.red.ip+'\n':''));
+    d.ultimoLogin=new Date();
+    var previo2=t.sis;
+    t.pila.push({u:r.usuario,cwd:u.home,vars:{},pid:d.proc({cmd:'-bash',nombre:'bash',u:r.usuario,stat:'Ss'}).pid,sisPrevio:previo2,remoto:true,host:d.host});
+    t.sis=d;
+    return 0;
+  });
+});
+cmd('ssh-keygen',{d:'crea un par de llaves para SSH (pública y privada)',uso:'ssh-keygen [-t ed25519] [-C comentario]',ops:[['-t ed25519','el tipo de llave (la recomendada)'],['-C "texto"','un comentario, como tu correo'],['-f archivo','dónde guardarla']],cat:'Red'},function(x){
+  var o=opts(x.args,'tCfNb'),s=x.sis,t=x.t,tipo=(o.val.t||'ed25519').toLowerCase(),home=s.home(x.u);
+  if(['ed25519','rsa','ecdsa'].indexOf(tipo)<0){x.err('unknown key type '+tipo+'\n');return 1}
+  var def=home+'/.ssh/id_'+tipo,ruta=null,frase='';
+  x.out('Generating public/private '+tipo+' key pair.\n');
+  var paso=o.val.f?Promise.resolve(o.val.f):t.pedir('Enter file in which to save the key ('+def+'): ');
+  return paso.then(function(f){
+    ruta=x.abs(f||def);
+    if(s.nodo(ruta))return t.pedir(ruta+' already exists.\nOverwrite (y/n)? ').then(function(r){if(!/^[yYsS]/.test(r))throw 1});
+  }).then(function(){
+    if(o.val.N!=null)return o.val.N;
+    return t.pedir('Enter passphrase for "'+ruta+'" (empty for no passphrase): ',true).then(function(a){return t.pedir('Enter same passphrase again: ',true).then(function(b){if(a!==b){x.err('Passphrases do not match.  Try again.\n');throw 1}return a})});
+  }).then(function(f){
+    frase=f;
+    var dir=dirname(ruta);
+    if(!s.nodo(dir)){var e0=s.mkdir(dir,x.u,true);if(e0){x.err('Saving key "'+ruta+'" failed: '+e0+'\n');return 1}if(dir===home+'/.ssh'){s.nodo(dir).modo=0o700;x.out('Created directory \''+dir+'\'.\n')}}
+    var com=o.val.C!=null?o.val.C:x.u+'@'+s.host;
+    var pub=(tipo==='ed25519'?'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI':tipo==='rsa'?'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQ':'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAI')+azar(tipo==='rsa'?120:43)+(com?' '+com:'');
+    var e=s.escribir(ruta,'-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAA'+azar(46)+'\n'+azar(70)+'\n'+azar(70)+'\n'+azar(36)+'\n-----END OPENSSH PRIVATE KEY-----\n',x.u,false);
+    if(e){x.err('Saving key "'+ruta+'" failed: '+e+'\n');return 1}
+    var priv=s.nodo(ruta);priv.modo=0o600;priv.llave={pub:pub,frase:frase};
+    s.escribir(ruta+'.pub',pub+'\n',x.u,false);s.nodo(ruta+'.pub').modo=0o644;
+    var fp=huella(pub),arte=['|      .o+*=.     |','|     . =+B..     |','|      +.O.+ .    |','|     . * O.o     |','|      . S =      |','|       o = .     |','|      . + o      |','|       E.o .     |','|        oo.      |'];
+    x.out('Your identification has been saved in '+ruta+'\nYour public key has been saved in '+ruta+'.pub\nThe key fingerprint is:\n'+fp+(com?' '+com:'')+"\nThe key's randomart image is:\n+--["+tipo.toUpperCase()+' '+(tipo==='rsa'?3072:256)+']'+(tipo==='rsa'?'----':'--')+'+\n'+arte.join('\n')+'\n+----[SHA256]-----+\n');
+    x.consejo('ssh-keygen','tienes dos archivos: la llave privada ('+basename(ruta)+'), que nunca se comparte, y la pública ('+basename(ruta)+'.pub), que se copia a los servidores.');
+    return 0;
+  }).catch(function(e){if(e===1)return 1;throw e});
+});
+cmd('ssh-copy-id',{d:'copia tu llave pública a un servidor para entrar sin contraseña',uso:'ssh-copy-id usuario@equipo',cat:'Red'},function(x){
+  var o=opts(x.args,'ip'),s=x.sis,dt=o.pos[0];
+  if(!dt){x.err('Usage: /usr/bin/ssh-copy-id [-h|-?|-f|-n|-s|-x] [-i [identity_file]] [-p port] [-F alternative ssh_config file] [-t target_path] [[-o <ssh -o options>] ...] [user@]hostname\n');return 1}
+  var ll=o.val.i?[{pub:(s.leer(x.abs(o.val.i.replace(/\.pub$/,'')+'.pub'))||'').trim(),ruta:x.abs(o.val.i)}]:llavesDe(s,x.u);
+  if(!ll.length||!ll[0].pub){x.err('/usr/bin/ssh-copy-id: ERROR: No identities found\n');x.consejo('ssh-copy-id','primero crea tu par de llaves con ssh-keygen.');return 1}
+  var k=ll[0];
+  x.err('/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "'+k.ruta.replace(/(\.pub)?$/,'.pub')+'"\n/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed\n');
+  return conectarSsh(x,dt,{puerto:o.val.p?+o.val.p:22}).then(function(r){
+    if(typeof r==='number')return r;
+    if(r.llave){x.err('\n/usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist on the remote system.\n\t\t(if you think this is a mistake, you may want to use -f option)\n\n');return 0}
+    var d=r.dest,u=d.usuarios[r.usuario],dir=u.home+'/.ssh';
+    if(!d.nodo(dir))d.poner(dir+'/',null,{u:r.usuario,g:d.grupoPrin(r.usuario),modo:0o700,f:new Date()});
+    if(!d.nodo(dir+'/authorized_keys'))d.poner(dir+'/authorized_keys','',{u:r.usuario,g:d.grupoPrin(r.usuario),modo:0o600,f:new Date()});
+    d.nodo(dir+'/authorized_keys').c+=k.pub+'\n';
+    x.out('\nNumber of key(s) added: 1\n\nNow try logging into the machine, with:   "ssh \''+dt+'\'"\nand check to make sure that only the key(s) you wanted were added.\n\n');
+    return 0;
+  });
+});
+cmd('scp',{d:'copia archivos a otra computadora (o desde ella) por SSH',uso:'scp archivo usuario@equipo:carpeta',cat:'Red'},function(x){
+  var o=opts(x.args,'Pi'),s=x.sis,ps=o.pos;
+  if(ps.length<2){x.err('usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]\n           [-i identity_file] [-J destination] [-l limit] [-o ssh_option]\n           [-P port] [-S program] [-X sftp_option] source ... target\n');return 1}
+  var dest=ps[ps.length-1],orig=ps[0],remD=dest.match(/^([^:]+):(.*)$/),remO=orig.match(/^([^:]+):(.*)$/);
+  if(!remD&&!remO){return CMD.cp.fn(x)}
+  var rem=remD||remO;
+  return conectarSsh(x,rem[1],{puerto:o.val.P?+o.val.P:22}).then(function(r){
+    if(typeof r==='number')return r;
+    var d=r.dest,home=d.usuarios[r.usuario].home;
+    function absR(p){return d.abs(p||'.',home,home)}
+    if(remD){
+      var lr=leer(x,orig,'scp');if(lr.e){x.err(lr.e.replace(/^scp: /,'scp: ')+'\n');return 1}
+      var ab=absR(remD[2]),tn=d.buscar(ab,r.usuario);if(tn.n&&tn.n.t==='d')ab=unir(ab,basename(x.abs(orig)));
+      var e=d.escribir(ab,lr.t,r.usuario,false);if(e){x.err('scp: dest open "'+ab+'": '+(e==='Permiso denegado'?'Permission denied':e)+'\nscp: failed to upload file '+orig+' to '+remD[2]+'\n');return 1}
+      x.out(pad(basename(x.abs(orig)),40)+' 100%  '+pad(bytesDe(lr.t),5,true)+'    85.2KB/s   00:00\n');return 0;
+    }
+    var abO=absR(remO[2]),nd=d.buscar(abO,r.usuario);
+    if(!nd.n||nd.n.t!=='f'||!d.puede(nd.n,r.usuario,'r')){x.err('scp: '+abO+': '+(nd.n?'Permission denied':'No such file or directory')+'\n');return 1}
+    var abL=x.abs(dest),tl=s.buscar(abL,x.u);if(tl.n&&tl.n.t==='d')abL=unir(abL,basename(abO));
+    var e2=s.escribir(abL,d.contenido(nd.n),x.u,false);if(e2){x.err('scp: '+dest+': '+e2+'\n');return 1}
+    x.out(pad(basename(abO),40)+' 100%  '+pad(bytesDe(d.contenido(nd.n)),5,true)+'    85.2KB/s   00:00\n');return 0;
+  });
+});
+
+/* --- Scripts: sentencias, if, for, while --- */
+/* Divide un texto en sentencias: por líneas y por «;», sin partir dentro de comillas ni de $(...) */
+function sentencias(texto){
+  var out=[],cur='',q=null,prof=0;
+  function push(s2){
+    s2=s2.trim();if(!s2)return;
+    var m=s2.match(/^(then|do|else)\s+([\s\S]+)$/);
+    if(m){out.push(m[1]);push(m[2])}else out.push(s2);
+  }
+  for(var i=0;i<texto.length;i++){
+    var ch=texto[i];
+    if(q){cur+=ch;if(ch==='\\'&&q==='"'&&i+1<texto.length){cur+=texto[++i];continue}if(ch===q)q=null;continue}
+    if(ch==='\\'&&i+1<texto.length){if(texto[i+1]==='\n'){i++;continue}cur+=ch+texto[++i];continue}
+    if(ch==="'"||ch==='"'){q=ch;cur+=ch;continue}
+    if(ch==='$'&&texto[i+1]==='('){prof++;cur+='$(';i++;continue}
+    if(prof&&ch==='('){prof++;cur+=ch;continue}
+    if(prof&&ch===')'){prof--;cur+=ch;continue}
+    if(ch==='#'&&!prof&&(cur===''||/\s$/.test(cur))){while(i<texto.length&&texto[i]!=='\n')i++;i--;continue}
+    if(!prof&&(ch==='\n'||ch===';'&&texto[i+1]!==';')){push(cur);cur='';continue}
+    cur+=ch;
+  }
+  push(cur);
+  return out;
+}
+var CLAVES=['then','fi','do','done','else','elif'];
+function arbol(st,i,fin){
+  var nodos=[];
+  function hasta(palabra){var c2=[];while(i<st.length&&st[i]!==palabra){c2.push(st[i]);i++}if(i>=st.length)throw 'error de sintaxis: falta «'+palabra+'»';i++;return c2}
+  while(i<st.length){
+    var s2=st[i],k=s2.split(/\s+/)[0];
+    if(fin&&fin.indexOf(k)>=0&&(k===s2||k==='elif'))return {nodos:nodos,i:i};
+    if(!fin&&CLAVES.indexOf(k)>=0&&(k===s2||k==='elif'))throw 'error de sintaxis cerca del elemento inesperado «'+k+'»';
+    if(k==='if'){
+      var n={tipo:'if',ramas:[],sino:null},cond=[s2.replace(/^if\s+/,'')];i++;
+      cond=cond.concat(hasta('then'));
+      var r=arbol(st,i,['elif','else','fi']);n.ramas.push({cond:cond,cuerpo:r.nodos});i=r.i;
+      while(i<st.length&&/^elif\b/.test(st[i])){cond=[st[i].replace(/^elif\s+/,'')];i++;cond=cond.concat(hasta('then'));r=arbol(st,i,['elif','else','fi']);n.ramas.push({cond:cond,cuerpo:r.nodos});i=r.i}
+      if(st[i]==='else'){i++;r=arbol(st,i,['fi']);n.sino=r.nodos;i=r.i}
+      if(st[i]!=='fi')throw 'error de sintaxis: falta «fi»';
+      i++;nodos.push(n);continue;
+    }
+    if(k==='for'){
+      var m=s2.match(/^for\s+([A-Za-z_]\w*)(?:\s+in\s+([\s\S]*))?$/);
+      if(!m)throw 'error de sintaxis cerca de «'+s2+'»';
+      i++;if(st[i]!=='do')throw 'error de sintaxis: falta «do»';i++;
+      var r2=arbol(st,i,['done']);if(st[r2.i]!=='done')throw 'error de sintaxis: falta «done»';
+      nodos.push({tipo:'for',v:m[1],lista:m[2]==null?'"$@"':m[2],cuerpo:r2.nodos});i=r2.i+1;continue;
+    }
+    if(k==='while'||k==='until'){
+      var c3=[s2.replace(/^(while|until)\s+/,'')];i++;c3=c3.concat(hasta('do'));
+      var r3=arbol(st,i,['done']);if(st[r3.i]!=='done')throw 'error de sintaxis: falta «done»';
+      nodos.push({tipo:'while',hasta:k==='until',cond:c3,cuerpo:r3.nodos});i=r3.i+1;continue;
+    }
+    nodos.push(s2);i++;
+  }
+  if(fin)throw 'error de sintaxis: falta «'+fin[fin.length-1]+'»';
+  return {nodos:nodos,i:i};
+}
+T.correrTexto=function(texto,captura){
+  var t=this,a;
+  try{a=arbol(sentencias(texto),0)}catch(e){t.escribir(c('e','bash: '+e)+'\n');return Promise.resolve(2)}
+  return t.correrNodos(a.nodos,captura);
+};
+T.correrNodos=function(nodos,captura){
+  var t=this,cod=0;
+  function lista(ls){return ls.reduce(function(p,l){return p.then(function(){return t.correrLinea(l,captura).then(function(c2){cod=c2;return c2})})},Promise.resolve(0))}
+  return nodos.reduce(function(p,n){return p.then(function(){
+    if(t.cancelado)throw 'cancelado';
+    if(typeof n==='string'){
+      var m=n.match(/^exit(?:\s+(\d+))?\s*$/);
+      if(m&&t.frame().script)throw {salir:+(m[1]==null?t.codigo:m[1])};
+      return t.correrLinea(n,captura).then(function(c2){cod=c2});
+    }
+    if(n.tipo==='if'){
+      var k=0;
+      function rama(){
+        if(k>=n.ramas.length)return n.sino?t.correrNodos(n.sino,captura).then(function(c2){cod=c2}):(cod=0,undefined);
+        var rm=n.ramas[k++];
+        return lista(rm.cond).then(function(c2){if(c2===0)return t.correrNodos(rm.cuerpo,captura).then(function(c3){cod=c3});return rama()});
+      }
+      return rama();
+    }
+    if(n.tipo==='for'){
+      var toks=lex(n.lista).filter(function(x2){return x2.tipo==='p'});
+      return t.expandir(toks).then(function(items){
+        return items.reduce(function(p2,it){return p2.then(function(){if(t.cancelado)throw 'cancelado';t.frame().vars[n.v]=it;return t.correrNodos(n.cuerpo,captura).then(function(c2){cod=c2})})},Promise.resolve());
+      });
+    }
+    if(n.tipo==='while'){
+      var vueltas=0;
+      function otra(){
+        if(++vueltas>500){t.escribir(c('h','(OneLearn: el ciclo dio más de 500 vueltas y se detuvo.)')+'\n');return}
+        return lista(n.cond).then(function(c2){if((c2===0)!==n.hasta)return t.correrNodos(n.cuerpo,captura).then(function(c3){cod=c3;return otra()})});
+      }
+      return otra();
+    }
+  })},Promise.resolve()).then(function(){return cod});
+};
+/* Aritmética de bash: $(( a + 1 )) */
+function aritmetica(expr,t){
+  var e=String(expr).replace(/\$?\{?([A-Za-z_]\w*)\}?/g,function(m,n){var v=t.variable(n);return String(parseInt(v,10)||0)});
+  if(!/^[\d\s+\-*\/%()<>=!&|]*$/.test(e))return '0';
+  try{return String(Math.trunc(Function('"use strict";return ('+(e.trim()||'0')+')')())|0)}catch(err){return '0'}
+}
+
+cmd('test [',{d:'compara valores o revisa archivos (se usa en if)',uso:'[ -f archivo ] · [ "$a" = "b" ] · [ $n -gt 5 ]',ops:[['-f / -d / -e','existe como archivo, carpeta o lo que sea'],['-z texto','el texto está vacío'],['= y !=','textos iguales o distintos'],['-eq -ne -lt -le -gt -ge','comparan números']],cat:'La terminal'},function(x){
+  var a=x.args.slice(1);
+  if(x.args[0]==='['){if(a[a.length-1]!==']'){x.err('bash: [: falta «]»\n');return 2}a=a.slice(0,-1)}
+  function evaluar(a2){
+    if(!a2.length)return false;
+    if(a2[0]==='!')return !evaluar(a2.slice(1));
+    var o=a2.indexOf('-a');if(o>0)return evaluar(a2.slice(0,o))&&evaluar(a2.slice(o+1));
+    o=a2.indexOf('-o');if(o>0)return evaluar(a2.slice(0,o))||evaluar(a2.slice(o+1));
+    if(a2.length===1)return a2[0]!=='';
+    if(a2.length===2){
+      var op=a2[0],v=a2[1],r=x.buscar(v);
+      if(op==='-z')return v==='';
+      if(op==='-n')return v!=='';
+      if(op==='-e')return !!r.n;
+      if(op==='-f')return !!r.n&&r.n.t==='f';
+      if(op==='-d')return !!r.n&&r.n.t==='d';
+      if(op==='-s')return !!r.n&&x.sis.tam(r.n)>0&&r.n.t==='f';
+      if(op==='-r'||op==='-w'||op==='-x')return !!r.n&&x.sis.puede(r.n,x.u,op.charAt(1));
+      if(op==='-L'||op==='-h'){var r2=x.buscar(v,true);return !!r2.n&&r2.n.t==='l'}
+      throw 'se esperaba un operador unario';
+    }
+    var A2=a2[0],op2=a2[1],B=a2[2];
+    if(op2==='='||op2==='==')return A2===B;
+    if(op2==='!=')return A2!==B;
+    var NUM={'-eq':function(p,q){return p===q},'-ne':function(p,q){return p!==q},'-lt':function(p,q){return p<q},'-le':function(p,q){return p<=q},'-gt':function(p,q){return p>q},'-ge':function(p,q){return p>=q}};
+    if(NUM[op2]){
+      if(!/^-?\d+$/.test(A2)||!/^-?\d+$/.test(B))throw (/^-?\d+$/.test(A2)?B:A2)+': se esperaba una expresión entera';
+      return NUM[op2](+A2,+B);
+    }
+    throw 'se esperaba un operador binario';
+  }
+  try{return evaluar(a)?0:1}catch(e){x.err('bash: '+x.args[0]+': '+e+'\n');return 2}
+});
+cmd('true',{d:'no hace nada y termina bien',cat:'La terminal'},function(){return 0});
+cmd('false',{d:'no hace nada y termina con error',cat:'La terminal'},function(){return 1});
+cmd('read',{d:'lee lo que escribes y lo guarda en una variable',uso:'read [-p "Pregunta: "] variable',cat:'La terminal',interna:true},function(x){
+  var o=opts(x.args,'p'),vars=o.pos.length?o.pos:['REPLY'],fr=x.t.frame();
+  if(x.entrada!=null){var l=x.entrada.split('\n')[0].split(/\s+/);vars.forEach(function(v,i){fr.vars[v]=i===vars.length-1?l.slice(i).join(' '):l[i]||''});return 0}
+  return x.pedir(o.val.p||'',o.f.s).then(function(r){var p=r.trim().split(/\s+/);vars.forEach(function(v,i){fr.vars[v]=i===vars.length-1?p.slice(i).join(' '):p[i]||''});return 0});
+});
+cmd('seq',{d:'escribe una serie de números',uso:'seq [inicio] fin',cat:'Ver y buscar texto'},function(x){
+  var a=x.args.slice(1).map(Number),ini=a.length>1?a[0]:1,fin=a[a.length-1],paso=a.length>2?a[1]:1,o=[];
+  if(a.some(isNaN)||!a.length){x.err('seq: falta un operando\n');return 1}
+  if(a.length>2){fin=a[2]}
+  for(var v=ini;paso>0?v<=fin:v>=fin;v+=paso){o.push(v);if(o.length>1000)break}
+  x.out(o.join('\n')+(o.length?'\n':''));
+});
+cmd('printf',{d:'escribe un texto con formato',uso:'printf "%s: %d\\n" nombre 5',cat:'Ver y buscar texto'},function(x){
+  var f=x.args[1]||'',args=x.args.slice(2),i=0,out='';
+  do{out+=f.replace(/%([-0-9.]*)([sdif%])/g,function(m,w,t2){if(t2==='%')return '%';var v=args[i++];if(v==null)v=t2==='s'?'':'0';if(t2==='d'||t2==='i')v=String(parseInt(v,10)||0);if(t2==='f')v=(parseFloat(v)||0).toFixed(/\.(\d+)/.test(w)?+w.split('.')[1]:6);var n=parseInt(w,10);return n?pad(v,Math.abs(n),n>0):v}).replace(/\\n/g,'\n').replace(/\\t/g,'\t')}while(i<args.length&&/%[sdif]/.test(f));
+  x.out(out);
+});
+cmd('basename',{d:'el nombre de un archivo sin su carpeta',uso:'basename ruta [extensión]',cat:'Archivos y carpetas'},function(x){var b=basename(x.args[1]||'');if(x.args[2]&&b.slice(-x.args[2].length)===x.args[2])b=b.slice(0,-x.args[2].length);x.out(b+'\n')});
+cmd('dirname',{d:'la carpeta de una ruta',uso:'dirname ruta',cat:'Archivos y carpetas'},function(x){var p=x.args[1]||'.';x.out((p.indexOf('/')<0?'.':dirname(p.replace(/\/+$/,''))||'/')+'\n')});
+cmd('ln',{d:'crea enlaces (accesos directos) a archivos y carpetas',uso:'ln -s destino nombre',ops:[['-s','enlace simbólico (el que casi siempre quieres)'],['-f','reemplaza si ya existe']],cat:'Archivos y carpetas'},function(x){
+  var o=opts(x.args),s=x.sis,ps=o.pos;
+  if(!o.f.s){x.consejo('ln-s','OneLearn solo simula enlaces simbólicos: usa ln -s destino nombre.');return 1}
+  if(!ps.length){x.err('ln: falta un operando de archivo\n');return 1}
+  var objetivo=ps[0],nombre=ps[1]||basename(objetivo),ab=x.abs(nombre),r=s.buscar(ab,x.u,true);
+  if(r.n&&r.n.t==='d'){ab=unir(ab,basename(objetivo));r=s.buscar(ab,x.u,true)}
+  if(r.n){if(!o.f.f){x.err("ln: no se pudo crear el enlace simbólico '"+nombre+"': El archivo ya existe\n");return 1}delete r.padre.h[r.nombre];r=s.buscar(ab,x.u,true)}
+  if(!r.padre){x.err("ln: no se pudo crear el enlace simbólico '"+nombre+"': No existe el archivo o el directorio\n");return 1}
+  if(!s.puede(r.padre,x.u,'w')){x.err("ln: no se pudo crear el enlace simbólico '"+nombre+"': Permiso denegado\n");return 1}
+  var dest=objetivo.charAt(0)==='/'?s.abs(objetivo,'/','/'):s.abs(objetivo,dirname(ab),x.home);
+  r.padre.h[r.nombre]={t:'l',u:x.u,g:s.grupoPrin(x.u),modo:0o777,dest:dest,txt:objetivo,m:new Date()};
+  if(o.f.v)x.out("'"+nombre+"' -> '"+objetivo+"'\n");
+});
+cmd('readlink',{d:'dice a dónde apunta un enlace',uso:'readlink enlace',cat:'Archivos y carpetas'},function(x){
+  var o=opts(x.args),r=x.buscar(o.pos[0]||'',true);
+  if(!r.n||r.n.t!=='l')return 1;
+  x.out((o.f.f?r.n.dest:r.n.txt||r.n.dest)+'\n');
+});
+/* tar: el archivo guarda el árbol de archivos como JSON, detrás de una marca */
+var MARCA_TAR='\u001f\u008bONELEARN-TAR\n';
+function empacar(s,n,nombre,u){
+  if(n.t==='d')return {n:nombre,t:'d',m:n.modo,h:Object.keys(n.h).sort(ordenar).filter(function(k){return s.puede(n.h[k],u,'r')||n.h[k].t!=='f'}).map(function(k){return empacar(s,n.h[k],nombre+'/'+k,u)})};
+  if(n.t==='l')return {n:nombre,t:'l',d:n.txt||n.dest};
+  return {n:nombre,t:'f',m:n.modo,c:s.contenido(n)};
+}
+function listaTar(e,out){out.push(e);(e.h||[]).forEach(function(h){listaTar(h,out)});return out}
+cmd('tar',{d:'junta archivos y carpetas en un solo archivo (para respaldos)',uso:'tar -czf respaldo.tar.gz carpeta',ops:[['-c','crea un archivo tar'],['-x','extrae'],['-t','lista lo que tiene'],['-z','comprimido con gzip (.tar.gz)'],['-f archivo','el nombre del archivo tar'],['-v','dice qué va haciendo'],['-C carpeta','extrae en otra carpeta']],cat:'Archivos y carpetas'},function(x){
+  var a=x.args.slice(1),f={},arch=null,dirC=null,pos=[];
+  for(var i=0;i<a.length;i++){
+    var v=a[i];
+    if(v==='-C'){dirC=a[++i];continue}
+    if(/^-?[cxtzvfjp]+$/.test(v)&&(i===0||v.charAt(0)==='-')){var letras=v.replace(/^-/,'').split('');letras.forEach(function(ch){f[ch]=true});if(f.f&&letras[letras.length-1]==='f'&&arch===null){arch=a[++i]}continue}
+    pos.push(v);
+  }
+  var s=x.sis,modos=(f.c?1:0)+(f.x?1:0)+(f.t?1:0);
+  if(modos!==1){x.err("tar: Debe especificar una de las opciones '-Acdtrux', '--delete' o '--test-label'\nPruebe 'tar --help' o 'tar --usage' para más información.\n");return 2}
+  if(!arch){x.err('tar: Se rehúsa a escribir datos de archivo en una terminal.\n');return 2}
+  if(f.c){
+    if(!pos.length){x.err('tar: Cowardly refusing to create an empty archive\n');return 2}
+    var ent=[],cod=0,lst=[];
+    pos.forEach(function(p){
+      var r=x.buscar(p);
+      if(!r.n){x.err('tar: '+p+': No se puede efectuar stat: No existe el archivo o el directorio\n');cod=2;return}
+      if(r.n.t==='f'&&!s.puede(r.n,x.u,'r')){x.err('tar: '+p+': No se puede abrir: Permiso denegado\n');cod=2;return}
+      var e=empacar(s,r.n,p.replace(/^\/+/,'').replace(/\/$/,''),x.u);ent.push(e);listaTar(e,lst);
+    });
+    if(p0abs(pos))x.err('tar: Se eliminan las «/» iniciales de los nombres de los miembros\n');
+    var cont=MARCA_TAR+JSON.stringify({z:!!f.z,e:ent});
+    var e2=s.escribir(x.abs(arch),cont,x.u,false);
+    if(e2){x.err('tar: '+arch+': No se puede open: '+e2+'\n');return 2}
+    if(f.v)x.out(lst.map(function(e){return e.n+(e.t==='d'?'/':'')}).join('\n')+'\n');
+    return cod;
+  }
+  var lr=leer(x,arch,'tar');
+  if(lr.e){x.err(lr.e.replace(/^tar: (.*): No existe el archivo o el directorio$/,'tar: $1: No se puede open: No existe el archivo o el directorio')+'\ntar: Error is not recoverable: exiting now\n');return 2}
+  if(lr.t.indexOf(MARCA_TAR)!==0){x.err('tar: Esto no parece un archivo tar\ntar: Saliendo con fallos debido a errores anteriores\n');return 2}
+  var dat=JSON.parse(lr.t.slice(MARCA_TAR.length)),todos=[];
+  dat.e.forEach(function(e){listaTar(e,todos)});
+  if(f.t){x.out(todos.map(function(e){return (f.v?(e.t==='d'?'drwxrwxr-x':'-rw-rw-r--')+' '+x.u+'/'+x.u+' '+pad(e.c?bytesDe(e.c):0,6,true)+' '+fechaLs(new Date())+' ':'')+e.n+(e.t==='d'?'/':'')}).join('\n')+'\n');return 0}
+  var base=dirC?x.abs(dirC):x.cwd,cod2=0;
+  if(dirC&&!s.nodo(base)){x.err('tar: '+dirC+': No se puede open: No existe el archivo o el directorio\ntar: Error is not recoverable: exiting now\n');return 2}
+  todos.forEach(function(e){
+    var ab=unir(base,e.n);
+    if(e.t==='d'){var er=s.mkdir(ab,x.u,true);if(er){x.err('tar: '+e.n+': No se puede crear el directorio: '+er+'\n');cod2=2}}
+    else if(e.t==='f'){var er2=s.escribir(ab,e.c,x.u,false);if(er2){x.err('tar: '+e.n+': No se puede open: '+er2+'\n');cod2=2}}
+    if(f.v)x.out(e.n+(e.t==='d'?'/':'')+'\n');
+  });
+  return cod2;
+  function p0abs(ps){return ps.some(function(p){return p.charAt(0)==='/'})}
+});
+cmd('rsync',{d:'copia y sincroniza carpetas (solo copia lo que cambió)',uso:'rsync -av origen/ destino/',ops:[['-a','conserva permisos y fechas, y copia todo lo de adentro'],['-v','dice qué copió'],['--delete','borra en el destino lo que ya no está en el origen']],cat:'Archivos y carpetas'},function(x){
+  var o=opts(x.args),s=x.sis,ps=o.pos;
+  if(ps.length<2){x.err('rsync: falta el destino\n');return 1}
+  var org=ps[0],dst=ps[1],r=x.buscar(org);
+  if(!r.n){x.err('rsync: link_stat "'+x.abs(org)+'" failed: No such file or directory (2)\nrsync error: some files/attrs were not transferred (see previous errors) (code 23)\n');return 23}
+  var dentroDe=/\/$/.test(org)&&r.n.t==='d',baseD=x.abs(dst);
+  if(!dentroDe&&r.n.t==='d')baseD=unir(baseD,basename(x.abs(org)));
+  var lista=[],nuevos=0,tam=0;
+  function sync(n,ab,rel){
+    if(n.t==='d'){if(!s.nodo(ab)){var e=s.mkdir(ab,x.u,true);if(e)return}lista.push(rel+'/');Object.keys(n.h).sort(ordenar).forEach(function(k){sync(n.h[k],ab+'/'+k,rel?rel+'/'+k:k)});return}
+    if(n.t!=='f'||!s.puede(n,x.u,'r'))return;
+    var txt=s.contenido(n),act=s.leer(ab);
+    if(act===txt)return;
+    if(!s.escribir(ab,txt,x.u,false)){nuevos++;tam+=bytesDe(txt);lista.push(rel);var nn=s.nodo(ab);if(nn&&o.f.a)nn.modo=n.modo}
+  }
+  if(r.n.t==='f'){var nd=s.nodo(baseD);sync(r.n,nd&&nd.t==='d'?unir(baseD,basename(x.abs(org))):baseD,basename(x.abs(org)))}
+  else{if(!s.nodo(baseD))s.mkdir(baseD,x.u,true);Object.keys(r.n.h).sort(ordenar).forEach(function(k){sync(r.n.h[k],baseD+'/'+k,k)})}
+  var borrados=[];
+  if(o.largo['delete']&&r.n.t==='d'){
+    var dn=s.nodo(baseD);
+    (function lim(d,orig,rel){Object.keys(d.h).forEach(function(k){if(!orig||!orig.h[k]){borrados.push('deleting '+(rel?rel+'/':'')+k);delete d.h[k]}else if(d.h[k].t==='d'&&orig.h[k].t==='d')lim(d.h[k],orig.h[k],(rel?rel+'/':'')+k)})})(dn,r.n,'');
+  }
+  if(o.f.v)x.out('sending incremental file list\n'+borrados.concat(lista.filter(function(l){return l!=='/'})).join('\n')+(lista.length>1||borrados.length?'\n':'')+'\nsent '+(tam+120)+' bytes  received 35 bytes  '+(tam+155)+'.00 bytes/sec\ntotal size is '+tam+'  speedup is 1.00\n');
+});
+/* cron */
+function revisarCron(txt){
+  var errores=[];
+  txt.split('\n').forEach(function(l,i){
+    l=l.trim();if(!l||l.charAt(0)==='#'||/^[A-Z_]+=/.test(l))return;
+    if(/^@(reboot|yearly|annually|monthly|weekly|daily|midnight|hourly)\s+\S/.test(l))return;
+    var p=l.split(/\s+/);
+    if(p.length<6){errores.push(i+1);return}
+    var lim=[[0,59],[0,23],[1,31],[1,12],[0,7]];
+    for(var k=0;k<5;k++){
+      var ok=p[k].split(',').every(function(parte){var m=parte.match(/^(\*|\d+(?:-\d+)?)(?:\/(\d+))?$/);if(!m)return false;if(m[1]==='*')return true;return m[1].split('-').every(function(n){return +n>=lim[k][0]&&+n<=lim[k][1]})});
+      if(!ok){errores.push(i+1);return}
+    }
+  });
+  return errores;
+}
+cmd('crontab',{d:'programa comandos para que se corran solos a ciertas horas',uso:'crontab -e | -l | -r',ops:[['-e','edita tus tareas programadas'],['-l','las muestra'],['-r','las borra todas'],['-u usuario','las de otro usuario (con sudo)']],cat:'Procesos y servicios'},function(x){
+  var o=opts(x.args,'u'),s=x.sis,u=o.val.u||x.u;
+  if(o.val.u&&x.u!=='root'){x.err('must be privileged to use -u\n');return 1}
+  if(!s.usuarios[u]){x.err('crontab: user \''+u+'\' unknown\n');return 1}
+  if(o.f.l){if(!s.crontabs[u]){x.err('no crontab for '+u+'\n');return 1}x.out(s.crontabs[u]);return 0}
+  if(o.f.r){if(!s.crontabs[u]){x.err('no crontab for '+u+'\n');return 1}delete s.crontabs[u];return 0}
+  if(o.f.e){
+    if(!x.tty){x.err('crontab: no se puede editar sin una terminal\n');return 1}
+    var plantilla=s.crontabs[u]||'# Edita este archivo para presentar tareas que cron ejecutará.\n#\n# Cada tarea va en una línea, con cinco campos de tiempo y el comando:\n# m h  dom mon dow   comando\n#\n# Por ejemplo, un respaldo a las 2:30 de cada noche:\n# 30 2 * * * tar -czf /home/'+u+'/respaldo.tar.gz /home/'+u+'/Documentos\n';
+    if(!s.crontabs[u])x.out('no crontab for '+u+' - using an empty one\n');
+    var guardado=null;
+    return x.t.editor('/tmp/crontab.'+azar(6,'abcdefghijklmnopqrstuvwxyz0123456789')+'/crontab',plantilla,false,function(txt){var e=revisarCron(txt);if(e.length)return 'error en la línea '+e[0]+': revisa los cinco campos de tiempo';guardado=txt;return null}).then(function(){
+      if(guardado==null){x.out('crontab: no changes made to crontab\n');return 0}
+      s.crontabs[u]=guardado.replace(/\n*$/,'\n');x.out('crontab: installing new crontab\n');return 0;
+    });
+  }
+  if(o.pos[0]){var lr=leer(x,o.pos[0],'crontab');if(lr.e){x.err(lr.e+'\n');return 1}var e=revisarCron(lr.t);if(e.length){x.err('"'+o.pos[0]+'":'+e[0]+': bad minute\nerrors in crontab file, can\'t install.\n');return 1}s.crontabs[u]=lr.t;return 0}
+  x.err('usage:\tcrontab [-u user] file\n\tcrontab [ -u user ] [ -i ] { -e | -l | -r }\n');return 1;
+});
+/* awk: un subconjunto útil para registros */
+function awkLex(t){
+  var toks=[],i=0;
+  while(i<t.length){
+    var ch=t[i];
+    if(/\s/.test(ch)){i++;continue}
+    if(ch==='"'){var j=i+1,v='';while(j<t.length&&t[j]!=='"'){if(t[j]==='\\'&&t[j+1]){v+={n:'\n',t:'\t'}[t[j+1]]||t[j+1];j+=2;continue}v+=t[j++]}toks.push({t:'s',v:v});i=j+1;continue}
+    if(ch==='/'&&(!toks.length||/^(op|\(|,|\{|;|&&|\|\|)$/.test(toks[toks.length-1].t)||toks[toks.length-1].v==='~'||toks[toks.length-1].v==='!~')){var k=t.indexOf('/',i+1);if(k<0)k=t.length;toks.push({t:'re',v:t.slice(i+1,k)});i=k+1;continue}
+    var m=t.slice(i).match(/^(\d+(?:\.\d+)?|[A-Za-z_]\w*|\$|==|!=|<=|>=|\+=|-=|\+\+|&&|\|\||!~|[~<>+\-*\/%=(){},;!])/);
+    if(!m)throw 'awk: error de sintaxis cerca de «'+t.slice(i,i+10)+'»';
+    var v2=m[1];
+    toks.push({t:/^\d/.test(v2)?'n':/^[A-Za-z_]/.test(v2)?'id':/^[(){},;]$/.test(v2)?v2:v2==='$'?'$':'op',v:v2});
+    i+=v2.length;
+  }
+  return toks;
+}
+function awkProg(texto){
+  var tk=awkLex(texto),i=0,reglas=[];
+  function ver(t,v){return tk[i]&&tk[i].t===t&&(v==null||tk[i].v===v)}
+  function come(t,v){if(!ver(t,v))throw 'awk: error de sintaxis cerca de «'+(tk[i]?tk[i].v:'el final')+'»';return tk[i++]}
+  function primario(){
+    if(ver('$')){i++;var e=primario();return {k:'campo',e:e}}
+    if(ver('n'))return {k:'num',v:+tk[i++].v};
+    if(ver('s'))return {k:'str',v:tk[i++].v};
+    if(ver('re'))return {k:'re',v:tk[i++].v};
+    if(ver('(')){i++;var e2=expr();come(')');return e2}
+    if(ver('op','-')){i++;return {k:'bin',o:'-',a:{k:'num',v:0},b:primario()}}
+    if(ver('op','!')){i++;return {k:'no',a:primario()}}
+    if(ver('id')){var n=tk[i++].v;if(ver('op','++')){i++;return {k:'inc',n:n}}if(ver('(')){i++;var args=[];while(!ver(')')){args.push(expr());if(ver(','))i++}i++;return {k:'fn',n:n,args:args}}return {k:'var',n:n}}
+    throw 'awk: error de sintaxis cerca de «'+(tk[i]?tk[i].v:'el final')+'»';
+  }
+  function mul(){var a=primario();while(ver('op','*')||ver('op','/')||ver('op','%')){var o=tk[i++].v;a={k:'bin',o:o,a:a,b:primario()}}return a}
+  function suma(){var a=mul();while(ver('op','+')||ver('op','-')){var o=tk[i++].v;a={k:'bin',o:o,a:a,b:mul()}}return a}
+  function concat(){var a=suma();while(tk[i]&&(ver('$')||ver('n')||ver('s')||ver('id')||ver('('))&&!ver('id','in')){a={k:'cat',a:a,b:suma()}}return a}
+  function comp(){var a=concat();if(ver('op')&&/^(==|!=|<|>|<=|>=|~|!~)$/.test(tk[i].v)){var o=tk[i++].v;return {k:'cmp',o:o,a:a,b:concat()}}return a}
+  function y(){var a=comp();while(ver('op','&&')){i++;a={k:'y',a:a,b:comp()}}return a}
+  function expr(){var a=y();while(ver('op','||')){i++;a={k:'o',a:a,b:y()}}return a}
+  function sentencia(){
+    if(ver('id','print')){i++;var args=[];if(!ver(';')&&!ver('}')){args.push(expr());while(ver(',')){i++;args.push(expr())}}return {k:'print',args:args}}
+    if(ver('id','for')){i++;come('(');var v=come('id').v;come('id','in');var arr=come('id').v;come(')');var cuerpo=ver('{')?bloque():[sentencia()];return {k:'forin',v:v,arr:arr,cuerpo:cuerpo}}
+    if(ver('id')&&tk[i+1]&&(tk[i+1].v==='+='||tk[i+1].v==='-='||tk[i+1].v==='=')){var n=tk[i++].v,o=tk[i++].v;return {k:'asig',n:n,o:o,e:expr()}}
+    if(ver('id')&&tk[i+1]&&tk[i+1].v==='++'){var n2=tk[i].v;i+=2;return {k:'asig',n:n2,o:'+=',e:{k:'num',v:1}}}
+    if(ver('id')&&tk[i+1]&&tk[i+1].v==='['){throw 'awk: arreglos no disponibles en esta terminal'}
+    return {k:'expr',e:expr()};
+  }
+  function bloque(){come('{');var ss=[];while(!ver('}')){if(ver(';')){i++;continue}ss.push(sentencia())}come('}');return ss}
+  while(i<tk.length){
+    var r={};
+    if(ver('id','BEGIN')){i++;r.especial='BEGIN'}
+    else if(ver('id','END')){i++;r.especial='END'}
+    else if(!ver('{'))r.patron=expr();
+    r.acc=ver('{')?bloque():null;
+    reglas.push(r);
+    while(ver(';'))i++;
+  }
+  return reglas;
+}
+function awkCorrer(reglas,lineas,sep){
+  var V={NR:0,NF:0},out='',campos=[];
+  function num(v){var n=parseFloat(v);return isNaN(n)?0:n}
+  function esNum(v){return typeof v==='number'||/^\s*-?\d+(\.\d+)?\s*$/.test(String(v))}
+  function str(v){return typeof v==='number'?(Math.round(v)===v?String(v):String(+v.toFixed(6))):String(v==null?'':v)}
+  function ev(e){
+    switch(e.k){
+      case 'num':return e.v;case 'str':return e.v;
+      case 're':return new RegExp(e.v).test(campos[0])?1:0;
+      case 'campo':var n=Math.floor(num(ev(e.e)));return n===0?campos[0]:campos[n]==null?'':campos[n];
+      case 'var':return e.n==='NR'?V.NR:e.n==='NF'?campos.length-1:V[e.n]==null?'':V[e.n];
+      case 'inc':var a=num(V[e.n]);V[e.n]=a+1;return a;
+      case 'bin':var x2=num(ev(e.a)),y2=num(ev(e.b));return e.o==='+'?x2+y2:e.o==='-'?x2-y2:e.o==='*'?x2*y2:e.o==='/'?(y2?x2/y2:0):x2%y2;
+      case 'cat':return str(ev(e.a))+str(ev(e.b));
+      case 'no':return ev(e.a)?0:1;
+      case 'y':return ev(e.a)&&ev(e.b)?1:0;
+      case 'o':return ev(e.a)||ev(e.b)?1:0;
+      case 'fn':var v=e.args.length?ev(e.args[0]):campos[0];if(e.n==='length')return str(v).length;if(e.n==='toupper')return str(v).toUpperCase();if(e.n==='tolower')return str(v).toLowerCase();if(e.n==='int')return Math.trunc(num(v));throw 'awk: función desconocida '+e.n;
+      case 'cmp':
+        if(e.o==='~'||e.o==='!~'){var re=e.b.k==='re'?e.b.v:str(ev(e.b));var t2=new RegExp(re).test(str(ev(e.a)));return (e.o==='~')===t2?1:0}
+        var A2=ev(e.a),B=ev(e.b),r;
+        if(esNum(A2)&&esNum(B)){A2=num(A2);B=num(B)}else{A2=str(A2);B=str(B)}
+        r=e.o==='=='?A2===B:e.o==='!='?A2!==B:e.o==='<'?A2<B:e.o==='>'?A2>B:e.o==='<='?A2<=B:A2>=B;return r?1:0;
+    }
+  }
+  function correr(ss){
+    ss.forEach(function(s2){
+      if(s2.k==='print')out+=(s2.args.length?s2.args.map(function(a){return str(ev(a))}).join(' '):campos[0])+'\n';
+      else if(s2.k==='asig'){var v=ev(s2.e);V[s2.n]=s2.o==='='?v:num(V[s2.n])+(s2.o==='+='?num(v):-num(v))}
+      else if(s2.k==='expr')ev(s2.e);
+    });
+  }
+  function cierto(p){var v=ev(p);return p.k==='re'?!!v:typeof v==='number'?v!==0:v!==''}
+  campos=[''];
+  reglas.filter(function(r){return r.especial==='BEGIN'}).forEach(function(r){correr(r.acc||[])});
+  lineas.forEach(function(l){
+    V.NR++;
+    campos=[l].concat(sep?l.split(sep):l.trim().split(/\s+/).filter(Boolean));
+    reglas.forEach(function(r){if(r.especial)return;if(r.patron&&!cierto(r.patron))return;if(r.acc)correr(r.acc);else out+=l+'\n'});
+  });
+  campos=[''];
+  reglas.filter(function(r){return r.especial==='END'}).forEach(function(r){correr(r.acc||[])});
+  return out;
+}
+cmd('awk',{d:'separa cada línea en columnas y hace cálculos con ellas',uso:"awk '{print $1}' archivo",ops:[["'{print $1, $3}'",'muestra las columnas 1 y 3'],["-F ','",'usa la coma para separar columnas'],["'$9 == 404'",'solo las líneas donde la columna 9 vale 404'],["'{s+=$10} END {print s}'",'suma una columna']],cat:'Ver y buscar texto'},function(x){
+  var a=x.args.slice(1),sep=null;
+  if(a[0]&&/^-F/.test(a[0])){sep=a[0].length>2?a[0].slice(2):a[1];a=a.slice(a[0].length>2?1:2)}
+  var prog=a[0];
+  if(prog==null){x.err('uso: awk [-F sep] \'programa\' [archivo ...]\n');return 2}
+  var reglas;
+  try{reglas=awkProg(prog)}catch(e){x.err(String(e)+'\n');return 2}
+  var src=fuentes(x,a.slice(1),'awk'),cod=0,ls=[];
+  src.forEach(function(s2){if(s2.e){x.err(s2.e.replace(/^awk: /,'awk: no se puede abrir el archivo ')+'\n');cod=2}else ls=ls.concat(lineasDe(s2.t))});
+  try{x.out(awkCorrer(reglas,ls,sep==='\\t'?'\t':sep))}catch(e){x.err(String(e)+'\n');return 2}
+  return cod;
+});
+cmd('cut',{d:'corta columnas de cada línea',uso:'cut -d "," -f 1,3 archivo',ops:[['-d ","','el separador de columnas'],['-f 1,3','qué columnas'],['-c 1-5','qué caracteres']],cat:'Ver y buscar texto'},function(x){
+  var o=opts(x.args,'dfc'),sep=o.val.d==null?'\t':o.val.d,lista=o.val.f||o.val.c;
+  if(!lista){x.err('cut: debe especificar una lista de bytes, caracteres o campos\n');return 1}
+  function sel(n){return lista.split(',').some(function(p){var m=p.match(/^(\d*)(-?)(\d*)$/);if(!m)return false;var a2=m[1]?+m[1]:1,b=m[2]?(m[3]?+m[3]:1e9):a2;return n>=a2&&n<=b})}
+  var out='',cod=0;
+  fuentes(x,o.pos,'cut').forEach(function(s2){
+    if(s2.e){x.err(s2.e+'\n');cod=1;return}
+    lineasDe(s2.t).forEach(function(l){
+      if(o.val.c)out+=l.split('').filter(function(ch,i){return sel(i+1)}).join('')+'\n';
+      else{var p=l.split(sep);out+=(p.length===1?l:p.filter(function(v,i){return sel(i+1)}).join(sep))+'\n'}
+    });
+  });
+  x.out(out);return cod;
+});
+cmd('netplan',{d:'aplica la configuración de red de /etc/netplan',uso:'sudo netplan apply',cat:'Red',sbin:true},function(x){
+  var s=x.sis,r=s.red;
+  if(x.args[1]!=='apply'&&x.args[1]!=='try'){x.err('You need to specify a command\n');return 1}
+  if(x.u!=='root'){x.err('Permission denied (try with sudo)\n');return 1}
+  var dir=s.nodo('/etc/netplan'),txt='';
+  if(dir)Object.keys(dir.h).sort().forEach(function(k){if(/\.ya?ml$/.test(k)&&dir.h[k].t==='f')txt+=s.contenido(dir.h[k])+'\n'});
+  if(/\t/.test(txt)){x.err('Error in network definition: found character that cannot start any token (tabs no están permitidos en YAML)\n');return 1}
+  var bloque=txt.slice(Math.max(0,txt.indexOf(r.iface+':')));
+  if(txt.indexOf(r.iface+':')<0){x.err('Error: no se encontró la configuración de '+r.iface+'\n');return 1}
+  if(/dhcp4:\s*(true|yes)/.test(bloque)){r.dhcp=true;r.ip=r.ipDhcp||r.ip||'192.168.1.50';r.bits=24;r.puerta=r.salida;r.dnsSup=null;r.arriba=true;return 0}
+  var dir2=bloque.match(/addresses:\s*\[?\s*-?\s*"?(\d+\.\d+\.\d+\.\d+)\/(\d+)/);
+  if(!dir2){x.err('Error in network definition: '+r.iface+': no tiene addresses ni dhcp4\n');return 1}
+  var gw=(bloque.match(/via:\s*"?(\d+\.\d+\.\d+\.\d+)/)||bloque.match(/gateway4:\s*"?(\d+\.\d+\.\d+\.\d+)/)||[])[1];
+  var dns=(bloque.match(/nameservers:[\s\S]*?addresses:\s*\[?\s*-?\s*"?(\d+\.\d+\.\d+\.\d+)/)||[])[1];
+  r.dhcp=false;r.ip=dir2[1];r.bits=+dir2[2];r.puerta=gw||null;r.arriba=true;if(dns)r.dnsSup=dns;
+  if(/gateway4/.test(bloque))x.err('\n** (generate:2201): WARNING **: `gateway4` has been deprecated, use default routes instead.\nSee the \'Default routes\' section of the documentation for more details.\n');
+  return 0;
 });
 
 /* --- Sistema --- */
@@ -2294,18 +3470,27 @@ cmd('git',{d:'control de versiones',uso:'git orden',cat:'Sistema',paq:'git'},fun
   if(x.args[1]==='--version'){x.out('git version 2.43.0\n');return}
   x.consejo('git','git ya está instalado. Lo usas a fondo en el proyecto «Tu portafolio web».');
 });
-cmd('nginx',{d:'el servidor web nginx',uso:'nginx -t | -v',cat:'Red',paq:'nginx',sbin:true},function(x){
-  var a=x.args[1];
+cmd('nginx',{d:'el servidor web nginx',uso:'sudo nginx -t',ops:[['-t','revisa que la configuración no tenga errores'],['-s reload','vuelve a leer la configuración'],['-v','la versión']],cat:'Red',paq:'nginx',sbin:true},function(x){
+  var a=x.args[1],s=x.sis;
   if(a==='-v'){x.err('nginx version: nginx/1.24.0 (Ubuntu)\n');return}
-  if(a==='-t'){
-    if(x.u!=='root'){x.err('nginx: [alert] could not open error log file: open() "/var/log/nginx/error.log" failed (13: Permission denied)\n');return 1}
+  if(a==='-t'||a==='-T'){
+    if(x.u!=='root'){x.err('nginx: [alert] could not open error log file: open() "/var/log/nginx/error.log" failed (13: Permission denied)\n2026/11/18 10:30:00 [warn] 2412#2412: the "user" directive makes sense only if the master process runs with super-user privileges, ignored in /etc/nginx/nginx.conf:1\nnginx: [emerg] open() "/run/nginx.pid" failed (13: Permission denied)\nnginx: configuration file /etc/nginx/nginx.conf test failed\n');x.consejo('nginx-t','revisar la configuración de nginx necesita sudo: sudo nginx -t.');return 1}
+    var r=nginxConfig(s);
+    if(r.err){x.err('nginx: [emerg] '+r.err+'\nnginx: configuration file /etc/nginx/nginx.conf test failed\n');return 1}
+    (r.avisos||[]).forEach(function(w){x.err('nginx: [warn] '+w+'\n')});
     x.err('nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful\n');return 0;
   }
-  x.consejo('nginx','nginx se controla con systemctl: sudo systemctl status nginx.');
+  if(a==='-s'&&x.args[2]==='reload'){return CMD.systemctl.fn(Object.assign({},x,{args:['systemctl','reload','nginx']}))}
+  x.consejo('nginx','nginx se controla con systemctl: sudo systemctl status nginx, sudo systemctl reload nginx.');
 });
 
 /* ---------- API pública ---------- */
 AT.terminal=function(cont,op){return new Terminal(cont,op)};
 AT.terminal.comando=function(nombres,meta,fn){cmd(nombres,meta,fn)};
 AT.terminal.color=c;
+/* Piezas para que las lecciones agreguen comandos con el mismo estilo */
+AT.terminal.util={opts:opts,pad:pad,tabla:tabla,plano:plano,leer:leer,fuentes:fuentes,lineasDe:lineasDe,ordenar:ordenar,
+  ipNum:ipNum,numIp:numIp,esIp:esIp,enRed:enRed,cidr:cidr,redDe:redDe,difusion:difusion,privada:privada,
+  respuesta:respuesta,paginaError:paginaError,HTTP_TXT:HTTP_TXT,PUERTOS:PUERTOS,puertoEstado:puertoEstado,bytesDe:bytesDe,
+  comando:function(n){return CMD[n]||null},paquete:function(n,def){PAQ[n]=def}};
 })();

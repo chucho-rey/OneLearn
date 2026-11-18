@@ -4,7 +4,7 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-21';
+const VERSION='onelearn-24';
 const ARCHIVOS=[
   './',
   'index.html',
@@ -23,6 +23,7 @@ const ARCHIVOS=[
   'assets/css/base.css',
   'assets/css/editor.css',
   'assets/css/terminal.css',
+  'assets/css/red.css',
   'assets/js/ajustes.js',
   'assets/js/catalogo.js',
   'assets/js/base.js',
@@ -44,6 +45,7 @@ const ARCHIVOS=[
   'assets/js/proyecto.js',
   'assets/js/rutas.js',
   'assets/js/terminal.js',
+  'assets/js/red.js',
   'lecciones/ram.html',
   'lecciones/ram.css',
   'lecciones/ram.js',
@@ -122,6 +124,27 @@ const ARCHIVOS=[
   'lecciones/apt.html',
   'lecciones/apt.css',
   'lecciones/apt.js',
+  'lecciones/que-es-red.html',
+  'lecciones/que-es-red.css',
+  'lecciones/que-es-red.js',
+  'lecciones/modelo-osi.html',
+  'lecciones/modelo-osi.css',
+  'lecciones/modelo-osi.js',
+  'lecciones/ethernet.html',
+  'lecciones/ethernet.css',
+  'lecciones/ethernet.js',
+  'lecciones/wifi.html',
+  'lecciones/wifi.css',
+  'lecciones/wifi.js',
+  'lecciones/subredes.html',
+  'lecciones/subredes.css',
+  'lecciones/subredes.js',
+  'lecciones/dhcp-nat.html',
+  'lecciones/dhcp-nat.css',
+  'lecciones/dhcp-nat.js',
+  'lecciones/ipv6.html',
+  'lecciones/ipv6.css',
+  'lecciones/ipv6.js',
   'assets/vendor/tiptap.min.js',
   'assets/icons/icono.svg',
   'assets/icons/icono-maskable.svg',

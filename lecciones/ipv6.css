@@ -1,0 +1,8 @@
+/* Estilos propios de los laboratorios de «IPv6 en la práctica». */
+.va-pr{margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--line)}
+.va-pr .lbl{display:block;margin:0}
+.va-q{margin:0.25rem 0 0;font-size:1rem;color:var(--accent-ink);overflow-wrap:anywhere;max-width:none}
+#vaIn,#vaResp{max-width:26rem}
+.vs-pasos{margin:0.75rem 0 0;padding-left:1.375rem;font-size:0.9375rem}
+.vs-pasos li{padding:0.125rem 0}
+.vs-pasos code{overflow-wrap:anywhere}

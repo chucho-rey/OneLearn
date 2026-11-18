@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DHCP y NAT · OneLearn</title>
+<meta name="description" content="Cómo recibe su dirección cada equipo con DHCP (Discover, Offer, Request, Ack), cómo comparte una sola IP pública toda tu casa con NAT, el reenvío de puertos, CGNAT y cómo darle una IP fija a un servidor con netplan.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="dhcp-nat.css">
+</head>
+<body data-leccion="dhcp-nat">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="dn-dora">
+<p class="hint">Una laptop se conecta a la red y pide una dirección. Elige qué pasa y avanza mensaje por mensaje.</p>
+<div class="chips" id="ddEsc" role="group" aria-label="Situación">
+  <button class="chip" type="button" data-v="normal" aria-pressed="true">Todo funciona</button>
+  <button class="chip" type="button" data-v="apagado" aria-pressed="false">El servidor DHCP está apagado</button>
+  <button class="chip" type="button" data-v="lleno" aria-pressed="false">Ya no quedan direcciones</button>
+</div>
+<div class="dd-c" id="ddCaja"></div>
+<div class="status" id="ddStat" data-k="" aria-live="polite"><span class="dot"></span><span id="ddMsg"></span></div>
+<div class="ctl">
+  <button class="btn pri" type="button" id="ddSig">Siguiente mensaje</button>
+  <button class="btn" type="button" id="ddReset">Empezar de nuevo</button>
+  <span class="lbl" id="ddPaso"></span>
+</div>
+</template>
+<template data-lab="dn-nat">
+<p class="hint">Tres equipos de una casa navegan por internet con una sola IP pública, la 198.51.100.77. Abre conexiones y mira la tabla del router.</p>
+<div class="chips" id="dnAcc" role="group" aria-label="Qué pasa">
+  <button class="chip" type="button" data-v="laptop">La laptop abre una página</button>
+  <button class="chip" type="button" data-v="celular">El celular abre una página</button>
+  <button class="chip" type="button" data-v="tv">La TV pone una película</button>
+  <button class="chip" type="button" data-v="respuesta">Llega una respuesta</button>
+  <button class="chip" type="button" data-v="externo">Alguien de internet intenta entrar al puerto 8080</button>
+</div>
+<label class="chk"><input type="checkbox" id="dnFwd"> Reenviar el puerto 8080 a la NAS (192.168.1.10)</label>
+<div class="tbl-wrap"><table class="dn-t"><caption class="vh">Tabla NAT del router</caption><thead><tr><th scope="col">Equipo (privada)</th><th scope="col">Sale como (pública)</th><th scope="col">Destino</th></tr></thead><tbody id="dnTabla"></tbody></table></div>
+<div class="status" id="dnStat" data-k="" aria-live="polite"><span class="dot"></span><span id="dnMsg"></span></div>
+<div class="ctl"><button class="btn" type="button" id="dnReset">Vaciar la tabla</button></div>
+</template>
+<template data-lab="dn-fija">
+<p class="hint">Este servidor recibe su IP por DHCP y cambia de vez en cuando. Dale una IP fija: la 192.168.1.60. La contraseña de sudo puede ser cualquiera.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "dhcp-nat",
+ "titulo": "DHCP y NAT",
+ "icono": "nat",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "20 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 laboratorios, 7 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-dn001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-dn002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dhcp",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "DHCP: direcciones automáticas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada equipo de una red necesita una IP, una máscara, la puerta de enlace (el router) y un servidor DNS. Configurar eso a mano en cada celular y cada laptop sería imposible, y bastaría un error de dedo para dejar a alguien sin internet. Para eso existe "
+     },
+     {
+      "type": "text",
+      "text": "DHCP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "Dynamic Host Configuration Protocol",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "): un servidor, casi siempre el router, reparte esa configuración sola."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El equipo no tiene IP todavía, así que no puede preguntarle a nadie en particular: grita a toda la red con una difusión. El intercambio tiene cuatro mensajes, que se recuerdan como "
+     },
+     {
+      "type": "text",
+      "text": "DORA",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ":"
+     }
+    ],
+    "attrs": {
+     "id": "b-dn004"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-dn005"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Mensaje"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Quién"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué dice"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "D",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "iscover"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El equipo, a todos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "«¿Hay algún servidor DHCP? Necesito una dirección»"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "O",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "ffer"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El servidor"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "«Te ofrezco la 192.168.1.35, con estos datos, por 24 horas»"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "R",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "equest"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El equipo, a todos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "«Acepto la 192.168.1.35 de este servidor» (a todos, para que otros servidores sepan que eligió)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "A",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "ck"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El servidor"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "«Confirmado: es tuya». El equipo se configura"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La dirección se "
+     },
+     {
+      "type": "text",
+      "text": "presta",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " por un tiempo ("
+     },
+     {
+      "type": "text",
+      "text": "lease",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "). A la mitad de ese tiempo el equipo pide renovarla; si se apaga o se va, la dirección vuelve a quedar libre para otro."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn006"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-dn007",
+     "nombre": "dn-dora",
+     "titulo": "DORA paso a paso"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "b-dn008",
+     "level": 3
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Reservas y direcciones fijas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las computadoras de las personas usan DHCP. Pero los "
+     },
+     {
+      "type": "text",
+      "text": "servidores",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", las "
+     },
+     {
+      "type": "text",
+      "text": "impresoras",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y el router necesitan una dirección que no cambie, porque los demás los buscan ahí. Hay dos formas:"
+     }
+    ],
+    "attrs": {
+     "id": "b-dn009"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-dn010"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Reserva DHCP",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": en el router, asocias la MAC de la impresora a la IP 192.168.1.30. Sigue usando DHCP, pero siempre recibe la misma. Es lo más fácil de administrar."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "IP fija",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (estática): la configuras en el propio equipo, fuera del rango que reparte el DHCP para que no choque con otro. Es lo común en servidores, y lo practicarás abajo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-dn011",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Si un equipo tiene una dirección que empieza con "
+       },
+       {
+        "type": "text",
+        "text": "169.254",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", no recibió respuesta de ningún servidor DHCP y se puso una dirección provisional. Con ella no tiene internet: revisa el cable, el Wi-Fi o el servidor DHCP."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-nat",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "NAT: muchos equipos, una sola IP pública"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Tu casa tiene muchos equipos con direcciones "
+     },
+     {
+      "type": "text",
+      "text": "privadas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (192.168.x.x), pero tu proveedor te da "
+     },
+     {
+      "type": "text",
+      "text": "una sola IP pública",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Las direcciones privadas no sirven en internet: miles de casas usan las mismas. El router lo resuelve con "
+     },
+     {
+      "type": "text",
+      "text": "NAT",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "Network Address Translation",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "):"
+     }
+    ],
+    "attrs": {
+     "id": "b-dn012"
+    }
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-dn013"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tu laptop (192.168.1.20) manda un paquete a un servidor desde su puerto 51514."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El router cambia el origen por su IP pública y un puerto libre: 198.51.100.77:40001. Anota la traducción en su "
+         },
+         {
+          "type": "text",
+          "text": "tabla NAT",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El servidor responde a 198.51.100.77:40001, que es lo único que conoce."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El router busca 40001 en su tabla, ve que era de la laptop y le entrega la respuesta cambiando el destino de vuelta a 192.168.1.20:51514."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Como cada conexión usa un puerto distinto, miles de conexiones de toda la casa comparten la misma IP pública. A esto, en rigor, se le llama "
+     },
+     {
+      "type": "text",
+      "text": "PAT",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " o NAT con sobrecarga, pero todo el mundo le dice NAT."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn014"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-dn015",
+     "nombre": "dn-nat",
+     "titulo": "La tabla NAT"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "b-dn016",
+     "level": 3
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Abrir un puerto y CGNAT"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una consecuencia de NAT: nadie de internet puede "
+     },
+     {
+      "type": "text",
+      "text": "iniciar",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " una conexión hacia tu red, porque el router no sabe a qué equipo mandarla. Si quieres publicar un servicio de tu casa (una cámara, un servidor de juegos), configuras un "
+     },
+     {
+      "type": "text",
+      "text": "reenvío de puertos",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "port forwarding",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "): «lo que llegue al puerto 8080, mándalo a 192.168.1.10»."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn017"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Algunos proveedores, por falta de direcciones IPv4, ni siquiera te dan una IP pública propia: comparten una entre muchos clientes con "
+     },
+     {
+      "type": "text",
+      "text": "CGNAT",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " (verás una IP 100.64.x.x en tu router). Con CGNAT no puedes abrir puertos; la salida es pedir una IP pública a tu proveedor o usar IPv6."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn018"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-dn019",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "NAT "
+       },
+       {
+        "type": "text",
+        "text": "no",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " es un firewall, aunque bloquee las conexiones que nadie pidió: es un efecto secundario. La protección real la da el firewall del router, y con IPv6, donde no hay NAT, es indispensable."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-fija",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Una IP fija para un servidor"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En Ubuntu Server la red se configura con "
+     },
+     {
+      "type": "text",
+      "text": "netplan",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", en archivos YAML dentro de "
+     },
+     {
+      "type": "text",
+      "text": "/etc/netplan/",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Por defecto usa DHCP. Para darle una IP fija a un servidor:"
+     }
+    ],
+    "attrs": {
+     "id": "b-dn020"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-dn021",
+     "language": "yaml"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "network:\n  version: 2\n  ethernets:\n    enp0s3:\n      dhcp4: false\n      addresses: [192.168.1.60/24]\n      routes:\n        - to: default\n          via: 192.168.1.1\n      nameservers:\n        addresses: [192.168.1.1]"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Se aplica con "
+     },
+     {
+      "type": "text",
+      "text": "sudo netplan apply",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Cuidado con YAML: la "
+     },
+     {
+      "type": "text",
+      "text": "sangría",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " importa (se usan espacios, nunca tabuladores) y un error deja al servidor sin red. Si estás conectado a distancia, "
+     },
+     {
+      "type": "text",
+      "text": "sudo netplan try",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " aplica el cambio y lo revierte solo si no confirmas en 2 minutos."
+     }
+    ],
+    "attrs": {
+     "id": "b-dn022"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-dn023",
+     "nombre": "dn-fija",
+     "titulo": "IP fija para el servidor"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn024"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué pasa si dos equipos tienen la misma IP?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un "
+         },
+         {
+          "type": "text",
+          "text": "conflicto de IP",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": los dos dejan de funcionar bien, porque los paquetes llegan a veces a uno y a veces al otro. Pasa cuando alguien pone una IP fija dentro del rango del DHCP. Por eso las fijas se ponen fuera de ese rango."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn025"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Mi IP pública cambia?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En casi todos los planes de casa sí: el proveedor también te la presta por DHCP y puede cambiarla al reiniciar el módem. Para un servidor en casa se usa un servicio de DNS dinámico, que actualiza tu nombre cada vez que cambia la IP."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-dn026"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es un servidor DHCP «pirata»?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Un segundo servidor DHCP en la red, puesto por error (alguien conectó un router de casa) o a propósito. Los equipos aceptan la primera oferta que llega y pueden quedar con una puerta de enlace o un DNS falsos. Los switches administrables tienen una función, "
+         },
+         {
+          "type": "text",
+          "text": "DHCP snooping",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", para bloquearlos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-dn027",
+     "preguntas": [
+      {
+       "q": "¿En qué orden van los mensajes de DHCP?",
+       "o": [
+        "Request, Offer, Discover, Ack",
+        "Discover, Offer, Request, Ack",
+        "Offer, Discover, Ack, Request"
+       ],
+       "a": 1,
+       "e": "DORA: Discover, Offer, Request y Ack."
+      },
+      {
+       "q": "¿Por qué el Discover se manda a toda la red?",
+       "o": [
+        "Para ir más rápido",
+        "Porque el equipo todavía no tiene IP ni sabe dónde está el servidor",
+        "Por seguridad"
+       ],
+       "a": 1,
+       "e": "Sin IP ni servidor conocido, la única opción es una difusión."
+      },
+      {
+       "q": "Una laptop tiene la IP 169.254.10.3. ¿Qué pasó?",
+       "o": [
+        "Tiene una IP pública",
+        "No recibió respuesta de ningún servidor DHCP",
+        "Usa IPv6"
+       ],
+       "a": 1,
+       "e": "169.254 es la dirección provisional que se pone sola cuando DHCP no contesta."
+      },
+      {
+       "q": "¿Qué hace el router con NAT al mandar un paquete a internet?",
+       "o": [
+        "Cifra el paquete",
+        "Cambia la IP y el puerto de origen por los suyos y anota la traducción",
+        "Borra la IP de destino"
+       ],
+       "a": 1,
+       "e": "Así el servidor responde a la IP pública y el router sabe a quién entregar la respuesta."
+      },
+      {
+       "q": "¿Cómo se le da una IP fija a un servidor Ubuntu?",
+       "o": [
+        "Con netplan, en /etc/netplan, y sudo netplan apply",
+        "Con ping",
+        "Reiniciando el router"
+       ],
+       "a": 0,
+       "e": "netplan lee los archivos YAML de /etc/netplan; netplan apply los aplica."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-dn028"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "DHCP reparte IP, máscara, puerta de enlace y DNS con cuatro mensajes: Discover, Offer, Request y Ack."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La dirección se presta por un tiempo y se renueva. Una IP 169.254 indica que DHCP no respondió."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Servidores e impresoras usan reserva DHCP o IP fija, fuera del rango del DHCP."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "NAT traduce las IP privadas a la pública del router y lleva una tabla de conexiones; por eso desde internet no se entra sin reenvío de puertos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En Ubuntu la IP fija se configura con netplan (YAML con espacios) y se aplica con sudo netplan apply."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="dhcp-nat.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

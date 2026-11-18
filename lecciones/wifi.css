@@ -1,0 +1,19 @@
+/* Estilos propios de los laboratorios de «Wi-Fi». */
+
+/* Elige el canal */
+.wc-g{position:relative;height:11rem;margin-top:0.25rem;border:1px solid var(--line);border-radius:0.5rem;background:var(--bg-side);overflow:hidden}
+.wc-ej{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(13,1fr);border-top:1px solid var(--line);font-family:var(--font-mono);font-size:0.6875rem;text-align:center;color:var(--fg-2)}
+.wc-ej span.on{background:var(--accent-bg);color:var(--accent-ink);font-weight:700}
+.wc-r{position:absolute;bottom:1.25rem;border:1.5px solid var(--c1);border-bottom:0;border-radius:45% 45% 0 0;background:transparent}
+.wc-r span{position:absolute;top:-1.2em;left:0;right:0;text-align:center;font-size:0.625rem;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc-r.tuya{border-color:var(--accent);border-width:2.5px;z-index:1}
+.wc-r.tuya span{color:var(--accent-ink);font-weight:700}
+
+/* Revisa este router */
+.ws-op{display:flex;flex-direction:column;gap:0.25rem}
+.ws-op .ctl{margin-top:0.25rem}
+.wq-l{margin:0.75rem 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:0.25rem;font-size:0.9375rem}
+.wq-l li{padding:0.375rem 0.625rem;border-radius:0.375rem}
+.wq-l li.ok{background:var(--good-bg);color:var(--good-ink)}
+.wq-l li.mal{background:var(--bad-bg);color:var(--bad-ink)}
+.wq-l li.neutro{background:var(--bg-soft);color:var(--fg-2)}

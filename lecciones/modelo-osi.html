@@ -1,0 +1,2411 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Modelo OSI y TCP/IP · OneLearn</title>
+<meta name="description" content="Las capas de una red: el modelo OSI de 7 capas y el modelo TCP/IP de 4, qué resuelve cada una, el encapsulamiento paso a paso y en qué capa trabajan el switch, el router y el firewall.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="modelo-osi.css">
+</head>
+<body data-leccion="modelo-osi">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="os-encap">
+<p class="hint">Tu navegador pide una página a un servidor en internet. Avanza paso a paso y mira cómo se arma el paquete, cómo lo lee el router y cómo se desarma al llegar.</p>
+<div class="oe-pq" id="oePq" aria-hidden="true"></div>
+<div class="status" id="oeStat" data-k="" aria-live="polite"><span class="dot"></span><span id="oeMsg"></span></div>
+<div class="kpis">
+  <div class="kpi"><span>Dónde va</span><b id="oeDonde"></b></div>
+  <div class="kpi"><span>Tamaño del paquete</span><b id="oeTam"></b></div>
+  <div class="kpi"><span>Encabezados</span><b id="oeExtra"></b></div>
+</div>
+<div class="ctl">
+  <button class="btn" type="button" id="oeAnt">Paso anterior</button>
+  <button class="btn pri" type="button" id="oeSig">Siguiente paso</button>
+  <span class="lbl" id="oePaso"></span>
+</div>
+</template>
+<template data-lab="os-capa">
+<p class="hint">¿En qué capa del modelo OSI trabaja cada cosa? Elige el número. Al final verás tu resultado.</p>
+<ol class="oc-l" id="ocLista"></ol>
+<div class="ctl">
+  <button class="btn" type="button" id="ocOtra">Empezar de nuevo</button>
+  <span class="lbl" id="ocPunt" aria-live="polite"></span>
+</div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "modelo-osi",
+ "titulo": "Modelo OSI y TCP/IP",
+ "icono": "osi",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Básico",
+   "estilo": "verde"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "15 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 laboratorios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-os001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-os002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-capas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "¿Por qué dividir la red en capas?"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Mandar una foto de tu celular a una computadora en otro país implica muchísimos problemas a la vez: convertir bits en señales eléctricas o de radio, saber a qué equipo de la red local entregar cada pedazo, encontrar el camino entre países, recuperar lo que se pierda y, al final, que la app entienda que es una foto. Nadie podría resolver todo eso en un solo programa."
+     }
+    ],
+    "attrs": {
+     "id": "b-os003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La solución es dividir el trabajo en "
+     },
+     {
+      "type": "text",
+      "text": "capas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Cada capa resuelve un problema, usa los servicios de la capa de abajo y le ofrece algo más sencillo a la de arriba. Es como el correo: tú escribes la carta (no te importa qué camión la lleva), la oficina de correos le pone el sobre con la dirección y el repartidor solo sigue rutas."
+     }
+    ],
+    "attrs": {
+     "id": "b-os004"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-os005"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Se reemplazan por partes",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cambiar de cable a Wi-Fi no obliga a cambiar el navegador: solo cambia la capa de abajo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cada quien su especialidad",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los fabricantes de switches, los de sistemas operativos y los de apps trabajan sin estorbarse."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ordenan el diagnóstico",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«¿Hay luz en el cable? ¿Tengo IP? ¿Responde el servidor?» Son preguntas de capas distintas."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-osi",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Las 7 capas del modelo OSI"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El "
+     },
+     {
+      "type": "text",
+      "text": "modelo OSI",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " es la forma clásica de describir las capas. Se cuenta de abajo hacia arriba: la capa 1 son los cables y la 7, las aplicaciones."
+     }
+    ],
+    "attrs": {
+     "id": "b-os006"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-os007"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "#"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Capa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué resuelve"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Unidad"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "7"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Aplicación",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lo que el programa quiere decir"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "HTTP, DNS, SSH, correo (SMTP)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Datos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "6"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Presentación",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El formato: codificación, compresión, cifrado"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "UTF-8, JPEG, TLS (en parte)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Datos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "5"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sesión",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Abrir, mantener y cerrar una conversación"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El inicio de sesión de una conexión"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Datos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "4"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Transporte",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Llevar los datos al "
+           },
+           {
+            "type": "text",
+            "text": "programa",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " correcto, completos y en orden"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP, UDP, puertos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Segmento"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Red",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Llevar el paquete a la "
+           },
+           {
+            "type": "text",
+            "text": "computadora",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " correcta, aunque esté en otra red"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "IP, ICMP (ping), routers"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Paquete"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Enlace de datos",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Entregar dentro de la misma red local"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ethernet, Wi-Fi, MAC, switches"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Trama"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Física",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Mover bits: electricidad, luz o radio"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cables, fibra, conectores, señal Wi-Fi"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Bits"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-os008",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Para recordar el orden de abajo hacia arriba: "
+       },
+       {
+        "type": "text",
+        "text": "F",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "ísica, "
+       },
+       {
+        "type": "text",
+        "text": "E",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "nlace, "
+       },
+       {
+        "type": "text",
+        "text": "R",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "ed, "
+       },
+       {
+        "type": "text",
+        "text": "T",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "ransporte, "
+       },
+       {
+        "type": "text",
+        "text": "S",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "esión, "
+       },
+       {
+        "type": "text",
+        "text": "P",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "resentación, "
+       },
+       {
+        "type": "text",
+        "text": "A",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "plicación: «"
+       },
+       {
+        "type": "text",
+        "text": "F",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "ui "
+       },
+       {
+        "type": "text",
+        "text": "E",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "n "
+       },
+       {
+        "type": "text",
+        "text": "R",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "uta "
+       },
+       {
+        "type": "text",
+        "text": "T",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "odo "
+       },
+       {
+        "type": "text",
+        "text": "S",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "in "
+       },
+       {
+        "type": "text",
+        "text": "P",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "arar "
+       },
+       {
+        "type": "text",
+        "text": "A",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": "hí»."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-tcpip",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "El modelo TCP/IP: el que se usa de verdad"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "OSI sirve para explicar y para hablar de fallas («es un problema de capa 2»), pero internet se construyó con el "
+     },
+     {
+      "type": "text",
+      "text": "modelo TCP/IP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", más sencillo, de 4 capas. Las capas 5, 6 y 7 de OSI se juntan en una sola, porque en la práctica las resuelve el mismo programa."
+     }
+    ],
+    "attrs": {
+     "id": "b-os009"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-os010"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP/IP"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Equivale en OSI"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Protocolos"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Aplicación",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "7, 6 y 5"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "HTTP, HTTPS, DNS, SSH, SMTP, DHCP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Transporte",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "4"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP, UDP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Internet",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "IPv4, IPv6, ICMP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Acceso a la red",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2 y 1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ethernet, Wi-Fi, fibra"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-encapsulamiento",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Encapsulamiento: sobres dentro de sobres"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuando un programa manda datos, cada capa le agrega su propio "
+     },
+     {
+      "type": "text",
+      "text": "encabezado",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " con la información que necesita, como meter una carta en un sobre y ese sobre en una caja. Esto se llama "
+     },
+     {
+      "type": "text",
+      "text": "encapsulamiento",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". En el destino se hace al revés: cada capa lee su encabezado, lo quita y entrega el resto a la capa de arriba."
+     }
+    ],
+    "attrs": {
+     "id": "b-os011"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-os012"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Transporte",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " agrega los "
+         },
+         {
+          "type": "text",
+          "text": "puertos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de origen y destino, para saber a qué programa va."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Red",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " agrega las "
+         },
+         {
+          "type": "text",
+          "text": "direcciones IP",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de origen y destino y el "
+         },
+         {
+          "type": "text",
+          "text": "TTL",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", cuántos saltos le quedan."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Enlace",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " agrega las "
+         },
+         {
+          "type": "text",
+          "text": "direcciones MAC",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " del siguiente salto y, al final, un código para detectar errores."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Física",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " convierte todo en bits: pulsos eléctricos, luz o radio."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Fíjate en algo importante: las direcciones "
+     },
+     {
+      "type": "text",
+      "text": "IP",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " van de punta a punta y no cambian en el camino, pero las "
+     },
+     {
+      "type": "text",
+      "text": "MAC",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " cambian en cada salto, porque solo sirven dentro de cada red local."
+     }
+    ],
+    "attrs": {
+     "id": "b-os013"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-os014",
+     "nombre": "os-encap",
+     "titulo": "Encapsulamiento paso a paso"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-equipos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Capas, equipos y diagnóstico"
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-os015"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Equipo o herramienta"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Trabaja en la capa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Por qué"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cable, fibra, repetidor, hub"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Solo mueven señales, sin entender lo que llevan"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Switch, punto de acceso"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "2"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Leen la MAC de destino para entregar en la red local"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Router"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lee la IP de destino para elegir el camino entre redes"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Firewall"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3, 4 y hasta 7"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Filtra por IP, por puerto o incluso por el contenido"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ping",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "3"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Usa ICMP: prueba si llega un paquete a una IP"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "curl",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", el navegador"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "7"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Hablan HTTP con el servidor"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Diagnosticar por capas ahorra tiempo: si "
+     },
+     {
+      "type": "text",
+      "text": "ping",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " a la IP del servidor funciona pero la página no abre, la red (capas 1 a 3) está bien y el problema está más arriba, en el servicio. Lo practicarás en la lección "
+     },
+     {
+      "type": "text",
+      "text": "Diagnóstico de red",
+      "marks": [
+       {
+        "type": "link",
+        "attrs": {
+         "href": "diagnostico.html"
+        }
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "."
+     }
+    ],
+    "attrs": {
+     "id": "b-os016"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-os017",
+     "nombre": "os-capa",
+     "titulo": "¿En qué capa está?"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-os018"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Hay que memorizar las 7 capas?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Conviene, porque en el trabajo se dice todo el tiempo «falla de capa 1» (cable) o «switch de capa 3» (switch que también enruta). Pero lo importante es entender la idea: cada capa resuelve un problema y le agrega su encabezado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-os019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿En qué capa va TLS, el cifrado de HTTPS?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Es un caso discutido: cifra (una tarea de la capa 6) y mantiene una sesión (capa 5), pero corre como parte de la aplicación. En el modelo TCP/IP simplemente es parte de la capa de aplicación."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-os020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué el paquete no puede ser de cualquier tamaño?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ethernet acepta como máximo 1500 bytes de datos por trama: es la "
+         },
+         {
+          "type": "text",
+          "text": "MTU",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Si un paquete es más grande, hay que partirlo. Por eso un archivo grande viaja en miles de paquetes."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-os021",
+     "preguntas": [
+      {
+       "q": "¿En qué capa trabaja un router?",
+       "o": [
+        "2, enlace de datos",
+        "3, red",
+        "7, aplicación"
+       ],
+       "a": 1,
+       "e": "El router lee la IP de destino para decidir el camino entre redes: capa 3."
+      },
+      {
+       "q": "¿Qué agrega la capa de transporte?",
+       "o": [
+        "Las direcciones MAC",
+        "Los puertos de origen y destino",
+        "La señal eléctrica"
+       ],
+       "a": 1,
+       "e": "Los puertos dicen a qué programa va cada dato. TCP y UDP son de esta capa."
+      },
+      {
+       "q": "Un paquete pasa por tres routers. ¿Qué cambia en cada salto?",
+       "o": [
+        "La IP de destino",
+        "Las direcciones MAC",
+        "Los puertos"
+       ],
+       "a": 1,
+       "e": "Las MAC solo sirven en cada red local, así que se reescriben en cada salto. Las IP van de punta a punta."
+      },
+      {
+       "q": "¿Cuántas capas tiene el modelo TCP/IP?",
+       "o": [
+        "4",
+        "5",
+        "7"
+       ],
+       "a": 0,
+       "e": "Aplicación, transporte, internet y acceso a la red."
+      },
+      {
+       "q": "El ping al servidor funciona, pero la página no carga. ¿Dónde buscas?",
+       "o": [
+        "En el cable",
+        "En las capas altas: el servidor web o el puerto",
+        "En la tarjeta de red"
+       ],
+       "a": 1,
+       "e": "Si ping llega, las capas 1 a 3 funcionan. El problema está en el transporte o en la aplicación."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-os022"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La red se divide en capas: cada una resuelve un problema y usa a la de abajo."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "OSI tiene 7 capas: física, enlace, red, transporte, sesión, presentación y aplicación."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "TCP/IP, el modelo de internet, tiene 4: acceso a la red, internet, transporte y aplicación."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Encapsular es agregar el encabezado de cada capa: puertos (4), IP (3), MAC (2). Las MAC cambian en cada salto; las IP no."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Switch en capa 2, router en capa 3: pensar por capas ordena el diagnóstico."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="modelo-osi.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>
