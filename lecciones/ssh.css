@@ -1,0 +1,6 @@
+/* Estilos propios de los laboratorios de «SSH y acceso remoto». La terminal está en assets/css/terminal.css. */
+.sl-ops{display:flex;flex-wrap:wrap;gap:0.5rem 1.5rem;margin-top:0.875rem}
+.sl-pasos{margin:0.875rem 0 0;padding-left:1.375rem;font-size:0.9375rem}
+.sl-pasos li{padding:0.125rem 0}
+.sl-pasos li.mal{color:var(--bad-ink)}
+.sl-ops .chk{min-width:0;overflow-wrap:anywhere}

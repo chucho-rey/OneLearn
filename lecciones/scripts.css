@@ -1,0 +1,10 @@
+/* Estilos propios de los laboratorios de «Scripts, cron y respaldos». La terminal está en assets/css/terminal.css. */
+.cc-f{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0.5rem;margin-top:0.875rem}
+.cc-f label{display:flex;flex-direction:column;gap:0.25rem;min-width:0}
+.cc-f span{font-size:0.75rem;color:var(--fg-2)}
+.cc-f input{width:100%;min-width:0;text-align:center}
+.cc-linea{margin:0.875rem 0 0;max-width:none}
+.cc-linea code{overflow-wrap:anywhere}
+.cc-pt{display:block;margin:0.875rem 0 0}
+.cc-prox{margin:0.25rem 0 0;padding-left:1.375rem;font-size:0.9375rem}
+@media (max-width:560px){.cc-f{grid-template-columns:repeat(2,minmax(0,1fr))}}

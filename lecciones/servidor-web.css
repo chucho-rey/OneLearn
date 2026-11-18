@@ -1,0 +1,10 @@
+/* Estilos propios de los laboratorios de «Servidor web con Nginx». La terminal está en assets/css/terminal.css. */
+.sb-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.75rem;margin-top:0.875rem}
+.sb-b{border:1px solid var(--line);border-radius:0.5rem;padding:0.625rem 0.75rem;background:var(--bg)}
+.sb-b.on{border-color:var(--accent);background:var(--accent-bg)}
+.sb-t{margin:0 0 0.375rem;font-family:var(--font-mono);font-size:0.8125rem;color:var(--fg-2);max-width:none}
+.sb-b.on .sb-t{color:var(--accent-ink)}
+.sb-t b{margin-left:0.25rem;font-family:var(--font-ui)}
+.sb-b pre{margin:0;font-family:var(--font-mono);font-size:0.75rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--fg)}
+@media (max-width:760px){.sb-g{grid-template-columns:minmax(0,1fr)}}
+#sbMsg{min-width:0;overflow-wrap:anywhere}

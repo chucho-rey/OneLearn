@@ -78,7 +78,7 @@ function opts(args,conValor){
     var a=args[i];
     if(a==='--'){pos=pos.concat(args.slice(i+1));break}
     if(/^--./.test(a)){var k=a.slice(2).split('=');largo[k[0]]=k.length>1?k.slice(1).join('='):true;continue}
-    if(/^-[^-]/.test(a)&&!/^-\d/.test(a)){
+    if(/^-[^-]/.test(a)&&!/^-\d+$/.test(a)){
       for(var j=1;j<a.length;j++){
         var ch=a[j];
         if(conValor&&conValor.indexOf(ch)>=0){val[ch]=a.slice(j+1)||args[++i]||'';break}
@@ -157,6 +157,7 @@ function Sistema(op){
   s.poner('/etc/shadow',null,{g:'shadow',modo:0o640,gen:function(){return Object.keys(s.usuarios).map(function(n){var u=s.usuarios[n];return n+':'+(u.uid>=1000?'$y$j9T$Lq0f6w3mFQ5i8r1b$k3Z.Wm7dTq9Xv2NpYc1Hs8Ej4Ra6Uo0Gl5Bf2Ki9Dx7':u.uid===0?'*':'!*')+':20000:0:99999:7:::'}).join('\n')+'\n'}});
   s.poner('/etc/sudoers','# Lo que puede hacer cada quien con sudo. Edítalo solo con: sudo visudo\nroot    ALL=(ALL:ALL) ALL\n\n# Los miembros del grupo sudo pueden ejecutar cualquier comando\n%sudo   ALL=(ALL:ALL) ALL\n',{modo:0o440});
   s.poner('/etc/ssh/sshd_config','# Configuración del servidor SSH. Cambios: sudo nano /etc/ssh/sshd_config\nInclude /etc/ssh/sshd_config.d/*.conf\n\n#Port 22\n#PermitRootLogin prohibit-password\nPasswordAuthentication yes\nKbdInteractiveAuthentication no\nUsePAM yes\nX11Forwarding yes\nPrintMotd no\nSubsystem\tsftp\t/usr/lib/openssh/sftp-server\n');
+  s.poner('/etc/ssh/sshd_config.d/');
   s.poner('/etc/crontab','# /etc/crontab: tareas programadas del sistema\nSHELL=/bin/sh\n# m h dom mon dow user\tcommand\n17 *\t* * *\troot\tcd / && run-parts --report /etc/cron.hourly\n25 6\t* * *\troot\ttest -x /usr/sbin/anacron || run-parts --report /etc/cron.daily\n');
   s.poner('/etc/apt/sources.list.d/ubuntu.sources','Types: deb\nURIs: http://mx.archive.ubuntu.com/ubuntu/\nSuites: noble noble-updates noble-backports\nComponents: main restricted universe multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.ubuntu.com/ubuntu/\nSuites: noble-security\nComponents: main restricted universe multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n');
   s.poner('/etc/resolv.conf','# Lo administra systemd-resolved: los programas preguntan a 127.0.0.53, que reenvía\n# las consultas a los servidores DNS de la red. Para ver cuáles: resolvectl status\nnameserver 127.0.0.53\noptions edns0 trust-ad\nsearch .\n');
@@ -1271,11 +1272,11 @@ cmd('less more',{d:'muestra un archivo largo por páginas',uso:'less archivo',ca
   return cod;
 });
 function cabezaCola(x,cola){
-  var a=x.args.slice(1),n=10,pos=[],seguir=false;
+  var a=x.args.slice(1),n=10,pos=[],seguir=false,desde=false;
   for(var i=0;i<a.length;i++){
     var v=a[i],m;
-    if(v==='-n'){n=parseInt(a[++i],10);continue}
-    if((m=v.match(/^-n(\d+)$/))||(m=v.match(/^-(\d+)$/))||(m=v.match(/^--lines=(\d+)$/))){n=+m[1];continue}
+    if(v==='-n'||(m=v.match(/^-n(\+?\d+)$/))){var nv=v==='-n'?String(a[++i]):m[1];desde=cola&&nv.charAt(0)==='+';n=parseInt(nv,10);continue}
+    if((m=v.match(/^-(\d+)$/))||(m=v.match(/^-(\d+)$/))||(m=v.match(/^--lines=(\d+)$/))){n=+m[1];continue}
     if(v==='-f'){seguir=true;continue}
     pos.push(v);
   }
@@ -1285,7 +1286,7 @@ function cabezaCola(x,cola){
     if(s.e){x.err(s.e+'\n');cod=1;return}
     if(src.length>1)out+=(k?'\n':'')+'==> '+s.nombre+' <==\n';
     var l=lineasDe(s.t);
-    l=cola?l.slice(Math.max(0,l.length-n)):l.slice(0,n);
+    l=desde?l.slice(Math.max(0,n-1)):cola?l.slice(Math.max(0,l.length-n)):l.slice(0,n);
     out+=l.join('\n')+(l.length?'\n':'');
   });
   x.out(out);
@@ -1293,7 +1294,7 @@ function cabezaCola(x,cola){
   return cod;
 }
 cmd('head',{d:'muestra las primeras líneas',uso:'head [-n N] archivo',ops:[['-n N','cuántas líneas (10 si no dices)']],cat:'Ver y buscar texto'},function(x){return cabezaCola(x,false)});
-cmd('tail',{d:'muestra las últimas líneas',uso:'tail [-n N] [-f] archivo',ops:[['-n N','cuántas líneas (10 si no dices)'],['-f','sigue mostrando lo que se agregue']],cat:'Ver y buscar texto'},function(x){return cabezaCola(x,true)});
+cmd('tail',{d:'muestra las últimas líneas',uso:'tail [-n N] [-f] archivo',ops:[['-n N','cuántas líneas (10 si no dices)'],['-n +N','desde la línea N hasta el final'],['-f','sigue mostrando lo que se agregue']],cat:'Ver y buscar texto'},function(x){return cabezaCola(x,true)});
 cmd('wc',{d:'cuenta líneas, palabras y bytes',uso:'wc [-l] [-w] [-c] [archivo...]',ops:[['-l','solo líneas'],['-w','solo palabras'],['-c','solo bytes']],cat:'Ver y buscar texto'},function(x){
   var o=opts(x.args),f=o.f,todos=!f.l&&!f.w&&!f.c&&!f.m,cod=0,filas=[],tot=[0,0,0];
   fuentes(x,o.pos,'wc').forEach(function(s){

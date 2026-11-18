@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SSH y acceso remoto · OneLearn</title>
+<meta name="description" content="Cómo entrar a otra computadora con SSH: la huella del servidor, llaves públicas y privadas con ssh-keygen y ssh-copy-id, cómo asegurar sshd y cómo copiar archivos con scp.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="ssh.css">
+</head>
+<body data-leccion="ssh">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="sh-llaves">
+<p class="hint">Un servidor con SSH abierto a internet. Cambia su configuración y mira quién logra entrar.</p>
+<div class="ctl" style="margin-top:0"><span class="lbl">Quién se conecta</span><div class="seg" id="slQuien" role="group" aria-label="Quién se conecta"><button type="button" data-v="tu" aria-pressed="true">Tú, con tu llave</button><button type="button" data-v="copia" aria-pressed="false">Alguien con tu llave pública</button><button type="button" data-v="bot" aria-pressed="false">Un bot que adivina contraseñas</button></div></div>
+<div class="sl-ops">
+<label class="chk"><input type="checkbox" id="slAk" checked>Tu llave pública está en authorized_keys</label>
+<label class="chk"><input type="checkbox" id="slPw" checked>PasswordAuthentication yes</label>
+</div>
+<ol class="sl-pasos" id="slPasos"></ol>
+<div class="status" id="slStat" data-k="" aria-live="polite"><span class="dot"></span><span id="slMsg"></span></div>
+</template>
+<template data-lab="sh-terminal">
+<p class="hint">En la red hay un servidor llamado «servidor». Tu usuario ahí es ana, con la contraseña servidor123.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "ssh",
+ "titulo": "SSH y acceso remoto",
+ "icono": "ssh",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Servidores y nube",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "25 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 laboratorios, 6 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-sh001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-sh002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que-es",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Una terminal en otra computadora"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "SSH",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "Secure Shell",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") te da una terminal en otra computadora a través de la red, con todo cifrado: lo que escribes, lo que ves y la contraseña. Así se administran casi todos los servidores del mundo, que no tienen pantalla ni teclado: están en un centro de datos o en la nube, y se manejan desde la terminal de tu computadora."
+     }
+    ],
+    "attrs": {
+     "id": "b-sh003"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sh004",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "ssh ana@192.168.1.10        # usuario@equipo\nssh servidor                # si tu usuario es el mismo en los dos\nssh -p 2222 ana@servidor    # si el servidor escucha en otro puerto\nssh servidor uptime         # corre un solo comando y regresa"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El servidor corre un programa llamado "
+     },
+     {
+      "type": "text",
+      "text": "sshd",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " que escucha en el puerto "
+     },
+     {
+      "type": "text",
+      "text": "22",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". En Ubuntu viene en el paquete "
+     },
+     {
+      "type": "text",
+      "text": "openssh-server",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y se maneja con "
+     },
+     {
+      "type": "text",
+      "text": "systemctl",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", como cualquier servicio."
+     }
+    ],
+    "attrs": {
+     "id": "b-sh005"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-huella",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La huella del servidor"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La primera vez que te conectas a un servidor, SSH te muestra su "
+     },
+     {
+      "type": "text",
+      "text": "huella",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "fingerprint",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") y pregunta si confías en ella. Si dices "
+     },
+     {
+      "type": "text",
+      "text": "yes",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", la guarda en "
+     },
+     {
+      "type": "text",
+      "text": "~/.ssh/known_hosts",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Las siguientes veces la compara: si un día cambia, SSH se niega a conectar con un aviso enorme."
+     }
+    ],
+    "attrs": {
+     "id": "b-sh006"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-sh007",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ese aviso puede significar que alguien se puso en medio para hacerse pasar por el servidor. También aparece si reinstalaron el servidor. Antes de borrar la huella vieja, averigua cuál de las dos cosas pasó."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-llaves",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Llaves en lugar de contraseñas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las contraseñas se pueden adivinar: cualquier servidor con el puerto 22 abierto a internet recibe miles de intentos al día de programas automáticos. La alternativa son las "
+     },
+     {
+      "type": "text",
+      "text": "llaves",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": un par de archivos que se crean juntos."
+     }
+    ],
+    "attrs": {
+     "id": "b-sh008"
+    }
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-sh009"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Llave privada"
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "~/.ssh/id_ed25519",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Se queda en tu computadora y "
+         },
+         {
+          "type": "text",
+          "text": "nunca se comparte",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Es lo que demuestra que eres tú. Puedes protegerla con una frase."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Llave pública"
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "~/.ssh/id_ed25519.pub",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Se copia a cada servidor, en "
+         },
+         {
+          "type": "text",
+          "text": "~/.ssh/authorized_keys",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Puede verla cualquiera: con ella no se puede entrar."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Al conectarte, el servidor te manda un reto que solo se puede firmar con la llave privada, y comprueba la firma con la pública. La llave privada nunca viaja por la red."
+     }
+    ],
+    "attrs": {
+     "id": "b-sh010"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-sh011",
+     "nombre": "sh-llaves",
+     "titulo": "¿Quién puede entrar?"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sh012",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "ssh-keygen -t ed25519 -C \"ana@laptop\"   # crea el par de llaves\nssh-copy-id ana@servidor                # copia la pública al servidor (pide tu contraseña una última vez)\nssh ana@servidor                        # ya entra con la llave"
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-asegurar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Asegurar el servidor"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuando ya entras con tu llave, conviene apagar las contraseñas. La configuración está en "
+     },
+     {
+      "type": "text",
+      "text": "/etc/ssh/sshd_config",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "; en Ubuntu, lo más limpio es agregar un archivo propio en "
+     },
+     {
+      "type": "text",
+      "text": "/etc/ssh/sshd_config.d/",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que se lee primero:"
+     }
+    ],
+    "attrs": {
+     "id": "b-sh013"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sh014",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "# /etc/ssh/sshd_config.d/seguro.conf\nPasswordAuthentication no     # solo llaves\nPermitRootLogin no            # nadie entra directo como root"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Luego reinicia el servicio con "
+     },
+     {
+      "type": "text",
+      "text": "sudo systemctl restart ssh",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". "
+     },
+     {
+      "type": "text",
+      "text": "Antes de cerrar tu sesión, abre otra terminal y comprueba que puedes entrar.",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " Si algo salió mal, la sesión abierta te permite arreglarlo; si ya cerraste, te quedaste fuera."
+     }
+    ],
+    "attrs": {
+     "id": "b-sh015"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-sh016"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Medida"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Por qué"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Solo llaves ("
+           },
+           {
+            "type": "text",
+            "text": "PasswordAuthentication no",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los bots que adivinan contraseñas ya no tienen nada que adivinar"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Sin root ("
+           },
+           {
+            "type": "text",
+            "text": "PermitRootLogin no",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ")"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Entras con tu usuario y usas "
+           },
+           {
+            "type": "text",
+            "text": "sudo",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ": queda registro de quién hizo qué"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Firewall"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Solo dejar pasar el 22 desde donde lo necesitas. Lo verás en "
+           },
+           {
+            "type": "text",
+            "text": "Firewalls",
+            "marks": [
+             {
+              "type": "link",
+              "attrs": {
+               "href": "firewalls.html"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "fail2ban"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Bloquea por un rato las IP que fallan muchas veces seguidas"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Frase en la llave privada"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Si te roban la laptop, la llave sola no sirve"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-scp",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Copiar archivos: scp"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-sh017",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "scp reporte.pdf ana@servidor:          # a la carpeta personal de ana en el servidor\nscp reporte.pdf servidor:/tmp/         # a otra carpeta\nscp servidor:/var/log/syslog .         # del servidor a tu computadora\nrsync -av fotos/ servidor:respaldo/    # sincroniza carpetas: solo copia lo que cambió"
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-sh018",
+     "nombre": "sh-terminal",
+     "titulo": "Entra a un servidor y asegúralo"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-sh019"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué tipo de llave uso?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ed25519",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": es corta, rápida y segura. RSA sigue funcionando, pero necesita llaves de 3072 bits o más. Si un sistema muy viejo no acepta Ed25519, usa "
+         },
+         {
+          "type": "text",
+          "text": "ssh-keygen -t rsa -b 4096",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-sh020"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "Perdí mi llave privada. ¿Qué hago?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea un par nuevo y pide que agreguen tu nueva llave pública. Si te la robaron, hay que "
+         },
+         {
+          "type": "text",
+          "text": "quitar la pública vieja",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " del "
+         },
+         {
+          "type": "text",
+          "text": "authorized_keys",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " de cada servidor: mientras esté ahí, quien tenga la privada puede entrar."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-sh021"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cambiar el puerto 22 sirve?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Reduce el ruido de los bots que solo prueban el 22, pero no es seguridad real: un escaneo encuentra el puerto nuevo en segundos. Lo que protege es usar llaves y un firewall."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-sh022",
+     "preguntas": [
+      {
+       "q": "¿Qué llave se copia al servidor?",
+       "o": [
+        "La privada",
+        "La pública",
+        "Las dos"
+       ],
+       "a": 1,
+       "e": "La pública va al authorized_keys del servidor. La privada nunca sale de tu computadora."
+      },
+      {
+       "q": "Alguien consigue tu llave pública. ¿Puede entrar al servidor?",
+       "o": [
+        "Sí, con eso basta",
+        "No: para entrar hace falta la privada",
+        "Solo si el servidor usa el puerto 22"
+       ],
+       "a": 1,
+       "e": "La pública solo sirve para comprobar firmas. Por eso se puede compartir."
+      },
+      {
+       "q": "¿Para qué sirve la huella que muestra SSH la primera vez?",
+       "o": [
+        "Para comprobar después que hablas con el mismo servidor",
+        "Para cifrar tu contraseña",
+        "Para elegir el puerto"
+       ],
+       "a": 0,
+       "e": "Se guarda en known_hosts. Si cambia, SSH avisa: podría ser alguien haciéndose pasar por el servidor."
+      },
+      {
+       "q": "¿Qué conviene hacer antes de apagar las contraseñas en sshd?",
+       "o": [
+        "Reiniciar el servidor",
+        "Comprobar que ya entras con tu llave",
+        "Cambiar el puerto"
+       ],
+       "a": 1,
+       "e": "Si apagas las contraseñas sin tener tu llave instalada, te quedas fuera."
+      },
+      {
+       "q": "¿Qué comando copia un archivo a otro equipo por SSH?",
+       "o": [
+        "scp",
+        "ssh-keygen",
+        "cp -r"
+       ],
+       "a": 0,
+       "e": "scp archivo usuario@equipo:carpeta. Para carpetas grandes, rsync."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-sh023"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "SSH da una terminal cifrada en otra computadora: "
+           },
+           {
+            "type": "text",
+            "text": "ssh usuario@equipo",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", puerto 22."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La huella del servidor se guarda en known_hosts y protege contra impostores."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Llaves: la privada se queda contigo; la pública va al authorized_keys del servidor."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ssh-keygen",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " crea el par y "
+           },
+           {
+            "type": "text",
+            "text": "ssh-copy-id",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " instala la pública."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para asegurar: solo llaves, sin root, firewall; y prueba tu acceso antes de cerrar la sesión."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="ssh.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

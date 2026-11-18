@@ -1,0 +1,1227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Firewalls · OneLearn</title>
+<meta name="description" content="Qué es un firewall y cómo decide: reglas en orden, política por defecto y conexiones con estado. Cómo usar ufw en Ubuntu sin quedarte fuera, limitar un servicio a una red y qué protege (y qué no) un firewall de puertos.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="firewalls.css">
+</head>
+<body data-leccion="firewalls">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="fw-reglas">
+<p class="hint">El firewall de un servidor web con base de datos. Mueve las reglas y cambia la política, y mira qué paquetes pasan.</p>
+<ol class="fr-l" id="frReglas"></ol>
+<div class="ctl"><span class="lbl">Si ninguna coincide</span><div class="seg" id="frPol" role="group" aria-label="Política por defecto"><button type="button" data-v="deny" aria-pressed="true">Negar</button><button type="button" data-v="allow" aria-pressed="false">Permitir</button></div></div>
+<div class="tbl-wrap"><table class="fr-t"><thead><tr><th>Paquete</th><th>Resultado</th></tr></thead><tbody id="frPaq"></tbody></table></div>
+<div class="status" id="frStat" data-k="" aria-live="polite"><span class="dot"></span><span id="frMsg"></span></div>
+</template>
+<template data-lab="fw-terminal">
+<p class="hint">El servidor (192.168.1.10) tiene SSH, un sitio web y PostgreSQL, sin firewall. Tu PC (192.168.1.50) es la única que debe llegar a la base de datos. La contraseña de ana en el servidor es servidor123.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "firewalls",
+ "titulo": "Firewalls",
+ "icono": "firewall",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Servidores y nube",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "25 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 laboratorios, 6 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-fw001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-fw002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que-es",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Qué es un firewall"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "firewall",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " revisa cada paquete que entra (o sale) y decide si lo deja pasar, según una lista de "
+     },
+     {
+      "type": "text",
+      "text": "reglas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Cada regla dice algo como «deja entrar conexiones al puerto 443 desde cualquier lado» o «bloquea el puerto 5432 si no viene de la red de la oficina»."
+     }
+    ],
+    "attrs": {
+     "id": "b-fw003"
+    }
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-fw004"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Las reglas se revisan "
+         },
+         {
+          "type": "text",
+          "text": "en orden, de arriba hacia abajo",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", y gana "
+         },
+         {
+          "type": "text",
+          "text": "la primera que coincide",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si ninguna coincide, se aplica la "
+         },
+         {
+          "type": "text",
+          "text": "política por defecto",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ". Lo seguro es negar todo lo que entra y permitir solo lo necesario."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los firewalls modernos tienen "
+         },
+         {
+          "type": "text",
+          "text": "estado",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": recuerdan las conexiones que tú abriste y dejan pasar sus respuestas sin regla extra. Por eso puedes navegar con todo lo de entrada bloqueado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-fw005"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dónde"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Ejemplos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Protege"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En la red"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "El router de tu casa, un firewall de la empresa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "A toda la red, en la entrada"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En el equipo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ufw o nftables en Linux, el firewall de Windows"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "A esa computadora, aunque el atacante ya esté dentro de la red"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En la nube"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Grupos de seguridad de AWS, reglas de firewall de Google Cloud"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "A cada servidor virtual, antes de que el paquete llegue"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-orden",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "El orden importa"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una regla mal colocada puede anular a otras. Si arriba dices «bloquea el 22 desde cualquier lado» y abajo «permite el 22 desde la oficina», la oficina nunca entra: el paquete coincide primero con el bloqueo."
+     }
+    ],
+    "attrs": {
+     "id": "b-fw006"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-fw007",
+     "nombre": "fw-reglas",
+     "titulo": "Ordena las reglas"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-ufw",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "ufw: el firewall sencillo de Ubuntu"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "ufw",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "Uncomplicated Firewall",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") escribe por ti las reglas de "
+     },
+     {
+      "type": "text",
+      "text": "nftables",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", el firewall del núcleo de Linux. Viene apagado."
+     }
+    ],
+    "attrs": {
+     "id": "b-fw008"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-fw009",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "sudo ufw allow OpenSSH                    # SSH (22). ¡Primero esto!\nsudo ufw allow 80/tcp                     # HTTP\nsudo ufw allow from 192.168.1.0/24 to any port 5432   # PostgreSQL, solo desde la red local\nsudo ufw enable                           # encender (la política por defecto niega lo que entra)\nsudo ufw status numbered                  # ver las reglas con número\nsudo ufw delete 3                         # borrar la regla 3"
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-fw010",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Si administras un servidor por SSH y activas el firewall sin permitir el 22, cortas tu propia conexión y ya no puedes entrar. En un servidor en la nube, eso puede significar recurrir a la consola de emergencia del proveedor. "
+       },
+       {
+        "type": "text",
+        "text": "Primero `allow OpenSSH`, después `enable`.",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-fw011",
+     "nombre": "fw-terminal",
+     "titulo": "Protege la base de datos"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-mas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Más allá de los puertos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un firewall de puertos no revisa el contenido: si dejas abierto el 443, deja pasar cualquier cosa que llegue al 443, incluidos ataques a tu aplicación. Para eso existen otras capas:"
+     }
+    ],
+    "attrs": {
+     "id": "b-fw012"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-fw013"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Herramienta"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué hace"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "fail2ban",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lee los registros y bloquea por un rato las IP que fallan muchas veces (por ejemplo, contraseñas de SSH)"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "WAF",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " (firewall de aplicaciones web)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Revisa las peticiones HTTP y bloquea ataques conocidos, como inyección SQL"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Segmentación",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Separar la red en zonas (VLAN) para que un equipo infectado no alcance a los demás. Lo verás en "
+           },
+           {
+            "type": "text",
+            "text": "VLAN",
+            "marks": [
+             {
+              "type": "link",
+              "attrs": {
+               "href": "vlan.html"
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-fw014"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué diferencia hay entre deny y reject?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "deny",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " descarta el paquete en silencio: el que se conecta espera hasta que se cansa (timeout). "
+         },
+         {
+          "type": "text",
+          "text": "reject",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " contesta «no»: el que se conecta se entera de inmediato (connection refused). deny da menos información a un atacante; reject es más amable con los programas legítimos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-fw015"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Necesito firewall si mi servidor no tiene nada más abierto?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Es una segunda línea de defensa: si mañana instalas algo que abre un puerto sin que te des cuenta (una base de datos, un panel de administración), el firewall lo sigue protegiendo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-fw016"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Docker se salta ufw?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sí: Docker escribe sus propias reglas, y un puerto publicado con "
+         },
+         {
+          "type": "text",
+          "text": "-p",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " queda abierto aunque ufw diga lo contrario. Publica solo en "
+         },
+         {
+          "type": "text",
+          "text": "127.0.0.1",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "-p 127.0.0.1:8080:80",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ") lo que no deba verse desde afuera."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-fw017",
+     "preguntas": [
+      {
+       "q": "Dos reglas coinciden con un paquete. ¿Cuál se aplica?",
+       "o": [
+        "La más específica",
+        "La primera de la lista",
+        "La última de la lista"
+       ],
+       "a": 1,
+       "e": "Los firewalls revisan en orden y aplican la primera que coincide."
+      },
+      {
+       "q": "¿Qué política por defecto es la más segura para lo que entra?",
+       "o": [
+        "Permitir todo",
+        "Negar todo y permitir solo lo necesario",
+        "Depende del día"
+       ],
+       "a": 1,
+       "e": "Negar por defecto: si olvidas algo, queda cerrado en lugar de abierto."
+      },
+      {
+       "q": "Vas a activar ufw en un servidor al que entras por SSH. ¿Qué haces primero?",
+       "o": [
+        "sudo ufw enable",
+        "sudo ufw allow OpenSSH",
+        "Reiniciar el servidor"
+       ],
+       "a": 1,
+       "e": "Si activas sin permitir SSH, te cortas la conexión."
+      },
+      {
+       "q": "¿Cómo dejas que solo la red 10.0.5.0/24 llegue a PostgreSQL?",
+       "o": [
+        "sudo ufw allow 5432",
+        "sudo ufw allow from 10.0.5.0/24 to any port 5432",
+        "sudo ufw deny 5432"
+       ],
+       "a": 1,
+       "e": "Con from limitas el origen; con port, el puerto."
+      },
+      {
+       "q": "Con el firewall negando todo lo que entra, ¿por qué sigues pudiendo navegar?",
+       "o": [
+        "Porque el navegador se salta el firewall",
+        "Porque el firewall recuerda las conexiones que tú abriste y deja pasar sus respuestas",
+        "Porque HTTPS no usa puertos"
+       ],
+       "a": 1,
+       "e": "Los firewalls con estado dejan pasar las respuestas de las conexiones que salieron de ti."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-fw018"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un firewall aplica reglas en orden; gana la primera que coincide, y si ninguna, la política por defecto."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lo seguro: negar todo lo que entra y permitir solo lo necesario, limitando el origen cuando se pueda."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Los firewalls con estado dejan pasar las respuestas de las conexiones que tú abriste."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "ufw: "
+           },
+           {
+            "type": "text",
+            "text": "allow",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "deny",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "from … to any port …",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "enable",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "status numbered",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "delete",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Antes de "
+           },
+           {
+            "type": "text",
+            "text": "ufw enable",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " en un servidor remoto: "
+           },
+           {
+            "type": "text",
+            "text": "ufw allow OpenSSH",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="firewalls.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

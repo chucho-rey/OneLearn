@@ -514,6 +514,62 @@ module.exports=function(txt,demo){
     await sesion(p,r,1,['ping -c 2 1.1.1.1','systemctl status systemd-resolved',['sudo systemctl start systemd-resolved','x'],'ping -c 2 example.com'],3,'Los nombres no funcionan');
     await clic(p,1,'#dgEsc [data-v="web"]');
     await sesion(p,r,1,['nc -zv web 80',['ssh web','yes','servidor123'],'systemctl status nginx',['sudo systemctl start nginx','servidor123'],'exit','curl http://web'],3,'La página no abre');
+  },
+
+  'ssh':async function(p,r){
+    r.igual(await p.getAttribute('#slStat','data-k'),'good','con tu llave instalada, entras');
+    await p.uncheck('#slAk');await p.uncheck('#slPw');
+    r.cumple(await p.getAttribute('#slStat','data-k')==='bad'&&/quedaste fuera/.test(await txt(p,'#slMsg')),'sin tu llave y sin contraseñas, te quedas fuera');
+    await clic(p,0,'#slQuien [data-v="bot"]');
+    r.igual(await p.getAttribute('#slStat','data-k'),'good','sin contraseñas, el bot no tiene nada que adivinar');
+    await sesion(p,r,1,[['ssh ana@servidor','yes','servidor123'],'exit',['ssh-keygen -t ed25519','','',''],['ssh-copy-id ana@servidor','servidor123'],'ssh ana@servidor',
+      ['echo "PasswordAuthentication no" | sudo tee /etc/ssh/sshd_config.d/seguro.conf','servidor123'],'sudo systemctl restart ssh','exit','scp reporte.txt ana@servidor:'],6,'Entra a un servidor y asegúralo');
+  },
+
+  'servidor-web':async function(p,r){
+    r.cumple(/bloque tienda/.test(await txt(p,'#sbMsg'))&&await p.locator('#sbG .sb-b.on').count()===1,'tienda.local va al bloque tienda');
+    await clic(p,0,'#sbHost [data-v="fotos.blog.local"]');
+    r.cumple(/comodín/.test(await txt(p,'#sbMsg')),'fotos.blog.local coincide con *.blog.local');
+    await clic(p,0,'#sbHost [data-v="otra.local"]');
+    r.cumple(/default_server/.test(await txt(p,'#sbMsg'))&&await p.getAttribute('#sbStat','data-k')==='good','un nombre desconocido va al default_server');
+    await p.uncheck('#sbDef');
+    r.cumple(await p.getAttribute('#sbStat','data-k')==='warn'&&/blog/.test(await txt(p,'#sbMsg')),'sin default_server responde el primer bloque, el del blog');
+    const c1='server {\\n\\tlisten 80;\\n\\tserver_name tienda.local;\\n\\troot /var/www/tienda;\\n\\tindex index.html;\\n}\\n';
+    const c2='server {\\n\\tlisten 80;\\n\\tserver_name tienda.local;\\n\\troot /var/www/tienda;\\n\\tindex index.html;\\n\\tlocation /api/ {\\n\\t\\tproxy_pass http://127.0.0.1:3000/;\\n\\t}\\n}\\n';
+    await sesion(p,r,1,['curl localhost',['sudo mkdir -p /var/www/tienda','x'],'echo "<h1>Tienda de Ana</h1>" | sudo tee /var/www/tienda/index.html','sudo ln -s /etc/nginx/sites-available/tienda /etc/nginx/sites-enabled/','sudo nginx -t',
+      "printf '"+c1+"' | sudo tee /etc/nginx/sites-available/tienda",'sudo nginx -t','sudo systemctl reload nginx','curl -H "Host: tienda.local" http://localhost',
+      "printf '"+c2+"' | sudo tee /etc/nginx/sites-available/tienda",'sudo nginx -t','sudo systemctl reload nginx','curl -H "Host: tienda.local" http://localhost/api/productos'],6,'Tu primer sitio con nginx');
+  },
+
+  'firewalls':async function(p,r){
+    r.cumple(await p.getAttribute('#frStat','data-k')==='bad'&&await p.locator('#frPaq tr.fr-mal').count()===1,'con el bloqueo del 22 primero, la oficina no entra');
+    await p.click('#frReglas button[data-i="1"][data-d="-1"]');
+    r.igual(await p.getAttribute('#frStat','data-k'),'good','al subir el permiso de la oficina, todo queda bien');
+    await clic(p,0,'#frPol [data-v="allow"]');
+    r.cumple(await p.getAttribute('#frStat','data-k')==='bad'&&await p.locator('#frPaq tr.fr-mal').count()===2,'con permitir por defecto, pasan el escaneo y el visitante a PostgreSQL');
+    await sesion(p,r,1,['nc -zv servidor 22 80 5432',['ssh servidor','yes','servidor123'],['sudo ufw allow OpenSSH','servidor123'],'sudo ufw allow 80/tcp',['sudo ufw enable','y'],'sudo ufw status','exit',
+      'nc -zv servidor 5432',['ssh servidor','servidor123'],['sudo ufw allow from 192.168.1.50 to any port 5432','servidor123'],'exit','nc -zv servidor 5432'],6,'Protege la base de datos');
+  },
+
+  'vpn':async function(p,r){
+    r.igual(await p.getAttribute('#vvStat','data-k'),'warn','sin VPN y con HTTPS, el Wi-Fi sabe a qué sitios vas');
+    await clic(p,0,'#vvVpn [data-v="si"]');
+    r.cumple(await p.getAttribute('#vvStat','data-k')==='good'&&await p.locator('#vvT tr').nth(2).locator('.vv-si').count()===2,'con VPN, su proveedor ve a qué sitio vas y tu IP real');
+    await clic(p,0,'#vvWeb [data-v="http"]');
+    r.igual(await p.getAttribute('#vvStat','data-k'),'bad','con HTTP, el contenido queda expuesto');
+    r.igual(await p.locator('#vrDest li.vr-tun').count(),3,'con 0.0.0.0/0, todo va por el túnel menos la red de casa');
+    await clic(p,1,'#vrAllow [data-v="10.20.0.0/16"]');
+    r.cumple(await p.locator('#vrDest li.vr-tun').count()===1&&await p.getAttribute('#vrStat','data-k')==='warn','con solo 10.20.0.0/16, la impresora de la oficina queda fuera');
+  },
+
+  'scripts':async function(p,r){
+    r.cumple(/A las 2:30, todos los días\./.test(await txt(p,'#ccMsg'))&&/jueves 19 nov 2026, 02:30/.test(await txt(p,'#ccProx')),'30 2 * * * corre a diario a las 2:30; la primera, el jueves 19');
+    await clic(p,0,'#ccEj [data-v="0 8 * * 1-5"]');
+    r.cumple(/lunes a viernes/.test(await txt(p,'#ccMsg')),'0 8 * * 1-5 es de lunes a viernes');
+    await p.fill('#ccF input[data-k="0"]','70');
+    r.igual(await p.getAttribute('#ccStat','data-k'),'bad','el minuto 70 no es válido');
+    await sesion(p,r,1,['cat respaldo.sh','chmod +x respaldo.sh','./respaldo.sh Documentos','tar -tzf respaldos/Documentos-$(date +%F).tar.gz',
+      'printf "30 2 * * * /home/ana/respaldo.sh /home/ana/Documentos\\n" > micron','crontab micron','mkdir /tmp/prueba','tar -xzf respaldos/Documentos-$(date +%F).tar.gz -C /tmp/prueba'],6,'Respalda, programa y restaura');
   }
 
   };
