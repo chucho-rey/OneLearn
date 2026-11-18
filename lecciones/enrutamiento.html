@@ -1,0 +1,1505 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Enrutamiento · OneLearn</title>
+<meta name="description" content="Cómo decide un router a dónde mandar cada paquete: la tabla de rutas, la coincidencia más larga, la ruta por defecto, las rutas estáticas contra OSPF y BGP, y cómo ver y agregar rutas en Linux con ip route.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/red.css">
+<link rel="stylesheet" href="../assets/css/terminal.css">
+<link rel="stylesheet" href="enrutamiento.css">
+</head>
+<body data-leccion="enrutamiento">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="en-tabla">
+<p class="hint">Esta es la tabla de rutas del router de una oficina. Elige un destino, o escribe uno, y mira qué fila usa.</p>
+<div class="chips" id="etChips" role="group" aria-label="Destinos de ejemplo"></div>
+<div class="ctl"><label class="lbl" for="etIp">Destino</label><input class="campo mono" id="etIp" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="15" value="10.20.5.33"></div>
+<div class="tbl-wrap"><table class="rd-tabla en-t"><thead><tr><th>Destino</th><th>Siguiente salto</th><th>¿Coincide?</th></tr></thead><tbody id="etFilas"></tbody></table></div>
+<div class="status" id="etStat" data-k="" aria-live="polite"><span class="dot"></span><span id="etMsg"></span></div>
+</template>
+<template data-lab="en-sim">
+<p class="hint">Tres sucursales unidas por tres enlaces. Manda un paquete desde la PC de Guadalajara, apaga enlaces y compara las rutas estáticas con OSPF.</p>
+<div class="ctl" style="margin-top:0"><span class="lbl">Rutas</span><div class="seg" id="esModo" role="group" aria-label="Tipo de rutas"><button type="button" data-v="estatico" aria-pressed="true">Estáticas</button><button type="button" data-v="ospf" aria-pressed="false">Dinámicas (OSPF)</button></div></div>
+<div class="ctl"><span class="lbl">Hacia</span><div class="seg" id="esDest" role="group" aria-label="Destino del paquete"><button type="button" data-v="10.0.30.5" aria-pressed="true">Servidor Monterrey</button><button type="button" data-v="10.0.20.10" aria-pressed="false">PC CDMX</button></div></div>
+<fieldset class="en-enl"><legend class="lbl">Enlaces funcionando</legend>
+<label class="chk"><input type="checkbox" id="esE12" data-enlace="r12" checked>R1 – R2</label>
+<label class="chk"><input type="checkbox" id="esE13" data-enlace="r13" checked>R1 – R3</label>
+<label class="chk"><input type="checkbox" id="esE23" data-enlace="r23" checked>R2 – R3</label>
+</fieldset>
+<div id="esMapa"></div>
+<ol class="rd-pasos" id="esPasos"></ol>
+<p class="lbl en-tt">Tabla de rutas de R1 Guadalajara</p>
+<div class="tbl-wrap"><table class="rd-tabla en-t"><thead><tr><th>Destino</th><th>Siguiente salto</th><th>Tipo</th></tr></thead><tbody id="esTabla"></tbody></table></div>
+<div class="status" id="esStat" data-k="" aria-live="polite"><span class="dot"></span><span id="esMsg"></span></div>
+<div class="ctl"><button class="btn pri" type="button" id="esEnviar">Enviar el paquete otra vez</button></div>
+</template>
+<template data-lab="en-terminal">
+<p class="hint">Tu PC está en la red 192.168.1.0/24. El router de internet es 192.168.1.1, pero el servidor de la oficina (10.0.30.5) está detrás de otro router: 192.168.1.254.</p>
+<div class="term-host"></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "enrutamiento",
+ "titulo": "Enrutamiento",
+ "icono": "router",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "25 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "3 laboratorios, 6 ejercicios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-en001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-en002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-router",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Qué hace un router"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Un "
+     },
+     {
+      "type": "text",
+      "text": "router",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " une dos o más redes y decide, paquete por paquete, a dónde mandarlo. No conoce el camino completo hasta el destino: solo sabe cuál es el "
+     },
+     {
+      "type": "text",
+      "text": "siguiente salto",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", el router vecino que está más cerca. Ese vecino hace lo mismo, y así hasta llegar. Es como pedir indicaciones en la calle: cada persona te manda a la siguiente esquina."
+     }
+    ],
+    "attrs": {
+     "id": "b-en003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Para decidir, cada router consulta su "
+     },
+     {
+      "type": "text",
+      "text": "tabla de rutas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Cada fila dice: «para llegar a esta red, manda el paquete a este vecino, por esta tarjeta»."
+     }
+    ],
+    "attrs": {
+     "id": "b-en004"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-en005"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Destino"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Siguiente salto"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Tarjeta"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Qué significa"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "192.168.1.0/24",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "(conectada)"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "eth1"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La red de la oficina: se entrega directo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "10.20.0.0/16",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "10.255.0.6",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "eth2"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Las redes de la sucursal Monterrey, por el router de allá"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "0.0.0.0/0",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "200.1.1.1",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "eth0"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Todo lo demás: al proveedor de internet"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las redes "
+     },
+     {
+      "type": "text",
+      "text": "conectadas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " el router las conoce solo, porque tiene una tarjeta en ellas. Las demás alguien se las tiene que enseñar: una persona (rutas estáticas) u otros routers (rutas dinámicas)."
+     }
+    ],
+    "attrs": {
+     "id": "b-en006"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-coincidencia",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La coincidencia más larga"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Muchas veces un destino coincide con varias filas a la vez. Por ejemplo, "
+     },
+     {
+      "type": "text",
+      "text": "10.20.5.33",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " está dentro de "
+     },
+     {
+      "type": "text",
+      "text": "10.0.0.0/8",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", de "
+     },
+     {
+      "type": "text",
+      "text": "10.20.0.0/16",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " y de "
+     },
+     {
+      "type": "text",
+      "text": "10.20.5.0/24",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". El router elige siempre la "
+     },
+     {
+      "type": "text",
+      "text": "más específica",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", la que tiene el prefijo más largo: la "
+     },
+     {
+      "type": "text",
+      "text": "/24",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Una ruta más específica es como una dirección más detallada: «calle Juárez 15, depto 3» gana a «colonia Centro»."
+     }
+    ],
+    "attrs": {
+     "id": "b-en007"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-en008",
+     "nombre": "en-tabla",
+     "titulo": "Elige la ruta como un router"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-defecto",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La ruta por defecto"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La ruta "
+     },
+     {
+      "type": "text",
+      "text": "0.0.0.0/0",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " coincide con "
+     },
+     {
+      "type": "text",
+      "text": "cualquier",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " dirección, pero con el prefijo más corto posible (0 bits). Por eso solo se usa cuando ninguna otra fila coincide. Es la "
+     },
+     {
+      "type": "text",
+      "text": "ruta por defecto",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", y el router al que apunta es la "
+     },
+     {
+      "type": "text",
+      "text": "puerta de enlace",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "gateway",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ")."
+     }
+    ],
+    "attrs": {
+     "id": "b-en009"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La tabla de tu computadora es la más sencilla de todas: su propia red, conectada, y una ruta por defecto hacia el router de tu casa. Cualquier cosa que no esté en tu red va al router, y él se encarga."
+     }
+    ],
+    "attrs": {
+     "id": "b-en010"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-en011",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En cada salto, el router resta 1 al "
+       },
+       {
+        "type": "text",
+        "text": "TTL",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " ("
+       },
+       {
+        "type": "text",
+        "text": "time to live",
+        "marks": [
+         {
+          "type": "italic"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ") del paquete. Si llega a 0, lo descarta y avisa al que lo mandó. Así, si dos routers se mandan un paquete de ida y vuelta por un error en las rutas, el paquete no da vueltas para siempre. "
+       },
+       {
+        "type": "text",
+        "text": "traceroute",
+        "marks": [
+         {
+          "type": "code"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " aprovecha esto para descubrir cada router del camino."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dinamicas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Rutas estáticas y dinámicas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una "
+     },
+     {
+      "type": "text",
+      "text": "ruta estática",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " la escribe una persona a mano. Es sencilla y predecible, pero no se entera de nada: si el enlace por donde pasa se cae, el router sigue mandando paquetes por ahí y se pierden."
+     }
+    ],
+    "attrs": {
+     "id": "b-en012"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Con el "
+     },
+     {
+      "type": "text",
+      "text": "enrutamiento dinámico",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", los routers platican entre sí con un "
+     },
+     {
+      "type": "text",
+      "text": "protocolo de enrutamiento",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": cada uno anuncia las redes que conoce y calcula el mejor camino. Si un enlace se cae, se avisan y recalculan en segundos."
+     }
+    ],
+    "attrs": {
+     "id": "b-en013"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-en014"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Protocolo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dónde se usa"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cómo decide"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "OSPF",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Dentro de una organización: oficinas, campus, centros de datos"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cada router conoce el mapa completo y calcula el camino de menor costo"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "BGP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Entre organizaciones: así se une internet"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cada red (sistema autónomo) anuncia qué direcciones tiene; decide por reglas comerciales y de distancia"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "RIP",
+            "marks": [
+             {
+              "type": "bold"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Redes pequeñas y antiguas"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cuenta saltos; máximo 15. Casi ya no se usa"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-en015",
+     "nombre": "en-sim",
+     "titulo": "Tres sucursales"
+    }
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-en016",
+     "variante": "aviso"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El 4 de octubre de 2021, Facebook, Instagram y WhatsApp desaparecieron de internet durante unas seis horas. Un cambio de configuración retiró sus anuncios BGP y el resto de internet dejó de saber cómo llegar a sus servidores, incluidos sus DNS. Los propios ingenieros tampoco podían entrar a la red para arreglarlo."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-linux",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Rutas en Linux"
+     }
+    ]
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-en017",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "ip route                       # la tabla de rutas\nip route get 10.0.30.5         # ¿qué ruta usaría para llegar ahí?\nsudo ip route add 10.0.30.0/24 via 192.168.1.254   # agrega una ruta estática\nsudo ip route del 10.0.30.0/24                     # la quita\ntraceroute 10.0.30.5           # cada router del camino"
+     }
+    ]
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-en018",
+     "nombre": "en-terminal",
+     "titulo": "La red de la oficina"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las rutas que agregas con "
+     },
+     {
+      "type": "text",
+      "text": "ip route add",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " se pierden al reiniciar. Para que sean permanentes en Ubuntu, se escriben en la configuración de "
+     },
+     {
+      "type": "text",
+      "text": "netplan",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ":"
+     }
+    ],
+    "attrs": {
+     "id": "b-en019"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-en020",
+     "language": "yaml"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "network:\n  version: 2\n  ethernets:\n    enp0s3:\n      dhcp4: true\n      routes:\n        - to: 10.0.30.0/24\n          via: 192.168.1.254"
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-en021"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿El router de mi casa usa OSPF o BGP?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No. Solo conoce dos cosas: tu red de casa, que está conectada, y la ruta por defecto hacia tu proveedor de internet. Los protocolos dinámicos los usan las empresas, los proveedores y los centros de datos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-en022"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es un sistema autónomo?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Una red que pertenece a una sola organización y tiene su propia política de rutas: un proveedor de internet, una universidad, una empresa de nube. Cada uno tiene un número (ASN). Internet son decenas de miles de sistemas autónomos que se anuncian sus direcciones con BGP."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-en023"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Por qué traceroute a veces muestra asteriscos?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Algunos routers no contestan a los paquetes con TTL vencido, o los contestan muy despacio, por seguridad o para no gastar recursos. El paquete sí pasa por ahí; solo que ese router no se identifica."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-en024",
+     "preguntas": [
+      {
+       "q": "¿Qué sabe un router del camino hacia un destino lejano?",
+       "o": [
+        "El camino completo, router por router",
+        "Solo cuál es el siguiente salto",
+        "Nada: manda el paquete a todos sus vecinos"
+       ],
+       "a": 1,
+       "e": "Solo el siguiente salto. Cada router del camino vuelve a decidir con su propia tabla."
+      },
+      {
+       "q": "Una tabla tiene 10.0.0.0/8, 10.1.0.0/16 y 0.0.0.0/0. ¿Cuál se usa para 10.1.4.20?",
+       "o": [
+        "10.0.0.0/8",
+        "10.1.0.0/16",
+        "0.0.0.0/0"
+       ],
+       "a": 1,
+       "e": "Las tres coinciden, y gana la más específica: la /16."
+      },
+      {
+       "q": "¿Cuándo se usa la ruta por defecto?",
+       "o": [
+        "Siempre, antes que las demás",
+        "Cuando ninguna otra ruta coincide",
+        "Solo cuando no hay internet"
+       ],
+       "a": 1,
+       "e": "Su prefijo es /0, el más corto posible: solo gana si no hay otra coincidencia."
+      },
+      {
+       "q": "Se cae el enlace por donde pasa una ruta estática. ¿Qué pasa?",
+       "o": [
+        "El router busca otro camino solo",
+        "Los paquetes se siguen mandando por ahí y se pierden",
+        "La ruta se borra sola"
+       ],
+       "a": 1,
+       "e": "Las rutas estáticas no se enteran. Para recalcular hace falta un protocolo dinámico como OSPF."
+      },
+      {
+       "q": "¿Qué protocolo une a los proveedores y empresas que forman internet?",
+       "o": [
+        "OSPF",
+        "BGP",
+        "DHCP"
+       ],
+       "a": 1,
+       "e": "BGP: cada sistema autónomo anuncia sus direcciones a los demás."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-en025"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Un router une redes y decide el siguiente salto de cada paquete con su tabla de rutas."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Si varias rutas coinciden, gana la más específica: la coincidencia más larga."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "La ruta por defecto, "
+           },
+           {
+            "type": "text",
+            "text": "0.0.0.0/0",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", se usa cuando nada más coincide; apunta a la puerta de enlace."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Las rutas estáticas se escriben a mano y no reaccionan a fallas; OSPF y BGP recalculan solos."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "En Linux: "
+           },
+           {
+            "type": "text",
+            "text": "ip route",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "ip route get",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": ", "
+           },
+           {
+            "type": "text",
+            "text": "sudo ip route add … via …",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": " y "
+           },
+           {
+            "type": "text",
+            "text": "traceroute",
+            "marks": [
+             {
+              "type": "code"
+             }
+            ]
+           },
+           {
+            "type": "text",
+            "text": "."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="../assets/js/red.js"></script>
+<script src="../assets/js/terminal.js"></script>
+<script src="enrutamiento.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

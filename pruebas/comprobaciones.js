@@ -458,6 +458,62 @@ module.exports=function(txt,demo){
     await p.check('#vsPriv');
     r.igual(await p.getAttribute('#vsStat','data-k'),'good','con privacidad, identificador aleatorio');
     await sesion(p,r,2,['ip -6 a','ip -br a','ping -c 2 ::1','dig AAAA example.com +short','ping -6 -c 2 example.com'],5,'IPv6 desde la terminal');
+  },
+
+  'tcp-udp':async function(p,r){
+    for(let k=0;k<3;k++)await p.click('#tsSig');
+    r.cumple(await txt(p,'#tsCli')==='ESTABLISHED'&&await txt(p,'#tsSrv')==='ESTABLISHED','después del saludo de tres pasos, la conexión queda establecida');
+    for(let k=0;k<6;k++)await p.click('#tsSig');
+    r.cumple(await txt(p,'#tsSrv')==='CLOSED'&&await p.getAttribute('#tsSig','aria-disabled')==='true','al terminar el cierre, el servidor queda en CLOSED');
+    r.igual(await txt(p,'#tpTcp'),'400 ms','con 2 paquetes perdidos, TCP tarda 400 ms');
+    await clic(p,1,'#tpQue [data-v="llamada"]');
+    r.igual(await p.getAttribute('#tpStat','data-k'),'warn','en una videollamada, esperar los reenvíos de TCP congela la imagen');
+    await sesion(p,r,2,['ss -tln','nc -zv servidor 22','nc -zv servidor 80 443','nc -zv servidor 5432',['ssh servidor','yes','servidor123'],'ss -tln','exit','curl -v http://servidor'],6,'Puertos de un servidor');
+  },
+
+  'enrutamiento':async function(p,r){
+    r.cumple(/gana 10\.20\.5\.0\/24/.test(await txt(p,'#etMsg'))&&await p.locator('#etFilas tr.coincide').count()===3,'10.20.5.33 coincide con 4 filas y gana la /24');
+    await clic(p,0,'#etChips [data-v="8.8.8.8"]');
+    r.cumple(/ruta por defecto/.test(await txt(p,'#etMsg')),'8.8.8.8 solo coincide con la ruta por defecto');
+    r.igual(await p.getAttribute('#esStat','data-k'),'good','con todos los enlaces, el paquete llega');
+    await p.uncheck('#esE13');
+    r.cumple(await p.getAttribute('#esStat','data-k')==='bad'&&await p.locator('#esPasos li.mal').count()===1,'con rutas estáticas y el enlace R1 – R3 caído, el paquete se pierde');
+    await clic(p,1,'#esModo [data-v="ospf"]');
+    r.cumple(await p.getAttribute('#esStat','data-k')==='good'&&/10\.255\.12\.2/.test(await txt(p,'#esTabla tr.usada')),'con OSPF, R1 manda por R2');
+    await sesion(p,r,2,['ip route','ping -c 2 10.0.30.5','ip route get 10.0.30.5',['sudo ip route add 10.0.30.0/24 via 192.168.1.254','x'],'ping -c 2 10.0.30.5','traceroute 10.0.30.5'],6,'La red de la oficina');
+  },
+
+  'http':async function(p,r){
+    await clic(p,0,'#hcOps [data-v="200"]');
+    r.cumple(await p.getAttribute('#hcStat','data-k')==='good'&&await txt(p,'#hcPunt')==='1 de 1 bien','la primera situación es un 200');
+    await p.click('#hcSig');await clic(p,0,'#hcOps [data-v="404"]');
+    r.igual(await p.getAttribute('#hcStat','data-k'),'bad','crear una cuenta no responde 404');
+    r.cumple(/200 OK/.test(await txt(p,'#haRes')),'GET /productos responde 200');
+    await clic(p,1,'#haMet [data-v="POST"]');
+    r.cumple(/401 Unauthorized/.test(await txt(p,'#haRes')),'POST sin token responde 401');
+    await p.check('#haTok');
+    r.cumple(/201 Created/.test(await txt(p,'#haRes'))&&/Location: \/productos\/8/.test(await txt(p,'#haRes')),'POST con token responde 201 y Location');
+    await clic(p,1,'#haMet [data-v="DELETE"]');await clic(p,1,'#haRuta [data-v="/productos/7"]');
+    r.cumple(/403 Forbidden/.test(await txt(p,'#haRes')),'DELETE con un token que no puede borrar responde 403');
+    const post="curl -i -X POST https://api.tienda.example/productos -d '{\"nombre\":\"Tapete\",\"precio\":150}'";
+    await sesion(p,r,2,['curl https://api.tienda.example/productos','curl -i http://api.tienda.example/productos','curl -i https://api.tienda.example/productos/99',post,
+      post.replace(' -d ',' -H "Authorization: Bearer demo123" -d '),'curl -i -X PUT https://api.tienda.example/productos/7'],6,'Usa una API con curl');
+  },
+
+  'diagnostico':async function(p,r){
+    await clic(p,0,'#dpOps [data-v="cable"]');
+    r.igual(await p.getAttribute('#dpStat','data-k'),'good','NO-CARRIER es el cable');
+    await p.click('#dpSig');await clic(p,0,'#dpOps [data-v="dns"]');
+    r.cumple(await p.getAttribute('#dpStat','data-k')==='bad'&&/DHCP/.test(await txt(p,'#dpMsg')),'una dirección 169.254 es el DHCP, no el DNS');
+    await sesion(p,r,1,['ip link',['sudo ip link set enp0s3 up','x'],'ping -c 2 example.com'],3,'Sin conexión');
+    await clic(p,1,'#dgEsc [data-v="ruta"]');
+    await sesion(p,r,1,['ip route',['sudo ip route add default via 192.168.1.1','x'],'ping -c 2 example.com'],3,'Sin ruta');
+    await clic(p,1,'#dgEsc [data-v="gw"]');
+    await sesion(p,r,1,['ip route','ping -c 2 192.168.1.100',['sudo ip route replace default via 192.168.1.1','x'],'ping -c 2 example.com'],3,'Puerta de enlace equivocada');
+    await clic(p,1,'#dgEsc [data-v="dns"]');
+    await sesion(p,r,1,['ping -c 2 1.1.1.1','systemctl status systemd-resolved',['sudo systemctl start systemd-resolved','x'],'ping -c 2 example.com'],3,'Los nombres no funcionan');
+    await clic(p,1,'#dgEsc [data-v="web"]');
+    await sesion(p,r,1,['nc -zv web 80',['ssh web','yes','servidor123'],'systemctl status nginx',['sudo systemctl start nginx','servidor123'],'exit','curl http://web'],3,'La página no abre');
   }
 
   };

@@ -55,7 +55,7 @@
 .term-ayuda{margin:0.5rem 0 0;font-size:0.8125rem;color:var(--fg-2);max-width:none}
 .term-ayuda kbd{font-size:0.75rem}
 .term-sug{margin-top:0.625rem}
-.term-sug .chip{font-family:var(--font-mono)}
+.term-sug .chip{max-width:100%;font-family:var(--font-mono);text-align:left;overflow-wrap:anywhere}
 
 /* Ejercicios que se califican solos */
 .term-ej{margin-top:1rem;padding:0.75rem 1rem;border:1px solid var(--line);border-radius:0.5rem}
