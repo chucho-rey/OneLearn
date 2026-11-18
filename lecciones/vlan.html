@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VLAN y segmentación · OneLearn</title>
+<meta name="description" content="Cómo dividir una red en varias con VLAN: puertos de acceso y troncales, la etiqueta 802.1Q, el enrutamiento entre VLAN y por qué separar invitados, cámaras y oficina.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../assets/icons/icono-180.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="../assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="../assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="vlan.css">
+</head>
+<body data-leccion="vlan">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta lección necesita JavaScript para mostrarse.</p></noscript>
+      <div id="siguiente"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Plantillas de los laboratorios: bloques.js las copia dentro de cada bloque «laboratorio» -->
+<template data-lab="vl-puertos">
+<p class="hint">Un switch con seis equipos, todos en la VLAN 1. Asigna cada uno a una VLAN y mira quién alcanza a quién. Las reglas del router no dejan salir de la VLAN 30 más que a internet.</p>
+<div class="vp-eq" id="vpEq"></div>
+<div class="tbl-wrap"><table class="vp-m" id="vpM"></table></div>
+<div class="leg"><span><i class="vp-di"></i>Directo (misma VLAN)</span><span><i class="vp-ro"></i>Por el router</span><span><i class="vp-bl"></i>Bloqueado</span></div>
+<div class="status" id="vpStat" data-k="" aria-live="polite"><span class="dot"></span><span id="vpMsg"></span></div>
+</template>
+<template data-lab="vl-trama">
+<p class="hint">Una trama va de una PC al servidor, pasando por dos switches unidos con un troncal. Elige la VLAN y el tramo del camino.</p>
+<div class="ctl" style="margin-top:0"><span class="lbl">VLAN</span><div class="seg" id="vtVlan" role="group" aria-label="VLAN"><button type="button" data-v="10" aria-pressed="true">10</button><button type="button" data-v="30" aria-pressed="false">30</button><button type="button" data-v="40" aria-pressed="false">40</button></div></div>
+<div class="ctl"><span class="lbl">Tramo</span><div class="seg" id="vtTramo" role="group" aria-label="Tramo"><button type="button" data-v="0" aria-pressed="true">PC → switch 1</button><button type="button" data-v="1" aria-pressed="false">Switch 1 → switch 2</button><button type="button" data-v="2" aria-pressed="false">Switch 2 → servidor</button></div></div>
+<div class="vt-trama" id="vtTrama"></div>
+<p class="vt-bits" id="vtBits"></p>
+<div class="status" id="vtStat" data-k="" aria-live="polite"><span class="dot"></span><span id="vtMsg"></span></div>
+</template>
+
+<!-- La lección, en el formato de bloques de OneLearn (ver assets/js/bloques.js) -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "leccion",
+ "id": "vlan",
+ "titulo": "VLAN y segmentación",
+ "icono": "vlan",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Redes",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Nivel",
+   "valor": "Intermedio",
+   "estilo": "amarillo"
+  },
+  {
+   "nombre": "Lectura",
+   "valor": "20 min",
+   "estilo": "texto"
+  },
+  {
+   "nombre": "Incluye",
+   "valor": "2 laboratorios y 5 preguntas de repaso",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "horizontalRule",
+    "attrs": {
+     "id": "b-vl001"
+    }
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "b-vl002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-que-es",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Varias redes en un mismo switch"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "En una oficina pequeña, todo suele estar en la misma red: las computadoras de contabilidad, las de ventas, la impresora, las cámaras y el Wi-Fi de las visitas. Eso significa que la laptop de un invitado puede ver el servidor de archivos, y que una cámara barata con una falla de seguridad está a un paso de la computadora del contador."
+     }
+    ],
+    "attrs": {
+     "id": "b-vl003"
+    }
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Una "
+     },
+     {
+      "type": "text",
+      "text": "VLAN",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " ("
+     },
+     {
+      "type": "text",
+      "text": "Virtual LAN",
+      "marks": [
+       {
+        "type": "italic"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") divide un switch en varias redes separadas, sin cambiar cables. Cada puerto se asigna a una VLAN, y el switch solo entrega tramas entre puertos de la "
+     },
+     {
+      "type": "text",
+      "text": "misma VLAN",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". Para el resto, es como si estuvieran en switches distintos."
+     }
+    ],
+    "attrs": {
+     "id": "b-vl004"
+    }
+   },
+   {
+    "type": "table",
+    "attrs": {
+     "id": "b-vl005"
+    },
+    "content": [
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "VLAN"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Para qué"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableHeader",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Red"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "10"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Oficina: computadoras, impresora, servidor"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "192.168.10.0/24"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "30"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Invitados: solo internet"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "192.168.30.0/24"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tableRow",
+      "content": [
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "40"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Cámaras: aisladas de todo"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "tableCell",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "192.168.40.0/24"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada VLAN es una red con su propio rango de direcciones (una subred). Para pasar de una a otra, el paquete tiene que ir al "
+     },
+     {
+      "type": "text",
+      "text": "router",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", que decide con sus reglas de firewall qué se permite: por ejemplo, que la oficina vea las cámaras, pero no al revés."
+     }
+    ],
+    "attrs": {
+     "id": "b-vl006"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-vl007",
+     "nombre": "vl-puertos",
+     "titulo": "Separa la red de la oficina"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-puertos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Puertos de acceso y troncales"
+     }
+    ]
+   },
+   {
+    "type": "columnas",
+    "attrs": {
+     "id": "b-vl008"
+    },
+    "content": [
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Puerto de acceso"
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pertenece a una sola VLAN. Ahí se conectan las computadoras, que ni se enteran de que existen las VLAN: mandan tramas normales."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "columna",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Puerto troncal (trunk)"
+         }
+        ]
+       },
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Lleva varias VLAN por el mismo cable, entre switches o hacia el router. Cada trama lleva una "
+         },
+         {
+          "type": "text",
+          "text": "etiqueta",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " que dice de qué VLAN es."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "La etiqueta la define el estándar "
+     },
+     {
+      "type": "text",
+      "text": "IEEE 802.1Q",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ": 4 bytes que se meten en la trama Ethernet, entre las MAC y el tipo. 12 de esos bits son el número de VLAN, así que caben hasta 4094 VLAN."
+     }
+    ],
+    "attrs": {
+     "id": "b-vl009"
+    }
+   },
+   {
+    "type": "laboratorio",
+    "attrs": {
+     "id": "b-vl010",
+     "nombre": "vl-trama",
+     "titulo": "La etiqueta 802.1Q"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-router",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Router en un palo"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Muchas oficinas tienen un solo router con un solo cable al switch, configurado como troncal. El router crea una subinterfaz por VLAN (una «tarjeta virtual» con su propia IP, que es la puerta de enlace de esa VLAN). A esto se le llama "
+     },
+     {
+      "type": "text",
+      "text": "router-on-a-stick",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ". En Linux se ve así:"
+     }
+    ],
+    "attrs": {
+     "id": "b-vl011"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-vl012",
+     "language": "bash"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "# Una subinterfaz para la VLAN 30 sobre la tarjeta enp0s3\nsudo ip link add link enp0s3 name enp0s3.30 type vlan id 30\nsudo ip addr add 192.168.30.1/24 dev enp0s3.30\nsudo ip link set enp0s3.30 up"
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "b-vl013",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En redes grandes, el enrutamiento entre VLAN lo hace un "
+       },
+       {
+        "type": "text",
+        "text": "switch de capa 3",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": ", que además de repartir tramas sabe enrutar, mucho más rápido que un router con un solo cable."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-segmentar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Para qué sirve segmentar"
+     }
+    ]
+   },
+   {
+    "type": "bulletList",
+    "attrs": {
+     "id": "b-vl014"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Seguridad",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": un equipo infectado solo alcanza a su VLAN. Las cámaras, impresoras y aparatos «inteligentes», que casi nunca se actualizan, quedan aislados."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Orden",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": cada área tiene su rango de direcciones, y las reglas del firewall se escriben por VLAN."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Menos ruido",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": los mensajes de difusión (como ARP o DHCP) se quedan dentro de su VLAN."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Wi-Fi de invitados",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": una red que solo sale a internet, aunque use los mismos puntos de acceso."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-dudas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Dudas comunes"
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-vl015"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Una VLAN es lo mismo que una subred?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Casi siempre van juntas, pero no son lo mismo: la VLAN separa en la capa 2 (qué puertos se ven entre sí) y la subred en la capa 3 (qué rango de direcciones usan). Lo normal es una subred por VLAN."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-vl016"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Cualquier switch hace VLAN?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "No: los switches más baratos («no administrables») no tienen configuración. Necesitas uno "
+         },
+         {
+          "type": "text",
+          "text": "administrable",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " o «smart». Muchos routers de casa con firmware avanzado también las manejan."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "desplegable",
+    "attrs": {
+     "id": "b-vl017"
+    },
+    "content": [
+     {
+      "type": "desplegableTitulo",
+      "content": [
+       {
+        "type": "text",
+        "text": "¿Qué es la VLAN 1?"
+       }
+      ]
+     },
+     {
+      "type": "desplegableCuerpo",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La VLAN por defecto: todos los puertos de un switch nuevo están en ella. Es buena práctica no usarla para equipos y poner la administración del switch en otra VLAN."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "s-repaso",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Repasa lo aprendido"
+     }
+    ]
+   },
+   {
+    "type": "repaso",
+    "attrs": {
+     "id": "b-vl018",
+     "preguntas": [
+      {
+       "q": "Dos computadoras están en el mismo switch, pero en VLAN distintas. ¿Se ven directamente?",
+       "o": [
+        "Sí, el switch las une",
+        "No: necesitan pasar por un router",
+        "Solo si tienen IP fija"
+       ],
+       "a": 1,
+       "e": "Cada VLAN es una red aparte. Para pasar de una a otra hace falta un router."
+      },
+      {
+       "q": "¿Qué lleva un puerto troncal?",
+       "o": [
+        "Una sola VLAN",
+        "Varias VLAN, con etiquetas 802.1Q",
+        "Solo internet"
+       ],
+       "a": 1,
+       "e": "El troncal lleva varias VLAN por el mismo cable; la etiqueta dice de cuál es cada trama."
+      },
+      {
+       "q": "¿Dónde va la etiqueta 802.1Q?",
+       "o": [
+        "Dentro de la trama Ethernet, después de las MAC",
+        "En el encabezado IP",
+        "En el cable"
+       ],
+       "a": 0,
+       "e": "Son 4 bytes entre las direcciones MAC y el tipo."
+      },
+      {
+       "q": "¿Por qué conviene poner las cámaras en su propia VLAN?",
+       "o": [
+        "Para que graben mejor",
+        "Porque casi no se actualizan y un atacante podría usarlas para llegar a lo demás",
+        "Porque usan otro tipo de cable"
+       ],
+       "a": 1,
+       "e": "Aisladas, si alguien las toma, no alcanza al resto de la red."
+      },
+      {
+       "q": "¿Cuántas VLAN caben con 12 bits de identificador?",
+       "o": [
+        "256",
+        "4094",
+        "65 535"
+       ],
+       "a": 1,
+       "e": "2^12 son 4096 números; el 0 y el 4095 están reservados."
+      }
+     ]
+    }
+   },
+   {
+    "type": "resumen",
+    "attrs": {
+     "id": "b-vl019"
+    },
+    "content": [
+     {
+      "type": "bulletList",
+      "content": [
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Una VLAN divide un switch en redes separadas: solo se ven los puertos de la misma VLAN."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Entre VLAN se pasa por un router, que filtra con sus reglas."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Puertos de acceso: una VLAN, sin etiquetas. Troncales: varias VLAN, con etiqueta 802.1Q."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Lo normal es una subred por VLAN."
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "listItem",
+        "content": [
+         {
+          "type": "paragraph",
+          "content": [
+           {
+            "type": "text",
+            "text": "Segmentar aísla invitados, cámaras y aparatos inseguros del resto de la red."
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="../assets/js/catalogo.js"></script>
+<script src="../assets/js/base.js"></script>
+<script src="../assets/js/datos.js"></script>
+<script src="../assets/js/barra.js"></script>
+<script src="../assets/js/lectura.js"></script>
+<script src="../assets/js/apuntes.js"></script>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/respaldo.js"></script>
+<script src="../assets/js/crear.js"></script>
+<script src="../assets/js/buscar.js"></script>
+<script src="vlan.js"></script>
+<script src="../assets/js/bloques.js"></script>
+<script src="../assets/js/marcadores.js"></script>
+<script src="../assets/js/avance.js"></script>
+<script src="../assets/js/zen.js"></script>
+</body>
+</html>

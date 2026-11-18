@@ -22,8 +22,8 @@ prueba('Rutas',async function({browser,base,r}){
   const faltan=[];
   C.modulos.forEach(function(m){(m.lecciones||[]).forEach(function(id){if(!ids[id])faltan.push(id)});(m.proyectos||[]).forEach(function(id){if(!proy[id])faltan.push(id)})});
   r.cumple(!faltan.length,'todas las lecciones y proyectos de la ruta están en el catálogo',faltan);
-  const publicadas=C.modulos[0].lecciones.filter(function(id){return ids[id].archivo});
-  r.igual(publicadas.length,5,'el módulo 1 (Linux y la terminal) está completo: 5 lecciones publicadas');
+  const todas=[].concat.apply([],C.modulos.map(function(m){return m.lecciones||[]}));
+  r.cumple(todas.length===27&&todas.every(function(id){return ids[id].archivo}),'las 27 lecciones de la ruta están publicadas',todas.filter(function(id){return !ids[id].archivo}));
 
   /* Se ve bien en todas las variantes de lectura, también con avance */
   for(const [ancho,tema,contraste,escala,fuente] of [[390,'dark','high',1.5,'opendyslexic'],[1280,'light','normal',1,'normal'],[390,'light','high',1,'atkinson']]){
@@ -39,7 +39,7 @@ prueba('Rutas',async function({browser,base,r}){
   await p.goto(base+'rutas.html');await listo(p);
   r.igual(await p.locator('.rt-m').count(),C.modulos.length,'se ven los '+C.modulos.length+' módulos');
   r.igual(await p.locator('.rt-m').first().locator('.rt-l li').count(),5,'el módulo 1 tiene 5 lecciones');
-  r.cumple(await p.locator('.rt-m').nth(5).locator('.exp-i.soon').count()===C.modulos[5].lecciones.length,'las lecciones del módulo 6 salen como «Pronto»');
+  r.igual(await p.locator('.rt-m .exp-i.soon').count(),0,'ninguna lección de la ruta sale como «Pronto»');
   r.cumple(await p.locator('.rt-m').last().locator('a.exp-i small').count()===2,'el último módulo tiene los dos proyectos');
   r.igual(await txt(p,'.rt-sig .btn'),'Empezar: Sistema operativo','sin avance, la ruta empieza por Sistema operativo');
   r.cumple(await p.getAttribute('.rt-m.actual','aria-current')==='step'&&/Linux y la terminal/.test(await txt(p,'.rt-m.actual h3')),'el módulo 1 se marca como «Vas aquí»');
@@ -70,15 +70,15 @@ prueba('Rutas',async function({browser,base,r}){
   r.cumple(q.errores.length===0,'sin errores con avance',q.errores);
   await cerrar(q);
 
-  /* Ruta terminada (todo lo publicado) */
+  /* Ruta terminada */
   const todo={};
   C.modulos.forEach(function(m){(m.lecciones||[]).forEach(function(id){if(ids[id].archivo)todo[id]=leida()})});
   const tareas={};
   C.modulos.forEach(function(m){(m.proyectos||[]).forEach(function(id){const t={};for(let i=0;i<proy[id].tareas;i++)t['t'+i]='2026-11-18';tareas[id]={tareas:t}})});
   const z=await pagina(browser,{ancho:1280,local:{'aprende-tecnologia:avance':JSON.stringify({lecciones:todo}),'aprende-tecnologia:proyectos':JSON.stringify(tareas)}});
   await z.goto(base+'rutas.html');await listo(z);
-  r.cumple(!await z.locator('.rt-sig .btn').count()&&/Terminaste todo lo publicado/.test(await txt(z,'.rt-sig-m')),'con todo lo publicado terminado, se avisa que faltan lecciones por publicar');
-  r.cumple(await z.locator('.rt-m.hecho').count()>=1,'el módulo 1 se marca como completo');
+  r.cumple(!await z.locator('.rt-sig .btn').count()&&/Terminaste la ruta completa/.test(await txt(z,'.rt-sig-m')),'con todo terminado, se felicita por la ruta completa');
+  r.igual(await z.locator('.rt-m.hecho').count(),C.modulos.length,'los '+C.modulos.length+' módulos se marcan como completos');
   await cerrar(z);
 
   /* La búsqueda encuentra la ruta */

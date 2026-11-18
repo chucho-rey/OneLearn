@@ -47,16 +47,16 @@ window.AT.catalogo=[
     {id:'enrutamiento',titulo:'Enrutamiento',archivo:'enrutamiento.html',icono:'router'},
     {id:'http',titulo:'HTTP y HTTPS',archivo:'http.html',icono:'http'},
     {id:'diagnostico',titulo:'Diagnóstico de red',archivo:'diagnostico.html',icono:'diagnostico'},
-    {id:'vlan',titulo:'VLAN y segmentación'}
+    {id:'vlan',titulo:'VLAN y segmentación',archivo:'vlan.html',icono:'vlan'}
   ]},
   {grupo:'Servidores y nube',lecciones:[
     {id:'ssh',titulo:'SSH y acceso remoto',archivo:'ssh.html',icono:'ssh'},
     {id:'servidor-web',titulo:'Servidor web con Nginx',archivo:'servidor-web.html',icono:'servidor'},
     {id:'firewalls',titulo:'Firewalls',archivo:'firewalls.html',icono:'firewall'},
-    {id:'vpn',titulo:'VPN',archivo:'vpn.html',icono:'vpn'},
-    {id:'contenedores',titulo:'Virtualización y contenedores'},
-    {id:'monitoreo',titulo:'Monitoreo y registros'},
-    {id:'nube',titulo:'Introducción a la nube'}
+    {id:'vpn',titulo:'VPN: redes privadas virtuales',archivo:'vpn.html',icono:'vpn'},
+    {id:'contenedores',titulo:'Virtualización y contenedores',archivo:'contenedores.html',icono:'contenedor'},
+    {id:'monitoreo',titulo:'Monitoreo y registros',archivo:'monitoreo.html',icono:'monitoreo'},
+    {id:'nube',titulo:'Introducción a la nube',archivo:'nube.html',icono:'nube'}
   ]},
   {grupo:'Ciberseguridad',lecciones:[
     {id:'contrasenas',titulo:'Contraseñas y autenticación',archivo:'contrasenas.html',icono:'llave'},

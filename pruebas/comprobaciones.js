@@ -570,6 +570,49 @@ module.exports=function(txt,demo){
     r.igual(await p.getAttribute('#ccStat','data-k'),'bad','el minuto 70 no es válido');
     await sesion(p,r,1,['cat respaldo.sh','chmod +x respaldo.sh','./respaldo.sh Documentos','tar -tzf respaldos/Documentos-$(date +%F).tar.gz',
       'printf "30 2 * * * /home/ana/respaldo.sh /home/ana/Documentos\\n" > micron','crontab micron','mkdir /tmp/prueba','tar -xzf respaldos/Documentos-$(date +%F).tar.gz -C /tmp/prueba'],6,'Respalda, programa y restaura');
+  },
+
+  'vlan':async function(p,r){
+    r.cumple(await p.getAttribute('#vpStat','data-k')==='bad'&&await p.locator('#vpM td.vp-di').count()===30,'con todos en la VLAN 1, todos se ven directo');
+    for(const [eq,v] of [['conta',10],['ventas',10],['srv',10],['imp',10],['cam',40],['inv',30]])await p.click('#vpEq [data-eq="'+eq+'"] [data-v="'+v+'"]');
+    r.cumple(await p.getAttribute('#vpStat','data-k')==='good'&&await p.locator('#vpM td.vp-bl').count()===10,'separados en VLAN, el invitado no alcanza a nadie');
+    r.igual(await p.locator('#vtTrama .vt-tag').count(),0,'de la PC al switch, la trama va sin etiqueta');
+    await clic(p,1,'#vtTramo [data-v="1"]');
+    r.cumple(await p.locator('#vtTrama .vt-tag').count()===1&&/000000001010/.test(await txt(p,'#vtBits')),'por el troncal lleva la etiqueta 802.1Q con la VLAN 10');
+    await clic(p,1,'#vtVlan [data-v="40"]');
+    r.cumple(/000000101000 = 40/.test(await txt(p,'#vtBits')),'la VLAN 40 en 12 bits');
+  },
+
+  'contenedores':async function(p,r){
+    r.cumple(/3 aplicaciones/.test(await txt(p,'#cpNV'))&&await p.locator('#cpVm .cp-so').count()===3&&await p.locator('#cpCt .cp-so').count()===0,'cada VM trae su sistema operativo; los contenedores no');
+    await rango(p,'#cpN',6);
+    r.igual(await p.locator('#cpCt .cp-app').count(),6,'con 6 aplicaciones se dibujan 6 contenedores');
+    await sesion(p,r,1,['docker run hello-world','docker run -d --name web -p 8080:80 nginx','docker ps','curl localhost:8080','docker logs web','docker stop web','docker rm web',
+      'docker run -d --name sitio -p 8080:80 -v ~/sitio:/usr/share/nginx/html nginx','curl localhost:8080'],6,'Tus primeros contenedores');
+  },
+
+  'monitoreo':async function(p,r){
+    r.cumple(await txt(p,'#maN')==='4'&&await txt(p,'#maF')==='3'&&await p.getAttribute('#maStat','data-k')==='warn','con 80 % y un minuto: 4 alertas, 3 falsas');
+    await clic(p,0,'#maD [data-v="5"]');
+    r.cumple(await txt(p,'#maN')==='1'&&await p.getAttribute('#maStat','data-k')==='good','con 5 minutos: una sola alerta, la del problema real');
+    await rango(p,'#maU',90);
+    r.igual(await p.getAttribute('#maStat','data-k'),'bad','con 90 % y 5 minutos, el problema real no se detecta');
+    const L='/var/log/nginx/access.log';
+    await sesion(p,r,1,['tail -n 5 '+L,'wc -l '+L,"awk '{print $1}' "+L+' | sort | uniq -c | sort -rn | head',"awk '$9 == 404' "+L+' | wc -l',
+      "awk '$9 == 404 {print $7}' "+L+' | sort | uniq -c | sort -rn',['sudo ufw deny from 45.9.20.11','x']],6,'Investiga el registro de acceso');
+  },
+
+  'nube':async function(p,r){
+    r.igual(await p.locator('#nrCapas li.nr-tu').count(),8,'con servidor propio, todas las capas son tuyas');
+    await clic(p,0,'#nrMod [data-v="iaas"]');
+    r.igual(await p.locator('#nrCapas li.nr-tu').count(),5,'en IaaS, el proveedor cuida el hardware y la virtualización');
+    await clic(p,0,'#nrMod [data-v="saas"]');
+    r.igual(await p.locator('#nrCapas li.nr-tu').count(),1,'en SaaS solo los datos y las cuentas son tuyos');
+    r.igual(await p.getAttribute('#ncStat','data-k'),'warn','encendida todo el mes y sin compromiso es lo más caro');
+    await p.check('#ncRes');
+    r.igual(await p.getAttribute('#ncStat','data-k'),'good','con compromiso de un año, la máquina cuesta menos');
+    await clic(p,1,'#ncHoras [data-v="220"]');
+    r.igual(await p.getAttribute('#ncStat','data-k'),'warn','el compromiso no conviene si la máquina pasa apagada');
   }
 
   };

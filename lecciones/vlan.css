@@ -1,0 +1,27 @@
+/* Estilos propios de los laboratorios de «VLAN y segmentación». */
+.vp-eq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.5rem 1.25rem}
+.vp-f{display:flex;flex-direction:column;gap:0.25rem;min-width:0}
+.vp-n{font-size:0.875rem;font-weight:600}
+.vp-f .seg button{min-width:2.75rem;font-family:var(--font-mono)}
+.vp-m{min-width:0;font-size:0.8125rem}
+.vp-m th,.vp-m td{padding:0.375rem 0.5rem;text-align:center}
+.vp-m tbody th{text-align:left;text-transform:none;letter-spacing:0;font-family:var(--font-ui);font-size:0.8125rem;color:var(--fg);white-space:normal}
+.vp-v{display:block;font-family:var(--font-mono);font-size:0.6875rem;font-weight:400;color:var(--fg-2)}
+.vp-m td:first-child{font-weight:400}
+.vp-di{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}
+.vp-ro{color:var(--fg-2)}
+.vp-bl{background:var(--bad-bg);color:var(--bad-ink)}
+.vp-yo{color:var(--fg-3)}
+.leg i.vp-di{background:var(--accent)}
+.leg i.vp-ro{background:var(--line-strong)}
+.leg i.vp-bl{background:var(--bad)}
+@media (max-width:640px){.vp-eq{grid-template-columns:minmax(0,1fr)}}
+
+.vt-trama{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.875rem}
+.vt-c{flex:1 1 7rem;min-width:0;display:flex;flex-direction:column;gap:0.125rem;padding:0.5rem 0.625rem;border:1px solid var(--line);border-radius:0.375rem;background:var(--bg)}
+.vt-c b{font-size:0.8125rem}
+.vt-c span{font-size:0.75rem;color:var(--fg-2)}
+.vt-c code{font-size:0.75rem;overflow-wrap:anywhere;background:none;padding:0}
+.vt-tag{border:2px solid var(--accent);background:var(--accent-bg)}
+.vt-tag b,.vt-tag code{color:var(--accent-ink)}
+.vt-bits{margin:0.75rem 0 0;font-family:var(--font-mono);font-size:0.875rem;max-width:none}
