@@ -67,8 +67,8 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   const grupos=function(){return g.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn')].map(function(b){
     return b.getAttribute('data-grupo')+':'+(b.getAttribute('aria-expanded')==='true'?'abierto':'cerrado')+(document.getElementById(b.getAttribute('aria-controls')).hidden?':oculto':'')})})};
   let gs=await grupos();
-  r.igual(gs.join(' '),'onelearn:cerrado:oculto hardware:abierto electronica:cerrado:oculto software:cerrado:oculto redes:cerrado:oculto ciberseguridad:cerrado:oculto inteligencia-artificial:cerrado:oculto',
-    'la primera vez solo se abre el grupo de la lección actual; Ciberseguridad e Inteligencia artificial están en el temario');
+  r.igual(gs.join(' '),'onelearn:cerrado:oculto hardware:abierto electronica:cerrado:oculto software:cerrado:oculto linux:cerrado:oculto redes:cerrado:oculto servidores-y-nube:cerrado:oculto ciberseguridad:cerrado:oculto inteligencia-artificial:cerrado:oculto',
+    'la primera vez solo se abre el grupo de la lección actual; Linux, Servidores y nube, Ciberseguridad e Inteligencia artificial están en el temario');
   const hw=await g.evaluate(function(){const l=AT.catalogo.filter(function(x){return x.grupo==='Hardware'})[0].lecciones;return [l.filter(function(x){return x.archivo}).length,l.length]});
   r.igual(await g.textContent('#grpb-hardware em'),hw[0]+'/'+hw[1],'el grupo dice cuántas lecciones tiene disponibles');
   r.cumple(new RegExp(hw[0]+' de '+hw[1]+' lecciones disponibles').test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');

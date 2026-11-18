@@ -56,7 +56,7 @@
   },
   {
    "nombre": "Incluye",
-   "valor": "8 ejemplos de código y 5 preguntas de repaso",
+   "valor": "9 ejemplos de código y 5 preguntas de repaso",
    "estilo": "texto"
   }
  ],
@@ -2647,6 +2647,340 @@
    {
     "type": "heading",
     "attrs": {
+     "id": "s-terminal",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La terminal simulada"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Las lecciones de Linux traen una terminal de Ubuntu que corre completa en el navegador ("
+     },
+     {
+      "type": "text",
+      "text": "assets/js/terminal.js",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": "). No hay una computadora real detrás: es un pequeño intérprete escrito en JavaScript, y por dentro funciona como un shell de verdad, en tres pasos:"
+     }
+    ],
+    "attrs": {
+     "id": "b-act001"
+    }
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "b-act002"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Leer la línea",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "lexer",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "): separa la línea en palabras y operadores, respetando las comillas y el "
+         },
+         {
+          "type": "text",
+          "text": "\\",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "grep \"login marta\" app.log | wc -l",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " da cinco palabras y un "
+         },
+         {
+          "type": "text",
+          "text": "|",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ")."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Entenderla",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " ("
+         },
+         {
+          "type": "text",
+          "text": "parser",
+          "marks": [
+           {
+            "type": "italic"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "): arma una lista de tuberías, cada una con sus comandos y sus redirecciones ("
+         },
+         {
+          "type": "text",
+          "text": ">",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", "
+         },
+         {
+          "type": "text",
+          "text": ">>",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", "
+         },
+         {
+          "type": "text",
+          "text": "\u003c",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", "
+         },
+         {
+          "type": "text",
+          "text": "2>",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ")."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Ejecutarla",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": expande variables ("
+         },
+         {
+          "type": "text",
+          "text": "$HOME",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "), comodines ("
+         },
+         {
+          "type": "text",
+          "text": "*.txt",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ") y "
+         },
+         {
+          "type": "text",
+          "text": "$(...)",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ", y corre cada comando pasándole la salida del anterior como entrada."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "El sistema de archivos es un árbol de objetos. Cada carpeta guarda a sus hijos y cada nodo tiene dueño, grupo y permisos como un número, igual que Linux. Revisar un permiso es una operación de bits:"
+     }
+    ],
+    "attrs": {
+     "id": "b-act003"
+    }
+   },
+   {
+    "type": "codeBlock",
+    "attrs": {
+     "id": "b-act004",
+     "language": "js"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "/* ¿El usuario u puede leer (r), escribir (w) o ejecutar (x) el nodo n? */\nfunction puede(n,u,q){\n  var bit=q==='r'?4:q==='w'?2:1;          // r=4, w=2, x=1\n  if(u==='root')return true;              // root puede todo (simplificado)\n  if(n.u===u)return !!((n.modo>>6)&bit);  // dueño: los 3 bits de la izquierda\n  if(enGrupo(u,n.g))return !!((n.modo>>3)&bit);  // grupo: los de en medio\n  return !!(n.modo&bit);                  // los demás: los de la derecha\n}"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "content": [
+     {
+      "type": "text",
+      "text": "Los comandos que esperan algo (la contraseña de sudo, el «¿Desea continuar?» de apt, "
+     },
+     {
+      "type": "text",
+      "text": "sleep",
+      "marks": [
+       {
+        "type": "code"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ") devuelven "
+     },
+     {
+      "type": "text",
+      "text": "promesas",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": ", así la terminal puede esperar tu respuesta sin congelar la página, y Ctrl+C simplemente rechaza la promesa pendiente. Cada ejercicio es una función que revisa el estado del sistema después de cada comando: «¿existe la carpeta?», «¿el servicio quedó encendido?»."
+     }
+    ],
+    "attrs": {
+     "id": "b-act005"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
      "id": "s-datos",
      "level": 2
     },
@@ -3557,7 +3891,7 @@
     "content": [
      {
       "type": "text",
-      "text": "Hay 14 archivos de pruebas con más de 1,600 comprobaciones. Además de las funciones, revisan en cada página, en varios anchos de pantalla, temas y tamaños de letra:"
+      "text": "Hay 16 archivos de pruebas con más de 1,800 comprobaciones. Además de las funciones, revisan en cada página, en varios anchos de pantalla, temas y tamaños de letra:"
      }
     ],
     "attrs": {

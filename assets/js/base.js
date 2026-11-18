@@ -37,6 +37,11 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx=".5" fill="currentColor" stroke="none"/><path d="M9 2v4M12 2v4M15 2v4M9 18v4M12 18v4M15 18v4M2 9h4M2 12h4M2 15h4M18 9h4M18 12h4M18 15h4"/></symbol>'+
 '<symbol id="i-disco" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="11" r="4.5"/><circle cx="12" cy="11" r=".9" fill="currentColor" stroke="none"/><path d="M15 17.5h2.5"/></symbol>'+
 '<symbol id="i-gpu" viewBox="0 0 24 24"><rect x="2" y="6" width="18" height="11" rx="1.5"/><circle cx="8.5" cy="11.5" r="3"/><path d="M14 9.5h3M14 12h3M14 14.5h3M20 9h2v5h-2M5 17v2.5M8 17v2.5M11 17v2.5"/></symbol>'+
+'<symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15H17"/></symbol>'+
+'<symbol id="i-permisos" viewBox="0 0 24 24"><path d="M11.5 20.5H6V3.5h7l4 4V10"/><path d="M13 3.5v4h4"/><rect x="13" y="14.5" width="8" height="6" rx="1"/><path d="M14.8 14.5v-1.7a2.2 2.2 0 0 1 4.4 0v1.7"/></symbol>'+
+'<symbol id="i-procesos" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M6 13h2.5l1.5-3.5 3 7 1.5-3.5H18"/></symbol>'+
+'<symbol id="i-apt" viewBox="0 0 24 24"><path d="M4.5 9.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V9.5"/><path d="M3 5h18v4.5H3zM12 11.5v5.5M9.5 14.5 12 17l2.5-2.5"/></symbol>'+
+'<symbol id="i-ruta" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.8"/></symbol>'+
 '<symbol id="i-proyecto" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8.5 7V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2V7M3 12.5h18M10.5 12.5v2h3v-2"/></symbol>'+
 '<symbol id="i-placa" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="6.5" height="6.5" rx=".5"/><path d="M16 6.5v11M18.5 6.5v11M6.5 16.5h6.5"/></symbol>'+
 '<symbol id="i-resistencia" viewBox="0 0 24 24"><path d="M2 12h4l1.5-3.5 3 7 3-7 3 7 1.5-3.5h4"/></symbol>'+
@@ -118,9 +123,9 @@ document.body.insertAdjacentHTML('afterbegin',
 /* ---------- Lección actual ---------- */
 var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
-/* Páginas: inicio, documento y acerca («Cómo está hecho») viven en la raíz del sitio; las lecciones, en lecciones/ */
+/* Páginas: inicio, documento, acerca («Cómo está hecho») y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas';
 /* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
@@ -134,12 +139,23 @@ catalogo.forEach(function(g){
 });
 if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{id:'documento',titulo:'Documento'}:
   PAGINA==='acerca'?{id:'acerca',titulo:'Cómo está hecho'}:
+  PAGINA==='rutas'?{id:'rutas',titulo:'Rutas'}:
   PAGINA==='proyectos'?{id:'proyectos',titulo:'Proyectos'}:
   PAGINA==='proyecto'?{id:'proyecto',titulo:document.body.getAttribute('data-titulo')||document.title}:{id:LID||'leccion',titulo:document.title};
 if(PAGINA==='documento')grupo='Mis apuntes';
 if(PAGINA==='acerca')grupo='OneLearn';
 if(PAGINA==='proyecto')grupo='Proyectos';
 AT.leccion=actual;
+/* La ruta de aprendizaje (AT.caminos) y el módulo donde está una lección o un proyecto, o null */
+AT.caminoDe=function(id,esProyecto){
+  var r=null;
+  (AT.caminos||[]).some(function(c){
+    return c.modulos.some(function(m,i){
+      if(((esProyecto?m.proyectos:m.lecciones)||[]).indexOf(id)>=0){r={camino:c,modulo:m,n:i+1};return true}
+    });
+  });
+  return r;
+};
 AT.orden=orden;AT.grupoActual=grupo;
 
 function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}

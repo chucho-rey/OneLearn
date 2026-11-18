@@ -1,15 +1,16 @@
 # OneLearn
 
-Lecciones interactivas de tecnología (hardware, electrónica, software, redes, ciberseguridad e inteligencia artificial) en español, con demos, repaso y apuntes que se guardan solos.
+Lecciones interactivas de tecnología (hardware, electrónica, software, Linux, redes, ciberseguridad e inteligencia artificial) en español, con demos, repaso y apuntes que se guardan solos. Las lecciones se ordenan en rutas de aprendizaje, como «Redes y sistemas», y las de Linux traen una terminal simulada con ejercicios que se califican solos.
 
 Es un sitio estático: no necesita servidor propio ni dependencias para funcionar. Abre `index.html` en el navegador, directamente desde el disco o desde cualquier servidor estático (por ejemplo, GitHub Pages). La única pieza compilada es el editor (Tiptap), y el resultado ya está guardado en `assets/vendor/`.
 
 ## Estructura
 
 ```
-index.html                  Inicio: continúa donde te quedaste, tus documentos, notas recientes y explorar temas
+index.html                  Inicio: continúa donde te quedaste, tus documentos, notas recientes, tu ruta, proyectos y explorar temas
 documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
 acerca.html                 «Cómo está hecho OneLearn»: las tecnologías del sitio explicadas para estudiantes de programación
+rutas.html                  Rutas de aprendizaje: cada ruta por módulos, con su avance y «qué sigue»
 proyectos/index.html        Lista de proyectos guiados, con su avance
 proyectos/portafolio.html   Proyecto «Tu portafolio web»: 8 fases, su contenido en JSON (<script id="proyecto">)
 proyectos/seguridad-negocio.*  Proyecto «Seguridad para un pequeño negocio»: 7 fases, matriz de riesgos y router simulado
@@ -19,9 +20,11 @@ sw.js                       Service worker: guarda el sitio para usarlo sin cone
 assets/
   css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
   css/editor.css            Estilos del editor (solo documento.html): barra de herramientas, asa de bloque, menús y formularios
+  css/terminal.css          Estilos de la terminal simulada (solo en las lecciones que la usan)
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
-  js/catalogo.js            Temario: grupos y lecciones (en la barra lateral, cada grupo se pliega y se recuerda cuáles dejaste abiertos)
+  js/catalogo.js            Temario: grupos y lecciones (en la barra lateral, cada grupo se pliega y se recuerda cuáles dejaste abiertos),
+                            proyectos (AT.proyectos) y rutas de aprendizaje por módulos (AT.caminos)
   js/base.js                Utilidades (AT.$, AT.esc, AT.ico...), íconos, página actual y repaso (AT.repaso)
   js/datos.js               Tus datos en IndexedDB: documentos, notas y marcadores, respaldo e importación (AT.datos)
   js/barra.js               Barra lateral, barra superior, menú en celular y pestañas Temas / Mis apuntes / Comunidad
@@ -38,6 +41,9 @@ assets/
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio
   js/proyecto.js            Proyectos: la lista y cada proyecto por fases, con tareas que se guardan (AT.proyectosAvance en base.js)
+  js/rutas.js               Página de rutas: módulos, avance y «qué sigue» (el cálculo es AT.avance.camino, en avance.js)
+  js/terminal.js            Terminal Linux simulada para los laboratorios (AT.terminal): archivos, permisos, usuarios, sudo, procesos,
+                            systemctl, apt, nano, tuberías y redirecciones, y ejercicios que se califican solos
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
   icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
@@ -50,17 +56,28 @@ lecciones/
   ram.js                    Sus laboratorios (AT.labs)
   cpu.html / .css / .js     Lección «Procesador (CPU)»
   como-funciona.html / .css / .js   «Cómo funciona OneLearn» (grupo OneLearn): guía de uso con laboratorios que usan los controles reales
-  <id>.html / .css / .js    Una lección por tema del catálogo (21 en total): hardware, electrónica, software,
-                            redes, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios
+  <id>.html / .css / .js    Una lección por tema del catálogo (25 publicadas): hardware, electrónica, software, Linux,
+                            redes, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios.
+                            Las de Linux (terminal, permisos, procesos, apt) también cargan la terminal simulada
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` (en el `<head>`), `catalogo.js`, `base.js`, `datos.js`, `barra.js`, `lectura.js`, `apuntes.js` (solo en lecciones), `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En una lección: su script de laboratorios, `bloques.js`, `marcadores.js`, `avance.js` y `zen.js`. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `documento.js` y `zen.js`. En `acerca.html`: `bloques.js` y `zen.js`. En `rutas.html`: `avance.js` y `rutas.js`. Las lecciones con terminal cargan `terminal.js` antes de su script de laboratorios.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
 ## «Cómo está hecho OneLearn»
 
 `acerca.html` explica a estudiantes de programación con qué está hecho el sitio: HTML, CSS con variables, JavaScript sin framework, el formato de bloques, Tiptap y esbuild, IndexedDB, el service worker, la accesibilidad, las pruebas y la publicación, con ejemplos del código real y preguntas de repaso. Se abre desde la barra lateral («Cómo está hecho») y desde Inicio, y la búsqueda la incluye. Su contenido es un documento en el formato de bloques, como una lección: **si cambias algo de la arquitectura, actualiza también esta página.**
+
+## Rutas de aprendizaje
+
+Una ruta (`AT.caminos` en `catalogo.js`) ordena lecciones de varios grupos y proyectos en módulos, de lo básico a lo intermedio. `rutas.html` dibuja cada ruta con su avance (lecciones leídas al 100 % y proyectos terminados) y el botón «Qué sigue» (la primera lección o proyecto publicado que no has terminado). Inicio muestra la ruta con su siguiente paso, y al final de cada lección de una ruta se dice en qué módulo está y cuál sigue en la ruta, si no es la misma que la siguiente del temario.
+
+La primera ruta es **Redes y sistemas**, en 7 módulos: Linux y la terminal, fundamentos de redes, direcciones, comunicación, servicios y administración, intermedio y proyectos. Se publica por módulos; las lecciones que faltan están en el catálogo sin `archivo` y salen como «Pronto».
+
+## Terminal simulada
+
+Las lecciones de Linux tienen laboratorios con una terminal de Ubuntu que corre en el navegador (`assets/js/terminal.js`, sin servidor). Un laboratorio la crea con `AT.terminal(contenedor, opciones)`: `archivos` agrega archivos y carpetas al escenario, `preparar(sis, t)` ajusta procesos, servicios o usuarios, y `tareas` son los ejercicios, cada uno con `ok(sis, ultimo, t)`, una función que revisa el estado después de cada comando (por ejemplo, `sis.permisos('~/diario.txt')==='600'` o `ultimo.uso('grep', /ERROR/)`). Los ejercicios terminados se guardan en `localStorage` (`aprende-tecnologia:terminal`) y entran en el respaldo. Otros módulos pueden agregar comandos con `AT.terminal.comando(nombres, meta, fn)`.
 
 ## Proyectos
 
@@ -98,7 +115,7 @@ Las lecciones y los documentos que crea cada estudiante usan el mismo formato, y
 1. En `assets/js/catalogo.js`, agrega `archivo` a la lección (por ejemplo, `archivo:'gpu.html'`). Así deja de mostrarse como «Pronto» y aparece en la barra lateral y en «Siguiente lección».
 2. Copia `lecciones/ram.html` como `lecciones/gpu.html`, cambia el `<title>` y la descripción, pon `data-leccion="gpu"` en el `<body>` (igual al `id` del catálogo) y reemplaza el JSON de `<script type="application/json" id="documento">` por el de la lección nueva.
 3. Si la lección tiene laboratorios, crea `lecciones/gpu.css` y `lecciones/gpu.js`. Cada laboratorio es un bloque `{"type": "laboratorio", "attrs": {"id": "...", "nombre": "gpu-algo", "titulo": "..."}}`, una plantilla `<template data-lab="gpu-algo">` con su HTML y una función `AT.labs['gpu-algo']=function(raiz){...}` en el script. Tienes `AT.$`, `AT.$$`, `AT.fmt`, `AT.esc`, `AT.setPressed`, `AT.elegir` (un grupo de botones que elige un valor) y `AT.reduce`, y en `base.css` las piezas comunes de los laboratorios (`.kpis`, `.barras`/`.br`, `.msg`, `.campo`, `.status`, `.chips`, `.seg`). Las preguntas de repaso van en el bloque `repaso` del JSON.
-4. Agrega los archivos nuevos a `ARCHIVOS` en `sw.js` y sube `VERSION`, para que la lección funcione sin conexión.
+4. Agrega los archivos nuevos a `ARCHIVOS` en `sw.js` y sube `VERSION`, para que la lección funcione sin conexión. Si la lección es parte de una ruta, ya está en `AT.caminos` por su `id`.
 5. Agrega sus comprobaciones en `pruebas/comprobaciones.js` (los cálculos clave de cada laboratorio). `pruebas/13-temas.js` revisa sola cualquier lección del catálogo: contraste, desbordes y cada control de cada laboratorio.
 
 No cambies el `id` de una lección ya publicada: es la clave con la que se guardan sus apuntes.

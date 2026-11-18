@@ -40,6 +40,8 @@ function cargarLecciones(){
   lista=lista.concat(PAGINAS);
   /* Proyectos: se buscan por su título y descripción (sin abrir su archivo) */
   var proy=(AT.proyectos||[]).map(function(p){return {tipo:'leccion',titulo:p.titulo,texto:p.descripcion||'',href:'proyectos/'+p.archivo,sub:'Proyecto',icono:p.icono||'proyecto',doc:'proyecto-'+p.id}});
+  /* Rutas de aprendizaje: por su título, su descripción y los nombres de sus módulos */
+  proy=proy.concat((AT.caminos||[]).map(function(c){return {tipo:'leccion',titulo:'Ruta: '+c.titulo,texto:c.descripcion+' '+c.modulos.map(function(m){return m.titulo}).join(', '),href:'rutas.html#'+c.id,sub:'Ruta',icono:c.icono||'ruta',doc:'ruta-'+c.id}}));
   lecciones=Promise.all(lista.map(function(l){
     /* La lección abierta ya está en memoria */
     if(AT.documento&&AT.documento.id===l.id)return Promise.resolve(entradasDeLeccion(l,AT.documento));
