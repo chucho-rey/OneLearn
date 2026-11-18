@@ -20,8 +20,8 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.crear-dlg').open}),'«+ Crear» del inicio abre la pregunta');
   const opciones=await p.$$eval('.crear-o b',function(e){return e.map(function(x){return x.textContent})});
-  r.igual(opciones.join(' | '),'Libreta de estudio | Notas | Apuntes de clase','se ofrecen libreta, notas y apuntes de clase');
-  r.cumple(/Libro/.test(await p.textContent('.crear-p'))&&/Tesis/.test(await p.textContent('.crear-p')),'libro, investigación, tesis y los demás se anuncian para la fase 3');
+  r.igual(opciones.join(' | '),'Libreta de estudio | Notas | Apuntes de clase | Tesis','se ofrecen libreta, notas, apuntes de clase y tesis');
+  r.cumple(/Libro/.test(await p.textContent('.crear-p'))&&!/Tesis/.test(await p.textContent('.crear-p')),'libro, investigación y los demás se anuncian para después; la tesis ya no')
   r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'libreta','el foco empieza en la primera opción');
   await revisar(p,r,'ventana Crear en escritorio');
   await p.keyboard.press('Escape');await p.waitForTimeout(200);

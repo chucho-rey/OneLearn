@@ -41,6 +41,7 @@ DETALLE=1 node 2-lectura.js   # muestra también cada comprobación que pasa
 | `12-hardware.js` | Las lecciones «Almacenamiento» y «Tarjeta gráfica»: todas las variantes de lectura y los cálculos de sus 8 laboratorios |
 | `15-rutas.js` | Rutas de aprendizaje: que la ruta coincida con el catálogo, la página en todas las variantes, «qué sigue» con y sin avance, el aviso al final de las lecciones, Inicio, la barra lateral y la búsqueda |
 | `16-terminal.js` | La terminal simulada: Tab, historial, Escape y Ctrl+C, errores, tuberías y redirecciones, la contraseña de sudo oculta, nano, ejercicios que se guardan, entran al respaldo y se reinician, teclas en pantalla para celular y el contraste de los colores de la salida |
+| `17-tesis.js` | La tesis: su estructura, el registro de autoría (tecleado, pegado y su origen, deshacer), fuentes a mano, BibTeX, RIS y DOI simulado, citas y bibliografía en APA 7, la declaración de autoría, la constancia con huella, Markdown, modo lectura, celular con alto contraste y que otros documentos no traigan estas herramientas |
 | `11-acerca.js` | «Cómo está hecho OneLearn»: se ve bien en todos los temas y anchos, su índice, ejemplos y repaso, el modo zen, el acceso desde Inicio y la búsqueda |
 | `lib.js` | Servidor, navegador, auditoría de contraste y utilidades compartidas |
 

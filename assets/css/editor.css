@@ -168,10 +168,80 @@ body[data-pagina="documento"] .icon-btn.zen-btn{margin-left:0}
 .menu-enlace input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .menu-bt{display:flex;flex-wrap:wrap;gap:0.375rem}
 
+/* ---------- Tesis: barra, citas, bibliografía y declaración ---------- */
+.ts-barra{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem;margin:0 0 0.75rem}
+.ts-barra .btn{display:inline-flex;align-items:center;gap:0.375rem}
+.ts-barra .btn .ico{font-size:1rem;color:var(--fg-2)}
+.ts-n{min-width:1.25rem;padding:0 0.3125rem;border-radius:0.625rem;background:var(--bg-soft);font-family:var(--font-mono);font-size:0.75rem;text-align:center}
+.ts-n:empty{display:none}
+.ts-palabras{margin-left:auto;font-family:var(--font-mono);font-size:0.75rem;color:var(--fg-2);white-space:nowrap}
+
+.ed-cuerpo .ref{padding:0 0.125rem;border-radius:0.1875rem;background:var(--accent-bg);color:var(--accent-ink);cursor:pointer}
+.ed-cuerpo .ref.ProseMirror-selectednode{outline:2px solid var(--accent)}
+ul.biblio{list-style:none;margin:0.75rem 0;padding:0}
+ul.biblio li{margin:0 0 0.625rem;padding-left:2.25rem;text-indent:-2.25rem;overflow-wrap:anywhere}
+.ed-biblio{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
+.ed-biblio .ed-rep-h{flex-wrap:wrap}
+.ed-biblio .hint{margin:0.375rem 0 0}
+.ed-decl-t{margin:0 0 0.75rem;font-size:0.9375rem}
+.ed-decl-t p{margin:0 0 0.5rem;max-width:none}
+.ed-decl-t ul{margin:0 0 0.5rem}
+.ed-decl fieldset .chk{display:flex;margin:0 0 0.375rem}
+.ed-uso{display:grid;grid-template-columns:minmax(0,0.8fr) minmax(0,1.6fr) auto;gap:0.375rem;align-items:center;margin:0.375rem 0}
+@media (max-width:599px){.ed-uso{grid-template-columns:minmax(0,1fr) auto}.ed-uso [data-c="uso"]{grid-column:1}}
+.declaracion{margin:1.5em 0}
+.declaracion p{max-width:none}
+
+/* Ventanas «Fuentes» y «Autoría» */
+dialog.fu-dlg{width:min(40rem,calc(100vw - 2rem))}
+dialog.au-dlg{width:min(36rem,calc(100vw - 2rem))}
+.fu-acc{display:flex;flex-wrap:wrap;gap:0.375rem;margin:0 0 0.75rem}
+.fu-acc .btn{display:inline-flex;align-items:center;gap:0.25rem}
+.fu-cita{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0.25rem 1rem;margin:0 0 0.75rem}
+.fu-cita .ed-campo{margin:0;flex:0 1 12rem}
+.fu-l{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.fu-i{padding:0.625rem 0;border-bottom:1px solid var(--line)}
+.fu-ref{margin:0 0 0.375rem;font-size:0.9375rem;max-width:none;overflow-wrap:anywhere}
+.fu-pie{display:flex;flex-wrap:wrap;align-items:center;gap:0.25rem 0.5rem}
+.fu-meta{margin-right:auto;font-size:0.8125rem;color:var(--fg-2)}
+.fu-vacio{margin:0.5rem 0 0}
+.fu-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 0.75rem}
+.fu-prev{margin:0.25rem 0 0.75rem;padding:0.5rem 0.75rem;border-radius:0.375rem;background:var(--bg-side);font-size:0.875rem;max-width:none;overflow-wrap:anywhere}
+.fu-prev:empty{display:none}
+.fu-msg{margin:0 0 0.75rem;font-size:0.875rem;color:var(--fg-2)}
+.fu-msg:empty{display:none}
+.fu-dlg input[type="text"],.fu-dlg select,.fu-dlg textarea,.au-dlg select{width:100%;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.fu-dlg textarea{resize:vertical}
+.fu-dlg input[type="file"]{font-size:0.875rem;max-width:100%}
+.fu-dlg :is(input,select,textarea):focus,.au-dlg select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.au-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.5rem;margin:0 0 0.5rem}
+.au-k .kpi{border:1px solid var(--line);border-radius:0.375rem;padding:0.5rem 0.625rem;min-width:0}
+.au-k .kpi span{display:block;font-size:0.75rem;color:var(--fg-2)}
+.au-k .kpi b{display:block;margin-top:2px;font-family:var(--font-mono);font-size:0.875rem;overflow-wrap:anywhere}
+@media (max-width:599px){.au-k{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.au-h3{margin:1rem 0 0.25rem;font-size:0.9375rem}
+.au-dlg .barras{margin-top:0.25rem}
+.au-dlg .br{grid-template-columns:minmax(0,9rem) minmax(0,1fr) auto}
+.au-l{list-style:none;margin:0.25rem 0 0;padding:0}
+.au-i{display:grid;grid-template-columns:minmax(0,1fr) minmax(8rem,11rem);gap:0.5rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--line)}
+@media (max-width:599px){.au-i{grid-template-columns:minmax(0,1fr)}}
+.au-t{display:flex;flex-direction:column;min-width:0}
+.au-meta{font-size:0.75rem;color:var(--fg-2)}
+.au-m{font-size:0.875rem;overflow-wrap:anywhere}
+.au-decl{margin:1rem 0;padding:0.5rem 0.75rem;border-radius:0.375rem;background:var(--bg-side);font-size:0.875rem;max-width:none}
+.au-dlg .td-bt .btn,.fu-dlg .td-bt .btn{display:inline-flex;align-items:center;gap:0.375rem}
+
+/* «¿De dónde viene lo que pegaste?» */
+.au-bar{position:fixed;z-index:60;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 0.75rem;
+  width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}
+.au-bar p{margin:0;max-width:none}
+.au-ops{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem}
+
 /* Modo lectura de un documento vacío */
 .doc-vacio{margin-top:1.5rem}
 
 /* Alto contraste */
 [data-contrast="high"] .tb-btn[aria-pressed="true"]{outline:1px solid var(--accent)}
-[data-contrast="high"] .ed-indice,[data-contrast="high"] .ed-repaso,[data-contrast="high"] .ed-q{border-color:var(--line-strong)}
+[data-contrast="high"] .ed-indice,[data-contrast="high"] .ed-repaso,[data-contrast="high"] .ed-q,[data-contrast="high"] .ed-biblio{border-color:var(--line-strong)}
+[data-contrast="high"] .au-bar{border-width:2px}
 [data-contrast="high"] .menu{border-width:2px}
