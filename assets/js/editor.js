@@ -17,7 +17,8 @@ function sinAcentos(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,
 
 /* ---------- Identificadores de bloque ---------- */
 var CON_ID=['paragraph','heading','bulletList','orderedList','taskList','blockquote','codeBlock','horizontalRule','table',
-  'callout','columnas','desplegable','laboratorio','repaso','indice','resumen','bibliografia','declaracion'];
+  'callout','columnas','desplegable','laboratorio','repaso','indice','resumen','bibliografia','declaracion',
+  'figura','tablaNumerada','ecuacion','indicePiezas'];
 var claveIds=new pm.PluginKey('idsDeBloque');
 var Ids=T.Extension.create({
   name:'idsDeBloque',
@@ -42,6 +43,14 @@ var Ids=T.Extension.create({
         n.descendants(function(h,p){
           if(h.attrs&&h.attrs.id){tr.setNodeAttribute(pos+1+p,'id',null);cambio=true}
         });
+      });
+      /* Figuras, tablas y ecuaciones numeradas: una clave única en cualquier nivel (la usan las referencias cruzadas) */
+      var claves={};
+      nuevo.doc.descendants(function(n,pos){
+        if(!n.attrs||!('clave' in n.attrs))return;
+        var c=n.attrs.clave;
+        if(!c||claves[c]){c=AT.bloques.nuevoId().replace(/^b-/,'p-');tr.setNodeAttribute(pos,'clave',c);cambio=true}
+        claves[c]=true;
       });
       return cambio?tr:null;
     }})];
@@ -858,6 +867,7 @@ function crearBarra(editor,host){
       {t:'Quitar columna',i:'close',peligro:true,f:function(){editor.chain().focus().deleteColumn().run()}},
       {t:'Quitar tabla',i:'basura',peligro:true,f:function(){editor.chain().focus().deleteTable().run()}}
     ];
+    if(cual==='tabla'&&AT.editorMenuTabla)items=AT.editorMenuTabla(editor,items);
     if(!items.length)return;
     t.setAttribute('aria-expanded','true');
     var m=abrirMenu(t,items,{etiqueta:t.getAttribute('aria-label'),devolver:t,alElegir:function(it){it.f()}});
@@ -980,7 +990,7 @@ function crear(o){
       T.CharacterCount,
       Ids,Callout,Columnas,Columna,Desplegable,DesplegableTitulo,DesplegableCuerpo,Resumen,Indice,Laboratorio,Repaso,
       Cita,ClicCita,Referencia,Bibliografia,Declaracion,MenuBarra,MenuCita,Atajos
-    ].concat(o.extensiones||[]),
+    ].concat(AT.editorExtensiones||[],o.extensiones||[]),
     onUpdate:function(){
       indices.forEach(function(v){v.pintar()});
       if(biblios.size){clearTimeout(repBib);repBib=setTimeout(function(){biblios.forEach(function(v){v.pintar()})},250)}
@@ -1016,5 +1026,5 @@ function crear(o){
   AT.editorActual=api;
   return api;
 }
-AT.editor={crear:crear,moverBloque:moverBloque,duplicarBloque:duplicarBloque};
+AT.editor={crear:crear,moverBloque:moverBloque,duplicarBloque:duplicarBloque,svg:svg,bloqueActual:bloqueActual};
 })();

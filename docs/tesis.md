@@ -27,7 +27,7 @@ OneLearn lo hace de forma más simple y privada, porque el documento vive en el 
 2. **Origen de lo pegado.** Al pegar un texto largo, OneLearn pregunta de dónde viene: de ti (otro borrador tuyo), de una fuente (y la cita en ese momento) o de una IA (y te recuerda declararlo). Se puede contestar después.
 3. **Declaración de autoría y de uso de IA.** Un bloque de la tesis donde declaras que el trabajo es tuyo y, si usaste IA, qué herramienta y para qué. Al leer, se ve como una declaración formal con tu nombre.
 4. **Constancia de autoría.** Un archivo que resume el registro (tiempo, sesiones, porcentaje tecleado y pegado, orígenes, declaración) con la huella SHA-256 del texto: si alguien cambia el texto, la huella ya no coincide.
-5. **Dar crédito a otros.** Citar bien también es autoría: cada cita apunta a una fuente y la bibliografía se arma sola, sin olvidos.
+5. **Dar crédito a otros.** Citar bien también es autoría: cada cita apunta a una fuente y la bibliografía se arma sola, sin olvidos. Lo mismo con las imágenes: cada figura tiene una nota de origen («Elaboración propia» o de dónde viene); «Autoría» avisa de las que no la tienen, la constancia las lista y su huella cubre también las imágenes.
 
 Límites que hay que decir claro: el registro demuestra cómo se escribió *dentro de OneLearn*; no ve lo que pasa en otra ventana o en otro dispositivo, y el estudiante puede no compartirlo. Es evidencia a favor del estudiante, no un detector. Todo se guarda solo en su dispositivo y entra en el respaldo.
 
@@ -45,15 +45,30 @@ No hay un formato único: cada universidad, y en la UNAM cada facultad, fija el 
 
 Para exportar: PDF con CSS de impresión (Paged.js, licencia MIT, agrega números de página, encabezados y notas al pie; [Paged.js](https://pagedjs.org/documentation/)) y DOCX con la librería `docx` (MIT, funciona en el navegador y maneja estilos, numeración y notas al pie). Para la constancia, OpenTimestamps permite sellar en el tiempo la huella del documento sin registrarse y sin enviar el texto, solo su huella ([OpenTimestamps](https://opentimestamps.org/)).
 
-## 5. Hitos
+## 5. Proteger la tesis
+
+Una tesis es meses de trabajo y en OneLearn vive en un solo navegador. Antes de exportarla hace falta que no se pierda:
+
+- **«Respaldo» en la barra de la tesis**: dice cuándo fue la última copia fuera del navegador (respaldo de «Tus datos», copia descargada o copia automática) y se marca si no hay copias o la última tiene más de 7 días.
+- **Copia automática en un archivo**: con File System Access (Chrome y Edge de escritorio) eliges un archivo una vez, idealmente en una carpeta que se sincroniza (Google Drive, OneDrive, iCloud), y se actualiza cada vez que se guarda. El navegador vuelve a pedir permiso en cada sesión; mientras tanto, la copia queda «en pausa».
+- **Descargar una copia** de la tesis en el formato del respaldo, que se recupera con «Importar respaldo» en otro navegador o equipo.
+- **Pedir al navegador que conserve los datos** (`navigator.storage.persist`).
+
+## 6. Decisiones tomadas
+
+- **Formato de entrega:** primero una plantilla genérica en APA (T4); las de universidades se agregan conforme se pidan.
+- **Segundo estilo de citas:** IEEE, por las ingenierías (T4).
+- **Registro de autoría:** solo en documentos académicos (tesis y, después, investigación); las libretas y notas no lo llevan.
+
+## 7. Hitos
 
 | Hito | Qué entrega | Listo cuando |
 |---|---|---|
-| **T1 · Tesis y autoría** | «Tesis» en Crear con su estructura (resumen, capítulos, conclusiones, referencias, anexos); datos de portada como propiedades; registro de sesiones y de lo pegado con su origen; bloque «Declaración de autoría»; panel «Autoría» y constancia descargable | Escribes y pegas en una tesis, contestas de dónde vino lo pegado y la constancia lo refleja con la huella del texto |
-| **T2 · Fuentes, citas y bibliografía** | Fuentes del documento (a mano, DOI, ISBN, BibTeX, RIS); citas en el texto con página; bibliografía automática en APA 7 | Citas tres fuentes y la bibliografía aparece sola, en orden alfabético y con el formato de APA |
-| **T3 · Piezas académicas** | Imágenes comprimidas con pie (hito 3.1), notas al pie, figuras y tablas numeradas, ecuaciones (KaTeX), índices de figuras y tablas, referencias cruzadas | Mueves una figura y su número y sus referencias se actualizan solos |
+| **T1 · Tesis y autoría** ✓ | «Tesis» en Crear con su estructura (resumen, capítulos, conclusiones, referencias, anexos); datos de portada como propiedades; registro de sesiones y de lo pegado con su origen; bloque «Declaración de autoría»; panel «Autoría» y constancia descargable | Escribes y pegas en una tesis, contestas de dónde vino lo pegado y la constancia lo refleja con la huella del texto |
+| **T2 · Fuentes, citas y bibliografía** ✓ | Fuentes del documento (a mano, DOI, ISBN, BibTeX, RIS); citas en el texto con página; bibliografía automática en APA 7 | Citas tres fuentes y la bibliografía aparece sola, en orden alfabético y con el formato de APA |
+| **T3 · Piezas académicas** ✓ | Imágenes comprimidas con pie (hito 3.1), notas al pie, figuras y tablas numeradas, ecuaciones (KaTeX), índices de figuras y tablas, referencias cruzadas | Mueves una figura y su número y sus referencias se actualizan solos |
 | **T4 · Entregar** | PDF con formato de tesis (portada, numeración romana y arábiga, márgenes) y DOCX; plantillas de formato; estilos IEEE, Vancouver y Chicago | Una tesis exportada a DOCX respeta márgenes, interlineado e índices de la plantilla |
 | **T5 · Historial y constancia completa** | Versiones del documento (hito 3.6), comparar versiones, constancia con línea de tiempo y sello de tiempo opcional con OpenTimestamps | Recuperas una versión de hace una semana y la constancia muestra la huella de cada versión |
 | **T6 · Asesor y defensa** | Paquete de revisión para el asesor y comentarios; guía y presentación para la defensa. Compartir en línea depende de las cuentas | Tu asesor deja comentarios en un archivo que tú importas y resuelves |
 
-T1 y T2 forman la primera entrega. Libro y documento de investigación (hitos 3.3 y 3.4) reutilizan todo esto: la investigación es una tesis más corta.
+T1 y T2 forman la primera entrega; T3 y la protección de datos, la segunda. Con T4 (exportar) una tesis ya se puede entregar. Libro y documento de investigación (hitos 3.3 y 3.4) reutilizan todo esto: la investigación es una tesis más corta.

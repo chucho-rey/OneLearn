@@ -89,11 +89,14 @@ function textoPlano(n){
   if(n.type==='cita')return attrs(n).texto||'';
   if(n.type==='referencia')return AT.fuentes&&AT.docActual?AT.fuentes.cita(attrs(n),AT.docActual.fuentes):'';
   if(n.type==='declaracion')return AT.fuentes?[].concat.apply([],AT.fuentes.declaracion(attrs(n),'')).join(' '):'';
+  if(TEXTO[n.type])return TEXTO[n.type](n,textoPlano);
   var sep=/^(paragraph|heading|listItem|taskItem|tableCell|tableHeader|codeBlock|desplegableTitulo)$/.test(n.type)?'\n':'';
   return hijos(n).map(textoPlano).join(n.type==='tableRow'?' ':'')+sep;
 }
 
 /* ---------- Bloques ---------- */
+/* Tipos que agregan otros archivos (piezas.js: figuras, ecuaciones, notas al pie…) con AT.bloques.registrar */
+var TEXTO={};
 var CALLOUT={info:'info',aviso:'aviso',idea:'idea'};
 var TIPOS={
   paragraph:function(n,c){return enLinea(hijos(n),el('p'),c)},
@@ -257,7 +260,7 @@ var ESTILOS={etiqueta:'tag',verde:'tag green',amarillo:'tag yellow',rojo:'tag re
               encabezado: false para omitir ícono, título y propiedades} */
 function dibujar(doc,cont,op){
   op=op||{};
-  var ctx={labs:[],repasos:[],indices:[],hayRepaso:false,doc:doc};
+  var ctx={labs:[],repasos:[],indices:[],hayRepaso:false,doc:doc,alFinal:[]};
   var frag=document.createDocumentFragment();
   if(op.encabezado!==false){
     if(doc.icono){
@@ -290,6 +293,8 @@ function dibujar(doc,cont,op){
     e.setAttribute('data-b','');
     frag.appendChild(e);
   });
+  /* Lo que va al final del documento (por ejemplo, las notas al pie) */
+  ctx.alFinal.forEach(function(f){f(frag,ctx)});
   /* Índices: una entrada por sección */
   var secs=secciones(doc);
   ctx.indices.forEach(function(ul){
@@ -326,7 +331,12 @@ AT.bloques={
   palabras:palabras,
   valido:valido,
   nuevoId:nuevoId,
-  hrefSeguro:hrefSeguro
+  hrefSeguro:hrefSeguro,
+  /* registrar(tipo, {dibujar(n, ctx, ayuda), texto(n, textoPlano)}): un tipo de bloque o de nodo en línea nuevo */
+  registrar:function(tipo,o){
+    if(o.dibujar)TIPOS[tipo]=function(n,c){return o.dibujar(n,c,{el:el,icono:icono,bloques:bloques,enLinea:enLinea,attrs:attrs,hijos:hijos})};
+    if(o.texto)TEXTO[tipo]=o.texto;
+  }
 };
 
 /* ---------- Documento de la página ---------- */

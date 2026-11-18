@@ -49,7 +49,7 @@ prueba('Fase de tesis · Autoría, fuentes y citas',async function({browser,base
   });
   r.cumple(est.tipo==='tesis'&&est.barra&&est.fuentes&&est.autoria,'la tesis nueva trae su barra, sus fuentes y su registro de autoría',est);
   r.igual(est.props,'Autor(a)|Universidad|Programa|Asesor(a)|Año','los datos de la portada son propiedades');
-  r.cumple(est.tipos[0]==='indice'&&est.tipos[1]==='declaracion'&&est.tipos.indexOf('bibliografia')>0,'empieza con índice y declaración de autoría, y trae la bibliografía',est.tipos);
+  r.cumple(est.tipos.slice(0,4).join(' ')==='indice indicePiezas indicePiezas declaracion'&&est.tipos.indexOf('bibliografia')>0,'empieza con los índices y la declaración de autoría, y trae la bibliografía',est.tipos);
   r.igual(est.secciones.join(' | '),'Resumen | Introducción | Capítulo 1. Planteamiento del problema | Capítulo 2. Marco teórico | Capítulo 3. Metodología | Capítulo 4. Resultados | Capítulo 5. Discusión | Conclusiones | Referencias | Anexos','la estructura de una tesis, capítulo por capítulo');
   await revisar(p,r,'tesis nueva en escritorio');
 

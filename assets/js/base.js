@@ -132,6 +132,9 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-clase" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="11" rx="1.2"/><path d="M8 20h8M12 15.5V20M7 8.5h6M7 11.5h4"/></symbol>'+
 '<symbol id="i-libro" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3.5 5v13.5c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5V20"/></symbol>'+
 '<symbol id="i-investigacion" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5M8 10.5h5M10.5 8v5"/></symbol>'+
+'<symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 8.2 7.5 9.5 4.3-1.3 7.5-5 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></symbol>'+
+'<symbol id="i-imagen" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 15.5-4.5-4.5L7 19.5"/></symbol>'+
+'<symbol id="i-ecuacion" viewBox="0 0 24 24"><path d="M17.5 5h-11l6 7-6 7h11"/></symbol>'+
 '<symbol id="i-tesis" viewBox="0 0 24 24"><path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.5 3.5 2.2 5.5 2.2s4-.7 5.5-2.2V11M21.5 9v5.5"/></symbol>'+
 '<symbol id="i-guia" viewBox="0 0 24 24"><path d="M9 11.5 11 13.5l4-4.5"/><path d="M5 3.5h14v17H5z"/><path d="M9 3.5v2h6v-2"/></symbol>'+
 '<symbol id="i-bitacora" viewBox="0 0 24 24"><path d="M9.5 3.5v6.2L4.5 18a1.8 1.8 0 0 0 1.6 2.5h11.8a1.8 1.8 0 0 0 1.6-2.5l-5-8.3V3.5M8 3.5h8M7.5 14h9"/></symbol>'+

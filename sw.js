@@ -4,7 +4,7 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-28';
+const VERSION='onelearn-29';
 const ARCHIVOS=[
   './',
   'index.html',
@@ -35,6 +35,8 @@ const ARCHIVOS=[
   'assets/js/app.js',
   'assets/js/fuentes.js',
   'assets/js/autoria.js',
+  'assets/js/piezas.js',
+  'assets/js/proteger.js',
   'assets/js/bloques.js',
   'assets/js/crear.js',
   'assets/js/buscar.js',
@@ -187,6 +189,28 @@ const ARCHIVOS=[
   'lecciones/nube.css',
   'lecciones/nube.js',
   'assets/vendor/tiptap.min.js',
+  'assets/vendor/katex/katex.min.js',
+  'assets/vendor/katex/katex.min.css',
+  'assets/vendor/katex/fonts/KaTeX_AMS-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Main-Bold.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Main-Italic.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Main-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Math-Italic.woff2',
+  'assets/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2',
+  'assets/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2',
+  'assets/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Script-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Size1-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Size2-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Size3-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Size4-Regular.woff2',
+  'assets/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2',
   'assets/icons/icono.svg',
   'assets/icons/icono-maskable.svg',
   'assets/icons/icono-32.png',
