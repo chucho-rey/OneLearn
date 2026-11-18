@@ -105,7 +105,9 @@ function guardarGrupos(){
       var sigR=porId[lista[lista.indexOf(actual.id)+1]];
       var h='<div class="ruta-nota">'+ico('ruta','ruta-nota-ic')+'<div><p>Parte de la ruta <a href="'+RAIZ+'rutas.html#'+esc(cm.camino.id)+'">'+esc(cm.camino.titulo)+'</a> · Módulo '+cm.n+': '+esc(cm.modulo.titulo)+'</p>';
       if(sigR&&sigR!==sig)h+=sigR.archivo?'<p><a href="'+esc(sigR.archivo)+'">Siguiente en la ruta: '+esc(sigR.titulo)+'</a></p>':'<p>Siguiente en la ruta: '+esc(sigR.titulo)+' <em>(pronto)</em></p>';
-      $('.page').insertAdjacentHTML('beforeend',h+'</div></div>');
+      /* Va antes del enlace a la siguiente lección, que siempre queda al final de la página */
+      var fin=$('.page > .next');
+      if(fin)fin.insertAdjacentHTML('beforebegin',h+'</div></div>');else $('.page').insertAdjacentHTML('beforeend',h+'</div></div>');
     }
   }
 

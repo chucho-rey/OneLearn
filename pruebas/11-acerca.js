@@ -25,7 +25,7 @@ prueba('Cómo está hecho OneLearn',async function({browser,base,r}){
   });
   r.igual(info.h1,'Cómo está hecho OneLearn','la página se dibuja desde su JSON');
   r.cumple(info.secciones>=12,'tiene índice con todas las secciones',info.secciones);
-  r.igual(info.codigo,8,'muestra los ejemplos de código');
+  r.igual(info.codigo,9,'muestra los ejemplos de código');
   r.cumple(info.tablas>=3,'muestra las tablas',info.tablas);
   r.cumple(info.repaso>0,'tiene preguntas de repaso',info.repaso);
   r.igual(info.avisoFijo,'static','un callout de aviso se queda en el texto (no se confunde con la notificación flotante)');
