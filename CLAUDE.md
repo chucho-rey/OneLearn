@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Proyecto
 
-OneLearn: sitio estático en español (es-MX) publicado con GitHub Pages en `https://chucho-rey.github.io/OneLearn/` (rama `main`). Lecciones interactivas de tecnología, más documentos propios del estudiante (libretas, notas, apuntes de clase) que se guardan solo en su navegador. Todo el texto de la interfaz, los comentarios del código y los mensajes de commit van en español. El plan y la hoja de ruta viven fuera del repositorio (un Artifact de claude.ai); el `README.md` describe el estado actual.
+OneLearn: sitio estático en español (es-MX) publicado con GitHub Pages en `https://chucho-rey.github.io/OneLearn/` (rama `main`). Lecciones interactivas de tecnología, más documentos propios del estudiante (libretas, notas, apuntes de clase) que se guardan solo en su navegador. Todo el texto de la interfaz, los comentarios del código y los mensajes de commit van en español. El plan, las características y el roadmap viven en Notion (página «OneLearn», con la base «Roadmap»): es la fuente de información del equipo; al terminar un hito, actualiza ahí su estado. El `README.md` describe el estado técnico actual.
 
 ## Comandos
 

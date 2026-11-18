@@ -82,9 +82,9 @@ Las pruebas automáticas usan Chromium. Falta probar a mano en:
 - Inicio recuerda descargar un respaldo si hay documentos o notas y el último respaldo tiene 14 días o más (o nunca se hizo). Se puede posponer una semana.
 - El almacenamiento persistente se pide al crear un documento, además de desde «Tus datos» y desde la lección «Cómo funciona OneLearn».
 
-### 3.8 Imágenes en los documentos · Recomendado
+### 3.8 Imágenes en los documentos · Hecho
 
-Es la función que más se va a extrañar al estudiar (diagramas, fotos del pizarrón). Es el hito 3.1 del plan. Si el MVP quiere medir el uso de «Crear», conviene tenerla.
+Llegaron con la fase de tesis (T3): «/imagen», pegar o arrastrar, en cualquier documento. La imagen se achica y se comprime a WebP en el dispositivo; en las tesis lleva número, título, texto alternativo y nota de origen.
 
 ### 3.9 Imprimir o guardar como PDF · Recomendado
 
@@ -131,7 +131,7 @@ Si una meta no se cumple, la tabla te dice dónde mirar: el contenido, las razon
 4. ~~Recordatorio de respaldo y almacenamiento persistente~~ (hecho).
 5. Pruebas en dispositivos reales.
 6. Lanzamiento con un grupo pequeño (un salón, un club de programación, un servidor de Discord).
-7. En paralelo, si da tiempo: imágenes y PDF.
+7. En paralelo, si da tiempo: PDF (las imágenes ya están).
 
 ## 7. Costos del MVP
 
