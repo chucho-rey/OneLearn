@@ -1,4 +1,4 @@
-/* OneLearn: marcadores a bloques de las lecciones.
+/* OneBook: marcadores a bloques de las lecciones.
    En una lección, cada bloque (párrafo, tabla, laboratorio, sección...) se puede guardar como marcador:
    con el ratón aparece un botón al lado del bloque; en pantallas táctiles, al tocar el bloque; con el teclado,
    M guarda la sección actual. Los marcadores viven en AT.datos (IndexedDB), se listan en «Mis apuntes»

@@ -1,4 +1,4 @@
-/* OneLearn: el editor de documentos (Tiptap, en assets/vendor/tiptap.min.js como window.Tiptap).
+/* OneBook: el editor de documentos (Tiptap, en assets/vendor/tiptap.min.js como window.Tiptap).
    AT.editor.crear({host, barra, contenido, alCambiar}) monta un editor que escribe el mismo formato de
    bloques que dibuja bloques.js, así que lo que escribes se ve como una lección oficial.
    - Bloques propios: callout, columnas, desplegable, preguntas de repaso, resumen, índice y laboratorio.
@@ -956,7 +956,7 @@ function contenidoSeguro(json,schema){
   var bloques=(json&&json.type==='doc'&&Array.isArray(json.content)?json.content:[]).map(function(b){return limpiar(b,schema)}).filter(Boolean);
   bloques=bloques.filter(function(b){
     try{schema.nodeFromJSON(b).check();return true}
-    catch(e){if(window.console)console.warn('OneLearn: se omitió un bloque dañado',b.type);return false}
+    catch(e){if(window.console)console.warn('OneBook: se omitió un bloque dañado',b.type);return false}
   });
   if(!bloques.length)bloques=[{type:'paragraph'}];
   return {type:'doc',content:bloques};

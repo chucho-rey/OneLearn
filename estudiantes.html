@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>OneBook para estudiantes · Aprende tecnología practicando</title>
+<meta name="description" content="Lecciones cortas con laboratorios que puedes tocar: una terminal de Linux, un simulador de red y proyectos por fases. Además, un lugar para tus apuntes y tu tesis. Gratis, en español y sin crear cuenta.">
+<link rel="canonical" href="https://chucho-rey.github.io/OneLearn/estudiantes.html">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_MX">
+<meta property="og:site_name" content="OneBook">
+<meta property="og:title" content="OneBook para estudiantes · Aprende tecnología practicando">
+<meta property="og:description" content="Lecciones con laboratorios, una terminal de Linux y un simulador de red en el navegador. Y tus apuntes y tu tesis, con autoría. Gratis y sin cuenta.">
+<meta property="og:url" content="https://chucho-rey.github.io/OneLearn/estudiantes.html">
+<meta property="og:image" content="https://chucho-rey.github.io/OneLearn/assets/icons/icono-512.png">
+<link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icono-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<!-- OneBook para estudiantes (la bienvenida de negocios es index.html). Quien ya usa OneBook va directo a su Inicio -->
+<script src="assets/js/landing.js"></script>
+<script src="assets/js/ajustes.js"></script>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/landing.css">
+</head>
+<body data-pagina="estudiantes" class="lp">
+
+<a class="lp-saltar" href="#principal">Ir al contenido</a>
+
+<header class="lp-cab">
+  <div class="lp-in lp-cab-in">
+    <a class="brand" href="./" aria-label="OneBook, página principal"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M18.5 22.5 27.5 16v32M27.5 16h8a7.5 7.5 0 0 1 0 15h-8M27.5 31h9.5a8.5 8.5 0 0 1 0 17h-9.5"/></svg><span>One<b>Book</b></span></a>
+    <nav class="lp-nav" aria-label="Principal">
+      <a href="rutas.html">Rutas</a>
+      <a href="lecciones/como-funciona.html">Cómo funciona</a>
+      <a href="./">Negocios</a>
+      <a class="btn pri" href="inicio.html">Entrar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="principal">
+
+  <section class="lp-in lp-hero" aria-labelledby="lpTitulo">
+    <div class="lp-hero-t">
+      <p class="lp-eti">Gratis · En español · Sin crear cuenta</p>
+      <h1 id="lpTitulo">Aprende cómo funciona la tecnología, practicando.</h1>
+      <p class="lp-lead">Lecciones cortas con laboratorios que puedes tocar: una terminal de Linux, un simulador de red y proyectos como los de un trabajo real. Y un lugar para tus apuntes y tu tesis.</p>
+      <div class="lp-cta">
+        <a class="btn pri" href="inicio.html">Empezar ahora</a>
+        <a class="btn" href="rutas.html">Ver la ruta Redes y sistemas</a>
+      </div>
+    </div>
+    <figure class="lp-term" aria-label="Ejemplo de un laboratorio: la terminal de Linux de OneBook">
+      <div class="lp-term-h" aria-hidden="true"><i></i><i></i><i></i><span>Laboratorio · Terminal</span></div>
+<pre class="lp-term-b"><span class="lp-p">ana@servidor:~$</span> ip -br addr
+lo     UNKNOWN  127.0.0.1/8
+eth0   UP       192.168.1.20/24
+<span class="lp-p">ana@servidor:~$</span> sudo systemctl status nginx
+● nginx.service · <span class="lp-ok">active (running)</span>
+<span class="lp-p">ana@servidor:~$</span> curl -I localhost
+HTTP/1.1 200 OK
+<span class="lp-ok">✓ Ejercicio 3 de 5: tu servidor web responde</span></pre>
+      <figcaption>La terminal corre en tu navegador: sin instalar nada y sin miedo a romper algo.</figcaption>
+    </figure>
+  </section>
+
+  <section class="lp-in" aria-label="OneBook en números">
+    <dl class="lp-cifras">
+      <div><dt>Lecciones</dt><dd id="lpLecciones">46</dd></div>
+      <div><dt>En la ruta Redes y sistemas</dt><dd id="lpRuta">27</dd></div>
+      <div><dt>Proyectos por fases</dt><dd id="lpProyectos">3</dd></div>
+      <div><dt>Cuentas que crear</dt><dd>0</dd></div>
+    </dl>
+  </section>
+
+  <section class="lp-in lp-sec" aria-labelledby="lpAprende">
+    <h2 id="lpAprende">Aprende haciendo, no solo leyendo</h2>
+    <ul class="lp-cols">
+      <li>
+        <h3>Lecciones con laboratorios</h3>
+        <p>Cada tema trae demos que respondes con tus manos, preguntas de repaso y un resumen. Hardware, electrónica, software, Linux, redes, servidores, ciberseguridad e inteligencia artificial.</p>
+      </li>
+      <li>
+        <h3>Practica como en el trabajo</h3>
+        <p>Una terminal de Ubuntu y un simulador de red en el navegador, con ejercicios que se califican solos. Proyectos por fases que terminan en algo que puedes mostrar en tu CV.</p>
+      </li>
+      <li>
+        <h3>Rutas con tu avance</h3>
+        <p>Un camino ordenado por módulos que te dice qué sigue. La primera, <b>Redes y sistemas</b>, va de tu primer comando en Linux a la nube.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="lp-in lp-sec lp-dos" aria-labelledby="lpCrea">
+    <div>
+      <h2 id="lpCrea">Tus apuntes y tu tesis, en el mismo lugar</h2>
+      <p>Libretas de estudio, notas y apuntes de clase con un editor de bloques: imágenes, tablas, ecuaciones y notas al pie. Lo que escribes se ve tan claro como una lección.</p>
+      <p>Para la <b>tesis</b>, OneBook reúne lo que hoy se junta de cinco programas, con la autoría en el centro.</p>
+      <div class="lp-cta"><a class="btn" href="inicio.html#crear">Crear un documento</a></div>
+    </div>
+    <ul class="lp-lista" aria-label="Herramientas de la tesis">
+      <li><b>Citas y bibliografía en APA 7.</b> Fuentes por DOI o ISBN, o importadas de Zotero y Mendeley.</li>
+      <li><b>Figuras, tablas y ecuaciones numeradas.</b> Con índices y referencias cruzadas que se actualizan solas.</li>
+      <li><b>Registro de autoría.</b> Cómo escribiste y de dónde vino lo que pegaste, con una constancia para demostrar que el trabajo es tuyo.</li>
+      <li><b>No la pierdas.</b> Aviso de respaldo y copia automática en tu computadora.</li>
+    </ul>
+  </section>
+
+  <section class="lp-in lp-sec" aria-labelledby="lpEscuelas">
+    <div class="lp-caja">
+      <h2 id="lpEscuelas">Para maestros y escuelas</h2>
+      <p>Úsalo hoy en clase: funciona en cualquier navegador y en computadoras modestas, sin instalar nada, sin cuentas y sin conexión. Cada lección trae laboratorios para hacer en grupo y preguntas de repaso para cerrar el tema.</p>
+      <p class="lp-nota">Estamos preparando grupos, tareas y exámenes para que tus alumnos trabajen contigo dentro de OneBook.</p>
+    </div>
+  </section>
+
+  <section class="lp-in lp-sec" aria-labelledby="lpDatos">
+    <h2 id="lpDatos">Tuyo, sin letra chiquita</h2>
+    <ul class="lp-cols">
+      <li>
+        <h3>Privado</h3>
+        <p>Tu avance, tus apuntes y tus documentos se guardan en tu dispositivo. No se suben a ningún servidor.</p>
+      </li>
+      <li>
+        <h3>Sin conexión</h3>
+        <p>Instálalo como app desde el navegador y estudia aunque no tengas internet.</p>
+      </li>
+      <li>
+        <h3>Para todos</h3>
+        <p>Tema claro u oscuro, alto contraste, letra grande, fuente para dislexia y todo se usa con el teclado.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="lp-in lp-sec lp-final" aria-labelledby="lpEmpieza">
+    <h2 id="lpEmpieza">Empieza en un minuto</h2>
+    <p>No necesitas cuenta. Abre una lección y toca el primer laboratorio.</p>
+    <div class="lp-cta">
+      <a class="btn pri" href="inicio.html">Empezar ahora</a>
+      <a class="btn" href="lecciones/como-funciona.html">Así funciona OneBook</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="lp-pie">
+  <div class="lp-in lp-pie-in">
+    <p><b>OneBook</b> para estudiantes · Gratis y en español.</p>
+    <nav aria-label="Más">
+      <a href="inicio.html">Inicio</a>
+      <a href="./">OneBook para negocios</a>
+      <a href="rutas.html">Rutas</a>
+      <a href="proyectos/index.html">Proyectos</a>
+      <a href="acerca.html">Cómo está hecho</a>
+      <a href="https://github.com/chucho-rey/OneLearn" rel="noopener">Código en GitHub</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/js/catalogo.js"></script>
+</body>
+</html>

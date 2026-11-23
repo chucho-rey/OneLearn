@@ -1,4 +1,4 @@
-/* OneLearn: terminal Linux simulada para los laboratorios.
+/* OneBook: terminal Linux simulada para los laboratorios.
    AT.terminal(contenedor, opciones) dibuja una terminal con su propio sistema en memoria: archivos y carpetas
    con dueño, grupo y permisos; usuarios, grupos y sudo; procesos y señales; servicios (systemctl y journalctl);
    paquetes (apt); el editor nano; tuberías (|), redirecciones (>, >>, <, 2>), variables, $(...), alias,
@@ -26,7 +26,7 @@ var ANTES=new Date(2024,3,22,9,15);
 
 /* ---------- Texto con colores ----------
    La salida lleva marcas \x01<letra>texto\x02. d carpeta, x ejecutable, l enlace, e error, g verde,
-   w aviso, m coincidencia, b negritas, h consejo de OneLearn. Al pasar por una tubería o a un archivo se quitan. */
+   w aviso, m coincidencia, b negritas, h consejo de OneBook. Al pasar por una tubería o a un archivo se quitan. */
 var A='\u0001',Z='\u0002';
 function c(k,t){return A+k+t+Z}
 function plano(s){return String(s).replace(/\u0001[a-z]/g,'').replace(/\u0002/g,'')}
@@ -578,7 +578,7 @@ T.reiniciar=function(borrar){
   t.log.textContent='';
   if(op.preparar)op.preparar(t.sis,t);
   (op.remotos||[]).forEach(function(r){if(r.preparar)r.preparar(t.remotos[r.op.host],t)});
-  t.escribir(c('h',op.bienvenida||'Terminal simulada de OneLearn: Ubuntu 24.04 LTS. Escribe help para ver los comandos.')+'\n');
+  t.escribir(c('h',op.bienvenida||'Terminal simulada de OneBook: Ubuntu 24.04 LTS. Escribe help para ver los comandos.')+'\n');
   var g=guardados();
   if(borrar&&op.clave){delete g[op.clave];try{localStorage.setItem(CLAVE,JSON.stringify(g))}catch(e){}}
   t.hechas=op.clave&&g[op.clave]&&typeof g[op.clave]==='object'?g[op.clave]:{};
@@ -619,7 +619,7 @@ T.eco=function(linea){
 T.consejo=function(clave,txt){
   if(this.dichos[clave])return;
   this.dichos[clave]=1;
-  this.escribir(c('h','(OneLearn: '+txt+')')+'\n');
+  this.escribir(c('h','(OneBook: '+txt+')')+'\n');
 };
 
 /* ---------- Teclado ---------- */
@@ -1656,7 +1656,7 @@ cmd('userdel deluser',{d:'borra un usuario',uso:'userdel [-r] usuario',ops:[['-r
   if(!soloRoot(x,nom))return 1;
   var o=opts(x.args),n=o.pos[0],s=x.sis,u=s.usuarios[n];
   if(!u){x.err(nom+": el usuario '"+n+"' no existe\n");return 6}
-  if(n==='root'||n===s.yo){x.err(nom+': no se puede borrar a '+n+' (OneLearn no te deja borrar tu propio usuario ni root).\n');return 8}
+  if(n==='root'||n===s.yo){x.err(nom+': no se puede borrar a '+n+' (OneBook no te deja borrar tu propio usuario ni root).\n');return 8}
   delete s.usuarios[n];
   if(s.grupos[n]&&!s.miembros(n).length)delete s.grupos[n];
   if(o.f.r||o.f['remove-home']||o.largo['remove-home']){var r=s.buscar(dirname(u.home),'root');if(r.n&&r.n.h[basename(u.home)])delete r.n.h[basename(u.home)]}
@@ -2659,7 +2659,7 @@ function servirHttp(dest,req,puerto){
   return null;
 }
 function paginaInternet(h){
-  var cuerpo='<!doctype html>\n<html>\n<head><title>'+h+'</title></head>\n<body>\n<h1>'+h+'</h1>\n<p>Página de ejemplo de la terminal simulada de OneLearn.</p>\n</body>\n</html>\n';
+  var cuerpo='<!doctype html>\n<html>\n<head><title>'+h+'</title></head>\n<body>\n<h1>'+h+'</h1>\n<p>Página de ejemplo de la terminal simulada de OneBook.</p>\n</body>\n</html>\n';
   return respuesta(200,cuerpo,{'content-type':'text/html; charset=UTF-8','content-length':String(bytesDe(cuerpo))});
 }
 cmd('curl',{d:'hace peticiones a servidores web y muestra la respuesta',uso:'curl [opciones] dirección',ops:[['-I','solo los encabezados de la respuesta'],['-v','muestra la petición y la respuesta completas'],['-X POST','el método HTTP'],['-d datos','manda datos (y usa POST)'],['-H "Nombre: valor"','agrega un encabezado'],['-L','sigue las redirecciones'],['-o archivo','guarda lo que descargó']],cat:'Red'},function(x){
@@ -3090,7 +3090,7 @@ T.correrNodos=function(nodos,captura){
     if(n.tipo==='while'){
       var vueltas=0;
       function otra(){
-        if(++vueltas>500){t.escribir(c('h','(OneLearn: el ciclo dio más de 500 vueltas y se detuvo.)')+'\n');return}
+        if(++vueltas>500){t.escribir(c('h','(OneBook: el ciclo dio más de 500 vueltas y se detuvo.)')+'\n');return}
         return lista(n.cond).then(function(c2){if((c2===0)!==n.hasta)return t.correrNodos(n.cuerpo,captura).then(function(c3){cod=c3;return otra()})});
       }
       return otra();
@@ -3160,7 +3160,7 @@ cmd('basename',{d:'el nombre de un archivo sin su carpeta',uso:'basename ruta [e
 cmd('dirname',{d:'la carpeta de una ruta',uso:'dirname ruta',cat:'Archivos y carpetas'},function(x){var p=x.args[1]||'.';x.out((p.indexOf('/')<0?'.':dirname(p.replace(/\/+$/,''))||'/')+'\n')});
 cmd('ln',{d:'crea enlaces (accesos directos) a archivos y carpetas',uso:'ln -s destino nombre',ops:[['-s','enlace simbólico (el que casi siempre quieres)'],['-f','reemplaza si ya existe']],cat:'Archivos y carpetas'},function(x){
   var o=opts(x.args),s=x.sis,ps=o.pos;
-  if(!o.f.s){x.consejo('ln-s','OneLearn solo simula enlaces simbólicos: usa ln -s destino nombre.');return 1}
+  if(!o.f.s){x.consejo('ln-s','OneBook solo simula enlaces simbólicos: usa ln -s destino nombre.');return 1}
   if(!ps.length){x.err('ln: falta un operando de archivo\n');return 1}
   var objetivo=ps[0],nombre=ps[1]||basename(objetivo),ab=x.abs(nombre),r=s.buscar(ab,x.u,true);
   if(r.n&&r.n.t==='d'){ab=unir(ab,basename(objetivo));r=s.buscar(ab,x.u,true)}

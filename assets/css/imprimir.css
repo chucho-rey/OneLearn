@@ -1,4 +1,4 @@
-/* OneLearn: la vista para imprimir (imprimir.html). En pantalla, una barra arriba y las páginas sobre un fondo
+/* OneBook: la vista para imprimir (imprimir.html). En pantalla, una barra arriba y las páginas sobre un fondo
    gris, como en un visor de PDF; al imprimir, solo las páginas. El estilo del papel lo arma imprimir.js. */
 body[data-pagina="imprimir"]{background:var(--bg-soft)}
 .im-barra{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 1rem;padding:0.625rem max(1rem,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--bg)}

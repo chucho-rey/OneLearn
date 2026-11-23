@@ -1,27 +1,33 @@
-# OneLearn
+# OneBook
 
-Lecciones interactivas de tecnología (hardware, electrónica, software, Linux, redes, ciberseguridad e inteligencia artificial) en español, con demos, repaso y apuntes que se guardan solos. Las lecciones se ordenan en rutas de aprendizaje, como «Redes y sistemas», y las de Linux traen una terminal simulada con ejercicios que se califican solos.
+OneBook (antes OneLearn) es un espacio de trabajo hecho de **bloques y plantillas**, enfocado en negocios pequeños: pagos, cobros, pendientes y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan del cambio y sus fases (F1 a F8) están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook). La versión anterior quedó en la etiqueta de git `onelearn-final` (commit `b4b9f6f`).
+
+Además conserva todo lo de OneLearn, que en la fase F2 pasará al módulo de estudio: lecciones interactivas de tecnología (hardware, electrónica, software, Linux, redes, ciberseguridad e inteligencia artificial) en español, con demos, repaso y apuntes que se guardan solos. Las lecciones se ordenan en rutas de aprendizaje, como «Redes y sistemas», y las de Linux traen una terminal simulada con ejercicios que se califican solos.
 
 Es un sitio estático: no necesita servidor propio ni dependencias para funcionar. Abre `index.html` en el navegador, directamente desde el disco o desde cualquier servidor estático (por ejemplo, GitHub Pages). La única pieza compilada es el editor (Tiptap), y el resultado ya está guardado en `assets/vendor/`.
 
 ## Estructura
 
 ```
-index.html                  Página de bienvenida (la raíz del sitio): qué es OneLearn, para quién y botones para entrar. Quien ya
-                            usa OneLearn en ese navegador va directo a inicio.html (con ?conoce se queda en la bienvenida)
+index.html                  Página de bienvenida para negocios (la raíz del sitio): una página de ejemplo hecha con bloques reales,
+                            un plan de pagos para probar sin cuenta («Guárdalo en tu espacio» lo convierte en documento), cómo
+                            funciona, lo que ya hay y lo que viene, precios y preguntas. Quien ya usa OneBook en ese navegador va
+                            directo a inicio.html (con ?conoce se queda en la bienvenida)
+estudiantes.html            Bienvenida para estudiantes (la de OneLearn): lecciones, rutas, apuntes y tesis
 inicio.html                 Inicio de la app: continúa donde te quedaste, tus documentos, notas recientes, tu ruta, proyectos y explorar temas
 documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
-acerca.html                 «Cómo está hecho OneLearn»: las tecnologías del sitio explicadas para estudiantes de programación
+acerca.html                 «Cómo está hecho OneBook»: las tecnologías del sitio explicadas para estudiantes de programación
 rutas.html                  Rutas de aprendizaje: cada ruta por módulos, con su avance y «qué sigue»
 proyectos/index.html        Lista de proyectos guiados, con su avance
 proyectos/portafolio.html   Proyecto «Tu portafolio web»: 8 fases, su contenido en JSON (<script id="proyecto">)
 proyectos/seguridad-negocio.*  Proyecto «Seguridad para un pequeño negocio»: 7 fases, matriz de riesgos y router simulado
 proyectos/red-oficina.*     Proyecto «La red de una oficina»: 8 fases y sus diagramas interactivos (.js y .css propios)
-manifest.webmanifest        Datos para instalar OneLearn como app
+manifest.webmanifest        Datos para instalar OneBook como app
 sw.js                       Service worker: guarda el sitio para usarlo sin conexión
 assets/
   css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
   css/editor.css            Estilos del editor (solo documento.html): barra de herramientas, asa de bloque, menús y formularios
+  css/negocio.css           Bloques de negocio al leer (por ahora el plan de pagos), en documento.html y en la bienvenida
   css/terminal.css          Estilos de la terminal simulada (solo en las lecciones que la usan)
   css/red.css               Estilos de los diagramas del simulador de red (solo en las lecciones que lo usan)
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
@@ -56,8 +62,9 @@ assets/
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
   js/inicio.js              Pantalla de inicio (inicio.html)
-  js/landing.js             Página de bienvenida: manda al Inicio a quien ya usa OneLearn y cuenta lecciones, ruta y proyectos
-  css/landing.css           Estilos de la página de bienvenida
+  js/landing.js             Bienvenidas: manda al Inicio a quien ya usa OneBook; en index.html dibuja la página de ejemplo y el
+                            plan de pagos para probar; en estudiantes.html cuenta lecciones, ruta y proyectos
+  css/landing.css           Estilos de las dos páginas de bienvenida
   js/proyecto.js            Proyectos: la lista y cada proyecto por fases, con tareas que se guardan (AT.proyectosAvance en base.js)
   js/rutas.js               Página de rutas: módulos, avance y «qué sigue» (el cálculo es AT.avance.camino, en avance.js)
   js/terminal.js            Terminal Linux simulada para los laboratorios (AT.terminal): archivos, permisos, usuarios, sudo, procesos,
@@ -66,7 +73,7 @@ assets/
   js/red.js                 Direcciones IPv4 e IPv6 (AT.ip: subredes, binario, abreviar, EUI-64) y simulador de red (AT.red):
                             dibuja una topología en SVG y calcula el camino de un paquete con rutas estáticas u OSPF
   js/zen.js                 Modo zen, atajos de teclado (Z, N, J/K, ?, Esc) y su lista de ayuda
-  icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
+  icons/                    Ícono de OneBook: el «1» que forma la «B» (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
   vendor/katex/             KaTeX (MIT) con sus fuentes WOFF2: se carga solo cuando un documento tiene ecuaciones
   vendor/paged.min.js       Paged.js (MIT): pagina la vista para imprimir (portada, números de página, notas al pie)
@@ -82,7 +89,7 @@ lecciones/
   ram.css                   Estilos de sus laboratorios
   ram.js                    Sus laboratorios (AT.labs)
   cpu.html / .css / .js     Lección «Procesador (CPU)»
-  como-funciona.html / .css / .js   «Cómo funciona OneLearn» (grupo OneLearn): guía de uso con laboratorios que usan los controles reales
+  como-funciona.html / .css / .js   «Cómo funciona OneBook» (grupo OneBook): guía de uso con laboratorios que usan los controles reales
   <id>.html / .css / .js    Una lección por tema del catálogo (45 publicadas): hardware, electrónica, software, Linux,
                             redes, servidores y nube, ciberseguridad e inteligencia artificial, cada una con 2 a 5 laboratorios.
                             Las que tienen práctica en la terminal cargan terminal.css y terminal.js; las de subredes,
@@ -93,7 +100,7 @@ Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan m
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
-## «Cómo está hecho OneLearn»
+## «Cómo está hecho OneBook»
 
 `acerca.html` explica a estudiantes de programación con qué está hecho el sitio: HTML, CSS con variables, JavaScript sin framework, el formato de bloques, Tiptap y esbuild, IndexedDB, el service worker, la accesibilidad, las pruebas y la publicación, con ejemplos del código real y preguntas de repaso. Se abre desde la barra lateral («Cómo está hecho») y desde Inicio, y la búsqueda la incluye. Su contenido es un documento en el formato de bloques, como una lección: **si cambias algo de la arquitectura, actualiza también esta página.**
 
@@ -168,11 +175,11 @@ Todo lo que escribe cada estudiante se guarda solo en su navegador; nada se sube
 - **IndexedDB** (base `onelearn`, `assets/js/datos.js`) guarda los documentos, las notas rápidas de cada lección y los marcadores. Si el navegador no tiene IndexedDB, se usa `localStorage`.
 - Cada nota se escribe primero en `localStorage` (al instante) y luego en IndexedDB; si la página se cierra a la mitad, la siguiente carga termina de guardarla. Así se pasaron también las notas de la fase 1, sin perder ninguna.
 - El avance de lectura y los ajustes siguen en `localStorage`, porque se leen antes de pintar la página.
-- **Tus datos** (barra lateral) muestra cuánto hay guardado, el espacio usado y el disponible (lo que el navegador reserva para OneLearn), si el navegador protege los datos (almacenamiento persistente) y permite **descargar un respaldo** en JSON e **importarlo** en otro navegador. Importar combina: entra lo que no existe y lo más reciente; nunca se borra nada.
+- **Tus datos** (barra lateral) muestra cuánto hay guardado, el espacio usado y el disponible (lo que el navegador reserva para OneBook), si el navegador protege los datos (almacenamiento persistente) y permite **descargar un respaldo** en JSON e **importarlo** en otro navegador. Importar combina: entra lo que no existe y lo más reciente; nunca se borra nada.
 
 ## App instalable y sin conexión
 
-OneLearn se puede instalar como app desde el navegador (en iPhone, con Compartir > Agregar a inicio) y funciona sin conexión: `sw.js` guarda una copia de todo el sitio. Con conexión, cada archivo se pide primero a la red, así que siempre se ve lo publicado; sin conexión, se usa la copia.
+OneBook se puede instalar como app desde el navegador (en iPhone, con Compartir > Agregar a inicio) y funciona sin conexión: `sw.js` guarda una copia de todo el sitio. Con conexión, cada archivo se pide primero a la red, así que siempre se ve lo publicado; sin conexión, se usa la copia.
 
 **Al agregar o quitar un archivo del sitio** (una lección nueva, por ejemplo), agrégalo a la lista `ARCHIVOS` de `sw.js` y sube `VERSION`. La prueba `pruebas/6-app.js` falla si a la lista le falta algo.
 
@@ -205,4 +212,4 @@ npm install
 npm run compilar
 ```
 
-Las versiones están fijadas en `herramientas/tiptap/package.json`. El código propio del editor de OneLearn no se compila: es un script clásico más que usa `window.Tiptap`.
+Las versiones están fijadas en `herramientas/tiptap/package.json`. El código propio del editor de OneBook no se compila: es un script clásico más que usa `window.Tiptap`.

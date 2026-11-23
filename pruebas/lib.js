@@ -1,4 +1,4 @@
-/* Utilidades compartidas por las pruebas de OneLearn.
+/* Utilidades compartidas por las pruebas de OneBook.
    - servidor(): sirve el repositorio en http://127.0.0.1:<puerto>/OneLearn/, igual que GitHub Pages
      (así se detectan rutas absolutas y funciona el service worker, que no corre con file://).
    - prueba(nombre, fn): arranca servidor y navegador, ejecuta fn({browser, base, r}) y sale con código 1

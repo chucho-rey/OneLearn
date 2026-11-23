@@ -1,4 +1,4 @@
-/* Temario de OneLearn.
+/* Temario de OneBook.
    Cada lección con `archivo` aparece como enlace; sin `archivo` se muestra como «Pronto».
    `id` es la clave de los apuntes guardados: no la cambies en una lección publicada,
    o sus apuntes dejarán de aparecer. Las rutas de `archivo` son relativas a lecciones/.
@@ -6,8 +6,8 @@
    en Inicio, los grupos sin lecciones publicadas se juntan en «Próximos temas». */
 window.AT=window.AT||{};
 window.AT.catalogo=[
-  {grupo:'OneLearn',lecciones:[
-    {id:'como-funciona',titulo:'Cómo funciona OneLearn',archivo:'como-funciona.html',icono:'info'}
+  {grupo:'OneBook',lecciones:[
+    {id:'como-funciona',titulo:'Cómo funciona OneBook',archivo:'como-funciona.html',icono:'info'}
   ]},
   {grupo:'Hardware',lecciones:[
     {id:'ram',titulo:'Memoria RAM',archivo:'ram.html',icono:'ram'},

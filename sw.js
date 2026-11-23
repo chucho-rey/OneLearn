@@ -1,13 +1,14 @@
-/* Service worker de OneLearn: guarda el sitio completo para usarlo sin conexión.
+/* Service worker de OneBook: guarda el sitio completo para usarlo sin conexión.
    Estrategia «red primero»: con conexión, cada archivo se pide a la red (así siempre ves la versión
    publicada) y se actualiza la copia guardada; sin conexión, o si la red tarda más de 4 s, se usa la copia.
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-32';
+const VERSION='onelearn-33';
 const ARCHIVOS=[
   './',
   'index.html',
+  'estudiantes.html',
   'inicio.html',
   'documento.html',
   'imprimir.html',
@@ -24,6 +25,7 @@ const ARCHIVOS=[
   'manifest.webmanifest',
   'assets/css/base.css',
   'assets/css/editor.css',
+  'assets/css/negocio.css',
   'assets/css/landing.css',
   'assets/css/imprimir.css',
   'assets/css/terminal.css',

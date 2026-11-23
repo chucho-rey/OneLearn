@@ -1,4 +1,4 @@
-/* OneLearn: búsqueda (Ctrl K o «Buscar» en la barra lateral).
+/* OneBook: búsqueda (Ctrl K o «Buscar» en la barra lateral).
    Busca en las lecciones (títulos, secciones y texto), en tus documentos, en las notas rápidas y en los
    marcadores. Todo pasa en tu navegador: las lecciones se leen de sus propios archivos (que el service worker
    guarda para usarlas sin conexión) y lo tuyo, de AT.datos.
@@ -14,7 +14,7 @@ function recorte(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length
 /* ---------- Índice ---------- */
 var lecciones=null;
 /* Páginas del sitio que también se buscan, además de las lecciones del catálogo */
-var PAGINAS=[{id:'acerca',titulo:'Cómo está hecho OneLearn',ruta:'acerca.html',icono:'codigo',sub:'Sobre OneLearn'}];
+var PAGINAS=[{id:'acerca',titulo:'Cómo está hecho OneBook',ruta:'acerca.html',icono:'codigo',sub:'Sobre OneBook'}];
 /* Entradas de una lección (o página): la lección, cada sección (con su texto) y cada bloque */
 function entradasDeLeccion(l,doc){
   var url=l.ruta,out=[{tipo:'leccion',titulo:doc.titulo||l.titulo,texto:'',href:url,sub:l.sub,icono:l.icono||'page',doc:l.id}];
@@ -131,7 +131,7 @@ function grupoDe(e){return e.tipo==='seccion'||e.tipo==='bloque'?'leccion':e.tip
 function crear(){
   dlg=document.createElement('dialog');
   dlg.className='atajos buscar-dlg';
-  dlg.setAttribute('aria-label','Buscar en OneLearn');
+  dlg.setAttribute('aria-label','Buscar en OneBook');
   dlg.innerHTML='<div class="bus-campo">'+ico('investigacion')+
     '<input id="busQ" type="text" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar en lecciones, documentos, notas y marcadores" '+
       'role="combobox" aria-expanded="false" aria-controls="busRes" aria-autocomplete="list" aria-label="Buscar">'+

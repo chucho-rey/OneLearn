@@ -79,11 +79,11 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   r.cumple((await p.textContent('#tdProt')).length>10,'explica si el navegador protege los datos');
   await revisar(p,r,'ventana Tus datos en escritorio');
   const [descarga]=await Promise.all([p.waitForEvent('download'),p.click('[data-td="descargar"]')]);
-  r.cumple(/^onelearn-respaldo-\d{4}-\d\d-\d\d\.json$/.test(descarga.suggestedFilename()),'el respaldo se descarga con nombre y fecha',descarga.suggestedFilename());
+  r.cumple(/^onebook-respaldo-\d{4}-\d\d-\d\d\.json$/.test(descarga.suggestedFilename()),'el respaldo se descarga con nombre y fecha',descarga.suggestedFilename());
   const archivo=path.join(os.tmpdir(),'onelearn-prueba-respaldo.json');
   await descarga.saveAs(archivo);
   const datos=JSON.parse(fs.readFileSync(archivo,'utf8'));
-  r.cumple(datos.app==='OneLearn'&&datos.formato===1&&datos.documentos.length===1&&datos.notas.length===2&&datos.marcadores.length===1&&datos.avance.lecciones.ram,
+  r.cumple(datos.app==='OneBook'&&datos.formato===1&&datos.documentos.length===1&&datos.notas.length===2&&datos.marcadores.length===1&&datos.avance.lecciones.ram,
     'el respaldo trae documentos, notas, marcadores y avance',{docs:datos.documentos.length,notas:datos.notas.length});
   await p.waitForTimeout(200);
   r.cumple(/Listo/.test(await p.textContent('#tdMsg'))&&/hoy/.test(await p.textContent('#tdUlt')),'confirma la descarga y recuerda la fecha');
@@ -169,7 +169,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   r.cumple(/hace 20 días/.test(await rr.textContent('#iniRespaldoTxt')),'si el último respaldo es de hace 20 días, lo dice');
   const [bajada]=await Promise.all([rr.waitForEvent('download'),rr.click('#iniRespaldoSi')]);
   await rr.waitForTimeout(200);
-  r.cumple(/onelearn-respaldo/.test(bajada.suggestedFilename())&&await rr.isHidden('#iniRespaldo'),'«Descargar respaldo» lo descarga y el recordatorio desaparece',bajada.suggestedFilename());
+  r.cumple(/onebook-respaldo/.test(bajada.suggestedFilename())&&await rr.isHidden('#iniRespaldo'),'«Descargar respaldo» lo descarga y el recordatorio desaparece',bajada.suggestedFilename());
   r.cumple(rr.errores.length===0,'recordatorio sin errores',rr.errores);
   await cerrar(rr);
 });

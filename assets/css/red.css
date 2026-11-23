@@ -1,4 +1,4 @@
-/* OneLearn: diagramas del simulador de red (assets/js/red.js). Colores solo con los tokens de base.css. */
+/* OneBook: diagramas del simulador de red (assets/js/red.js). Colores solo con los tokens de base.css. */
 .rd-svg{display:block;width:100%;height:auto;max-height:26rem;margin-top:0.75rem;border:1px solid var(--line);border-radius:0.5rem;background:var(--bg-side)}
 .rd-enl line{stroke:var(--line-strong);stroke-width:3}
 .rd-enl.caido line{stroke:var(--bad);stroke-dasharray:6 5}

@@ -1,4 +1,4 @@
-/* OneLearn: página de un documento tuyo (documento.html?id=...).
+/* OneBook: página de un documento tuyo (documento.html?id=...).
    Dos modos: «Editar» (título, propiedades y el editor de bloques, con autoguardado) y «Leer» (el documento
    dibujado igual que una lección, con su índice, repaso interactivo y modo zen). Desde «⋯» se puede
    descargar como Markdown, duplicar o eliminar (con «Deshacer»).
@@ -226,7 +226,7 @@ document.addEventListener('keydown',function(e){
 
 function titulo(){
   var t=doc.titulo||'Sin título';
-  document.title=t+' · OneLearn';
+  document.title=t+' · OneBook';
   var c=$('.crumbs .cur');if(c)c.textContent=t;
 }
 
@@ -367,7 +367,7 @@ function noEncontrado(){
   page.innerHTML='<div class="page-icon">'+ico('notas')+'</div><h1>No encontramos este documento</h1>'+
     '<p>No está guardado en este navegador. Si lo creaste en otro dispositivo o navegador, descarga ahí un respaldo desde «Tus datos» e impórtalo aquí.</p>'+
     '<p><a class="btn pri" href="inicio.html">Ir al inicio</a> <button class="btn" type="button" data-crear>Crear algo nuevo</button></p>';
-  document.title='Documento no encontrado · OneLearn';
+  document.title='Documento no encontrado · OneBook';
 }
 AT.documentoAbierto=ID;
 if(!ID||!AT.editor){noEncontrado();return}

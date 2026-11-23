@@ -1,4 +1,4 @@
-/* OneLearn: hoja de apuntes de cada lección (nota rápida).
+/* OneBook: hoja de apuntes de cada lección (nota rápida).
    Abajo a media página o en pantalla completa; en escritorio también acoplada a la derecha, con ancho ajustable.
    Se guarda sola en este dispositivo. Expone AT.hoja. */
 (function(){

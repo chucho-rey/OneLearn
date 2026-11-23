@@ -1,4 +1,4 @@
-/* OneLearn: ventana «Tus datos».
+/* OneBook: ventana «Tus datos».
    Explica dónde se guarda lo que escribes, cuánto espacio ocupa, si el navegador lo protege,
    y permite descargar un respaldo e importarlo. Se abre desde «Tus datos» en la barra lateral.
    Usa AT.datos (datos.js). Expone AT.tusDatos.abrir(). */
@@ -32,7 +32,7 @@ function crear(){
   dlg.setAttribute('aria-labelledby','tdT');
   dlg.innerHTML='<div class="at-h"><h2 id="tdT">Tus datos</h2>'+
     '<button class="lec-x" type="button" data-td="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
-    '<p class="td-p">Lo que escribes en OneLearn se guarda solo en este navegador, en este dispositivo. No se sube a ningún servidor.</p>'+
+    '<p class="td-p">Lo que escribes en OneBook se guarda solo en este navegador, en este dispositivo. No se sube a ningún servidor.</p>'+
     '<dl class="td-res" id="tdRes"></dl>'+
     '<div class="td-esp" id="tdEsp" hidden><div class="td-bar" aria-hidden="true"><i id="tdBar"></i></div>'+
       '<p class="td-p td-nota" id="tdNotaEsp"></p></div>'+
@@ -65,11 +65,11 @@ function crear(){
     var f=this.files&&this.files[0];
     this.value='';
     if(!f)return;
-    if(f.size>50*1024*1024){mensaje('El archivo es demasiado grande para ser un respaldo de OneLearn.',true);return}
+    if(f.size>50*1024*1024){mensaje('El archivo es demasiado grande para ser un respaldo de OneBook.',true);return}
     mensaje('Importando…',false);
     f.text().then(function(t){
       var datos;
-      try{datos=JSON.parse(t)}catch(e){throw new Error('El archivo no es un respaldo de OneLearn.')}
+      try{datos=JSON.parse(t)}catch(e){throw new Error('El archivo no es un respaldo de OneBook.')}
       return AT.datos.importar(datos);
     }).then(function(r){
       var n=r.documentos+r.notas+r.marcadores;
@@ -96,7 +96,7 @@ function pintar(){
       '<div><dt>Marcadores</dt><dd>'+AT.fmt(r[2].length)+'</dd></div>'+
       (esp?'<div><dt>Espacio usado</dt><dd>'+mb(esp.usado)+'</dd></div>':'')+
       (esp&&esp.cuota?'<div><dt>Disponible</dt><dd>'+mb(Math.max(0,esp.cuota-esp.usado))+'</dd></div>':'');
-    /* La cuota es lo que el navegador le reserva a OneLearn; depende del espacio libre del dispositivo */
+    /* La cuota es lo que el navegador le reserva a OneBook; depende del espacio libre del dispositivo */
     $('#tdEsp',dlg).hidden=!esp;
     if(esp){
       var uso=esp.cuota?Math.min(100,esp.usado/esp.cuota*100):0;
@@ -104,12 +104,12 @@ function pintar(){
       bar.style.width=esp.cuota?Math.max(uso,1)+'%':'0';
       bar.classList.toggle('lleno',uso>=80);
       $('#tdEsp .td-bar',dlg).hidden=!esp.cuota;
-      $('#tdNotaEsp',dlg).textContent=(esp.cuota?'Usas '+pct(uso)+' de los '+mb(esp.cuota)+' que el navegador le reserva a OneLearn en este dispositivo (cambia según el espacio libre). ':'')+
-        'Incluye la copia de OneLearn que permite usarlo sin conexión.';
+      $('#tdNotaEsp',dlg).textContent=(esp.cuota?'Usas '+pct(uso)+' de los '+mb(esp.cuota)+' que el navegador le reserva a OneBook en este dispositivo (cambia según el espacio libre). ':'')+
+        'Incluye la copia de OneBook que permite usarlo sin conexión.';
     }
     var prot=$('#tdProt',dlg);
     if(pers===true)prot.innerHTML='<p class="td-p td-ok">'+ico('marcador')+'<span><b>Protegidos.</b> El navegador no los borrará aunque se quede sin espacio.</span></p>';
-    else if(pers===false)prot.innerHTML='<p class="td-p"><b>Sin proteger.</b> Si el dispositivo se queda sin espacio, el navegador podría borrarlos. Puedes pedirle que los conserve (algunos navegadores lo deciden solos, según cuánto usas OneLearn).</p>'+
+    else if(pers===false)prot.innerHTML='<p class="td-p"><b>Sin proteger.</b> Si el dispositivo se queda sin espacio, el navegador podría borrarlos. Puedes pedirle que los conserve (algunos navegadores lo deciden solos, según cuánto usas OneBook).</p>'+
       '<button class="btn" type="button" data-td="proteger">Pedir que los conserve</button>';
     else prot.innerHTML='';
     var u=AT.datos.ultimoRespaldo();

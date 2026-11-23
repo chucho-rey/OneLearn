@@ -33,7 +33,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   const p=await pagina(browser);
   await p.goto(base+'inicio.html');await listo(p);
   const man=await (await p.request.get(base+'manifest.webmanifest')).json();
-  r.cumple(man.name==='OneLearn'&&man.lang==='es'&&man.display==='standalone'&&man.start_url==='inicio.html'&&man.scope==='./','el manifiesto tiene nombre, idioma, modo app y abre en Inicio (relativo)',man);
+  r.cumple(man.name==='OneBook'&&man.lang==='es'&&man.display==='standalone'&&man.start_url==='inicio.html'&&man.scope==='./','el manifiesto tiene nombre, idioma, modo app y abre en Inicio (relativo)',man);
   for(const ic of man.icons){
     const res=await p.request.get(base+ic.src);
     r.igual(res.status(),200,'el ícono '+ic.src+' existe');
@@ -93,7 +93,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   r.cumple(await a.evaluate(function(){return window.__pidio===true}),'«Instalar» abre el diálogo del navegador');
   r.cumple(await a.isHidden('#instalar'),'al aceptar, la tarjeta desaparece');
   /* El aviso de actualización */
-  await a.evaluate(function(){window.__recarga=0;AT.aviso('OneLearn se actualizó.','Recargar',function(){window.__recarga++})});
+  await a.evaluate(function(){window.__recarga=0;AT.aviso('OneBook se actualizó.','Recargar',function(){window.__recarga++})});
   r.cumple(await a.isVisible('#avisoApp'),'el aviso de actualización se muestra');
   await revisar(a,r,'aviso de actualización');
   await a.click('#avisoApp .btn');

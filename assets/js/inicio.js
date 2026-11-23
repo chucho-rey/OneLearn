@@ -1,4 +1,4 @@
-/* Pantalla de inicio de OneLearn: continúa donde te quedaste, tus notas recientes y explorar temas.
+/* Pantalla de inicio de OneBook: continúa donde te quedaste, tus notas recientes y explorar temas.
    La primera visita (sin avance ni notas) muestra una bienvenida que sugiere empezar por Memoria RAM.
    Usa AT.avance (avance.js) y AT.datos (datos.js). */
 (function(){

@@ -1,4 +1,4 @@
-/* OneLearn: proyectos guiados por fases.
+/* OneBook: proyectos guiados por fases.
    - En proyectos/index.html (data-pagina="proyectos") lista los proyectos de AT.proyectos con su avance.
    - En proyectos/<id>.html (data-pagina="proyecto") dibuja el proyecto de <script id="proyecto">: introducción,
      la lista de fases y una fase a la vez (#f1, #f2…), con su contenido en el formato de bloques, sus tareas

@@ -1,5 +1,5 @@
-/* OneLearn: app instalable y sin conexión.
-   Registra el service worker (sw.js), avisa cuando OneLearn se actualiza y guarda el evento del navegador
+/* OneBook: app instalable y sin conexión.
+   Registra el service worker (sw.js), avisa cuando OneBook se actualiza y guarda el evento del navegador
    que permite instalar la app, para que la pantalla de inicio ofrezca el botón «Instalar».
    Expone AT.aviso y AT.app. */
 (function(){
@@ -47,7 +47,7 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
   navigator.serviceWorker.register(RAIZ+'sw.js').catch(function(){});
   /* La primera instalación no avisa; una versión nueva, sí */
   navigator.serviceWorker.addEventListener('controllerchange',function(){
-    if(controlada)AT.aviso('OneLearn se actualizó.','Recargar',function(){location.reload()});
+    if(controlada)AT.aviso('OneBook se actualizó.','Recargar',function(){location.reload()});
     controlada=true;
   });
 }

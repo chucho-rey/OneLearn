@@ -1,4 +1,4 @@
-/* OneLearn: herramientas de red para los laboratorios.
+/* OneBook: herramientas de red para los laboratorios.
    AT.ip   Direcciones IPv4 e IPv6: validar, máscaras, subredes, binario, tipos, abreviar IPv6 y EUI-64.
    AT.red  Simulador de red: dibuja una topología (computadoras, switches y routers) en SVG y calcula,
            salto por salto, el camino de un paquete con las tablas de rutas (estáticas o calculadas como OSPF).

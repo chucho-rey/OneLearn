@@ -1,4 +1,4 @@
-/* OneLearn: exportar una tesis a Word (DOCX). Hito T4.
+/* OneBook: exportar una tesis a Word (DOCX). Hito T4.
    AT.exportarDocx(doc) → Promise<{blob, nombre}>. Usa docx (assets/vendor/docx.min.js, window.Docx), que se carga
    la primera vez que se exporta. El archivo sigue la plantilla genérica de APA y el formato de doc.formato:
    - Tres secciones: portada sin número; preliminares con números romanos; cuerpo con números arábigos desde 1,
@@ -219,8 +219,8 @@ function exportar(doc){
     }).then(function(huella){
       var negro='000000',par={spacing:{line:LINEA,lineRule:'auto',before:0,after:0}};
       var documento=new D.Document({
-        creator:q&&q.autor||'OneLearn',title:doc.titulo||'Sin título',subject:q&&q.programa||'',
-        description:huella?'Huella SHA-256 del texto (OneLearn): '+huella:'',keywords:'OneLearn',lastModifiedBy:q&&q.autor||'OneLearn',
+        creator:q&&q.autor||'OneBook',title:doc.titulo||'Sin título',subject:q&&q.programa||'',
+        description:huella?'Huella SHA-256 del texto (OneBook): '+huella:'',keywords:'OneBook',lastModifiedBy:q&&q.autor||'OneBook',
         features:{updateFields:true},
         footnotes:notas,
         numbering:{config:[{reference:'numerada',levels:[{level:0,format:'decimal',text:'%1.',alignment:D.AlignmentType.LEFT,style:{paragraph:{indent:{left:720,hanging:360}}}}]}]},

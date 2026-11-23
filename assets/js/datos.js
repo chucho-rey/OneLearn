@@ -1,4 +1,4 @@
-/* OneLearn: tus datos en este dispositivo.
+/* OneBook: tus datos en este dispositivo.
    Documentos, notas rápidas y marcadores viven en IndexedDB (base «onelearn»), que aguanta mucho más que
    localStorage y después guardará imágenes y libros. El avance y los ajustes siguen en localStorage porque
    son pequeños y se leen antes de pintar la página.
@@ -41,7 +41,7 @@ function abrirIDB(){
     };
     r.onsuccess=function(){
       var db=r.result;
-      /* Otra pestaña con una versión nueva de OneLearn necesita actualizar la base: se cede */
+      /* Otra pestaña con una versión nueva de OneBook necesita actualizar la base: se cede */
       db.onversionchange=function(){db.close()};
       ok(db);
     };
@@ -112,7 +112,7 @@ function masNueva(a,b){
 /* ---------- Apertura ---------- */
 var motor=null;
 var listo=abrirIDB().then(motorIDB,function(e){
-  if(window.console)console.warn('OneLearn: IndexedDB no está disponible; se usa localStorage.',e&&e.message);
+  if(window.console)console.warn('OneBook: IndexedDB no está disponible; se usa localStorage.',e&&e.message);
   return motorLocal();
 }).then(function(m){
   motor=m;
@@ -130,7 +130,7 @@ var listo=abrirIDB().then(motorIDB,function(e){
     });
   });
 }).then(function(){return motor},function(e){
-  if(window.console)console.error('OneLearn: no se pudieron preparar tus datos',e);
+  if(window.console)console.error('OneBook: no se pudieron preparar tus datos',e);
   motor=motor||motorLocal();
   return motor;
 });
@@ -205,7 +205,7 @@ function leerJSON(k){try{return JSON.parse(lsGet(k)||'null')}catch(e){return nul
 function exportar(){
   return Promise.all([notas.todas(),conMotor(function(m){return m.todos('documentos')}),conMotor(function(m){return m.todos('marcadores')})]).then(function(r){
     return {
-      app:'OneLearn',formato:1,exportado:ahora(),
+      app:'OneBook',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],
       avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal')
     };
@@ -213,7 +213,7 @@ function exportar(){
 }
 function nombreRespaldo(){
   var d=new Date(),z=function(n){return (n<10?'0':'')+n};
-  return 'onelearn-respaldo-'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'.json';
+  return 'onebook-respaldo-'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'.json';
 }
 function descargar(){
   return exportar().then(function(datos){
@@ -231,9 +231,10 @@ function idValido(id){return typeof id==='string'&&/^[\w-]{1,80}$/.test(id)}
 /* Combina un respaldo con lo que hay: entra lo que no existe y lo que es más nuevo.
    Devuelve {documentos, notas, marcadores, avance} con cuántas cosas entraron. */
 function importar(datos){
-  if(!esObjeto(datos)||datos.app!=='OneLearn'||typeof datos.formato!=='number')
-    return Promise.reject(new Error('El archivo no es un respaldo de OneLearn.'));
-  if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneLearn. Actualiza la página e inténtalo otra vez.'));
+  /* Los respaldos de antes del cambio de nombre dicen app:'OneLearn' y se siguen aceptando */
+  if(!esObjeto(datos)||(datos.app!=='OneBook'&&datos.app!=='OneLearn')||typeof datos.formato!=='number')
+    return Promise.reject(new Error('El archivo no es un respaldo de OneBook.'));
+  if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneBook. Actualiza la página e inténtalo otra vez.'));
   var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false,terminal:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
