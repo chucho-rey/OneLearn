@@ -3,8 +3,9 @@
      (inicio.html), antes de pintar nada. Con ?conoce se queda aquí, por ejemplo para compartir la página.
    - estudiantes.html: las cifras (lecciones, ruta y proyectos) se cuentan del temario (catalogo.js).
    - index.html: dibuja con bloques reales (bloques.js y pagos.js) la página de ejemplo y el plan de pagos para
-     probar. «Guárdalo en tu espacio» deja el plan en sessionStorage y abre inicio.html#guardar-pagos, donde crear.js
-     lo convierte en un documento. Ver esta página no guarda nada en localStorage.
+     probar. «Guárdalo en tu espacio» deja el plan en sessionStorage y abre entrar.html?perfil=negocio#guardar-pagos:
+     al crear el espacio se abre inicio.html#guardar-pagos, donde crear.js lo convierte en un documento (si ya hay
+     espacio, entrar.html pasa directo al Inicio). Ver esta página no guarda nada en localStorage.
    Se carga en el <head>, antes de ajustes.js; lo demás corre al terminar de cargar la página. */
 (function(){
 'use strict';
@@ -97,7 +98,7 @@ function prueba(){
   form.addEventListener('submit',function(e){e.preventDefault()});
   $('lpGuardar').addEventListener('click',function(){
     try{sessionStorage.setItem(CLAVE_GUARDAR,JSON.stringify(attrs()))}catch(e){}
-    location.href='inicio.html#guardar-pagos';
+    location.href='entrar.html?perfil=negocio#guardar-pagos';
   });
   pintar();
 }

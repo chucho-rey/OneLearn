@@ -201,6 +201,6 @@ var Pagos=T.Node.create({
   addNodeView:function(){return vista}
 });
 AT.editorExtensiones=(AT.editorExtensiones||[]).concat([Pagos]);
-if(AT.editorInsertar)AT.editorInsertar.push({k:'pagos',t:'Plan de pagos',d:'Una deuda en pagos: cuánto pagas y cuánto te falta',i:'pagos',
+if(AT.editorInsertar)AT.editorInsertar.push({k:'pagos',modulo:'negocio',t:'Plan de pagos',d:'Una deuda en pagos: cuánto pagas y cuánto te falta',i:'pagos',
   p:'deuda prestamo credito abonos mensualidades quincenas dinero cuotas',f:function(c){abrirNuevo=true;return c.insertContent({type:'pagos',attrs:{pagados:{}}})}});
 })();

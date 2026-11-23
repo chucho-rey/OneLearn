@@ -1,5 +1,9 @@
-/* Pantalla de inicio de OneBook: continúa donde te quedaste, tus notas recientes y explorar temas.
-   La primera visita (sin avance ni notas) muestra una bienvenida que sugiere empezar por Memoria RAM.
+/* Pantalla de inicio de OneBook. Cambia según el perfil del espacio (perfil.js):
+   - Con el módulo de estudio: continúa donde te quedaste, tus documentos, notas recientes, rutas, proyectos y
+     explorar temas; la primera visita (sin avance ni notas) sugiere empezar por Memoria RAM.
+   - Sin él (negocio o personal): el nombre del negocio (o tu nombre) y la fecha, tus páginas y páginas listas
+     para usar (las plantillas de los módulos encendidos, AT.crear.plantillasInicio).
+   Las secciones de un módulo apagado llevan .m-estudio y base.css las oculta.
    Usa AT.avance (avance.js) y AT.datos (datos.js). */
 (function(){
 'use strict';
@@ -7,6 +11,7 @@ var AT=window.AT,$=AT.$,esc=AT.esc,ico=AT.ico,LECC=AT.rutas.lecciones;
 var lecciones=[],porId={};
 AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){lecciones.push(l);porId[l.id]=l})});
 var disponibles=lecciones.filter(function(l){return l.archivo});
+var PER=AT.perfil,EST=!PER||PER.tiene('estudio');
 
 function saludo(){
   var h=new Date().getHours();
@@ -80,17 +85,19 @@ function cuando(iso){
   return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:d.getFullYear()===new Date().getFullYear()?undefined:'numeric'});
 }
 /* Recordatorio de respaldo: si tienes documentos o notas y no descargas un respaldo desde hace 14 días
-   (o nunca), Inicio lo sugiere. «Recordármelo en una semana» lo pospone 7 días. */
+   (o nunca), Inicio lo sugiere. «Recordármelo en una semana» lo pospone 7 días. Un espacio recién creado
+   (menos de 3 días, perfil.js) todavía no lo pide: sus páginas acaban de salir de las plantillas. */
 var CLAVE_POSPONER='aprende-tecnologia:recordar-respaldo',DIA=864e5;
 function pintarRespaldo(){
   var caja=$('#iniRespaldo');if(!caja)return;
   var ult=AT.datos.ultimoRespaldo(),hasta=0;
   try{hasta=+localStorage.getItem(CLAVE_POSPONER)||0}catch(e){}
   var dias=ult?Math.floor((Date.now()-new Date(ult).getTime())/DIA):null;
-  var mostrar=hayNotas()&&(dias===null||dias>=14)&&Date.now()>=hasta;
+  var pf=PER&&PER.actual(),nuevo=pf&&!pf.migrado&&(Date.now()-new Date(pf.creado+'T00:00:00').getTime())<3*DIA;
+  var mostrar=hayNotas()&&(dias===null||dias>=14)&&Date.now()>=hasta&&!(nuevo&&dias===null);
   caja.hidden=!mostrar;
   if(mostrar)$('#iniRespaldoTxt').textContent=(dias===null?'Todavía no has descargado ningún respaldo.':'Tu último respaldo es de hace '+dias+' días.')+
-    ' Tus documentos y notas solo viven en este navegador: si se borran sus datos, se pierden. Descarga un respaldo y guárdalo en otro lugar.';
+    (EST?' Tus documentos y notas solo viven en este navegador':' Tus páginas solo viven en este navegador')+': si se borran sus datos, se pierden. Descarga un respaldo y guárdalo en otro lugar.';
 }
 $('#iniRespaldoSi').addEventListener('click',function(){
   AT.datos.descargar().then(function(){pintarRespaldo();AT.aviso('Respaldo descargado. Guárdalo en tu nube o en una memoria USB.')},function(){AT.aviso('No se pudo crear el respaldo. Inténtalo otra vez.')});
@@ -105,7 +112,8 @@ function pintarDocs(){
   if(!ul)return;
   var docs=docsCache.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0}).slice(0,6);
   if(!docs.length){
-    ul.innerHTML='<li class="ini-vacio">Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.</li>';
+    ul.innerHTML='<li class="ini-vacio">'+(EST?'Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.':
+      'Todavía no tienes páginas. Crea la primera con «Crear» o con una de las que están aquí abajo. Se guardan en este dispositivo.')+'</li>';
     return;
   }
   ul.innerHTML=docs.map(function(d){
@@ -146,7 +154,7 @@ function pintarInstalar(){
   if(AT.app.instalada()){sec.hidden=true;return}
   if(AT.app.evento){
     sec.hidden=false;btn.hidden=false;
-    txt.textContent='Ábrelo como una app, desde tu pantalla de inicio, y estudia sin conexión.';
+    txt.textContent='Ábrelo como una app, desde tu pantalla de inicio, y úsalo sin conexión.';
   }else if(AT.app.esIOS()){
     sec.hidden=false;btn.hidden=true;
     txt.textContent='En iPhone o iPad: toca Compartir y luego «Agregar a inicio». Así lo abres como una app y funciona sin conexión.';
@@ -186,9 +194,36 @@ function pintarRutas(){
       '<a class="btn" href="rutas.html#'+esc(r.id)+'">Ver los módulos</a></div></div></div>';
   }).join('');
 }
+/* Páginas listas para usar (sin el módulo de estudio): un botón por plantilla, que la crea y la abre */
+function pintarPlantillas(){
+  var c=$('#iniPlantillas');if(!c||EST||!AT.crear||!AT.crear.plantillasInicio)return;
+  c.innerHTML=AT.crear.plantillasInicio().map(function(k){
+    var t=AT.tiposDoc[k];
+    return '<button type="button" class="ini-pl" data-nuevo="'+esc(k)+'">'+ico(t.icono)+'<span><b>'+esc(t.nombre)+'</b><small>'+esc(t.desc)+'</small></span></button>';
+  }).join('');
+}
+$('#iniPlantillas').addEventListener('click',function(e){
+  var b=e.target.closest('[data-nuevo]');
+  if(!b||b.getAttribute('aria-disabled')==='true')return;
+  b.setAttribute('aria-disabled','true');
+  AT.crear.nuevo(b.getAttribute('data-nuevo')).catch(function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo crear la página. Inténtalo otra vez.')});
+});
+/* Saludo: con negocio, su nombre y la fecha; si no, «Buenos días» y tu nombre */
+function pintarSaludo(){
+  var nombre=PER?PER.nombre():'',fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+  if(PER&&PER.tipo()==='negocio'&&nombre){
+    $('#saludo').textContent=nombre;
+    $('#iniSub').textContent=saludo()+' · '+fecha;
+  }else{
+    $('#saludo').textContent=saludo()+(nombre?', '+nombre:'');
+    $('#iniSub').textContent=EST?'Qué quieres aprender hoy.':fecha.charAt(0).toUpperCase()+fecha.slice(1);
+  }
+  if(!EST)$('#t-docs').textContent='Tus páginas';
+}
 function pintar(){pintarContinuar();pintarRutas();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
-$('#saludo').textContent=saludo();
+pintarSaludo();
+pintarPlantillas();
 pintar();
 recargar();
 AT.avance.on(pintar);

@@ -14,6 +14,7 @@
 <meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script src="assets/js/ajustes.js"></script>
+<script src="assets/js/perfil.js"></script>
 <link rel="stylesheet" href="assets/css/base.css">
 </head>
 <body data-pagina="inicio">
@@ -26,13 +27,13 @@
 
     <main class="page inicio">
       <h1 id="saludo">Hola</h1>
-      <p class="ini-sub">Qué quieres aprender hoy.</p>
+      <p class="ini-sub" id="iniSub">Qué quieres aprender hoy.</p>
 
-      <div class="bienv" id="bienvenida">
+      <div class="bienv m-estudio" id="bienvenida">
         <p>OneBook explica cómo funciona la tecnología con lecciones cortas y laboratorios que puedes tocar. Tu avance y tus apuntes se guardan en este dispositivo.</p>
         <div class="bienv-b"><a class="btn pri" href="lecciones/como-funciona.html">Así funciona OneBook</a><a class="btn" href="lecciones/ram.html">Empieza por Memoria RAM</a></div>
       </div>
-      <div id="continuar" hidden></div>
+      <div class="m-estudio" id="continuar" hidden></div>
 
       <section class="ini-sec" aria-labelledby="t-docs">
         <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus documentos</h2><button class="btn" type="button" data-crear>+ Crear</button></div>
@@ -43,27 +44,33 @@
         <ul class="ini-notas" id="iniDocs"></ul>
       </section>
 
-      <section class="ini-sec" aria-labelledby="t-notas">
+      <section class="ini-sec m-sin-estudio" id="iniEmpezar" aria-labelledby="t-empezar">
+        <h2 id="t-empezar">Páginas listas para usar</h2>
+        <p class="ini-nota">Empieza con una de estas y cámbiala a tu gusto con «/».</p>
+        <div class="ini-plantillas" id="iniPlantillas"></div>
+      </section>
+
+      <section class="ini-sec m-estudio" aria-labelledby="t-notas">
         <h2 id="t-notas">Tus notas recientes</h2>
         <ul class="ini-notas" id="recientes"></ul>
       </section>
 
-      <section class="ini-sec" aria-labelledby="t-rutas">
+      <section class="ini-sec m-estudio" aria-labelledby="t-rutas">
         <div class="ini-sec-h"><h2 id="t-rutas">Rutas</h2><a class="btn" href="rutas.html">Ver la ruta completa</a></div>
         <div id="iniRutas"></div>
       </section>
 
-      <section class="ini-sec" aria-labelledby="t-proyectos">
+      <section class="ini-sec m-estudio" aria-labelledby="t-proyectos">
         <div class="ini-sec-h"><h2 id="t-proyectos">Proyectos</h2><a class="btn" href="proyectos/index.html">Ver todos</a></div>
         <div id="iniProyectos"></div>
       </section>
 
-      <section class="ini-sec" aria-labelledby="t-explorar">
+      <section class="ini-sec m-estudio" aria-labelledby="t-explorar">
         <h2 id="t-explorar">Explorar temas</h2>
         <div id="explorar"></div>
       </section>
 
-      <section class="ini-sec ini-app" aria-labelledby="t-hecho">
+      <section class="ini-sec ini-app m-estudio" aria-labelledby="t-hecho">
         <h2 id="t-hecho">¿Estudias programación?</h2>
         <p>Mira con qué está hecho OneBook: HTML, CSS y JavaScript sin framework, el editor, tus datos en el navegador y las pruebas, con ejemplos del código real.</p>
         <a class="btn" href="acerca.html">Cómo está hecho OneBook</a>
@@ -71,7 +78,7 @@
 
       <section class="ini-sec ini-app" id="instalar" aria-labelledby="t-instalar" hidden>
         <h2 id="t-instalar">Instala OneBook</h2>
-        <p id="instalarTxt">Ábrelo como una app, desde tu pantalla de inicio, y estudia sin conexión.</p>
+        <p id="instalarTxt">Ábrelo como una app, desde tu pantalla de inicio, y úsalo sin conexión.</p>
         <button class="btn" type="button" id="instalarBtn" hidden>Instalar</button>
       </section>
     </main>

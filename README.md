@@ -14,7 +14,10 @@ index.html                  Página de bienvenida para negocios (la raíz del si
                             funciona, lo que ya hay y lo que viene, precios y preguntas. Quien ya usa OneBook en ese navegador va
                             directo a inicio.html (con ?conoce se queda en la bienvenida)
 estudiantes.html            Bienvenida para estudiantes (la de OneLearn): lecciones, rutas, apuntes y tesis
-inicio.html                 Inicio de la app: continúa donde te quedaste, tus documentos, notas recientes, tu ruta, proyectos y explorar temas
+entrar.html                 «Crea tu espacio»: para qué usarás OneBook (negocio, finanzas o estudiar), tu negocio o tu nombre y las
+                            páginas para empezar; con ?editar cambia el perfil y los módulos; también restaura un respaldo
+inicio.html                 Inicio de la app, según el perfil: con estudio, continúa donde te quedaste, tus documentos, notas, tu ruta,
+                            proyectos y explorar temas; sin estudio, el nombre del negocio, tus páginas y páginas listas para usar
 documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
 acerca.html                 «Cómo está hecho OneBook»: las tecnologías del sitio explicadas para estudiantes de programación
 rutas.html                  Rutas de aprendizaje: cada ruta por módulos, con su avance y «qué sigue»
@@ -31,6 +34,10 @@ assets/
   css/terminal.css          Estilos de la terminal simulada (solo en las lecciones que la usan)
   css/red.css               Estilos de los diagramas del simulador de red (solo en las lecciones que lo usan)
   js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
+  js/perfil.js              El perfil del espacio y sus módulos (negocio, estudio); en el <head> de todas las páginas, después de
+                            ajustes.js. Marca <html> con con-/sin-<módulo>, migra a quien ya usaba OneLearn y manda a entrar.html
+                            si no hay espacio (AT.perfil)
+  js/entrar.js              El asistente de «Crea tu espacio» (entrar.html)
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
   js/catalogo.js            Temario: grupos y lecciones (en la barra lateral, cada grupo se pliega y se recuerda cuáles dejaste abiertos),
                             proyectos (AT.proyectos) y rutas de aprendizaje por módulos (AT.caminos)
@@ -41,7 +48,8 @@ assets/
   js/apuntes.js             Hoja de apuntes de cada lección (abajo o acoplada a la derecha)
   js/app.js                 App instalable: service worker, aviso de actualización e instalación
   js/respaldo.js            Ventana «Tus datos»: espacio, protección del navegador, descargar e importar respaldo
-  js/crear.js               «Crear»: tipos de documento, sus plantillas y la ventana «¿Qué quieres crear?» (AT.crear)
+  js/crear.js               «Crear»: tipos de documento (cada uno de un módulo), sus plantillas (también las de negocio: pendientes,
+                            préstamo, gastos, surtir, proveedores) y la ventana «¿Qué quieres crear?» (AT.crear)
   js/editor.js              El editor de bloques sobre Tiptap: bloques propios, barra, menú «/», asa para mover (AT.editor)
   js/documento.js           Página de un documento: modos Editar y Leer, autoguardado, Markdown, duplicar y eliminar
   js/fuentes.js             Fuentes de una tesis: formato APA 7 en español, citas y bibliografía, importar BibTeX y RIS,
@@ -65,6 +73,7 @@ assets/
   js/landing.js             Bienvenidas: manda al Inicio a quien ya usa OneBook; en index.html dibuja la página de ejemplo y el
                             plan de pagos para probar; en estudiantes.html cuenta lecciones, ruta y proyectos
   css/landing.css           Estilos de las dos páginas de bienvenida
+  css/entrar.css            Estilos de «Crea tu espacio»
   js/proyecto.js            Proyectos: la lista y cada proyecto por fases, con tareas que se guardan (AT.proyectosAvance en base.js)
   js/rutas.js               Página de rutas: módulos, avance y «qué sigue» (el cálculo es AT.avance.camino, en avance.js)
   js/terminal.js            Terminal Linux simulada para los laboratorios (AT.terminal): archivos, permisos, usuarios, sudo, procesos,
@@ -123,6 +132,7 @@ La tesis es el primer tipo académico de «Crear» (en `crear.js`, `academico:tr
 - **Declaración de autoría** (bloque `declaracion`, {ia, usos}): declara que el trabajo es propio y, si se usó IA, cuál y para qué. Al leer se ve como una declaración formal con el nombre del autor.
 - **Registro de autoría** (`autoria.js`, `doc.autoria`): una extensión del editor cuenta por sesión lo tecleado, borrado y pegado (solo números; deshacer no cuenta). Al pegar un texto largo, una barra pregunta de dónde viene (de ti, de una fuente para citarla, o de una IA). La ventana «Autoría» resume el registro y descarga una **constancia** en HTML con sesiones, orígenes, las figuras y tablas con su nota de origen, la declaración y la huella SHA-256 del texto (y de las imágenes, si hay).
 - **Piezas académicas** (`piezas.js`): `figura` (imagen comprimida en el dispositivo a WebP de hasta 1600 px, con título, texto alternativo y nota de origen; se inserta con «/imagen», pegando o arrastrando), `tablaNumerada` (una tabla con «Tabla N», título y nota), `ecuacion` y `formula` (LaTeX dibujado con KaTeX, que se carga solo si hace falta; «$$» y `$x^2$` al escribir), `notaPie` (Ctrl+Alt+F; al leer, las notas van al final con enlaces de ida y vuelta), `indicePiezas` y `refCruzada` («Figura 3», «Tabla 2», «Ecuación (4)» o una sección; se renumeran solas). Figuras, tablas y ecuaciones llevan `attrs.clave`, única en todo el documento, que es el destino de las referencias. Imágenes, ecuaciones y notas están en todos los documentos; la numeración de figuras, las tablas numeradas, los índices y las referencias cruzadas, solo en los académicos. `AT.bloques.registrar` agrega su dibujo al leer.
+- **Perfiles y módulos** (`perfil.js`, `entrar.html`, fase F2): cada espacio tiene un perfil (negocio, personal o estudio) que enciende módulos. El núcleo (páginas, notas, tablas, imágenes, imprimir, respaldo, búsqueda y ajustes) está siempre; el módulo **negocio** trae el plan de pagos y las plantillas de negocio; el módulo **estudio**, las lecciones, rutas, proyectos, libretas, apuntes, tesis y las herramientas académicas del editor. Lo de un módulo apagado no se muestra: la barra lateral (sin estudio, solo Inicio, Crear, Buscar y tus páginas), el Inicio (secciones `.m-estudio`, `.m-sin-estudio`), «Crear», el menú «/» (`modulo` en cada elemento de `AT.editorInsertar`) y la búsqueda. Los scripts de documento.html se siguen cargando todos (cualquier documento se puede abrir, aunque su módulo esté apagado). Sin espacio, Inicio manda a «Crea tu espacio»; quien ya usaba OneLearn queda con estudio y negocio. El perfil entra en el respaldo.
 - **Entregar** (`entrega.js`, `imprimir.js`, `exportar-docx.js`, hito T4): el botón «Entregar» de la barra abre el formato de entrega (`doc.formato`: citas APA 7 o IEEE, papel carta o A4, Times New Roman o Arial a 12 puntos, interlineado doble o 1.5, margen izquierdo de 2.54 o 4 cm) y la lista «Antes de entregar» (declaración, pegados sin origen, figuras sin nota, citas o referencias rotas, secciones vacías, datos de la portada). La plantilla es la genérica de APA: portada sin número (de las propiedades), preliminares con números romanos (índices, declaración, resumen), cuerpo con números arábigos desde la introducción o el primer capítulo, número de página arriba a la derecha y cada capítulo en una página nueva. El **PDF** se hace en `imprimir.html` con Paged.js (índice con número de página, notas al pie al pie de su página) y se guarda con «Imprimir»; el **DOCX** se arma con la librería docx: estilos de Word, índice como campo que Word actualiza, índices de figuras y tablas desde sus leyendas, notas al pie de Word, imágenes, ecuaciones nativas de Word (`latexToMath`) y la huella del texto en las propiedades. Cada entrega queda en `doc.autoria.entregas` con su huella y la constancia las lista. Cualquier otro documento se puede imprimir o guardar como PDF desde «⋯».
 - **IEEE** (`fuentes.js`): con `doc.formato.estilo === 'ieee'`, las citas se numeran por orden de primera aparición ([1], [2, p. 12]; el editor avisa el orden con `AT.fuentes.ordenVivo`) y la bibliografía va en ese orden, en el formato IEEE en español.
 - **Proteger la tesis** (`proteger.js`): el botón «Respaldo» de la barra dice cuándo fue la última copia fuera del navegador y avisa si no hay una reciente. Su ventana descarga una copia de la tesis (se recupera con «Importar respaldo»), activa la **copia automática** en un archivo de la computadora (File System Access, en Chrome y Edge de escritorio; el enlace al archivo se guarda en IndexedDB, base `onelearn-archivos`) y pide al navegador que conserve los datos.
