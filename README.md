@@ -7,7 +7,9 @@ Es un sitio estático: no necesita servidor propio ni dependencias para funciona
 ## Estructura
 
 ```
-index.html                  Inicio: continúa donde te quedaste, tus documentos, notas recientes, tu ruta, proyectos y explorar temas
+index.html                  Página de bienvenida (la raíz del sitio): qué es OneLearn, para quién y botones para entrar. Quien ya
+                            usa OneLearn en ese navegador va directo a inicio.html (con ?conoce se queda en la bienvenida)
+inicio.html                 Inicio de la app: continúa donde te quedaste, tus documentos, notas recientes, tu ruta, proyectos y explorar temas
 documento.html              Un documento tuyo (?id=...): editar con el editor de bloques o leerlo como una lección
 acerca.html                 «Cómo está hecho OneLearn»: las tecnologías del sitio explicadas para estudiantes de programación
 rutas.html                  Rutas de aprendizaje: cada ruta por módulos, con su avance y «qué sigue»
@@ -47,7 +49,9 @@ assets/
   js/buscar.js              Búsqueda con Ctrl K en lecciones, documentos, notas y marcadores; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
-  js/inicio.js              Pantalla de inicio
+  js/inicio.js              Pantalla de inicio (inicio.html)
+  js/landing.js             Página de bienvenida: manda al Inicio a quien ya usa OneLearn y cuenta lecciones, ruta y proyectos
+  css/landing.css           Estilos de la página de bienvenida
   js/proyecto.js            Proyectos: la lista y cada proyecto por fases, con tareas que se guardan (AT.proyectosAvance en base.js)
   js/rutas.js               Página de rutas: módulos, avance y «qué sigue» (el cálculo es AT.avance.camino, en avance.js)
   js/terminal.js            Terminal Linux simulada para los laboratorios (AT.terminal): archivos, permisos, usuarios, sudo, procesos,

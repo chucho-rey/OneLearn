@@ -31,16 +31,16 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
 
   /* Manifiesto e íconos */
   const p=await pagina(browser);
-  await p.goto(base+'index.html');await listo(p);
+  await p.goto(base+'inicio.html');await listo(p);
   const man=await (await p.request.get(base+'manifest.webmanifest')).json();
-  r.cumple(man.name==='OneLearn'&&man.lang==='es'&&man.display==='standalone'&&man.start_url==='./'&&man.scope==='./','el manifiesto tiene nombre, idioma, modo app e inicio relativos',man);
+  r.cumple(man.name==='OneLearn'&&man.lang==='es'&&man.display==='standalone'&&man.start_url==='inicio.html'&&man.scope==='./','el manifiesto tiene nombre, idioma, modo app y abre en Inicio (relativo)',man);
   for(const ic of man.icons){
     const res=await p.request.get(base+ic.src);
     r.igual(res.status(),200,'el ícono '+ic.src+' existe');
     if(ic.type==='image/png')r.igual(tamPng(await res.body()),ic.sizes,'el ícono '+ic.src+' mide lo que dice el manifiesto');
   }
   r.cumple(man.icons.some(function(i){return i.purpose==='maskable'}),'hay un ícono «maskable» para Android');
-  for(const pag of ['index.html','lecciones/ram.html','lecciones/cpu.html']){
+  for(const pag of ['inicio.html','lecciones/ram.html','lecciones/cpu.html']){
     const q=await pagina(browser);
     await q.goto(base+pag);await listo(q);
     const h=await q.evaluate(function(){const m=document.querySelector('link[rel="manifest"]'),i=document.querySelector('link[rel="icon"]');return {m:m&&m.href,i:i&&i.href}});
@@ -60,7 +60,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   /* Sin conexión: el criterio del hito */
   await p.context().setOffline(true);
   p.errores.length=0;
-  await p.goto(base+'index.html');await listo(p);
+  await p.goto(base+'inicio.html');await listo(p);
   r.cumple(/Buen|Hola/.test(await p.textContent('#saludo')),'sin conexión abre el inicio');
   for(const [pag,titulo] of [['lecciones/ram.html','Memoria RAM'],['lecciones/cpu.html','Procesador (CPU)']]){
     await p.goto(base+pag);await listo(p);
@@ -80,7 +80,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
 
   /* «Instalar» en el inicio */
   const a=await pagina(browser);
-  await a.goto(base+'index.html');await listo(a);
+  await a.goto(base+'inicio.html');await listo(a);
   r.cumple(await a.isHidden('#instalar'),'si el navegador no ofrece instalar, no se muestra nada');
   await a.evaluate(function(){
     const e=new Event('beforeinstallprompt',{cancelable:true});
@@ -103,7 +103,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   /* iPhone: se explica cómo instalar */
   const ctx=await browser.newContext({viewport:{width:390,height:844},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',isMobile:true,hasTouch:true});
   const i=await ctx.newPage();
-  await i.goto(base+'index.html');await i.waitForLoadState('load');
+  await i.goto(base+'inicio.html');await i.waitForLoadState('load');
   r.cumple(await i.isVisible('#instalar')&&await i.isHidden('#instalarBtn')&&/Agregar a inicio/.test(await i.textContent('#instalarTxt')),'en iPhone se explica cómo agregarlo al inicio');
   await ctx.close();
 });

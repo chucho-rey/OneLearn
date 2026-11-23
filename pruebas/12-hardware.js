@@ -77,7 +77,7 @@ prueba('Almacenamiento y Tarjeta gráfica',async function({browser,base,r}){
 
   /* La búsqueda encuentra las lecciones nuevas */
   const b=await pagina(browser,{});
-  await b.goto(base+'index.html');await listo(b);
+  await b.goto(base+'inicio.html');await listo(b);
   await b.keyboard.press('Control+k');await b.waitForTimeout(200);
   await b.keyboard.type('nvme');await b.waitForTimeout(800);
   r.cumple((await b.locator('[role=option]').allTextContents()).some(function(t){return /Almacenamiento/.test(t)}),'Ctrl K encuentra «NVMe» en Almacenamiento');

@@ -80,7 +80,7 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   gs=await grupos();
   r.cumple(gs.indexOf('ciberseguridad:abierto')>=0,'se recuerda qué grupos dejaste abiertos',gs);
   r.cumple(gs.indexOf('hardware:abierto')>=0,'el grupo de la lección actual siempre se abre, aunque lo hayas plegado',gs);
-  await g.goto(base+'index.html');await listo(g);
+  await g.goto(base+'inicio.html');await listo(g);
   gs=await grupos();
   r.cumple(gs.indexOf('hardware:cerrado:oculto')>=0&&gs.indexOf('ciberseguridad:abierto')>=0,'en Inicio se respeta lo que plegaste',gs);
   const pronto=await g.evaluate(function(){return [[...document.querySelectorAll('.exp-pronto b')].map(function(b){return b.textContent}).join(', '),
@@ -89,7 +89,7 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   await revisar(g,r,'Inicio con grupos plegados');
   await cerrar(g);
   const g2=await pagina(browser,{ancho:1280});
-  await g2.goto(base+'index.html');await listo(g2);
+  await g2.goto(base+'inicio.html');await listo(g2);
   r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn[aria-expanded="true"]')].map(function(b){return b.getAttribute('data-grupo')}).join(',')}),
     'onelearn','la primera vez, en Inicio, solo se abre el primer grupo (OneLearn, con «Cómo funciona»)');
   r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#explorar details.exp-g[open]')].map(function(d){return d.getAttribute('data-g')}).join(',')}),

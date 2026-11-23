@@ -32,7 +32,7 @@ Salida real: imprime la terminal tras `ls -a`, después `2 de 7` (ejercicios cum
 
 | Comando | Qué hace |
 |---|---|
-| `goto <ruta>` | Abre una página relativa a la raíz: `index.html`, `rutas.html`, `lecciones/<id>.html`, `proyectos/<id>.html` |
+| `goto <ruta>` | Abre una página relativa a la raíz: `index.html` (bienvenida; si el navegador ya usó la app, salta a `inicio.html`), `inicio.html`, `rutas.html`, `lecciones/<id>.html`, `proyectos/<id>.html` |
 | `size <ancho> <alto>` | Cambia la ventana. `390 844` simula un celular |
 | `click <sel>` · `fill <sel> <texto>` · `press <tecla>` | Clic, escribir y teclas (sintaxis de Playwright) |
 | `term <n> <línea>` | Escribe en la terminal simulada del laboratorio `n` (empieza en 0, cuenta todos los `.demo`), espera a que termine y muestra las últimas líneas |

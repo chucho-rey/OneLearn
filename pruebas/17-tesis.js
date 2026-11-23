@@ -34,7 +34,7 @@ ER  - `;
 
 prueba('Fase de tesis · Autoría, fuentes y citas',async function({browser,base,r}){
   const p=await pagina(browser,{ancho:1280,alto:900,reducir:true});
-  await p.goto(base+'index.html');await listo(p);
+  await p.goto(base+'inicio.html');await listo(p);
 
   /* ---------- Crear una tesis ---------- */
   await p.click('#sideCrear');await p.waitForTimeout(200);
@@ -197,7 +197,7 @@ prueba('Fase de tesis · Autoría, fuentes y citas',async function({browser,base
   /* ---------- Variantes de lectura y celular ---------- */
   const m=await pagina(browser,{ancho:390,ajustes:{tema:'dark',contraste:'high',escala:1.5,fuente:'opendyslexic'},reducir:true});
   /* Cada página de prueba tiene su propio almacenamiento: se guarda ahí la misma tesis */
-  await m.goto(base+'index.html');await listo(m);
+  await m.goto(base+'inicio.html');await listo(m);
   await m.evaluate(function(x){return AT.datos.documentos.guardar(x,{conservarFecha:true}).then(function(){return 1})},d);
   await m.goto(base+'documento.html?id='+d.id);await listo(m,500);
   await m.evaluate(function(){var b=document.getElementById('docModo');if(/Editar/.test(b.textContent))b.click()});await m.waitForTimeout(400);
@@ -218,7 +218,7 @@ prueba('Fase de tesis · Autoría, fuentes y citas',async function({browser,base
 
   /* ---------- Otros documentos no traen las herramientas de la tesis ---------- */
   const q=await pagina(browser,{ancho:1280,reducir:true});
-  await q.goto(base+'index.html');await listo(q);
+  await q.goto(base+'inicio.html');await listo(q);
   await Promise.all([q.waitForURL(/documento\.html/),q.evaluate(function(){AT.crear.nuevo('notas');return 1}).catch(function(){return 1})]);await listo(q,400);
   await q.click('.ed-cuerpo');await q.keyboard.type('/cita');await q.waitForTimeout(200);
   const opc=await q.$$eval('.menu-barra .menu-i b',function(e){return e.map(function(x){return x.textContent})});

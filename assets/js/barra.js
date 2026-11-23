@@ -25,9 +25,9 @@ function guardarGrupos(){
 
 /* ---------- Estructura: barra lateral, barra superior y siguiente lección ---------- */
 (function(){
-  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'index.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M20.5 22.5 30 16v32h14.5"/></svg><span>One<b>Learn</b></span></a>'+
+  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'inicio.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M20.5 22.5 30 16v32h14.5"/></svg><span>One<b>Learn</b></span></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
-    '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'index.html">'+ico('home')+'<span>Inicio</span></a>'+
+    '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'inicio.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
     '<a class="nv'+(R.pagina==='rutas'?' on" aria-current="page':'')+'" href="'+RAIZ+'rutas.html" id="sideRutas">'+ico('ruta')+'<span>Rutas</span></a>'+
@@ -94,7 +94,7 @@ function guardarGrupos(){
   if(nx){
     var sig=orden[orden.indexOf(actual)+1];
     /* Al final del temario, en lugar de «Siguiente lección», un cierre que regresa al inicio */
-    if(!sig)nx.outerHTML='<a class="next" href="'+RAIZ+'index.html">'+ico('home')+'<span>Terminaste todo el temario. Volver al inicio</span></a>';
+    if(!sig)nx.outerHTML='<a class="next" href="'+RAIZ+'inicio.html">'+ico('home')+'<span>Terminaste todo el temario. Volver al inicio</span></a>';
     else if(sig.archivo)nx.outerHTML='<a class="next" href="'+esc(sig.archivo)+'">'+ico('page')+'<span>Siguiente lección: '+esc(sig.titulo)+'</span></a>';
     else nx.outerHTML='<div class="next">'+ico('page')+'<span>Siguiente lección: '+esc(sig.titulo)+'</span><em>Pronto</em></div>';
     /* Si la lección es parte de una ruta, se dice en qué módulo está y cuál sigue en la ruta (si no es la misma) */
