@@ -173,7 +173,9 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.cumple(md.suggestedFilename()==='fotosintesis.md'&&/^# Fotosíntesis/.test(texto)&&/## Luz y clorofila/.test(texto)&&/\*\*Aviso:\*\*/.test(texto)&&/\| Fase \| Dónde ocurre \| Producto \|/.test(texto)&&/\(correcta\)/.test(texto),
     'se descarga como Markdown con secciones, callout, tabla y repaso',texto.slice(0,300));
   await p.click('#docMas');await p.waitForTimeout(150);
-  await Promise.all([p.waitForURL(function(u){return u.href.indexOf(base)===0&&/documento/.test(u.href)}),p.click('.menu-i:has-text("Duplicar")')]);await listo(p,400);
+  /* La copia se abre en otro documento.html: se espera una URL distinta de la actual */
+  const original=p.url();
+  await Promise.all([p.waitForURL(function(u){return u.href.indexOf(base)===0&&/documento/.test(u.href)&&u.href!==original}),p.click('.menu-i:has-text("Duplicar")')]);await listo(p,400);
   r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Duplicar» crea una copia y la abre');
   await p.click('#docMas');await p.click('.menu-i:has-text("Eliminar")');await p.waitForTimeout(150);
   r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-el')==='no'}),'eliminar pide confirmación con el foco en «Cancelar»');

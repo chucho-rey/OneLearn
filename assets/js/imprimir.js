@@ -74,6 +74,11 @@ function hoja(p){
     '.papel .repaso .ctl,.papel .demo{display:none}',
     '.papel .qo{display:block;border:0;background:none;padding:0 0 0 12pt;font:inherit;text-align:left}',
     '.papel .resumen h2{text-align:left}',
+    /* Plan de pagos */
+    '.papel .pg{margin:9pt 0;break-inside:avoid}.papel .pg-t{margin:0 0 4pt;font-size:12pt}',
+    '.papel .pg-k{display:flex;flex-wrap:wrap;gap:4pt 18pt;margin:0 0 4pt}.papel .pg-k div{display:flex;gap:4pt}.papel .pg-k dt{font-weight:700}.papel .pg-k dd{margin:0}',
+    '.papel .pg-barra{display:none}.papel .pg-sig{margin:0 0 4pt}',
+    '.papel .pg-l{list-style:none;padding:0;margin:0;font-size:10pt;line-height:1.4}.papel .pg-i label{display:flex;gap:12pt}.papel .pg-i input{margin:0 6pt 0 0}',
     '.papel dl.props{display:grid;grid-template-columns:auto 1fr;gap:2pt 12pt;margin:0 0 12pt;font-size:10pt}',
     '.papel dl.props div{display:contents}.papel dl.props dt{font-weight:700}.papel dl.props dd{margin:0}',
     '.papel .tag{border:0;padding:0;background:none;font:inherit}',

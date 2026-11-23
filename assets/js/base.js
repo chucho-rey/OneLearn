@@ -132,6 +132,7 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-clase" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="11" rx="1.2"/><path d="M8 20h8M12 15.5V20M7 8.5h6M7 11.5h4"/></symbol>'+
 '<symbol id="i-libro" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3.5 5v13.5c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5V20"/></symbol>'+
 '<symbol id="i-investigacion" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5M8 10.5h5M10.5 8v5"/></symbol>'+
+'<symbol id="i-pagos" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 9.5h19M6.5 14.5h4"/></symbol>'+
 '<symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 8.2 7.5 9.5 4.3-1.3 7.5-5 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></symbol>'+
 '<symbol id="i-imagen" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 15.5-4.5-4.5L7 19.5"/></symbol>'+
 '<symbol id="i-ecuacion" viewBox="0 0 24 24"><path d="M17.5 5h-11l6 7-6 7h11"/></symbol>'+
