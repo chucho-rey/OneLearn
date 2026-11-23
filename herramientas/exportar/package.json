@@ -1,0 +1,13 @@
+{
+  "name": "onelearn-exportar",
+  "private": true,
+  "description": "Copia las librerías para exportar documentos (Paged.js para el PDF y docx para Word) a assets/vendor",
+  "scripts": {
+    "copiar": "node copiar.js"
+  },
+  "devDependencies": {
+    "docx": "9.15.1",
+    "esbuild": "0.28.2",
+    "pagedjs": "0.4.3"
+  }
+}

@@ -4,12 +4,13 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-30';
+const VERSION='onelearn-31';
 const ARCHIVOS=[
   './',
   'index.html',
   'inicio.html',
   'documento.html',
+  'imprimir.html',
   'acerca.html',
   'rutas.html',
   'proyectos/index.html',
@@ -24,6 +25,7 @@ const ARCHIVOS=[
   'assets/css/base.css',
   'assets/css/editor.css',
   'assets/css/landing.css',
+  'assets/css/imprimir.css',
   'assets/css/terminal.css',
   'assets/css/red.css',
   'assets/js/ajustes.js',
@@ -40,6 +42,9 @@ const ARCHIVOS=[
   'assets/js/autoria.js',
   'assets/js/piezas.js',
   'assets/js/proteger.js',
+  'assets/js/entrega.js',
+  'assets/js/exportar-docx.js',
+  'assets/js/imprimir.js',
   'assets/js/bloques.js',
   'assets/js/crear.js',
   'assets/js/buscar.js',
@@ -192,6 +197,8 @@ const ARCHIVOS=[
   'lecciones/nube.css',
   'lecciones/nube.js',
   'assets/vendor/tiptap.min.js',
+  'assets/vendor/docx.min.js',
+  'assets/vendor/paged.min.js',
   'assets/vendor/katex/katex.min.js',
   'assets/vendor/katex/katex.min.css',
   'assets/vendor/katex/fonts/KaTeX_AMS-Regular.woff2',

@@ -4,6 +4,8 @@
    donde autores es [{apellido, nombre}] o [{org}] para una institución o empresa.
    - Formato APA 7 en español: AT.fuentes.referencia(f) da trozos [{t, i}] (i = cursiva) y AT.fuentes.cita(...) el
      texto de una cita en el texto: (Pérez, 2020, p. 15) o Pérez (2020). Mismo autor y año: 2020a, 2020b.
+   - Estilo IEEE (doc.formato.estilo === 'ieee'): citas numeradas por orden de aparición, [1] o [1, p. 15], y la
+     bibliografía en ese orden. AT.fuentes.estilo(doc) dice cuál usa un documento.
    - Importar: AT.fuentes.bibtex(texto) y AT.fuentes.ris(texto) (Zotero, Mendeley); buscar: porDoi(doi) en Crossref y
      porIsbn(isbn) en Open Library.
    - AT.fuentes.dialogo({doc, alCambiar, alElegir}) abre la ventana «Fuentes»; con alElegir sirve para citar.
@@ -120,12 +122,93 @@ function extraDe(f){
 }
 function referenciaTexto(f,suf){return referencia(f,suf).map(function(x){return x.t}).join('')}
 function pagina(p){p=s(p);if(!p)return '';if(/^(p|pp|párr)\./.test(p))return p;return (/[-–,]/.test(p)?'pp. ':'p. ')+rango(p)}
-/* Texto de una cita en el texto, dados sus atributos y las fuentes del documento */
-function cita(a,fuentes){
+/* ---------- IEEE, en español ---------- */
+function estilo(doc){return doc&&doc.formato&&doc.formato.estilo==='ieee'?'ieee':'apa'}
+var NOMBRE_ESTILO={apa:'APA 7',ieee:'IEEE'};
+function autorIeee(a){
+  if(a.org)return s(a.org);
+  var ini=iniciales(a.nombre);
+  return (ini?ini+' ':'')+s(a.apellido);
+}
+function autoresIeee(lista){
+  var l=(lista||[]).filter(function(a){return s(a.org)||s(a.apellido)}).map(autorIeee);
+  if(!l.length)return '';
+  if(l.length>6)return l[0]+' et al.';
+  if(l.length===1)return l[0];
+  return l.slice(0,-1).join(', ')+' y '+l[l.length-1];
+}
+/* Trozos de una referencia IEEE (sin el número; bibliografia() lo agrega).
+   Artículo: A. Autor y B. Autor, “Título,” *Revista*, vol. 4, no. 2, pp. 8–25, 2019, doi: 10.xxx.
+   Libro: A. Autor, *Título*, 2.ª ed. Editorial, 2016. */
+function referenciaIeee(f){
+  var R=[],t=f.tipo,an=s(f.anio)||'s. f.',tit=s(f.titulo),au=autoresIeee(f.autores),resto=[],cont='',sep=', ';
+  function add(x,i){if(x)R.push({t:x,i:!!i})}
+  var enComillas=t!=='libro'&&t!=='ia';
+  if(au)add(au+', ');
+  if(tit){if(enComillas)add('“'+tit+',” ');else add(tit,true)}
+  if(t==='articulo'){
+    cont=s(f.contenedor);
+    if(s(f.volumen))resto.push('vol. '+s(f.volumen));
+    if(s(f.numero))resto.push('no. '+s(f.numero));
+    if(s(f.paginas))resto.push((/[-–,]/.test(f.paginas)?'pp. ':'p. ')+rango(f.paginas));
+    resto.push(an);
+  }else if(t==='libro'){
+    if(s(f.edicion)&&!/^1(\.|ª|a)?$/.test(s(f.edicion)))resto.push(s(f.edicion).replace(/\.?\s*(ed\.?|edición)?$/i,'')+'.ª ed.');
+    if(s(f.editorial))resto.push(s(f.editorial));
+    resto.push(an);
+    if(resto.length>1&&/ed\.$/.test(resto[0])){resto[0]+=' '+resto[1];resto.splice(1,1)}
+  }else if(t==='ia'){
+    add(' [Chat de IA generativa]');
+    if(s(f.herramienta))resto.push(s(f.herramienta));
+    resto.push(an);
+  }else if(t==='capitulo'){
+    if(s(f.contenedor)){add('en ');cont=s(f.contenedor)}
+    if(s(f.editores))resto.push(s(f.editores)+', Ed'+(/ y |,/.test(s(f.editores))?'s':'')+'.');
+    if(s(f.editorial))resto.push(s(f.editorial));
+    resto.push(an);
+    if(s(f.paginas))resto.push('pp. '+rango(f.paginas));
+  }else if(t==='tesis'){
+    resto.push(GRADOS[f.grado]||'Tesis');
+    if(s(f.institucion))resto.push(s(f.institucion));
+    resto.push(an);
+  }else{
+    if(s(f.contenedor)&&s(f.contenedor)!==au)cont=s(f.contenedor);
+    if(t==='otro'&&s(f.editorial))resto.push(s(f.editorial));
+    resto.push(an);
+  }
+  if(cont)add(cont,true);
+  /* Después de algo en cursiva va una coma; después de un título entre comillas, no (la coma va dentro) */
+  var ultimo=R[R.length-1],coma=ultimo&&(ultimo.i||/\]$/.test(ultimo.t))?sep:'';
+  add(coma+resto.join(', '));
+  var doi=doiUrl(f.doi);
+  if(doi)add(', doi: '+doi.replace('https://doi.org/','')+'.');
+  else{R[R.length-1].t=terminaPunto(R[R.length-1].t);if(s(f.url))add(' [En línea]. Disponible en: '+s(f.url))}
+  return R;
+}
+/* Números IEEE: orden de la primera cita en el documento (en el editor, el que tiene abierto ahora) */
+var vivo=null,cacheOrden=typeof WeakMap==='function'?new WeakMap():null;
+function ordenCitas(doc){
+  if(vivo&&doc&&doc===AT.docActual)return vivo;
+  var c=doc&&doc.contenido;
+  if(!c)return [];
+  if(cacheOrden&&cacheOrden.has(c))return cacheOrden.get(c);
+  var o=Object.keys(citadas(c));
+  if(cacheOrden)cacheOrden.set(c,o);
+  return o;
+}
+function numeroIeee(doc,id){var i=ordenCitas(doc).indexOf(id);return i<0?0:i+1}
+/* Texto de una cita en el texto, dados sus atributos y las fuentes del documento (doc: para el estilo y la numeración) */
+function cita(a,fuentes,doc){
+  if(!doc&&AT.docActual&&AT.docActual.fuentes===fuentes)doc=AT.docActual;
   var f=(fuentes||[]).filter(function(x){return x.id===a.fuente})[0];
-  if(!f)return '(fuente borrada)';
+  if(!f)return estilo(doc)==='ieee'?'[?]':'(fuente borrada)';
+  var pg=pagina(a.pagina);
+  if(estilo(doc)==='ieee'){
+    var n=numeroIeee(doc,f.id)||'?',num='['+n+(pg?', '+pg:'')+']';
+    return a.narrativa?(autoresCita(f.autores)||'«'+s(f.titulo)+'»')+' '+num:num;
+  }
   var suf=sufijos(fuentes)[f.id]||'',quien=autoresCita(f.autores)||('«'+(s(f.titulo).length>40?s(f.titulo).slice(0,40)+'…':s(f.titulo))+'»');
-  var cuando=anio(f)+suf,pg=pagina(a.pagina);
+  var cuando=anio(f)+suf;
   return a.narrativa?quien+' ('+cuando+(pg?', '+pg:'')+')':'('+quien+', '+cuando+(pg?', '+pg:'')+')';
 }
 /* Ids de las fuentes citadas en el contenido */
@@ -134,13 +217,18 @@ function citadas(contenido){
   (function rec(n){if(!n)return;if(n.type==='referencia'&&n.attrs&&n.attrs.fuente)out[n.attrs.fuente]=(out[n.attrs.fuente]||0)+1;(n.content||[]).forEach(rec)})(contenido);
   return out;
 }
-/* Lista ordenada para la bibliografía */
+/* Lista ordenada para la bibliografía: APA por autor y año; IEEE por orden de cita (las no citadas, al final) */
 function bibliografia(doc,todas,usadas){
   var fs=doc&&doc.fuentes||[],suf=sufijos(fs);
   usadas=usadas||citadas(doc&&doc.contenido);
-  return fs.filter(function(f){return todas||usadas[f.id]}).sort(function(a,b){
-    return claveAutor(a).localeCompare(claveAutor(b))||anio(a).localeCompare(anio(b))||(suf[a.id]||'').localeCompare(suf[b.id]||'');
-  }).map(function(f){return {fuente:f,trozos:referencia(f,suf[f.id])}});
+  var alfa=function(a,b){return claveAutor(a).localeCompare(claveAutor(b))||anio(a).localeCompare(anio(b))||(suf[a.id]||'').localeCompare(suf[b.id]||'')};
+  if(estilo(doc)==='ieee'){
+    var orden=Object.keys(usadas),pos={};orden.forEach(function(id,i){pos[id]=i});
+    var lista=fs.filter(function(f){return f.id in pos}).sort(function(a,b){return pos[a.id]-pos[b.id]})
+      .concat(todas?fs.filter(function(f){return !(f.id in pos)}).sort(alfa):[]);
+    return lista.map(function(f,i){return {fuente:f,numero:i+1,trozos:[{t:'['+(i+1)+'] ',i:false}].concat(referenciaIeee(f))}});
+  }
+  return fs.filter(function(f){return todas||usadas[f.id]}).sort(alfa).map(function(f){return {fuente:f,trozos:referencia(f,suf[f.id])}});
 }
 /* Dibuja trozos en un elemento (cursivas con <i>, enlaces seguros) */
 function pintarTrozos(trozos,cont){
@@ -326,7 +414,7 @@ function dialogo(op){
     d.innerHTML=h;
     if(vista==='lista')$$('.fu-i',d).forEach(function(li){
       var f=doc.fuentes[+li.getAttribute('data-i')];
-      pintarTrozos(referencia(f,sufijos(doc.fuentes)[f.id]),$('.fu-ref',li));
+      pintarTrozos(estilo(doc)==='ieee'?referenciaIeee(f):referencia(f,sufijos(doc.fuentes)[f.id]),$('.fu-ref',li));
     });
     if(vista==='form')previa();
     var x=foco?$(foco,d):null;
@@ -420,6 +508,9 @@ AT.fuentes={
   TIPOS:TIPOS,referencia:referencia,referenciaTexto:referenciaTexto,cita:cita,citadas:citadas,bibliografia:bibliografia,sufijos:sufijos,
   pintarTrozos:pintarTrozos,trozosMarkdown:trozosMarkdown,bibtex:bibtex,ris:ris,deCrossref:deCrossref,porDoi:porDoi,porIsbn:porIsbn,
   dialogo:dialogo,declaracion:declaracion,autorDe:autorDe,
+  estilo:estilo,nombreEstilo:function(doc){return NOMBRE_ESTILO[estilo(doc)]},referenciaIeee:referenciaIeee,ordenCitas:ordenCitas,
+  /* El editor avisa el orden de las citas mientras escribes (null al cerrarlo); true si cambió */
+  ordenVivo:function(ids){var a=JSON.stringify(vivo),b=JSON.stringify(ids);vivo=ids;return a!==b},
   /* El documento abierto (lo pone documento.js) */
   doc:function(){return AT.docActual||null},
   vigilar:function(v){vistas.add(v);return function(){vistas.delete(v)}},

@@ -1,0 +1,21 @@
+/* OneLearn: la vista para imprimir (imprimir.html). En pantalla, una barra arriba y las páginas sobre un fondo
+   gris, como en un visor de PDF; al imprimir, solo las páginas. El estilo del papel lo arma imprimir.js. */
+body[data-pagina="imprimir"]{background:var(--bg-soft)}
+.im-barra{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 1rem;padding:0.625rem max(1rem,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--bg)}
+.im-barra .btn{display:inline-flex;align-items:center;min-height:2.25rem;font-size:0.9375rem;color:var(--fg);text-decoration:none}
+.im-barra .btn.pri{color:var(--on-accent)}
+.im-estado{flex:1;margin:0;font-size:0.9375rem;color:var(--fg-2)}
+.im-estado.err{color:var(--bad-ink)}
+.im-ayuda{max-width:none;margin:0;padding:0.5rem max(1rem,env(safe-area-inset-left,0px));font-size:0.875rem;color:var(--fg-2)}
+.im-paginas{padding:1rem 0 3rem;overflow-x:auto}
+.im-espera{position:absolute;left:-9999px;top:0;width:16cm}
+/* Las páginas de Paged.js, centradas y con sombra */
+.im-paginas .pagedjs_pages{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.im-paginas .pagedjs_page{background:#fff;box-shadow:0 0.125rem 0.75rem rgba(0,0,0,.18)}
+@media print{
+  .im-barra,.im-ayuda{display:none}
+  html,body,body[data-pagina="imprimir"]{background:#fff}
+  .im-paginas{padding:0;overflow:visible}
+  .im-paginas .pagedjs_pages{display:block}
+  .im-paginas .pagedjs_page{box-shadow:none}
+}

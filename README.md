@@ -45,6 +45,10 @@ assets/
   js/piezas.js              Piezas académicas: figuras con imagen comprimida, tablas numeradas, ecuaciones y fórmulas (KaTeX),
                             notas al pie, índices de figuras y tablas, y referencias cruzadas (AT.piezas)
   js/proteger.js            «Respaldo» de la tesis: aviso, copia descargable y copia automática en un archivo (AT.proteger)
+  js/entrega.js             «Entregar»: formato de entrega, portada, preliminares y cuerpo, revisión previa y registro de
+                            cada entrega en la autoría (AT.entrega)
+  js/imprimir.js            Vista para imprimir o guardar como PDF (imprimir.html), paginada con Paged.js
+  js/exportar-docx.js       Exportar una tesis a Word con la librería docx (AT.exportarDocx)
   js/marcadores.js          Marcadores a bloques de las lecciones (botón junto al bloque o tecla M); AT.marcadores
   js/buscar.js              Búsqueda con Ctrl K en lecciones, documentos, notas y marcadores; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
@@ -63,8 +67,12 @@ assets/
   icons/                    Ícono de OneLearn (SVG y PNG de 32, 180, 192 y 512 px, más una versión maskable)
   vendor/tiptap.min.js      Tiptap y ProseMirror empaquetados (MIT, ver tiptap-LICENSE.txt); no se edita a mano
   vendor/katex/             KaTeX (MIT) con sus fuentes WOFF2: se carga solo cuando un documento tiene ecuaciones
+  vendor/paged.min.js       Paged.js (MIT): pagina la vista para imprimir (portada, números de página, notas al pie)
+  vendor/docx.min.js        docx (MIT), empaquetado: genera el DOCX de una tesis; se carga al exportar
 herramientas/tiptap/        Cómo se compila assets/vendor/tiptap.min.js (esbuild)
 herramientas/katex/         Cómo se copia KaTeX a assets/vendor/katex (npm run copiar)
+herramientas/exportar/      Cómo se preparan docx.min.js y paged.min.js (npm run copiar)
+imprimir.html               Vista para imprimir o guardar como PDF de un documento (imprimir.html?id=…)
 pruebas/                    Pruebas automáticas con Playwright (ver pruebas/README.md)
 docs/                       Planeación: qué falta para el MVP (MVP.md) y la idea del conector con Claude (conector-claude.md)
 lecciones/
@@ -106,6 +114,8 @@ La tesis es el primer tipo académico de «Crear» (en `crear.js`, `academico:tr
 - **Declaración de autoría** (bloque `declaracion`, {ia, usos}): declara que el trabajo es propio y, si se usó IA, cuál y para qué. Al leer se ve como una declaración formal con el nombre del autor.
 - **Registro de autoría** (`autoria.js`, `doc.autoria`): una extensión del editor cuenta por sesión lo tecleado, borrado y pegado (solo números; deshacer no cuenta). Al pegar un texto largo, una barra pregunta de dónde viene (de ti, de una fuente para citarla, o de una IA). La ventana «Autoría» resume el registro y descarga una **constancia** en HTML con sesiones, orígenes, las figuras y tablas con su nota de origen, la declaración y la huella SHA-256 del texto (y de las imágenes, si hay).
 - **Piezas académicas** (`piezas.js`): `figura` (imagen comprimida en el dispositivo a WebP de hasta 1600 px, con título, texto alternativo y nota de origen; se inserta con «/imagen», pegando o arrastrando), `tablaNumerada` (una tabla con «Tabla N», título y nota), `ecuacion` y `formula` (LaTeX dibujado con KaTeX, que se carga solo si hace falta; «$$» y `$x^2$` al escribir), `notaPie` (Ctrl+Alt+F; al leer, las notas van al final con enlaces de ida y vuelta), `indicePiezas` y `refCruzada` («Figura 3», «Tabla 2», «Ecuación (4)» o una sección; se renumeran solas). Figuras, tablas y ecuaciones llevan `attrs.clave`, única en todo el documento, que es el destino de las referencias. Imágenes, ecuaciones y notas están en todos los documentos; la numeración de figuras, las tablas numeradas, los índices y las referencias cruzadas, solo en los académicos. `AT.bloques.registrar` agrega su dibujo al leer.
+- **Entregar** (`entrega.js`, `imprimir.js`, `exportar-docx.js`, hito T4): el botón «Entregar» de la barra abre el formato de entrega (`doc.formato`: citas APA 7 o IEEE, papel carta o A4, Times New Roman o Arial a 12 puntos, interlineado doble o 1.5, margen izquierdo de 2.54 o 4 cm) y la lista «Antes de entregar» (declaración, pegados sin origen, figuras sin nota, citas o referencias rotas, secciones vacías, datos de la portada). La plantilla es la genérica de APA: portada sin número (de las propiedades), preliminares con números romanos (índices, declaración, resumen), cuerpo con números arábigos desde la introducción o el primer capítulo, número de página arriba a la derecha y cada capítulo en una página nueva. El **PDF** se hace en `imprimir.html` con Paged.js (índice con número de página, notas al pie al pie de su página) y se guarda con «Imprimir»; el **DOCX** se arma con la librería docx: estilos de Word, índice como campo que Word actualiza, índices de figuras y tablas desde sus leyendas, notas al pie de Word, imágenes, ecuaciones nativas de Word (`latexToMath`) y la huella del texto en las propiedades. Cada entrega queda en `doc.autoria.entregas` con su huella y la constancia las lista. Cualquier otro documento se puede imprimir o guardar como PDF desde «⋯».
+- **IEEE** (`fuentes.js`): con `doc.formato.estilo === 'ieee'`, las citas se numeran por orden de primera aparición ([1], [2, p. 12]; el editor avisa el orden con `AT.fuentes.ordenVivo`) y la bibliografía va en ese orden, en el formato IEEE en español.
 - **Proteger la tesis** (`proteger.js`): el botón «Respaldo» de la barra dice cuándo fue la última copia fuera del navegador y avisa si no hay una reciente. Su ventana descarga una copia de la tesis (se recupera con «Importar respaldo»), activa la **copia automática** en un archivo de la computadora (File System Access, en Chrome y Edge de escritorio; el enlace al archivo se guarda en IndexedDB, base `onelearn-archivos`) y pide al navegador que conserve los datos.
 
 ## Proyectos

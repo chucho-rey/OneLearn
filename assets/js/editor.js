@@ -252,7 +252,7 @@ var ClicCita=T.Extension.create({
 
 /* ---------- Tesis: citas a fuentes, bibliografía y declaración de autoría (fuentes.js) ---------- */
 function docActual(){return AT.docActual||{fuentes:[],props:[]}}
-function textoRef(a){return AT.fuentes?AT.fuentes.cita(a,docActual().fuentes):'(cita)'}
+function textoRef(a){var d=docActual();return AT.fuentes?AT.fuentes.cita(a,d.fuentes,d):'(cita)'}
 /* Cita a una fuente del documento: (Pérez, 2020, p. 15) o Pérez (2020) */
 var Referencia=T.Node.create({
   name:'referencia',group:'inline',inline:true,atom:true,selectable:true,
@@ -284,7 +284,7 @@ var Bibliografia=atomo('bibliografia',function(p){
   var node=p.node;
   function pintar(){
     var d=docActual(),l=AT.fuentes?AT.fuentes.bibliografia(d,node.attrs.todas,citadasEn(p.editor.state)):[];
-    dom.innerHTML='<div class="ed-rep-h"><span class="ed-et">Bibliografía · APA 7</span><label class="chk"><input type="checkbox" data-todas'+(node.attrs.todas?' checked':'')+'>Incluir las que no citaste</label></div>';
+    dom.innerHTML='<div class="ed-rep-h"><span class="ed-et">Bibliografía · '+esc(AT.fuentes?AT.fuentes.nombreEstilo(d):'APA 7')+'</span><label class="chk"><input type="checkbox" data-todas'+(node.attrs.todas?' checked':'')+'>Incluir las que no citaste</label></div>';
     if(!l.length){var h=el('p','hint');h.textContent=(d.fuentes||[]).length?'Aquí aparecerán las fuentes que cites en el texto.':'Agrega tus fuentes en «Fuentes» y cítalas: la bibliografía se arma sola, en orden.';dom.appendChild(h);return}
     var ul=el('ul','biblio');
     l.forEach(function(r){ul.appendChild(AT.fuentes.pintarTrozos(r.trozos,el('li')))});
@@ -993,6 +993,7 @@ function crear(o){
     ].concat(AT.editorExtensiones||[],o.extensiones||[]),
     onUpdate:function(){
       indices.forEach(function(v){v.pintar()});
+      ordenCitasVivo();
       if(biblios.size){clearTimeout(repBib);repBib=setTimeout(function(){biblios.forEach(function(v){v.pintar()})},250)}
       clearTimeout(cambio);
       cambio=setTimeout(function(){if(o.alCambiar)o.alCambiar(editor.getJSON())},o.espera||500);
@@ -1004,6 +1005,12 @@ function crear(o){
   editor.view.dispatch(editor.state.tr.setMeta('addToHistory',false));
   /* Ids para lo que llegó sin ellos */
   editor.view.dispatch(editor.state.tr.setMeta(claveIds,true).setMeta('addToHistory',false));
+  /* IEEE numera las citas por orden de aparición: el orden se toma del editor mientras escribes */
+  function ordenCitasVivo(){
+    if(!AT.fuentes||!AT.fuentes.ordenVivo)return;
+    if(AT.fuentes.ordenVivo(Object.keys(citadasEn(editor.state)))&&AT.fuentes.estilo(docActual())==='ieee')AT.fuentes.refrescar();
+  }
+  ordenCitasVivo();
   var barra=o.barra?crearBarra(editor,o.barra):null;
   var asa=crearAsa(editor,envoltura);
   var api={
@@ -1021,7 +1028,7 @@ function crear(o){
     enlace:function(){if(barra)barra.enlace()},
     insertar:function(k){var it=INSERTAR.filter(function(x){return x.k===k})[0];if(it)it.f(editor.chain().focus()).run()},
     citarFuente:function(){citarFuente(editor)},
-    destruir:function(){clearTimeout(cambio);cerrarMenu();editor.destroy();envoltura.remove();if(barra)barra.el.remove()}
+    destruir:function(){clearTimeout(cambio);cerrarMenu();if(AT.fuentes&&AT.fuentes.ordenVivo)AT.fuentes.ordenVivo(null);editor.destroy();envoltura.remove();if(barra)barra.el.remove()}
   };
   AT.editorActual=api;
   return api;

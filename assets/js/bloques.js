@@ -87,7 +87,7 @@ function textoPlano(n){
   if(n.type==='hardBreak')return '\n';
   if(n.type==='repaso')return (attrs(n).preguntas||[]).map(function(q){return [q.q].concat(q.o||[],[q.e||'']).join(' ')}).join(' ');
   if(n.type==='cita')return attrs(n).texto||'';
-  if(n.type==='referencia')return AT.fuentes&&AT.docActual?AT.fuentes.cita(attrs(n),AT.docActual.fuentes):'';
+  if(n.type==='referencia')return AT.fuentes&&AT.docActual?AT.fuentes.cita(attrs(n),AT.docActual.fuentes,AT.docActual):'';
   if(n.type==='declaracion')return AT.fuentes?[].concat.apply([],AT.fuentes.declaracion(attrs(n),'')).join(' '):'';
   if(TEXTO[n.type])return TEXTO[n.type](n,textoPlano);
   var sep=/^(paragraph|heading|listItem|taskItem|tableCell|tableHeader|codeBlock|desplegableTitulo)$/.test(n.type)?'\n':'';
@@ -209,7 +209,7 @@ var TIPOS={
   },
   referencia:function(n,c){
     var e=el('span','ref');
-    e.textContent=AT.fuentes?AT.fuentes.cita(attrs(n),(c.doc||{}).fuentes):'';
+    e.textContent=AT.fuentes?AT.fuentes.cita(attrs(n),(c.doc||{}).fuentes,c.doc):'';
     return e;
   },
   bibliografia:function(n,c){

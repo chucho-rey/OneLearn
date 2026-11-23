@@ -164,6 +164,8 @@ function panel(doc,op){
     }
     var sn=figurasSinNota(doc);
     if(sn)h+='<p class="hint au-fig">'+(sn===1?'1 figura no tiene':sn+' figuras no tienen')+' nota de origen. Escríbela debajo de la imagen (por ejemplo, «Elaboración propia» o de dónde la tomaste): queda en tu constancia.</p>';
+    var ent=Array.isArray(datos(doc).entregas)?datos(doc).entregas:[];
+    if(ent.length){var u=ent[ent.length-1];h+='<p class="hint au-fig">'+(ent.length===1?'Exportaste una vez':'Exportaste '+ent.length+' veces')+'; la última, '+(u.f==='docx'?'en Word':'en PDF')+' el '+esc(fechaHora(u.t))+'. La constancia guarda la huella de cada entrega.</p>'}
     h+='<p class="au-decl">'+esc(estadoDeclaracion(doc))+'</p>'+
       '<div class="td-bt"><button class="btn pri" type="button" data-au="constancia">'+ico('descargar')+'Descargar constancia</button><button class="btn" type="button" data-au="cerrar">Cerrar</button></div>';
     d.innerHTML=h;
@@ -234,6 +236,9 @@ function constancia(doc){
         pz.map(function(x){return '<tr><td>'+esc(AT.piezas.etiqueta(x))+'</td><td>'+esc(x.titulo||'Sin título')+'</td><td>'+esc(x.nota||(x.clase==='figura'?'Sin indicar':'—'))+'</td></tr>'}).join('')+
         '</tbody></table>':'')+
       '<h2>Declaración de autoría</h2>'+(decTxt?decTxt.map(function(x){return Array.isArray(x)?'<ul>'+x.map(function(y){return '<li>'+esc(y)+'</li>'}).join('')+'</ul>':'<p>'+esc(x)+'</p>'}).join(''):'<p>El documento no tiene declaración de autoría.</p>')+
+      (Array.isArray(datos(doc).entregas)&&datos(doc).entregas.length?'<h2>Entregas</h2><p>Cada vez que se exportó para entregar, con la huella del texto de ese momento:</p><table><thead><tr><th>Cuándo</th><th>Formato</th><th>Palabras</th><th>Huella SHA-256</th></tr></thead><tbody>'+
+        datos(doc).entregas.map(function(e){return '<tr><td>'+esc(fechaHora(e.t))+'</td><td>'+(e.f==='docx'?'Word (DOCX)':'PDF')+'</td><td>'+fmt(e.w||0)+'</td><td><code>'+esc(e.h||'')+'</code></td></tr>'}).join('')+
+        '</tbody></table>':'')+
       '<h2>Huella del texto</h2><p>SHA-256 del texto del documento'+(conImagenes?' y de sus imágenes':'')+' al emitir esta constancia:</p><p><code>'+(h||'No disponible en este navegador')+'</code></p>'+
       '<p class="m">Si el texto cambia, aunque sea una letra, la huella cambia. Sirve para comprobar que esta constancia corresponde a la versión que entregaste.</p>'+
       '<h2>Qué demuestra y qué no</h2><p class="m">El registro muestra cómo se escribió el documento dentro de OneLearn, en este dispositivo: cuándo, cuánto se tecleó y cuánto se pegó, y el origen que la autora o el autor indicó para lo pegado. No registra lo que pasa en otros programas ni en otros dispositivos. Es evidencia del proceso de escritura, no un detector.</p>'+
