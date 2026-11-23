@@ -70,16 +70,20 @@ var catalogo=AT.catalogo||[],actual=AT.leccion;
     var sg=b.closest('.seg');
     if(sg)aj.set(sg.getAttribute('data-k'),b.getAttribute('data-v'));
   });
+  var soltarAtras=function(){};
   function abrir(){
     setNav(false);
     pintar();
     panel.hidden=false;
+    /* El botón Atrás del celular lo cierra (CloseWatcher, base.js) */
+    soltarAtras=AT.alAtras(function(){cerrar(false)});
     btn.setAttribute('aria-expanded','true');
     menos.focus({preventScroll:true});
   }
   function cerrar(devolverFoco){
     if(panel.hidden)return;
     panel.hidden=true;
+    soltarAtras();soltarAtras=function(){};
     btn.setAttribute('aria-expanded','false');
     if(devolverFoco)btn.focus({preventScroll:true});
   }

@@ -350,6 +350,11 @@ a.cita:hover{text-decoration:underline}
 .nv.marc small{font-size:0.75rem;color:var(--fg-2)}
 .marc-x{flex:none;display:grid;place-items:center;width:1.75rem;height:1.75rem;margin-top:0.125rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);font-size:0.875rem;cursor:pointer}
 .marc-x:hover{background:var(--hover);color:var(--fg)}
+/* Dentro de las pestañas de la app: abrir un documento de la barra en una pestaña nueva */
+.doc-li{display:flex;align-items:center;gap:2px}
+.doc-li>a{flex:1;min-width:0}
+.doc-pt{flex:none;display:grid;place-items:center;width:1.75rem;height:1.75rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);font-size:0.9375rem;cursor:pointer}
+.doc-pt:hover{background:var(--hover);color:var(--fg)}
 /* Búsqueda */
 dialog.buscar-dlg{width:min(38rem,calc(100vw - 2rem));padding:0;margin-top:max(4rem,10vh);overflow:hidden;display:none;flex-direction:column;max-height:min(36rem,calc(100dvh - 6rem))}
 dialog.buscar-dlg[open]{display:flex}

@@ -85,6 +85,8 @@ function guardarGrupos(){
   h+='<div class="side-foot">'+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
       '<button class="nv" type="button" id="sideDatos">'+ico('datos')+'<span>Tus datos</span></button>'+
+      /* Fuera de las pestañas de la app: entrar a ellas con esta página abierta */
+      (AT.enPestana?'':'<a class="nv" id="sidePestanas" href="'+RAIZ+'app.html#abrir='+encodeURIComponent(location.pathname.split('/').slice(RAIZ==='../'?-2:-1).join('/')+location.search)+'">'+ico('pestanas')+'<span>Abrir en pestañas</span></a>')+
       (EST?'<a class="nv'+(R.pagina==='acerca'?' on" aria-current="page':'')+'" href="'+RAIZ+'acerca.html">'+ico('codigo')+'<span>Cómo está hecho</span></a>':'')+
       (ES_INICIO?'':
         '<button class="nv" type="button" id="sideZen">'+ico('zen')+'<span>Modo zen</span><kbd>Z</kbd></button>'+
@@ -143,6 +145,8 @@ function syncMenu(){
 }
 /* En celular el menú es un panel modal: mientras está abierto, el resto de la página
    queda inerte (sin foco ni clics) y el foco se mueve al panel; al cerrar vuelve al botón. */
+/* En celular, el botón Atrás (CloseWatcher, base.js) cierra el menú abierto */
+var soltarAtras=function(){};
 function setNav(open){
   var was=navOpen();
   document.body.classList.toggle('nav-open',open);
@@ -151,6 +155,8 @@ function setNav(open){
   var sheetEl=$('#sheet');
   if(sheetEl)sheetEl.toggleAttribute('inert',modal);
   syncMenu();
+  if(modal&&!was)soltarAtras=AT.alAtras(function(){setNav(false)});
+  else if(!open&&was){soltarAtras();soltarAtras=function(){}}
   if(modal&&!was){
     var f=$('.tabp:not([hidden]) .nv.on',sideEl)||$('.tab[aria-selected="true"]',sideEl)||sideBtn;
     f.focus({preventScroll:true});
@@ -299,14 +305,21 @@ document.addEventListener('click',function(e){
       }
     }
   });
+  /* Dentro de las pestañas de la app: el botón junto a cada documento lo abre en una pestaña nueva */
+  listaDocs.addEventListener('click',function(e){
+    var b=e.target.closest('[data-pt-url]');
+    if(b&&AT.pestanas){setNav(false);AT.pestanas.abrir(new URL(RAIZ+b.getAttribute('data-pt-url'),location.href).href)}
+  });
   /* Documentos: los más recientes primero; el que está abierto, marcado */
   function pintarDocsCon(docs){
     var abierto=AT.documentoAbierto||'';
     docs=docs.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
     var h=docs.map(function(d){
       var aqui=d.id===abierto,tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo];
-      return '<li><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+'documento.html?id='+encodeURIComponent(d.id)+'"'+(aqui?' aria-current="page"':'')+'>'+
-        ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></a></li>';
+      var u='documento.html?id='+encodeURIComponent(d.id);
+      return '<li'+(AT.enPestana?' class="doc-li"':'')+'><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+u+'"'+(aqui?' aria-current="page"':'')+'>'+
+        ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></a>'+
+        (AT.enPestana?'<button class="doc-pt" type="button" data-pt-url="'+esc(u)+'" aria-label="Abrir «'+esc(d.titulo||'Sin título')+'» en una pestaña nueva" title="Abrir en una pestaña nueva">'+ico('pestanas')+'</button>':'')+'</li>';
     }).join('');
     h=h||'<li class="side-txt">'+(EST?'Todavía no creas documentos. Toca «Crear» para empezar una libreta o unas notas.':'Todavía no tienes páginas. Toca «Crear» para empezar.')+'</li>';
     if(h!==ultimoDocs){listaDocs.innerHTML=h;ultimoDocs=h}
