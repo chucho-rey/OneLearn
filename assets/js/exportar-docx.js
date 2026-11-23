@@ -161,7 +161,11 @@ function exportar(doc){
             return [new D.Paragraph({style:'TextoSinSangria',children:[new D.TextRun({text:(k+1)+'. '+q.q,bold:true})]})].concat((q.o||[]).map(function(o){return new D.Paragraph({style:'Lista',bullet:{level:0},children:[new D.TextRun(o)]})}));
           }).reduce(function(x,y){return x.concat(y)},[]);
         case 'laboratorio':return [new D.Paragraph({style:'TextoSinSangria',children:[new D.TextRun({text:'Laboratorio: '+(a.titulo||''),italics:true})]})];
-        default:return c.length?bloques(c,{nivel:1}):[];
+        /* Los bloques sin contenido propio (plan de pagos, bloques de la tienda) van como su texto */
+        default:
+          if(c.length)return bloques(c,{nivel:1});
+          var tx=AT.bloques.textoDe(n).trim();
+          return tx?tx.split('\n').filter(function(l){return l.trim()}).map(function(l){return new D.Paragraph({style:'TextoSinSangria',children:[new D.TextRun({text:l})]})}):[];
       }
     }
     /* APA: «Figura 1» en negritas y, en la línea de abajo, el título en cursiva. El número va escrito (no como campo SEQ,

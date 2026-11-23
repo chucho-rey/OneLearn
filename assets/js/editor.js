@@ -19,6 +19,8 @@ function sinAcentos(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,
 var CON_ID=['paragraph','heading','bulletList','orderedList','taskList','blockquote','codeBlock','horizontalRule','table',
   'callout','columnas','desplegable','laboratorio','repaso','indice','resumen','bibliografia','declaracion',
   'figura','tablaNumerada','ecuacion','indicePiezas','pagos'];
+/* Los bloques que se registran después (negocio.js) agregan aquí su tipo: los ids se piden al crear el editor */
+AT.editorConId=CON_ID;
 var claveIds=new pm.PluginKey('idsDeBloque');
 var Ids=T.Extension.create({
   name:'idsDeBloque',
@@ -526,7 +528,11 @@ function insertables(){var t=AT.tiposDoc&&AT.docActual&&AT.tiposDoc[AT.docActual
 function filtrarInsertar(q){
   q=sinAcentos(q);
   if(!q)return insertables();
-  return insertables().filter(function(it){return sinAcentos(it.t+' '+it.p+' '+it.k).indexOf(q)>=0});
+  /* Primero los que se llaman así (clave o título que empieza con lo escrito), después los que lo mencionan */
+  function rango(it){var k=sinAcentos(it.k),t=sinAcentos(it.t);return k===q?0:k.indexOf(q)===0||t.indexOf(q)===0?1:t.indexOf(q)>=0?2:3}
+  return insertables().map(function(it,i){return {it:it,i:i}})
+    .filter(function(o){return sinAcentos(o.it.t+' '+o.it.p+' '+o.it.k).indexOf(q)>=0})
+    .sort(function(a,b){return rango(a.it)-rango(b.it)||a.i-b.i}).map(function(o){return o.it});
 }
 var claveBarra=new pm.PluginKey('menuBarra');
 var MenuBarra=T.Extension.create({

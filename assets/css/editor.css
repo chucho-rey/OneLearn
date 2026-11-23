@@ -367,3 +367,12 @@ dialog.en-dlg{width:min(34rem,calc(100vw - 2rem))}
 .doc-bloqueo p{flex:1 1 16rem;margin:0;font-size:0.9375rem;max-width:none}
 .doc-bloqueo .btn{flex:none}
 [data-contrast="high"] .doc-bloqueo{border-color:var(--line-strong)}
+
+/* ---------- Bloques de la tienda al editar (negocio.js; el formulario .nb-f está en negocio.css) ---------- */
+.nb-ed{border-style:dashed}
+.nb-ed.ProseMirror-selectednode{outline:2px solid var(--accent);outline-offset:2px}
+/* Las tablas de resultados no son tablas del documento */
+.ed-cuerpo .nb-tab{border:0;border-radius:0;table-layout:auto}
+.ed-cuerpo .nb-tab th,.ed-cuerpo .nb-tab td{border:0;border-bottom:1px solid var(--line);min-width:0}
+.ed-cuerpo .nb-tab .nb-tot th,.ed-cuerpo .nb-tab .nb-tot td{border-top:1px solid var(--line-strong)}
+.ed-cuerpo .nb-tab tr:last-child th,.ed-cuerpo .nb-tab tr:last-child td{border-bottom:0}
