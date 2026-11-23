@@ -361,3 +361,9 @@ dialog.en-dlg{width:min(34rem,calc(100vw - 2rem))}
 [data-contrast="high"] .ed-fig,[data-contrast="high"] .ed-ecu{border-color:var(--line-strong)}
 [data-contrast="high"] .ts-barra .ts-aviso{border-width:2px}
 [data-contrast="high"] .menu{border-width:2px}
+
+/* La misma página abierta en otra pestaña: aquí queda solo para leer (documento.js) */
+.doc-bloqueo{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 1rem;margin:0 0 1.25rem;padding:0.75rem 1rem;border:1px solid var(--warn);border-radius:0.625rem;background:var(--warn-bg);color:var(--fg)}
+.doc-bloqueo p{flex:1 1 16rem;margin:0;font-size:0.9375rem;max-width:none}
+.doc-bloqueo .btn{flex:none}
+[data-contrast="high"] .doc-bloqueo{border-color:var(--line-strong)}

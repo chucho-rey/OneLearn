@@ -33,7 +33,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   const p=await pagina(browser);
   await p.goto(base+'inicio.html');await listo(p);
   const man=await (await p.request.get(base+'manifest.webmanifest')).json();
-  r.cumple(man.name==='OneBook'&&man.lang==='es'&&man.display==='standalone'&&man.start_url==='inicio.html'&&man.scope==='./','el manifiesto tiene nombre, idioma, modo app y abre en Inicio (relativo)',man);
+  r.cumple(man.name==='OneBook'&&man.lang==='es'&&man.display==='standalone'&&man.start_url==='app.html'&&man.scope==='./','el manifiesto tiene nombre, idioma, modo app y abre en las pestañas de la app (relativo)',man);
   for(const ic of man.icons){
     const res=await p.request.get(base+ic.src);
     r.igual(res.status(),200,'el ícono '+ic.src+' existe');

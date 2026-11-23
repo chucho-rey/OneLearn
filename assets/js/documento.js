@@ -57,6 +57,8 @@ function cambio(){
   clearTimeout(timer);timer=setTimeout(guardar,600);
 }
 addEventListener('pagehide',function(){if(pendiente||timer){if(ed)doc.contenido=ed.json();guardar()}});
+/* Para el contenedor de pestañas: guarda ya lo pendiente (antes de cerrar o descargar la pestaña) */
+AT.docGuardarYa=function(){return (pendiente||timer)?guardar():Promise.resolve()};
 document.addEventListener('visibilitychange',function(){if(document.hidden&&(pendiente||timer))guardar()});
 
 /* ---------- Modo «Editar» ---------- */
@@ -203,14 +205,15 @@ function pintarLeer(){
 }
 
 /* ---------- Cambiar de modo ---------- */
-function ponerModo(m,enfocar){
+function ponerModo(m,enfocar,sinRecordar){
   if(ed){doc.contenido=ed.json();if(pendiente||timer)guardar();if(registro){registro.desactivar();registro=null}ed.destruir();ed=null}
-  modo=m;recordarModo(m);
+  modo=m;if(!sinRecordar)recordarModo(m);
   document.documentElement.classList.toggle('doc-editando',m==='editar');
   modoBtn.innerHTML=m==='editar'?ico('ojo')+'<span>Leer</span>':ico('note')+'<span>Editar</span>';
   modoBtn.setAttribute('aria-label',m==='editar'?'Ver como lectura':'Editar el documento');
   modoBtn.title=m==='editar'?'Ver como lectura (se ve como una lección)':'Editar';
   if(m==='editar')pintarEditar();else pintarLeer();
+  if(bloqueado)pintarBloqueo();
   if(enfocar==='titulo'){var t=$('#docTitulo');if(t){t.focus();t.select()}}
   else if(enfocar==='cuerpo'&&ed)ed.enfocar('start');
   else if(enfocar)modoBtn.focus({preventScroll:true});
@@ -218,7 +221,7 @@ function ponerModo(m,enfocar){
 modoBtn.addEventListener('click',function(){ponerModo(modo==='editar'?'leer':'editar',true)});
 /* E cambia a editar desde la lectura */
 document.addEventListener('keydown',function(e){
-  if(modo!=='leer'||e.ctrlKey||e.metaKey||e.altKey||e.defaultPrevented)return;
+  if(modo!=='leer'||bloqueado||e.ctrlKey||e.metaKey||e.altKey||e.defaultPrevented)return;
   var t=e.target;
   if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
   if(e.key==='e'||e.key==='E'){e.preventDefault();ponerModo('editar','cuerpo')}
@@ -384,6 +387,7 @@ AT.datos.documentos.leer(ID).then(function(d){
   var conAncla=location.hash.length>1;
   ponerModo(nuevo?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo?'titulo':false);
   ponerEstado('Guardado','ok');
+  avisarAbierto();
   if(AT.refrescarNotas)AT.refrescarNotas();
   /* Si llegaste con #bloque (desde una cita o la búsqueda), se va a ese bloque en modo lectura */
   if(location.hash.length>1&&modo==='leer'){
@@ -392,10 +396,56 @@ AT.datos.documentos.leer(ID).then(function(d){
   }
 },function(){noEncontrado()});
 
+/* ---------- La misma página en dos pestañas (de la app o del navegador) ----------
+   Al abrir un documento se avisa a las demás. La que ya lo tenía guarda lo pendiente y queda solo para leer,
+   con un aviso y «Editar aquí» (que la vuelve la pestaña activa y deja a la otra para leer). La que lo acaba de
+   abrir, si todavía no cambió nada, vuelve a leerlo cuando llega ese último guardado: así nada se pisa. */
+var YO=Math.random().toString(36).slice(2),bloqueado=false,abiertoEn=0,canalDoc=null;
+try{if('BroadcastChannel' in window)canalDoc=new BroadcastChannel('onebook-documentos')}catch(e){}
+function avisarAbierto(){
+  abiertoEn=Date.now();
+  if(canalDoc)try{canalDoc.postMessage({tipo:'abierto',id:ID,quien:YO})}catch(e){}
+}
+function pintarBloqueo(){
+  var v=document.createElement('div');
+  v.className='doc-bloqueo';v.setAttribute('role','status');
+  v.innerHTML='<p><b>Esta página también está abierta en otra pestaña.</b> Aquí queda solo para leer, para que no se pisen los cambios.</p>'+
+    '<button class="btn" type="button" id="docEditarAqui">Editar aquí</button>';
+  page.insertBefore(v,page.firstChild);
+  $('#docEditarAqui',v).addEventListener('click',function(){location.reload()});
+}
+function bloquear(){
+  if(bloqueado||!doc)return;
+  bloqueado=true;
+  (pendiente||timer?guardar():Promise.resolve()).then(function(){
+    /* Sin AT.docCambio, el plan de pagos y lo demás se ven pero no se marcan */
+    AT.docCambio=null;
+    modoBtn.hidden=true;
+    ponerModo('leer',false,true);
+    ponerEstado('Solo lectura');
+  });
+}
+if(canalDoc)canalDoc.onmessage=function(e){
+  var m=e.data;
+  if(m&&m.tipo==='abierto'&&m.id===ID&&m.quien!==YO)bloquear();
+};
+/* Vuelve a leer el documento (después del último guardado de la otra pestaña) */
+function releer(){
+  AT.datos.documentos.leer(ID).then(function(d){
+    if(!d||!d.contenido||pendiente||timer||bloqueado)return;
+    if(ed){if(registro){registro.desactivar();registro=null}ed.destruir();ed=null}
+    doc=d;if(!doc.props)doc.props=[];
+    if(tipo().academico&&!Array.isArray(doc.fuentes))doc.fuentes=[];
+    AT.docActual=doc;
+    titulo();ponerModo(modo,false,true);ponerEstado('Guardado','ok');
+  });
+}
 /* Otra pestaña cambió este documento */
 AT.datos.on(function(c,deOtra){
   if(!deOtra||!doc||c.almacen!=='documentos'||c.id!==ID)return;
   if(c.borrado){AT.aviso('Este documento se eliminó en otra pestaña.');return}
+  if(bloqueado)return;
+  if(!pendiente&&!timer&&Date.now()-abiertoEn<5000){releer();return}
   AT.aviso('Este documento cambió en otra pestaña.','Ver la versión nueva',function(){location.reload()});
 });
 })();

@@ -43,12 +43,13 @@ function limpiar(p){
 }
 function leer(){try{return limpiar(JSON.parse(localStorage.getItem(CLAVE)||'null'))}catch(e){return null}}
 function escribir(p){try{localStorage.setItem(CLAVE,JSON.stringify(p));return true}catch(e){return false}}
-/* ¿Este navegador ya usaba OneLearn? (cualquier dato con el prefijo, salvo el perfil) */
+/* ¿Este navegador ya usaba OneLearn? (cualquier dato con el prefijo, salvo el perfil y las pestañas abiertas,
+   que el contenedor guarda antes de que exista el espacio) */
 function hayDatos(){
   try{
     for(var i=0;i<localStorage.length;i++){
       var k=String(localStorage.key(i));
-      if(k.indexOf(PREF)===0&&k!==CLAVE)return true;
+      if(k.indexOf(PREF)===0&&k!==CLAVE&&k!==PREF+'pestanas')return true;
     }
   }catch(e){}
   return false;

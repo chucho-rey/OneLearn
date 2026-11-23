@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>OneBook</title>
+<meta name="description" content="OneBook con pestañas: varias páginas abiertas a la vez, como en un navegador.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icono-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f1f4f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161e1d" media="(prefers-color-scheme: dark)">
+<!-- El contenedor no se abre dentro de sí mismo: dentro de una pestaña, va al Inicio -->
+<script>if(window.parent!==window)location.replace('inicio.html');</script>
+<script src="assets/js/ajustes.js"></script>
+<script src="assets/js/perfil.js"></script>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/pestanas.css">
+</head>
+<body data-pagina="pestanas" class="pt">
+
+<header class="pt-barra">
+  <button class="pt-todas" type="button" id="ptTodas" aria-haspopup="dialog"><b class="pt-n" id="ptN">1</b><span class="pt-act" id="ptAct">Inicio</span></button>
+  <div class="pt-lista" id="ptLista" role="tablist" aria-label="Pestañas"></div>
+  <button class="pt-nueva" type="button" id="ptNueva" aria-label="Nueva pestaña" title="Nueva pestaña (Alt+T)"></button>
+</header>
+<main class="pt-marcos" id="ptMarcos"></main>
+
+<script src="assets/js/base.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/pestanas.js"></script>
+</body>
+</html>

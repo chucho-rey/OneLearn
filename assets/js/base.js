@@ -141,6 +141,7 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-bitacora" viewBox="0 0 24 24"><path d="M9.5 3.5v6.2L4.5 18a1.8 1.8 0 0 0 1.6 2.5h11.8a1.8 1.8 0 0 0 1.6-2.5l-5-8.3V3.5M8 3.5h8M7.5 14h9"/></symbol>'+
 '<symbol id="i-presentacion" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.2"/><path d="M12 16v4M8.5 20.5h7M7.5 12.5l3-3 2.5 2 3.5-4"/></symbol>'+
 '<symbol id="i-blanco" viewBox="0 0 24 24"><path d="M6 3.5h8.5l4 4v13H6z"/><path d="M14.5 3.5v4h4"/></symbol>'+
+'<symbol id="i-pestanas" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>'+
 '<symbol id="i-marcador" viewBox="0 0 24 24"><path d="M6 3.5h12V21l-6-4.2L6 21z"/></symbol>'+
 '</svg>');
 
@@ -149,15 +150,16 @@ var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
 /* Páginas: inicio, documento, acerca («Cómo está hecho») y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida'||PAGINA==='entrar';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida'||PAGINA==='entrar'||PAGINA==='pestanas';
 /* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
 AT.rutas={raiz:RAIZ,lecciones:LECC,esInicio:ES_INICIO,pagina:PAGINA};
 /* Marca que este navegador ya usa OneBook: la página de bienvenida (index.html) lo manda directo a su Inicio.
    La bienvenida también carga base.js (para dibujar bloques de ejemplo), pero verla no cuenta como usar la app;
-   tampoco «Crea tu espacio» (entrar.html) hasta que el espacio existe: si lo dejas a medias, vuelve a preguntar. */
-if(PAGINA!=='bienvenida'&&PAGINA!=='entrar'){try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}}
+   tampoco «Crea tu espacio» (entrar.html) hasta que el espacio existe: si lo dejas a medias, vuelve a preguntar.
+   El contenedor de pestañas (app.html) tampoco: la página que abre dentro ya lo marca. */
+if(PAGINA!=='bienvenida'&&PAGINA!=='entrar'&&PAGINA!=='pestanas'){try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}}
 var actual=null,grupo='',orden=[];
 catalogo.forEach(function(g){
   g.lecciones.forEach(function(l){
@@ -185,6 +187,42 @@ AT.caminoDe=function(id,esProyecto){
   return r;
 };
 AT.orden=orden;AT.grupoActual=grupo;
+
+/* ---------- El botón Atrás (o Esc) cierra primero lo que está abierto ----------
+   Las ventanas (<dialog> con showModal) ya responden solas. Para los paneles que no son ventanas (el menú
+   lateral en celular, Lectura, los menús del editor) se usa CloseWatcher donde existe (Chrome y Edge;
+   en Android, el botón y el gesto de Atrás). AT.alAtras(fn) devuelve una función que lo suelta. */
+AT.alAtras=function(fn){
+  if(typeof window.CloseWatcher!=='function')return function(){};
+  var w=null;
+  try{w=new CloseWatcher();w.onclose=function(){w=null;fn()}}catch(e){return function(){}}
+  return function(){if(w){var x=w;w=null;try{x.destroy()}catch(e){}}};
+};
+
+/* ---------- Dentro de una pestaña de la app (app.html) ----------
+   Si esta página vive en un iframe del contenedor de pestañas, se le avisan los cambios de título y de
+   dirección, y le pasa los atajos (Alt+T, Alt+W, Alt+1…9) y los enlaces que se abren con clic central o
+   Ctrl/Cmd+clic, para abrirlos en una pestaña nueva. Expone AT.enPestana y AT.pestanas (las del contenedor). */
+(function(){
+  var P=null;
+  try{if(window.parent!==window&&window.parent.AT&&window.parent.AT.pestanas)P=window.parent.AT.pestanas}catch(e){}
+  AT.enPestana=!!P;
+  if(!P)return;
+  AT.pestanas=P;
+  document.documentElement.classList.add('en-pestanas');
+  function avisar(){try{P.cambio(window)}catch(e){}}
+  function nueva(e){
+    var a=e.target.closest&&e.target.closest('a[href]');
+    if(!a||a.hasAttribute('download')||!P.abrible(a.href))return;
+    e.preventDefault();e.stopPropagation();
+    P.abrir(a.href);
+  }
+  document.addEventListener('click',function(e){if(e.button===0&&(e.ctrlKey||e.metaKey))nueva(e)},true);
+  document.addEventListener('auxclick',function(e){if(e.button===1)nueva(e)},true);
+  document.addEventListener('keydown',function(e){if(P.atajo(e,window))e.preventDefault()},true);
+  new MutationObserver(avisar).observe(document.head,{subtree:true,childList:true,characterData:true});
+  addEventListener('hashchange',avisar);addEventListener('popstate',avisar);
+})();
 
 function contarPalabras(t){t=t.trim();return t?t.split(/\s+/).length:0}
 AT.contarPalabras=contarPalabras;

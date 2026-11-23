@@ -438,9 +438,12 @@ AT.editorInsertar=INSERTAR;
 /* ---------- Menú emergente reutilizable ---------- */
 /* abrirMenu(ancla, opciones, {alElegir, etiqueta, foco:true|false}) → {cerrar, mover(d), elegir(), filtrar(lista)} */
 var menuAbierto=null;
+var soltarAtrasMenu=function(){};
 function abrirMenu(ancla,items,op){
   cerrarMenu();
   op=op||{};
+  /* El botón Atrás del celular cierra el menú (CloseWatcher, base.js) */
+  soltarAtrasMenu=AT.alAtras?AT.alAtras(function(){cerrarMenu()}):function(){};
   var conFoco=op.foco!==false,m=el('div','menu'+(op.clase?' '+op.clase:''));
   m.setAttribute('role',conFoco?'menu':'listbox');
   if(op.etiqueta)m.setAttribute('aria-label',op.etiqueta);
@@ -507,6 +510,7 @@ function abrirMenu(ancla,items,op){
 function fuera(e){if(menuAbierto&&!menuAbierto.el.contains(e.target))cerrarMenu()}
 function cerrarMenu(sinDevolver){
   if(!menuAbierto)return;
+  soltarAtrasMenu();soltarAtrasMenu=function(){};
   var m=menuAbierto;menuAbierto=null;
   document.removeEventListener('pointerdown',fuera,true);
   var tenia=m.el.contains(document.activeElement);
