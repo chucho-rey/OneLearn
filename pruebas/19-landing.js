@@ -59,6 +59,14 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   r.cumple(await p.evaluate(function(){return document.activeElement&&document.activeElement.getAttribute('data-pago')==='1'}),'el foco se queda en la casilla que marcaste');
   await p.waitForTimeout(900);
   r.igual(await p.textContent('#lpVoz'),'3 pagos de $2,000.00. Te faltan $4,000.00.','un resumen corto se anuncia a los lectores de pantalla');
+  /* ---------- ¿A cuánto lo vendo? (el bloque «Precio de venta») ---------- */
+  function precio(){return p.evaluate(function(){return [].map.call(document.querySelectorAll('#lpPrecio .nb-k > div'),function(d){return d.querySelector('dt').textContent+': '+d.querySelector('dd').textContent}).join(' | ')})}
+  r.igual(await precio(),'Precio de venta: $13.00 | Ganas por pieza: +$3.00 | Margen sobre el precio: 23.1 % | Ganancia sobre el costo: 30 %','la calculadora de precio llega lista: costo $10 y 30 % de ganancia');
+  await p.fill('#lpPrecio [data-k="costo"]','20');await p.selectOption('#lpPrecio [data-k="iva"]','si');await p.fill('#lpPrecio [data-k="comision"]','3.5');
+  await p.waitForTimeout(100);
+  r.cumple(/^Precio de venta: \$31\.44 \| Ganas por pieza: \+\$6\.00/.test(await precio()),'con IVA y comisión de la tarjeta, sube el precio para que te queden $6',await precio());
+  await p.check('#lpPrecio [data-k="modo"][value="precio"]');await p.fill('#lpPrecio [data-k="precio"]','22');await p.waitForTimeout(100);
+  r.cumple(/Ganas por pieza: −\$1\.80/.test(await precio())&&await p.evaluate(function(){return !!document.querySelector('#lpPrecio .nb-mal .nb-d.neg')}),'con un precio que ya tienes dice la ganancia real; si pierdes, en rojo y con signo',await precio());
   r.cumple(await nadaGuardado(p),'ver la página y probar el plan no guarda nada en el navegador');
   await revisar(p,r,'bienvenida de negocios en escritorio');
 

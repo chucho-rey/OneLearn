@@ -2,7 +2,10 @@
    Pregunta qué quieres crear y empieza el documento con la estructura de ese tipo. Cada tipo es de un módulo
    (perfil.js) y solo se ofrece si ese módulo está encendido:
      núcleo   notas
-     negocio  pendientes del día, préstamo o crédito (plan de pagos), gastos del mes, lista para surtir y proveedores
+     negocio  pendientes del día, cortes de caja, fiado, gastos (con «Generar mes»), nota de venta (con folio), precios de
+              venta, lista para surtir, proveedores (con cuentas por pagar) y préstamo o crédito (plan de pagos);
+              los bloques de la tienda vienen de negocio.js y sus archivos, que en inicio.html no se cargan: las
+              plantillas solo guardan sus datos iniciales
      estudio  libreta de estudio, apuntes de clase y tesis (con fuentes, citas en APA 7 y registro de autoría)
    Los que no tienen «listo» se anuncian en «Llegan después».
    Todos los tipos usan el mismo formato de bloques (bloques.js), así que después se podrán convertir.
@@ -23,18 +26,20 @@ var TIPOS=AT.tiposDoc={
   bitacora:{nombre:'Bitácora de laboratorio',icono:'bitacora',desc:'Entradas con fecha, objetivo y resultados.',modulo:'estudio'},
   presentacion:{nombre:'Presentación',icono:'presentacion',desc:'Diapositivas hechas con los mismos bloques.',modulo:'estudio'},
   blanco:{nombre:'Documento en blanco',icono:'blanco',desc:'Solo las herramientas básicas.',modulo:'nucleo'},
-  /* Negocio y dinero: plantillas hechas con los bloques que ya hay */
+  /* Negocio y dinero: plantillas hechas con los bloques de negocio */
   pendientes:{nombre:'Pendientes del día',icono:'tareas',desc:'Lo que hay que hacer al abrir, durante el día y al cerrar.',listo:true,modulo:'negocio'},
-  prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio'},
-  gastos:{nombre:'Gastos del mes',icono:'tabla',desc:'Fecha, concepto, categoría y monto de lo que sale.',listo:true,modulo:'negocio'},
+  corte:{nombre:'Corte de caja',icono:'caja',desc:'Fondo, ventas, retiros y efectivo contado: ¿la caja cuadra?',listo:true,modulo:'negocio'},
+  fiado:{nombre:'Fiado',icono:'fiado',desc:'Quién te debe, lo que se lleva, sus abonos y su saldo.',listo:true,modulo:'negocio'},
+  gastos:{nombre:'Gastos del mes',icono:'gastos',desc:'Lo que sale, por categoría; los gastos fijos se generan cada mes.',listo:true,modulo:'negocio'},
+  venta:{nombre:'Nota de venta',icono:'venta',desc:'Recibo con folio, conceptos, IVA, total y cambio, para imprimir.',listo:true,modulo:'negocio'},
+  precio:{nombre:'Precios de venta',icono:'precio',desc:'A cuánto vender con tu ganancia, el IVA y la comisión de la tarjeta.',listo:true,modulo:'negocio'},
   surtir:{nombre:'Lista para surtir',icono:'lista',desc:'Lo que se acaba, cuánto queda y a quién pedirlo.',listo:true,modulo:'negocio'},
-  proveedores:{nombre:'Proveedores',icono:'tabla',desc:'Quién te surte, qué te vende, su teléfono y su día de visita.',listo:true,modulo:'negocio'},
-  corte:{nombre:'Corte de caja',icono:'pagos',desc:'Fondo, ventas, retiros y lo que hay en la caja.',modulo:'negocio'},
-  fiado:{nombre:'Fiado',icono:'notas',desc:'Quién te debe, sus abonos y cuánto le falta.',modulo:'negocio'},
-  cotizacion:{nombre:'Cotización y nota de venta',icono:'notas',desc:'Conceptos, precios e IVA, en PDF.',modulo:'negocio'}
+  proveedores:{nombre:'Proveedores',icono:'porpagar',desc:'Quién te surte, su día de visita y lo que le debes.',listo:true,modulo:'negocio'},
+  prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio'},
+  cotizacion:{nombre:'Cotización',icono:'notas',desc:'Conceptos, precios e IVA para enviar; después, nota de venta.',modulo:'negocio'}
 };
-var ORDEN=['libreta','notas','clase','tesis','pendientes','prestamo','gastos','surtir','proveedores',
-  'corte','fiado','cotizacion','libro','investigacion','guia','bitacora','presentacion','blanco'];
+var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','proveedores','prestamo',
+  'cotizacion','libro','investigacion','guia','bitacora','presentacion','blanco'];
 var PER=AT.perfil;
 function tiene(m){return !PER||PER.tiene(m)}
 function hoyISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
@@ -52,7 +57,6 @@ function tabla(titulos,filas){
   for(var i=0;i<(filas||3);i++)rs.push({type:'tableRow',content:titulos.map(function(){return celda('')})});
   return {type:'table',attrs:{id:id()},content:rs};
 }
-function mes(){var t=new Date().toLocaleDateString('es-MX',{month:'long',year:'numeric'});return t.replace(/ de /,' ')}
 var PLANTILLAS={
   libreta:function(){return {titulo:'Libreta sin título',props:[{nombre:'Materia',valor:'',estilo:'etiqueta'}],contenido:[
     {type:'indice',attrs:{id:id()}},
@@ -83,16 +87,34 @@ var PLANTILLAS={
   prestamo:function(){return {titulo:'Préstamo o crédito',props:[],contenido:[
     {type:'pagos',attrs:{id:id(),titulo:'',modo:'plazos',monto:'',pagos:'12',cuota:'',frecuencia:'mensual',inicio:hoyISO(),pagados:{}}},P()
   ]}},
-  gastos:function(){return {titulo:'Gastos de '+mes(),props:[],contenido:[
-    P('Anota cada gasto en una fila: renta, luz, mercancía, transporte… Agrega filas desde el menú de la tabla.'),
-    tabla(['Fecha','Concepto','Categoría','Monto'],4),P()
+  gastos:function(){return {titulo:'Gastos',props:[],contenido:[
+    P('Anota lo que sale. Los gastos fijos (renta, luz, internet) se anotan una vez y «Generar mes» los agrega cada mes.'),
+    {type:'gastos',attrs:{id:id(),titulo:'',mes:hoyISO().slice(0,7),filas:[],fijos:[]}},P()
+  ]}},
+  corte:function(){return {titulo:'Cortes de caja',props:[],contenido:[
+    P('Un corte por día. Para el de mañana, escribe / y elige «Corte de caja».'),
+    {type:'corte',attrs:{id:id(),fecha:hoyISO()}},P()
+  ]}},
+  fiado:function(){return {titulo:'Fiado',props:[],contenido:[
+    {type:'fiado',attrs:{id:id(),titulo:'',clientes:[]}},P()
+  ]}},
+  venta:function(){
+    var f=AT.folio('V');
+    return {titulo:'Nota de venta '+f,props:[],contenido:[
+      {type:'venta',attrs:{id:id(),folio:f,fecha:hoyISO(),conceptos:[{cant:'1',desc:'',precio:''}]}},P()
+    ]};
+  },
+  precio:function(){return {titulo:'Precios de venta',props:[],contenido:[
+    P('Una calculadora por producto. Para otro, escribe / y elige «Precio de venta».'),
+    {type:'precio',attrs:{id:id()}},P()
   ]}},
   surtir:function(){return {titulo:'Lista para surtir',props:[],contenido:[
     P('Lo que se está acabando. Cuando lo pidas, bórralo de la lista o márcalo en «Pedido».'),
     tabla(['Producto','Quedan','Mínimo','Proveedor','Pedido'],4),P()
   ]}},
   proveedores:function(){return {titulo:'Proveedores',props:[],contenido:[
-    tabla(['Proveedor','Qué te surte','Teléfono','Día de visita'],3),P()
+    tabla(['Proveedor','Qué te surte','Teléfono','Día de visita'],3),
+    H('Lo que les debes'),{type:'porpagar',attrs:{id:id(),titulo:'',cuentas:[]}},P()
   ]}},
   clase:function(){return {titulo:'Clase del '+hoy(),props:[
       {nombre:'Materia',valor:'',estilo:'etiqueta'},{nombre:'Profesor',valor:'',estilo:'texto'},{nombre:'Fecha',valor:hoy(),estilo:'texto'}],contenido:[
@@ -150,8 +172,9 @@ function plantillasInicio(){return ORDEN.filter(function(k){return TIPOS[k].list
 /* Lo que «Crea tu espacio» sugiere al empezar: [{tipo, marcado}] según el perfil y el giro */
 function sugeridas(perfil,giro){
   if(perfil==='negocio'){
-    var mercancia=['tienda','comida','catalogo'].indexOf(giro)>=0;
-    return [['pendientes',true],['gastos',true],['surtir',mercancia],['proveedores',mercancia],['prestamo',false],['notas',false]]
+    var tienda=giro==='tienda',mercancia=['tienda','comida','catalogo'].indexOf(giro)>=0;
+    return [['corte',mercancia],['fiado',tienda],['gastos',true],['surtir',mercancia],['venta',!mercancia],['pendientes',!mercancia],
+      ['proveedores',false],['precio',false],['prestamo',false],['notas',false]]
       .map(function(x){return {tipo:x[0],marcado:x[1]}});
   }
   if(perfil==='personal')return [{tipo:'gastos',marcado:true},{tipo:'prestamo',marcado:true},{tipo:'notas',marcado:false}];

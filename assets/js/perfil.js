@@ -1,7 +1,7 @@
 /* OneBook: el perfil de tu espacio y sus módulos (fase F2).
    Un espacio tiene un perfil y los módulos que ese perfil enciende. El núcleo (páginas, notas, tablas, imágenes,
    imprimir, respaldo, búsqueda y ajustes) está siempre; lo demás se ve solo si su módulo está encendido:
-     negocio  bloques y plantillas de negocio y dinero (por ahora, el plan de pagos y sus plantillas)
+     negocio  bloques y plantillas de negocio y dinero (plan de pagos y los bloques de la tienda, con sus plantillas)
      estudio  lecciones, rutas, proyectos, libretas, apuntes de clase, tesis y las herramientas académicas
    Perfiles: negocio (negocio), personal (negocio, para tus finanzas) y estudio (estudio). Desde «Tu espacio»
    (entrar.html?editar) se puede cambiar el perfil y encender o apagar módulos.
@@ -19,11 +19,11 @@
 var AT=window.AT=window.AT||{};
 var CLAVE='aprende-tecnologia:perfil',PREF='aprende-tecnologia:';
 var MODULOS={
-  negocio:{nombre:'Negocio y dinero',desc:'Plan de pagos y plantillas para tu negocio o tus finanzas.'},
+  negocio:{nombre:'Negocio y dinero',desc:'Corte de caja, fiado, gastos, notas de venta, precios y plan de pagos.'},
   estudio:{nombre:'Estudio',desc:'Lecciones de tecnología, rutas, proyectos, libretas, apuntes de clase y tesis.'}
 };
 var PERFILES={
-  negocio:{nombre:'Mi negocio',desc:'Pagos, pendientes, surtido y notas de tu negocio.',modulos:['negocio']},
+  negocio:{nombre:'Mi negocio',desc:'Corte de caja, fiado, gastos, notas de venta y surtido.',modulos:['negocio']},
   personal:{nombre:'Mis finanzas y notas',desc:'Deudas, gastos del mes y tus notas.',modulos:['negocio']},
   estudio:{nombre:'Estudiar',desc:'Lecciones con laboratorios, rutas, apuntes y tu tesis.',modulos:['estudio']}
 };

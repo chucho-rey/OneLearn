@@ -30,17 +30,17 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await revisar(p,r,'Crea tu espacio, paso 2, en celular');
   await p.keyboard.press('Enter');await p.waitForTimeout(150);
   const sug=await p.$$eval('input[name="plantilla"]',function(e){return e.map(function(x){return x.value+(x.checked?'+':'-')}).join(' ')});
-  r.igual(sug,'pendientes+ gastos+ surtir+ proveedores+ prestamo- notas-','paso 3: para una tienda vienen marcados pendientes, gastos, surtir y proveedores');
+  r.igual(sug,'corte+ fiado+ gastos+ surtir+ venta- pendientes- proveedores- precio- prestamo- notas-','paso 3: para una tienda vienen marcados el corte de caja, el fiado, los gastos y la lista para surtir');
   await revisar(p,r,'Crea tu espacio, paso 3, en celular');
   await p.click('#enAtras');await p.waitForTimeout(100);
   r.igual(await p.inputValue('#enNegocio'),'Abarrotes Lupita','«Atrás» conserva lo escrito');
   await p.click('#enSig');await p.waitForTimeout(100);
-  await p.uncheck('input[name="plantilla"][value="proveedores"]');await p.check('input[name="plantilla"][value="prestamo"]');
+  await p.uncheck('input[name="plantilla"][value="fiado"]');await p.check('input[name="plantilla"][value="prestamo"]');
   await Promise.all([p.waitForURL(/inicio\.html$/),p.click('#enSig')]);await listo(p,500);
   const pf=await perfil(p);
   r.cumple(pf.perfil==='negocio'&&pf.modulos.join()==='negocio'&&pf.negocio.nombre==='Abarrotes Lupita'&&pf.negocio.giro==='tienda'&&pf.negocio.telefono==='55 1234 5678'&&!pf.migrado,'«Crear mi espacio» guarda el perfil de negocio',pf);
   const docs=await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.map(function(d){return d.tipo}).sort().join(',')})});
-  r.igual(docs,'gastos,pendientes,prestamo,surtir','y crea las páginas marcadas');
+  r.igual(docs,'corte,gastos,prestamo,surtir','y crea las páginas marcadas');
   const ini=await p.evaluate(function(){
     function ve(s){var e=document.querySelector(s);return !!e&&!!e.getClientRects().length}
     return {h1:document.getElementById('saludo').textContent,sub:document.getElementById('iniSub').textContent,docs:document.getElementById('t-docs').textContent,
@@ -49,7 +49,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   });
   r.cumple(ini.h1==='Abarrotes Lupita'&&/^Buen(os|as) \w+ · /.test(ini.sub)&&ini.docs==='Tus páginas','Inicio saluda con el nombre del negocio y la fecha',ini);
   r.cumple(!ini.rutas&&!ini.explorar&&!ini.continuar&&!ini.hecho&&/sin-estudio/.test(ini.clases)&&/con-negocio/.test(ini.clases),'sin el módulo de estudio, Inicio no muestra rutas, temas ni lecciones',ini);
-  r.cumple(ini.listas===5&&!ini.respaldo,'ofrece 5 páginas listas para usar y, recién creado, todavía no pide respaldo',ini);
+  r.cumple(ini.listas===9&&!ini.respaldo,'ofrece 9 páginas listas para usar y, recién creado, todavía no pide respaldo',ini);
   const barra=await p.evaluate(function(){var s=document.getElementById('side');
     return {rutas:!!s.querySelector('#sideRutas'),tabs:!!s.querySelector('.tabs'),temas:!!s.querySelector('.grp-btn'),acerca:!!s.querySelector('a[href$="acerca.html"]'),
       docs:s.querySelectorAll('#docsLista a.doc').length,etiqueta:s.getAttribute('aria-label'),menu:document.getElementById('menuBtn').getAttribute('aria-label')}});
@@ -57,15 +57,16 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo del negocio */
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
-  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Préstamo o crédito | Gastos del mes | Lista para surtir | Proveedores','«Crear» ofrece notas y las plantillas de negocio, sin libreta ni tesis');
+  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Proveedores | Préstamo o crédito','«Crear» ofrece notas y las plantillas de negocio, sin libreta ni tesis');
   const pronto=await p.textContent('dialog.crear-dlg .crear-p');
-  r.cumple(/Corte de caja/.test(pronto)&&/Fiado/.test(pronto)&&!/Libro|Bitácora/.test(pronto),'«Llegan después» anuncia lo de negocio y no lo académico',pronto);
+  r.cumple(/Cotización/.test(pronto)&&!/Corte de caja|Fiado/.test(pronto)&&!/Libro|Bitácora/.test(pronto),'«Llegan después» anuncia lo de negocio que falta y no lo académico',pronto);
   await revisar(p,r,'Crear de negocio en celular');
   await p.keyboard.press('Escape');await p.waitForTimeout(150);
   /* Una página lista para usar se crea y se abre */
   await Promise.all([p.waitForURL(/documento\.html\?id=/),p.click('#iniPlantillas [data-nuevo="proveedores"]')]);await listo(p,500);
-  const prov=await p.evaluate(function(){var d=AT.docActual;return {tipo:d.tipo,titulo:d.titulo,cols:d.contenido.content.filter(function(b){return b.type==='table'}).map(function(t){return t.content[0].content.length})[0]}});
-  r.cumple(prov.tipo==='proveedores'&&prov.titulo==='Proveedores'&&prov.cols===4,'«Proveedores» crea la página con su tabla y la abre',prov);
+  const prov=await p.evaluate(function(){var d=AT.docActual;return {tipo:d.tipo,titulo:d.titulo,cols:d.contenido.content.filter(function(b){return b.type==='table'}).map(function(t){return t.content[0].content.length})[0],
+    porPagar:d.contenido.content.some(function(b){return b.type==='porpagar'}),bloque:!!document.querySelector('.nb-porpagar')}});
+  r.cumple(prov.tipo==='proveedores'&&prov.titulo==='Proveedores'&&prov.cols===4&&prov.porPagar&&prov.bloque,'«Proveedores» crea la página con su tabla y sus cuentas por pagar, y la abre',prov);
   r.igual(await p.textContent('.crumbs'),'Tus páginas/Proveedores','la barra superior dice «Tus páginas»');
   /* «/» en el editor: sin lo académico */
   await p.evaluate(function(){AT.editorActual.tiptap.commands.focus('end')});await p.waitForTimeout(100);await p.keyboard.type('/');await p.waitForTimeout(250);

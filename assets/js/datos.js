@@ -208,7 +208,7 @@ function exportar(){
       app:'OneBook',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],
       avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
-      perfil:leerJSON(PREF+'perfil')
+      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios')
     };
   });
 }
@@ -307,6 +307,15 @@ function importar(datos){
       /* El perfil del espacio: solo si aquí todavía no hay uno (por ejemplo, al restaurar en «Crea tu espacio»).
          AT.perfil.guardar lo limpia: solo entran campos conocidos */
       if(esObjeto(datos.perfil)&&AT.perfil&&!AT.perfil.actual())res.perfil=!!AT.perfil.guardar(datos.perfil);
+      /* Folios de notas de venta y cotizaciones: se queda el número más alto de cada prefijo, para no repetir folios */
+      if(esObjeto(datos.folios)){
+        var fo=leerJSON(PREF+'folios');if(!esObjeto(fo))fo={};
+        Object.keys(datos.folios).forEach(function(k){
+          var n=parseInt(datos.folios[k],10);
+          if(/^[A-Z]{1,4}$/.test(k)&&n>0&&n<1e6&&!(fo[k]>=n))fo[k]=n;
+        });
+        lsSet(PREF+'folios',JSON.stringify(fo));
+      }
       /* Ajustes: solo si en este navegador no has cambiado ninguno */
       if(esObjeto(datos.ajustes)&&AT.ajustes&&AT.ajustes.esInicial()&&lsGet(PREF+'ajustes')===null){
         Object.keys(datos.ajustes).forEach(function(k){try{AT.ajustes.set(k,datos.ajustes[k])}catch(e){}});

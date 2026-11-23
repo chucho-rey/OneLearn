@@ -5,7 +5,8 @@
    - index.html: dibuja con bloques reales (bloques.js y pagos.js) la página de ejemplo y el plan de pagos para
      probar. «Guárdalo en tu espacio» deja el plan en sessionStorage y abre entrar.html?perfil=negocio#guardar-pagos:
      al crear el espacio se abre inicio.html#guardar-pagos, donde crear.js lo convierte en un documento (si ya hay
-     espacio, entrar.html pasa directo al Inicio). Ver esta página no guarda nada en localStorage.
+     espacio, entrar.html pasa directo al Inicio). También la calculadora de precio de venta (negocio.js y precio.js,
+     AT.negocio.formulario). Ver esta página no guarda nada en localStorage.
    Se carga en el <head>, antes de ajustes.js; lo demás corre al terminar de cargar la página. */
 (function(){
 'use strict';
@@ -103,10 +104,18 @@ function prueba(){
   pintar();
 }
 
+/* ---------- index.html: la calculadora de precio de venta (el formulario del bloque, de negocio.js y precio.js) ---------- */
+function calculadora(){
+  var AT=window.AT,cont=$('lpPrecio');
+  if(!cont||!AT||!AT.negocio)return;
+  cont.replaceChildren(AT.negocio.formulario('precio',{costo:'10',ganancia:'30'}));
+}
+
 function listo(){
   if($('lpLecciones'))contar();
   hojaEjemplo();
   prueba();
+  calculadora();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',listo);else listo();
 })();

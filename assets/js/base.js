@@ -16,6 +16,16 @@ var $$=AT.$$=function(s,r){return Array.prototype.slice.call((r||document).query
 var reduce=AT.reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 var fmt=AT.fmt=function(n,d){return n.toLocaleString('es-MX',{minimumFractionDigits:d||0,maximumFractionDigits:d||0})};
 var esc=AT.esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+/* Folios consecutivos por prefijo (V-001, V-002…) para notas de venta y cotizaciones: el último número de cada
+   prefijo se guarda en aprende-tecnologia:folios (entra en el respaldo) */
+AT.folio=function(pref){
+  var o={};
+  try{o=JSON.parse(localStorage.getItem('aprende-tecnologia:folios')||'{}')||{}}catch(e){}
+  if(typeof o!=='object'||Array.isArray(o))o={};
+  var n=(parseInt(o[pref],10)||0)+1;o[pref]=n;
+  try{localStorage.setItem('aprende-tecnologia:folios',JSON.stringify(o))}catch(e){}
+  return pref+'-'+(n<1000?('00'+n).slice(-3):String(n));
+};
 AT.setPressed=function(group,test){$$('button',group).forEach(function(b){b.setAttribute('aria-pressed',test(b)?'true':'false')})};
 /* Laboratorios: un grupo de botones (.seg o .chips) que elige un valor (data-v); fn recibe el valor como texto */
 AT.elegir=function(sel,fn){
@@ -133,6 +143,12 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-libro" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 3.5 5v13.5c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5V20"/></symbol>'+
 '<symbol id="i-investigacion" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5M8 10.5h5M10.5 8v5"/></symbol>'+
 '<symbol id="i-pagos" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 9.5h19M6.5 14.5h4"/></symbol>'+
+'<symbol id="i-caja" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="9" rx="1.5"/><path d="M6.5 11V4.5h8V11M9 7.5h3M3 15h18M10.5 17.5h3"/></symbol>'+
+'<symbol id="i-fiado" viewBox="0 0 24 24"><path d="M5 3.5h14v17H5z"/><circle cx="12" cy="9.5" r="2.5"/><path d="M8 17c.6-2.2 2.1-3.3 4-3.3s3.4 1.1 4 3.3"/></symbol>'+
+'<symbol id="i-gastos" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5z"/><path d="M9 8.5h6M9 12h6M9 15.5h3"/></symbol>'+
+'<symbol id="i-venta" viewBox="0 0 24 24"><path d="M4 6.5h16v3a2.5 2.5 0 0 0 0 5v3H4v-3a2.5 2.5 0 0 0 0-5z"/><path d="M14.5 6.5v2M14.5 11v2M14.5 15.5v2"/></symbol>'+
+'<symbol id="i-precio" viewBox="0 0 24 24"><path d="M3.5 12.5v-8a1 1 0 0 1 1-1h8l8.5 8.5-9 9z"/><circle cx="8" cy="8" r="1.5"/></symbol>'+
+'<symbol id="i-porpagar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4M8 13.5h3M8 16.5h5"/></symbol>'+
 '<symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 8.2 7.5 9.5 4.3-1.3 7.5-5 7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.4-4.4"/></symbol>'+
 '<symbol id="i-imagen" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 15.5-4.5-4.5L7 19.5"/></symbol>'+
 '<symbol id="i-ecuacion" viewBox="0 0 24 24"><path d="M17.5 5h-11l6 7-6 7h11"/></symbol>'+
