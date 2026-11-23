@@ -1,8 +1,8 @@
-/* «Cómo está hecho OneLearn» (acerca.html): la página para estudiantes de programación. */
+/* «Cómo está hecho OneBook» (acerca.html): la página para estudiantes de programación. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
-prueba('Cómo está hecho OneLearn',async function({browser,base,r}){
+prueba('Cómo está hecho OneBook',async function({browser,base,r}){
   /* Se ve bien en celular y escritorio, en todos los temas y con texto grande */
   for(const ancho of [390,1280])for(const tema of ['light','dark'])for(const contraste of ['normal','high']){
     const escala=ancho===390&&contraste==='high'?1.5:1;
@@ -23,13 +23,13 @@ prueba('Cómo está hecho OneLearn',async function({browser,base,r}){
       enlace:!!document.querySelector('#side a.nv.on[aria-current="page"][href="acerca.html"]'),
       externos:[...pg.querySelectorAll('a[href^="http"]')].map(function(a){return a.getAttribute('href')})};
   });
-  r.igual(info.h1,'Cómo está hecho OneLearn','la página se dibuja desde su JSON');
+  r.igual(info.h1,'Cómo está hecho OneBook','la página se dibuja desde su JSON');
   r.cumple(info.secciones>=12,'tiene índice con todas las secciones',info.secciones);
   r.igual(info.codigo,9,'muestra los ejemplos de código');
   r.cumple(info.tablas>=3,'muestra las tablas',info.tablas);
   r.cumple(info.repaso>0,'tiene preguntas de repaso',info.repaso);
   r.igual(info.avisoFijo,'static','un callout de aviso se queda en el texto (no se confunde con la notificación flotante)');
-  r.igual(info.miga,'OneLearn/Cómo está hecho','la barra superior dice dónde estás');
+  r.igual(info.miga,'OneBook/Cómo está hecho','la barra superior dice dónde estás');
   r.cumple(info.enlace,'la barra lateral marca «Cómo está hecho» como página actual');
   r.cumple(info.externos.length>0&&info.externos.every(function(h){return h.startsWith('https://')}),'los enlaces externos usan https',info.externos);
 

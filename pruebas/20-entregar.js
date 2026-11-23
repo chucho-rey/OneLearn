@@ -95,7 +95,7 @@ prueba('Tesis · Entregar: PDF, Word e IEEE',async function({browser,base,r}){
   r.cumple((docx.match(/<m:oMath>/g)||[]).length>=2&&/<m:f>/.test(docx)&&/<m:nary>/.test(docx),'la fórmula y la ecuación son ecuaciones nativas de Word');
   r.cumple(/Datos del ciclo escolar 2025\./.test(notasX)&&/Una segunda aclaración\./.test(notasX)&&(docx.match(/w:footnoteReference/g)||[]).length===2,'las notas al pie son notas al pie de Word');
   r.cumple(/\(UNESCO, 2016\)/.test(texto)&&/García, M\., y Peña, J\. L\. \(2019\)/.test(texto)&&/UNIVERSIDAD NACIONAL/.test(texto)&&/Yo, Ana López Ruiz, declaro/.test(texto),'citas, bibliografía, portada y declaración van en el archivo');
-  r.cumple(/Huella SHA-256 del texto \(OneLearn\): [0-9a-f]{64}/.test(core)&&/Ana López Ruiz/.test(core),'la huella del texto y la autora van en las propiedades del archivo');
+  r.cumple(/Huella SHA-256 del texto \(OneBook\): [0-9a-f]{64}/.test(core)&&/Ana López Ruiz/.test(core),'la huella del texto y la autora van en las propiedades del archivo');
   await p.keyboard.press('Escape');await p.waitForTimeout(150);
   let ent=await p.evaluate(function(){return AT.docActual.autoria.entregas});
   r.cumple(ent.length===1&&ent[0].f==='docx'&&/^[0-9a-f]{64}$/.test(ent[0].h)&&ent[0].w>100,'la entrega en Word queda en el registro de autoría, con su huella',ent);

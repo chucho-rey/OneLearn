@@ -1,4 +1,4 @@
-/* OneLearn: fuentes, citas y bibliografía de un documento académico (por ahora, la tesis).
+/* OneBook: fuentes, citas y bibliografía de un documento académico (por ahora, la tesis).
    Las fuentes viven en el propio documento: doc.fuentes = [{id, tipo, autores, anio, fecha, titulo, contenedor,
    editorial, volumen, numero, paginas, edicion, editores, grado, institucion, herramienta, doi, url}],
    donde autores es [{apellido, nombre}] o [{org}] para una institución o empresa.

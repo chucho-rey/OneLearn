@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>OneLearn · Aprende tecnología practicando, en español</title>
-<meta name="description" content="Lecciones cortas con laboratorios que puedes tocar: una terminal de Linux, un simulador de red y proyectos por fases. Además, un lugar para tus apuntes y tu tesis. Gratis, en español y sin crear cuenta.">
+<title>OneBook · Tu negocio, en bloques</title>
+<meta name="description" content="Pagos, cobros, listas, tablas y notas de tu negocio en páginas que armas con bloques. Gratis, en tu celular, sin crear cuenta y sin internet. Tus datos se quedan en tu dispositivo.">
 <link rel="canonical" href="https://chucho-rey.github.io/OneLearn/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_MX">
-<meta property="og:site_name" content="OneLearn">
-<meta property="og:title" content="OneLearn · Aprende tecnología practicando, en español">
-<meta property="og:description" content="Lecciones con laboratorios, una terminal de Linux y un simulador de red en el navegador. Y tus apuntes y tu tesis, con autoría. Gratis y sin cuenta.">
+<meta property="og:site_name" content="OneBook">
+<meta property="og:title" content="OneBook · Tu negocio, en bloques">
+<meta property="og:description" content="Pagos, cobros, listas y notas de tu negocio en páginas que armas con bloques. Gratis, sin cuenta y sin internet.">
 <meta property="og:url" content="https://chucho-rey.github.io/OneLearn/">
 <meta property="og:image" content="https://chucho-rey.github.io/OneLearn/assets/icons/icono-512.png">
 <link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
@@ -20,10 +20,11 @@
 <meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<!-- Quien ya usa OneLearn va directo a su Inicio (antes de pintar la página) -->
+<!-- Quien ya usa OneBook va directo a su Inicio (antes de pintar la página) -->
 <script src="assets/js/landing.js"></script>
 <script src="assets/js/ajustes.js"></script>
 <link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/negocio.css">
 <link rel="stylesheet" href="assets/css/landing.css">
 </head>
 <body data-pagina="bienvenida" class="lp">
@@ -32,10 +33,11 @@
 
 <header class="lp-cab">
   <div class="lp-in lp-cab-in">
-    <a class="brand" href="./" aria-label="OneLearn, página principal"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M20.5 22.5 30 16v32h14.5"/></svg><span>One<b>Learn</b></span></a>
+    <a class="brand" href="./" aria-label="OneBook, página principal"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M18.5 22.5 27.5 16v32M27.5 16h8a7.5 7.5 0 0 1 0 15h-8M27.5 31h9.5a8.5 8.5 0 0 1 0 17h-9.5"/></svg><span>One<b>Book</b></span></a>
     <nav class="lp-nav" aria-label="Principal">
-      <a href="rutas.html">Rutas</a>
-      <a href="lecciones/como-funciona.html">Cómo funciona</a>
+      <a href="#como">Cómo funciona</a>
+      <a href="#precios">Precios</a>
+      <a href="estudiantes.html">Estudiantes</a>
       <a class="btn pri" href="inicio.html">Entrar</a>
     </nav>
   </div>
@@ -45,102 +47,168 @@
 
   <section class="lp-in lp-hero" aria-labelledby="lpTitulo">
     <div class="lp-hero-t">
-      <p class="lp-eti">Gratis · En español · Sin crear cuenta</p>
-      <h1 id="lpTitulo">Aprende cómo funciona la tecnología, practicando.</h1>
-      <p class="lp-lead">Lecciones cortas con laboratorios que puedes tocar: una terminal de Linux, un simulador de red y proyectos como los de un trabajo real. Y un lugar para tus apuntes y tu tesis.</p>
+      <p class="lp-eti">Gratis · En tu celular · Sin crear cuenta</p>
+      <h1 id="lpTitulo">Tu negocio, en bloques.</h1>
+      <p class="lp-lead">Pagos, cobros, pendientes y notas en páginas que armas a tu medida. Funciona sin internet y todo se queda en tu dispositivo.</p>
       <div class="lp-cta">
-        <a class="btn pri" href="inicio.html">Empezar ahora</a>
-        <a class="btn" href="rutas.html">Ver la ruta Redes y sistemas</a>
+        <a class="btn pri" href="inicio.html">Empieza gratis</a>
+        <a class="btn" href="#prueba">Pruébalo aquí</a>
       </div>
     </div>
-    <figure class="lp-term" aria-label="Ejemplo de un laboratorio: la terminal de Linux de OneLearn">
-      <div class="lp-term-h" aria-hidden="true"><i></i><i></i><i></i><span>Laboratorio · Terminal</span></div>
-<pre class="lp-term-b"><span class="lp-p">ana@servidor:~$</span> ip -br addr
-lo     UNKNOWN  127.0.0.1/8
-eth0   UP       192.168.1.20/24
-<span class="lp-p">ana@servidor:~$</span> sudo systemctl status nginx
-● nginx.service · <span class="lp-ok">active (running)</span>
-<span class="lp-p">ana@servidor:~$</span> curl -I localhost
-HTTP/1.1 200 OK
-<span class="lp-ok">✓ Ejercicio 3 de 5: tu servidor web responde</span></pre>
-      <figcaption>La terminal corre en tu navegador: sin instalar nada y sin miedo a romper algo.</figcaption>
+    <figure class="lp-hoja" aria-labelledby="lpHojaT">
+      <div class="lp-hoja-h" aria-hidden="true"><i></i><i></i><i></i><span>Página de ejemplo</span></div>
+      <div class="lp-hoja-b">
+        <p class="lp-hoja-t" id="lpHojaT">Abarrotes Lupita</p>
+        <div id="lpHoja"></div>
+      </div>
+      <figcaption>Una página de OneBook: un aviso, una lista de tareas, un plan de pagos y una tabla. Cada pieza es un bloque.</figcaption>
     </figure>
   </section>
 
-  <section class="lp-in" aria-label="OneLearn en números">
-    <dl class="lp-cifras">
-      <div><dt>Lecciones</dt><dd id="lpLecciones">46</dd></div>
-      <div><dt>En la ruta Redes y sistemas</dt><dd id="lpRuta">27</dd></div>
-      <div><dt>Proyectos por fases</dt><dd id="lpProyectos">3</dd></div>
-      <div><dt>Cuentas que crear</dt><dd>0</dd></div>
-    </dl>
-  </section>
-
-  <section class="lp-in lp-sec" aria-labelledby="lpAprende">
-    <h2 id="lpAprende">Aprende haciendo, no solo leyendo</h2>
-    <ul class="lp-cols">
-      <li>
-        <h3>Lecciones con laboratorios</h3>
-        <p>Cada tema trae demos que respondes con tus manos, preguntas de repaso y un resumen. Hardware, electrónica, software, Linux, redes, servidores, ciberseguridad e inteligencia artificial.</p>
-      </li>
-      <li>
-        <h3>Practica como en el trabajo</h3>
-        <p>Una terminal de Ubuntu y un simulador de red en el navegador, con ejercicios que se califican solos. Proyectos por fases que terminan en algo que puedes mostrar en tu CV.</p>
-      </li>
-      <li>
-        <h3>Rutas con tu avance</h3>
-        <p>Un camino ordenado por módulos que te dice qué sigue. La primera, <b>Redes y sistemas</b>, va de tu primer comando en Linux a la nube.</p>
-      </li>
-    </ul>
-  </section>
-
-  <section class="lp-in lp-sec lp-dos" aria-labelledby="lpCrea">
-    <div>
-      <h2 id="lpCrea">Tus apuntes y tu tesis, en el mismo lugar</h2>
-      <p>Libretas de estudio, notas y apuntes de clase con un editor de bloques: imágenes, tablas, ecuaciones y notas al pie. Lo que escribes se ve tan claro como una lección.</p>
-      <p>Para la <b>tesis</b>, OneLearn reúne lo que hoy se junta de cinco programas, con la autoría en el centro.</p>
-      <div class="lp-cta"><a class="btn" href="inicio.html#crear">Crear un documento</a></div>
-    </div>
-    <ul class="lp-lista" aria-label="Herramientas de la tesis">
-      <li><b>Citas y bibliografía en APA 7.</b> Fuentes por DOI o ISBN, o importadas de Zotero y Mendeley.</li>
-      <li><b>Figuras, tablas y ecuaciones numeradas.</b> Con índices y referencias cruzadas que se actualizan solas.</li>
-      <li><b>Registro de autoría.</b> Cómo escribiste y de dónde vino lo que pegaste, con una constancia para demostrar que el trabajo es tuyo.</li>
-      <li><b>No la pierdas.</b> Aviso de respaldo y copia automática en tu computadora.</li>
-    </ul>
-  </section>
-
-  <section class="lp-in lp-sec" aria-labelledby="lpEscuelas">
-    <div class="lp-caja">
-      <h2 id="lpEscuelas">Para maestros y escuelas</h2>
-      <p>Úsalo hoy en clase: funciona en cualquier navegador y en computadoras modestas, sin instalar nada, sin cuentas y sin conexión. Cada lección trae laboratorios para hacer en grupo y preguntas de repaso para cerrar el tema.</p>
-      <p class="lp-nota">Estamos preparando grupos, tareas y exámenes para que tus alumnos trabajen contigo dentro de OneLearn.</p>
+  <section class="lp-in lp-sec" id="prueba" aria-labelledby="lpPrueba">
+    <h2 id="lpPrueba">Pruébalo aquí: ¿de cuánto es cada pago?</h2>
+    <p>Escribe cuánto debes y en cuántos pagos. Marca los que ya hiciste y mira cuánto te falta. Así funciona el bloque «Plan de pagos» dentro de OneBook.</p>
+    <div class="lp-prueba">
+      <form class="lp-form" id="lpForm" novalidate>
+        <label class="lp-campo"><span>¿Cuánto debes?</span><input id="lpMonto" name="monto" type="text" inputmode="decimal" autocomplete="off" value="20000"></label>
+        <label class="lp-campo"><span>Número de pagos</span><input id="lpPagos" name="pagos" type="number" inputmode="numeric" min="1" max="520" value="12"></label>
+        <label class="lp-campo"><span>Cada cuándo</span><select id="lpFrec" name="frecuencia"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual" selected>Mensual</option></select></label>
+        <label class="lp-campo"><span>Primer pago</span><input id="lpInicio" name="inicio" type="date"></label>
+      </form>
+      <div class="lp-plan" id="lpPlan"></div>
+      <p class="vh" id="lpVoz" aria-live="polite"></p>
+      <div class="lp-cta lp-guardar">
+        <button class="btn pri" type="button" id="lpGuardar">Guárdalo en tu espacio</button>
+        <p class="lp-nota">Se guarda en este dispositivo, sin crear cuenta.</p>
+      </div>
     </div>
   </section>
 
-  <section class="lp-in lp-sec" aria-labelledby="lpDatos">
+  <section class="lp-in lp-sec" id="como" aria-labelledby="lpComo">
+    <h2 id="lpComo">Cómo funciona</h2>
+    <ol class="lp-pasos">
+      <li>
+        <h3>Crea una página</h3>
+        <p>Para tu negocio, una deuda, tus pendientes o tus notas. Sin cuenta: se guarda en tu celular o tu computadora.</p>
+      </li>
+      <li>
+        <h3>Agrega bloques con «/»</h3>
+        <p>Escribe / y elige: texto, lista de tareas, tabla, imagen, aviso o plan de pagos. Muévelos y quítalos a tu gusto.</p>
+      </li>
+      <li>
+        <h3>Úsala todos los días</h3>
+        <p>Marca lo que ya pagaste, lo que ya hiciste y lo que falta. Imprímela o guárdala en PDF cuando la necesites.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="lp-in lp-sec" id="bloques" aria-labelledby="lpBloques">
+    <h2 id="lpBloques">Lo que ya puedes hacer</h2>
+    <ul class="lp-cols lp-cols-6">
+      <li><h3>Plan de pagos</h3><p>Préstamos, créditos y apartados: cuánto es cada pago, cuándo toca y cuánto te falta.</p></li>
+      <li><h3>Listas de tareas</h3><p>La apertura y el cierre del día, pedidos pendientes, lo que no se te puede olvidar.</p></li>
+      <li><h3>Tablas</h3><p>Precios, existencias o proveedores, con las filas y columnas que tú armas.</p></li>
+      <li><h3>Notas e imágenes</h3><p>Fotos de tickets o productos, acuerdos con clientes e ideas, con títulos y avisos.</p></li>
+      <li><h3>Imprimir o PDF</h3><p>Cualquier página sale lista para imprimir o para mandarla como PDF.</p></li>
+      <li><h3>Respaldo</h3><p>Descarga una copia de todo en un archivo y recupérala en otro dispositivo.</p></li>
+    </ul>
+    <div class="lp-viene">
+      <h3 id="lpViene">Lo que viene</h3>
+      <ul aria-labelledby="lpViene">
+        <li><span class="lp-pronto">Pronto</span>Cotizaciones y notas de venta en PDF</li>
+        <li><span class="lp-pronto">Pronto</span>Corte de caja y gastos del mes</li>
+        <li><span class="lp-pronto">Pronto</span>Fiado: quién te debe y sus abonos</li>
+        <li><span class="lp-pronto">Pronto</span>Inventario con aviso de existencias bajas</li>
+        <li><span class="lp-pronto">Pronto</span>Calculadoras: precio de venta, costo de receta y punto de equilibrio</li>
+        <li><span class="lp-pronto">Pronto</span>Plantillas para tienda, comida, servicios y ventas por catálogo</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="lp-in lp-sec" id="datos" aria-labelledby="lpDatos">
     <h2 id="lpDatos">Tuyo, sin letra chiquita</h2>
     <ul class="lp-cols">
-      <li>
-        <h3>Privado</h3>
-        <p>Tu avance, tus apuntes y tus documentos se guardan en tu dispositivo. No se suben a ningún servidor.</p>
+      <li><h3>Privado</h3><p>Lo que escribes se guarda en tu dispositivo. No se sube a ningún servidor y no hay anuncios.</p></li>
+      <li><h3>Sin internet</h3><p>Instálalo como app desde el navegador y úsalo aunque se caiga la señal.</p></li>
+      <li><h3>Para todos</h3><p>Letra grande, tema oscuro, alto contraste, fuente para dislexia y todo se usa con el teclado.</p></li>
+    </ul>
+  </section>
+
+  <section class="lp-in lp-sec" id="precios" aria-labelledby="lpPrecios">
+    <h2 id="lpPrecios">Precios</h2>
+    <p>Lo que se guarda en tu dispositivo es gratis y lo seguirá siendo. La nube, para usar OneBook en varios dispositivos y con tu equipo, viene después.</p>
+    <ul class="lp-planes">
+      <li class="lp-plan-gratis">
+        <h3>Local</h3>
+        <p class="lp-precio"><b>Gratis</b> <span>para siempre</span></p>
+        <ul>
+          <li>Todas las páginas y bloques que quieras</li>
+          <li>En tu celular o computadora, sin internet</li>
+          <li>Respaldo en un archivo</li>
+          <li>Sin cuenta y sin anuncios</li>
+        </ul>
+        <a class="btn pri" href="inicio.html">Empieza gratis</a>
       </li>
       <li>
-        <h3>Sin conexión</h3>
-        <p>Instálalo como app desde el navegador y estudia aunque no tengas internet.</p>
+        <h3>Nube <span class="lp-pronto">Próximamente</span></h3>
+        <p class="lp-precio"><b>$99</b> <span>MXN al mes*</span></p>
+        <p class="lp-precio-n">o $990 MXN al año</p>
+        <ul>
+          <li>Todo lo de Local</li>
+          <li>Tus páginas en todos tus dispositivos</li>
+          <li>Respaldo automático</li>
+          <li>Entras con tu correo</li>
+        </ul>
       </li>
       <li>
-        <h3>Para todos</h3>
-        <p>Tema claro u oscuro, alto contraste, letra grande, fuente para dislexia y todo se usa con el teclado.</p>
+        <h3>Equipo <span class="lp-pronto">Próximamente</span></h3>
+        <p class="lp-precio"><b>$199</b> <span>MXN al mes*</span></p>
+        <p class="lp-precio-n">con 3 personas; $49 MXN por persona extra</p>
+        <ul>
+          <li>Todo lo de Nube</li>
+          <li>Tus empleados, cada quien con su acceso</li>
+          <li>Permisos: quién ve ventas, gastos o ganancias</li>
+          <li>Cuentas que creas para tus clientes</li>
+        </ul>
       </li>
     </ul>
+    <p class="lp-nota">* Precios estimados de los planes con nube: pueden cambiar antes de que salgan. Lo local seguirá siendo gratis.</p>
+  </section>
+
+  <section class="lp-in lp-sec" aria-labelledby="lpTambien">
+    <h2 id="lpTambien">También para estudiar</h2>
+    <ul class="lp-cols lp-cols-2">
+      <li>
+        <h3>Estudiantes</h3>
+        <p>Lecciones de tecnología con laboratorios, libretas, apuntes de clase y herramientas para tu tesis.</p>
+        <p><a href="estudiantes.html">OneBook para estudiantes</a></p>
+      </li>
+      <li>
+        <h3>Escuelas</h3>
+        <p>Grupos, tareas y exámenes con tus alumnos dentro de OneBook. Lo estamos preparando.</p>
+        <p><a href="estudiantes.html#lpEscuelas">Conoce la idea</a></p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="lp-in lp-sec" id="preguntas" aria-labelledby="lpPreguntas">
+    <h2 id="lpPreguntas">Preguntas</h2>
+    <div class="lp-faq">
+      <details><summary>¿Es gratis?</summary><p>Sí. Todo lo que se guarda en tu dispositivo es gratis y lo seguirá siendo. Más adelante habrá planes de pago para usar OneBook en la nube, en varios dispositivos y con tu equipo.</p></details>
+      <details><summary>¿Necesito crear una cuenta?</summary><p>No. Abres OneBook y empiezas. Tus páginas se guardan en el navegador de ese dispositivo.</p></details>
+      <details><summary>¿Hace facturas (CFDI)?</summary><p>Todavía no. Primero vienen las cotizaciones y las notas de venta en PDF. La factura electrónica necesita un proveedor autorizado por el SAT y llegará después.</p></details>
+      <details><summary>¿Funciona en el celular?</summary><p>Sí, en cualquier navegador actual. Puedes instalarlo como app y usarlo sin internet.</p></details>
+      <details><summary>¿Qué pasa si cambio de celular o se borra el navegador?</summary><p>Descarga un respaldo desde «Tus datos» de vez en cuando: con ese archivo recuperas todo en otro dispositivo. Con la nube será automático.</p></details>
+      <details><summary>¿Puedo usarlo con mis empleados?</summary><p>Con el plan Equipo, cuando salga la nube. Por ahora, cada dispositivo tiene sus propias páginas.</p></details>
+    </div>
   </section>
 
   <section class="lp-in lp-sec lp-final" aria-labelledby="lpEmpieza">
     <h2 id="lpEmpieza">Empieza en un minuto</h2>
-    <p>No necesitas cuenta. Abre una lección y toca el primer laboratorio.</p>
+    <p>Sin cuenta y sin tarjeta. Crea tu primera página y agrégale un plan de pagos.</p>
     <div class="lp-cta">
-      <a class="btn pri" href="inicio.html">Empezar ahora</a>
-      <a class="btn" href="lecciones/como-funciona.html">Así funciona OneLearn</a>
+      <a class="btn pri" href="inicio.html">Empieza gratis</a>
+      <a class="btn" href="lecciones/como-funciona.html">Cómo funciona OneBook</a>
     </div>
   </section>
 
@@ -148,17 +216,18 @@ HTTP/1.1 200 OK
 
 <footer class="lp-pie">
   <div class="lp-in lp-pie-in">
-    <p><b>OneLearn</b> · Gratis y en español.</p>
+    <p><b>OneBook</b> · Gratis en tu dispositivo.</p>
     <nav aria-label="Más">
       <a href="inicio.html">Inicio</a>
-      <a href="rutas.html">Rutas</a>
-      <a href="proyectos/index.html">Proyectos</a>
+      <a href="estudiantes.html">Para estudiantes</a>
       <a href="acerca.html">Cómo está hecho</a>
       <a href="https://github.com/chucho-rey/OneLearn" rel="noopener">Código en GitHub</a>
     </nav>
   </div>
 </footer>
 
-<script src="assets/js/catalogo.js"></script>
+<script src="assets/js/base.js"></script>
+<script src="assets/js/bloques.js"></script>
+<script src="assets/js/pagos.js"></script>
 </body>
 </html>

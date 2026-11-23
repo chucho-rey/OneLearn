@@ -1,4 +1,4 @@
-/* Ajustes de lectura de OneLearn.
+/* Ajustes de lectura de OneBook.
    Se carga en el <head>, antes de pintar, para que el tema, el contraste, el tamaño de texto y la barra lateral
    se apliquen sin parpadeo. Guarda las preferencias en este dispositivo (localStorage) y las expone como
    AT.ajustes para el resto del sitio:

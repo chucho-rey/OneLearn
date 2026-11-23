@@ -1,4 +1,4 @@
-/* OneLearn: panel Lectura (tamaño de texto, tema, contraste, fuente y espacios).
+/* OneBook: panel Lectura (tamaño de texto, tema, contraste, fuente y espacios).
    Los valores viven en AT.ajustes (assets/js/ajustes.js); este panel solo los muestra y los cambia.
    Se abre con «Aa» de la barra superior o «Lectura» de la barra lateral. Expone AT.lectura. */
 (function(){

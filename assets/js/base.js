@@ -1,4 +1,4 @@
-/* OneLearn: base compartida por todas las páginas.
+/* OneBook: base compartida por todas las páginas.
    Utilidades (AT.$, AT.fmt, AT.esc, AT.ico...), los íconos, la página actual (AT.leccion, AT.rutas)
    y el repaso de preguntas (AT.repaso).
    Se usan scripts clásicos con un espacio de nombres global (no módulos ES) para que
@@ -149,13 +149,14 @@ var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
 /* Páginas: inicio, documento, acerca («Cómo está hecho») y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida';
 /* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
 AT.rutas={raiz:RAIZ,lecciones:LECC,esInicio:ES_INICIO,pagina:PAGINA};
-/* Marca que este navegador ya usa OneLearn: la página de bienvenida (index.html) lo manda directo a su Inicio */
-try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}
+/* Marca que este navegador ya usa OneBook: la página de bienvenida (index.html) lo manda directo a su Inicio.
+   La bienvenida también carga base.js (para dibujar bloques de ejemplo), pero verla no cuenta como usar la app. */
+if(PAGINA!=='bienvenida'){try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}}
 var actual=null,grupo='',orden=[];
 catalogo.forEach(function(g){
   g.lecciones.forEach(function(l){
@@ -169,7 +170,7 @@ if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{
   PAGINA==='proyectos'?{id:'proyectos',titulo:'Proyectos'}:
   PAGINA==='proyecto'?{id:'proyecto',titulo:document.body.getAttribute('data-titulo')||document.title}:{id:LID||'leccion',titulo:document.title};
 if(PAGINA==='documento')grupo='Mis apuntes';
-if(PAGINA==='acerca')grupo='OneLearn';
+if(PAGINA==='acerca')grupo='OneBook';
 if(PAGINA==='proyecto')grupo='Proyectos';
 AT.leccion=actual;
 /* La ruta de aprendizaje (AT.caminos) y el módulo donde está una lección o un proyecto, o null */

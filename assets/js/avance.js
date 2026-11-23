@@ -1,4 +1,4 @@
-/* Avance de lectura de OneLearn.
+/* Avance de lectura de OneBook.
    Guarda en este dispositivo qué secciones de cada lección leíste, dónde te quedaste y tu resultado del repaso.
    Expone AT.avance para el resto del sitio (la pantalla de inicio lo usa) y, en las lecciones:
    - registra la lectura de cada sección (h2 con id dentro de .page);

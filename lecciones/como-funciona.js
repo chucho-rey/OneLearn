@@ -1,4 +1,4 @@
-/* Laboratorios de la lección «Cómo funciona OneLearn». Usan los controles reales de OneLearn: AT.ajustes
+/* Laboratorios de la lección «Cómo funciona OneBook». Usan los controles reales de OneBook: AT.ajustes
    (Lectura), los atajos de zen.js, AT.datos y «Tus datos», y la instalación de app.js. Lo que el estudiante
    cambie aquí queda cambiado en todo el sitio. */
 (function(){
@@ -29,7 +29,7 @@ AT.labs['cf-lectura']=function(){
     $(x[0]).addEventListener('click',function(e){
       var b=e.target.closest('button');if(!b)return;
       aj.set(x[1],b.getAttribute('data-v'));
-      msg('Listo: '+x[1]+' '+NOM[x[1]][b.getAttribute('data-v')]+'. Se aplica en todo OneLearn y se recuerda en este dispositivo.');
+      msg('Listo: '+x[1]+' '+NOM[x[1]][b.getAttribute('data-v')]+'. Se aplica en todo OneBook y se recuerda en este dispositivo.');
     });
   });
   $('#clReset').addEventListener('click',function(){aj.restablecer();msg('Los ajustes de lectura volvieron a sus valores iniciales.')});
@@ -74,7 +74,7 @@ AT.labs['cf-datos']=function(){
       var p=r[3];
       $('#cdStat').setAttribute('data-k',p===true?'good':'warn');
       $('#cdMsg').textContent=p===true?'Protegidos: el navegador no los borrará aunque le falte espacio.':
-        p===false?'Sin proteger: si el dispositivo se queda sin espacio, el navegador podría borrarlos. Pide que los conserve (algunos navegadores lo deciden solos, según cuánto usas OneLearn).':
+        p===false?'Sin proteger: si el dispositivo se queda sin espacio, el navegador podría borrarlos. Pide que los conserve (algunos navegadores lo deciden solos, según cuánto usas OneBook).':
         'Este navegador no dice si protege los datos. Descarga respaldos de vez en cuando.';
       $('#cdPedir').hidden=p!==false;
     });
@@ -85,18 +85,18 @@ AT.labs['cf-datos']=function(){
   render();
 };
 
-/* ---------- Instala OneLearn ---------- */
+/* ---------- Instala OneBook ---------- */
 AT.labs['cf-instalar']=function(){
   var PASOS={
-    android:['Abre OneLearn en Chrome.','Toca el menú ⋮ (arriba a la derecha).','Elige «Instalar app» o «Agregar a la pantalla principal».','Confirma. OneLearn aparecerá entre tus apps.'],
-    ios:['Abre OneLearn en Safari.','Toca el botón Compartir (el cuadro con una flecha hacia arriba).','Elige «Agregar a inicio».','Toca «Agregar». OneLearn aparecerá en tu pantalla de inicio.'],
-    pc:['Abre OneLearn en Chrome o Edge.','En la barra de direcciones, a la derecha, haz clic en el ícono de instalar (una pantalla con una flecha).','Haz clic en «Instalar».','OneLearn se abrirá en su propia ventana y quedará en tu menú de aplicaciones.']
+    android:['Abre OneBook en Chrome.','Toca el menú ⋮ (arriba a la derecha).','Elige «Instalar app» o «Agregar a la pantalla principal».','Confirma. OneBook aparecerá entre tus apps.'],
+    ios:['Abre OneBook en Safari.','Toca el botón Compartir (el cuadro con una flecha hacia arriba).','Elige «Agregar a inicio».','Toca «Agregar». OneBook aparecerá en tu pantalla de inicio.'],
+    pc:['Abre OneBook en Chrome o Edge.','En la barra de direcciones, a la derecha, haz clic en el ícono de instalar (una pantalla con una flecha).','Haz clic en «Instalar».','OneBook se abrirá en su propia ventana y quedará en tu menú de aplicaciones.']
   };
   function estado(){
     var inst=AT.app.instalada(),sw=!!(navigator.serviceWorker&&navigator.serviceWorker.controller);
     $('#ciEstado').setAttribute('data-k',inst?'good':'');
-    $('#ciEstadoTxt').textContent=inst?'Ya estás usando OneLearn instalado como app.':
-      (sw?'Este navegador ya guardó una copia de OneLearn: funciona sin conexión. ':'')+'Todavía no lo instalas como app.';
+    $('#ciEstadoTxt').textContent=inst?'Ya estás usando OneBook instalado como app.':
+      (sw?'Este navegador ya guardó una copia de OneBook: funciona sin conexión. ':'')+'Todavía no lo instalas como app.';
     $('#ciInstalar').hidden=inst||!AT.app.evento;
   }
   function pasos(d){$('#ciPasos').innerHTML=PASOS[d].map(function(t){return '<li>'+esc(t)+'</li>'}).join('')}

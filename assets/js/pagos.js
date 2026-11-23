@@ -1,5 +1,5 @@
-/* OneLearn: bloque «Plan de pagos» (en cualquier documento).
-   Para llevar una deuda: el monto total y, o el número de pagos (OneLearn calcula cuánto es cada uno), o cuánto
+/* OneBook: bloque «Plan de pagos» (en cualquier documento).
+   Para llevar una deuda: el monto total y, o el número de pagos (OneBook calcula cuánto es cada uno), o cuánto
    pagas cada vez (calcula cuántos pagos son). Con la frecuencia (semanal, quincenal o mensual) y la fecha del
    primer pago arma el calendario. Cada pago se marca como pagado (también al leer) y se descuenta de lo que debes.
    attrs: {titulo, modo:'plazos'|'cuota', monto, pagos, cuota, frecuencia:'semanal'|'quincenal'|'mensual', inicio:'AAAA-MM-DD',
@@ -77,31 +77,43 @@ function htmlLista(c,uid,editable){
 function hoy(){return iso(new Date())}
 
 /* ---------- Al leer: se dibuja y, en tus documentos, se puede marcar como pagado ---------- */
+/* La vista de lectura de un plan: una <section> con el resumen y los pagos.
+   op: {editable, marcar(n, marcado) → los pagados nuevos}. La usan el dibujo del bloque y la página de bienvenida. */
+function vistaLectura(a,op){
+  a=Object.assign({},DEF,a);op=op||{};
+  var d=document.createElement('section'),uid='pg'+AT.bloques.nuevoId().slice(2);
+  d.className='pg pg-leer';d.setAttribute('aria-label',a.titulo||'Plan de pagos');
+  function pintar(){
+    var cal=calcular(a);
+    d.innerHTML='<h3 class="pg-t">'+esc(a.titulo||'Plan de pagos')+'</h3>'+
+      (cal.total?htmlResumen(cal)+htmlLista(cal,uid,!!op.editable):'<p class="hint">Este plan de pagos todavía no tiene monto.</p>');
+  }
+  d.addEventListener('change',function(e){
+    var k=e.target.getAttribute('data-pago');if(!k||!op.editable||!op.marcar)return;
+    var p=op.marcar(k,e.target.checked);
+    if(!p)return;
+    a.pagados=p;
+    pintar();
+    var x=d.querySelector('[data-pago="'+k+'"]');if(x)x.focus();
+  });
+  pintar();
+  return d;
+}
 if(AT.bloques&&AT.bloques.registrar){
   AT.bloques.registrar('pagos',{
     dibujar:function(n,c,h){
-      var a=Object.assign({},DEF,h.attrs(n)),id=h.attrs(n).id,d=h.el('section','pg pg-leer',{'aria-label':a.titulo||'Plan de pagos'});
-      var uid='pg'+AT.bloques.nuevoId().slice(2);
+      var id=h.attrs(n).id;
       /* Solo en documento.html y en tu propio documento se puede marcar (no al imprimir) */
       var editable=!!(AT.docActual&&AT.docCambio&&id&&document.body.getAttribute('data-pagina')==='documento');
-      function pintar(){
-        var cal=calcular(a);
-        d.innerHTML='<h3 class="pg-t">'+esc(a.titulo||'Plan de pagos')+'</h3>'+
-          (cal.total?htmlResumen(cal)+htmlLista(cal,uid,editable):'<p class="hint">Este plan de pagos todavía no tiene monto.</p>');
-      }
-      d.addEventListener('change',function(e){
-        var k=e.target.getAttribute('data-pago');if(!k||!editable)return;
+      return vistaLectura(h.attrs(n),{editable:editable,marcar:function(k,marcado){
         var blk=(AT.docActual.contenido.content||[]).filter(function(b){return b.attrs&&b.attrs.id===id})[0];
-        if(!blk)return;
+        if(!blk)return null;
         var p=Object.assign({},blk.attrs.pagados||{});
-        if(e.target.checked)p[k]=hoy();else delete p[k];
-        blk.attrs.pagados=p;a.pagados=p;
+        if(marcado)p[k]=hoy();else delete p[k];
+        blk.attrs.pagados=p;
         AT.docCambio();
-        pintar();
-        var x=d.querySelector('[data-pago="'+k+'"]');if(x)x.focus();
-      });
-      pintar();
-      return d;
+        return p;
+      }});
     },
     texto:function(n){var a=Object.assign({},DEF,n.attrs||{});return (a.titulo?a.titulo+'\n':'')+resumenTexto(a,calcular(a))+'\n'}
   });
@@ -115,7 +127,7 @@ if(AT.piezas&&AT.piezas.md){
     }).join('\n'):'');
   };
 }
-AT.pagos={calcular:calcular,dinero:dinero,centavos:centavos};
+AT.pagos={calcular:calcular,dinero:dinero,centavos:centavos,vista:vistaLectura,hoy:hoy};
 
 /* =====================================================================================
    Editor

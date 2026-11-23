@@ -1,4 +1,4 @@
-/* OneLearn: rutas de aprendizaje (rutas.html).
+/* OneBook: rutas de aprendizaje (rutas.html).
    Dibuja cada ruta de AT.caminos (catalogo.js) con su avance, el botón «Qué sigue» y sus módulos en orden:
    cada módulo con su meta, sus lecciones (con el porcentaje leído o «Pronto») y sus proyectos.
    El avance se calcula con AT.avance.camino (avance.js); al volver a la página o cambiar el avance, se redibuja. */

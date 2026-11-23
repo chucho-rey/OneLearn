@@ -1,4 +1,4 @@
-/* OneLearn: barra lateral, barra superior y navegación.
+/* OneBook: barra lateral, barra superior y navegación.
    Arma la barra lateral (Inicio, pestañas Temas / Mis apuntes / Comunidad, Lectura y Modo zen),
    la barra superior y el enlace a la siguiente lección a partir de AT.catalogo; maneja el menú en celular
    (panel modal con trampa de foco), la barra contraída en escritorio y las pestañas.
@@ -25,7 +25,7 @@ function guardarGrupos(){
 
 /* ---------- Estructura: barra lateral, barra superior y siguiente lección ---------- */
 (function(){
-  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'inicio.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M20.5 22.5 30 16v32h14.5"/></svg><span>One<b>Learn</b></span></a>'+
+  var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'inicio.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M18.5 22.5 27.5 16v32M27.5 16h8a7.5 7.5 0 0 1 0 15h-8M27.5 31h9.5a8.5 8.5 0 0 1 0 17h-9.5"/></svg><span>One<b>Book</b></span></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'inicio.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
@@ -71,7 +71,7 @@ function guardarGrupos(){
     '</div>'+
     '<div class="tabp" role="tabpanel" id="pn-comunidad" aria-labelledby="tab-comunidad" hidden>'+
       '<p class="side-txt">Aquí podrás publicar tus temas, explorar los de otros estudiantes y guardar una copia en tus apuntes para editarla.</p>'+
-      '<p class="side-txt side-soon"><b>Pronto:</b> llega cuando OneLearn tenga cuentas.</p>'+
+      '<p class="side-txt side-soon"><b>Pronto:</b> llega cuando OneBook tenga cuentas.</p>'+
     '</div>'+
     '<div class="side-foot">'+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+

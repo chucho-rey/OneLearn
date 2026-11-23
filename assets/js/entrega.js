@@ -1,4 +1,4 @@
-/* OneLearn: entregar un documento (fase de tesis, hito T4).
+/* OneBook: entregar un documento (fase de tesis, hito T4).
    - Formato de entrega (doc.formato): estilo de citas (APA 7 o IEEE), papel, letra, interlineado y margen izquierdo.
      La plantilla es la genérica de APA: márgenes de 2.54 cm, letra de 12 puntos, interlineado doble, sangría en
      la primera línea de cada párrafo, número de página arriba a la derecha y cada capítulo en una página nueva.

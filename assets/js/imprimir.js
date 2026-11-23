@@ -1,4 +1,4 @@
-/* OneLearn: vista para imprimir o guardar como PDF (imprimir.html?id=...). Hito T4.
+/* OneBook: vista para imprimir o guardar como PDF (imprimir.html?id=...). Hito T4.
    Dibuja el documento con bloques.js, lo ordena para papel y lo pagina con Paged.js (assets/vendor/paged.min.js,
    window.PagedModule), que da en cualquier navegador lo que pide una tesis:
    - Tesis: portada sin número; preliminares (índices, declaración, resumen) con números romanos; desde la

@@ -1,4 +1,4 @@
-/* OneLearn: proteger una tesis (o cualquier documento largo) para no perderla.
+/* OneBook: proteger una tesis (o cualquier documento largo) para no perderla.
    El documento vive solo en este navegador; aquí se ayuda a tener copias fuera de él:
    - «Respaldo» en la barra de la tesis dice cuándo fue la última copia y avisa si hace falta otra.
    - Copia automática en un archivo de tu computadora (File System Access, en Chrome y Edge de escritorio):
@@ -44,11 +44,11 @@ function ultima(doc){
 
 /* ---------- El archivo de respaldo de un documento ---------- */
 function copia(doc){
-  return JSON.stringify({app:'OneLearn',formato:1,exportado:new Date().toISOString(),documentos:[doc],notas:[],marcadores:[]},null,1);
+  return JSON.stringify({app:'OneBook',formato:1,exportado:new Date().toISOString(),documentos:[doc],notas:[],marcadores:[]},null,1);
 }
 function nombre(doc){
   var s=(doc.titulo||'documento').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  return (s||'documento')+'.onelearn.json';
+  return (s||'documento')+'.onebook.json';
 }
 function descargar(doc){
   var a=document.createElement('a');
@@ -134,7 +134,7 @@ function guardado(doc){
 }
 function elegirArchivo(doc){
   return window.showSaveFilePicker({suggestedName:nombre(doc),
-    types:[{description:'Respaldo de OneLearn',accept:{'application/json':['.json']}}]}).then(function(h){
+    types:[{description:'Respaldo de OneBook',accept:{'application/json':['.json']}}]}).then(function(h){
     enlaces[doc.id]=h;permisos[doc.id]='granted';
     return idb('readwrite',function(s){return s.put(h,doc.id)}).catch(function(){}).then(function(){
       AT.datos.pedirPersistencia();
@@ -191,9 +191,9 @@ function dialogo(doc,op){
         h+='<div class="td-sec"><h3>Copia automática</h3>';
         if(a.estado==='activo')h+='<p class="td-p td-ok">'+ico('escudo')+'<span>Se copia en <b>'+esc(a.nombre)+'</b> cada vez que se guarda'+(i.a?' (la última, '+esc(hace(i.a))+')':'')+'.</span></p>'+
           '<div class="td-bt"><button class="btn" type="button" data-pr="soltar">Dejar de copiar</button></div>';
-        else if(a.estado==='pausa')h+='<p class="td-p">La copia en <b>'+esc(a.nombre)+'</b> está en pausa: el navegador pide permiso otra vez cada vez que abres OneLearn.</p>'+
+        else if(a.estado==='pausa')h+='<p class="td-p">La copia en <b>'+esc(a.nombre)+'</b> está en pausa: el navegador pide permiso otra vez cada vez que abres OneBook.</p>'+
           '<div class="td-bt"><button class="btn pri" type="button" data-pr="reanudar">Reanudar la copia</button><button class="btn" type="button" data-pr="soltar">Dejar de copiar</button></div>';
-        else h+='<p class="td-p">Elige un archivo en tu computadora (mejor si está en una carpeta que se sincroniza, como Google Drive, OneDrive o iCloud) y OneLearn lo actualizará cada vez que guardes.</p>'+
+        else h+='<p class="td-p">Elige un archivo en tu computadora (mejor si está en una carpeta que se sincroniza, como Google Drive, OneDrive o iCloud) y OneBook lo actualizará cada vez que guardes.</p>'+
           '<div class="td-bt"><button class="btn pri" type="button" data-pr="elegir">Elegir dónde copiar</button></div>';
         h+='</div>';
       }
@@ -201,8 +201,8 @@ function dialogo(doc,op){
         (i.d?'La última la descargaste '+esc(hace(i.d))+'.':'')+'</p>'+
         '<div class="td-bt"><button class="btn'+(puedeArchivo?'':' pri')+'" type="button" data-pr="descargar">'+ico('descargar')+'Descargar copia</button></div></div>';
       h+='<div class="td-sec">'+(pers===true?'<p class="td-p td-ok">'+ico('escudo')+'<span><b>El navegador conserva tus datos:</b> no los borrará aunque le falte espacio.</span></p>':
-        pers===false?'<p class="td-p">El navegador podría borrar los datos de OneLearn si el dispositivo se queda sin espacio.</p><div class="td-bt"><button class="btn" type="button" data-pr="conservar">Pedir que los conserve</button></div>':'')+
-        '<p class="td-p pr-rec">Para recuperar '+(cual==='tu tesis'?'tu tesis':'el documento')+' en otro navegador o equipo: abre OneLearn, ve a «Tus datos» y elige «Importar respaldo».</p></div>'+
+        pers===false?'<p class="td-p">El navegador podría borrar los datos de OneBook si el dispositivo se queda sin espacio.</p><div class="td-bt"><button class="btn" type="button" data-pr="conservar">Pedir que los conserve</button></div>':'')+
+        '<p class="td-p pr-rec">Para recuperar '+(cual==='tu tesis'?'tu tesis':'el documento')+' en otro navegador o equipo: abre OneBook, ve a «Tus datos» y elige «Importar respaldo».</p></div>'+
         '<p class="td-msg'+(error?' err':'')+'" role="status">'+esc(msg||'')+'</p>';
       var foco=document.activeElement&&d.contains(document.activeElement)?document.activeElement.getAttribute('data-pr'):'';
       d.innerHTML=h;

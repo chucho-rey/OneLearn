@@ -238,7 +238,7 @@ module.exports=function(txt,demo){
 
   'como-funciona':async function(p,r){
     await p.click('#clTema [data-v="dark"]');
-    r.cumple(await p.evaluate(function(){return document.documentElement.getAttribute('data-theme')==='dark'&&AT.ajustes.get('tema')==='dark'}),'el laboratorio cambia el tema real de OneLearn');
+    r.cumple(await p.evaluate(function(){return document.documentElement.getAttribute('data-theme')==='dark'&&AT.ajustes.get('tema')==='dark'}),'el laboratorio cambia el tema real de OneBook');
     await p.click('#clTam [data-v="1"]');
     r.igual(await txt(p,'#clTamV'),'115 %','A+ sube la letra al 115 %');
     await p.click('#clFue [data-v="opendyslexic"]');

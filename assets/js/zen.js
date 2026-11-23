@@ -1,4 +1,4 @@
-/* Modo zen y atajos de teclado de OneLearn (en las lecciones, en tus documentos y en «Cómo está hecho»).
+/* Modo zen y atajos de teclado de OneBook (en las lecciones, en tus documentos y en «Cómo está hecho»).
    Modo zen: oculta la barra lateral, la barra superior, el mapa y la barra de apuntes; deja el texto y una línea
    fina de avance arriba, y usa la pantalla completa del navegador donde se puede. Una barra discreta (que aparece
    al mover el ratón o con Tab) cambia el tamaño de letra y el ancho, abre la nota rápida y sale.
@@ -137,7 +137,7 @@ dlg.innerHTML='<div class="at-h"><h2 id="atajosT">Atajos de teclado</h2>'+
     (conNota?'<div><dt><kbd>N</kbd></dt><dd>Abrir la nota rápida</dd></div>':'')+
     '<div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>Sección siguiente y anterior</dd></div>'+
     (conNota?'<div><dt><kbd>M</kbd></dt><dd>Guardar la sección como marcador</dd></div>':'<div><dt><kbd>E</kbd></dt><dd>Pasar de leer a editar</dd></div>')+
-    '<div><dt><kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Buscar en todo OneLearn</dd></div>'+
+    '<div><dt><kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Buscar en todo OneBook</dd></div>'+
     '<div><dt><kbd>Esc</kbd></dt><dd>Cerrar lo que esté abierto, o salir del modo zen</dd></div>'+
     '<div><dt><kbd>?</kbd></dt><dd>Ver esta lista</dd></div>'+
   '</dl><p class="lec-nota">Los atajos no se activan mientras escribes.</p>';

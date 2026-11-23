@@ -1,4 +1,4 @@
-/* OneLearn: formato de bloques y su dibujo.
+/* OneBook: formato de bloques y su dibujo.
    Un documento (una lección oficial o un documento tuyo) es un objeto JSON:
      {formato:1, tipo:'leccion'|'libreta'|'notas'|..., id, titulo, icono, props:[{nombre, valor, estilo}],
       creado, editado, contenido:{type:'doc', content:[bloques]}}

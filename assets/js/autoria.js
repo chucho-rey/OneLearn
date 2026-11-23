@@ -1,4 +1,4 @@
-/* OneLearn: registro de autoría de un documento académico (por ahora, la tesis).
+/* OneBook: registro de autoría de un documento académico (por ahora, la tesis).
    Mientras escribes, anota en doc.autoria cómo se hizo el texto, sin guardar nunca las teclas:
      {v:1, sesiones:[{i, f, e, b, p}], pegados:[{t, n, m, o, f}]}
    Una sesión (i y f en milisegundos) junta lo tecleado (e), borrado (b) y pegado (p), en caracteres; se abre otra
@@ -214,7 +214,7 @@ function constancia(doc){
       'table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;padding:.35rem .5rem;border-bottom:1px solid #d5dedc}'+
       '.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem}.k div{border:1px solid #d5dedc;border-radius:.5rem;padding:.5rem .75rem}.k b{display:block;font-size:1.2rem}'+
       'code{font-size:.8rem;word-break:break-all}@media print{body{margin:0}}</style></head><body>'+
-      '<p class="m">OneLearn · Constancia de autoría</p><h1>'+esc(doc.titulo||'Sin título')+'</h1>'+
+      '<p class="m">OneBook · Constancia de autoría</p><h1>'+esc(doc.titulo||'Sin título')+'</h1>'+
       (props.length?'<p>'+props.map(function(p){return '<b>'+esc(p.nombre)+':</b> '+esc(p.valor)}).join(' · ')+'</p>':'')+
       '<p class="m">Emitida el '+esc(ahora.toLocaleString('es-MX',{dateStyle:'long',timeStyle:'short'}))+'.</p>'+
       '<h2>Resumen</h2><div class="k">'+
@@ -241,7 +241,7 @@ function constancia(doc){
         '</tbody></table>':'')+
       '<h2>Huella del texto</h2><p>SHA-256 del texto del documento'+(conImagenes?' y de sus imágenes':'')+' al emitir esta constancia:</p><p><code>'+(h||'No disponible en este navegador')+'</code></p>'+
       '<p class="m">Si el texto cambia, aunque sea una letra, la huella cambia. Sirve para comprobar que esta constancia corresponde a la versión que entregaste.</p>'+
-      '<h2>Qué demuestra y qué no</h2><p class="m">El registro muestra cómo se escribió el documento dentro de OneLearn, en este dispositivo: cuándo, cuánto se tecleó y cuánto se pegó, y el origen que la autora o el autor indicó para lo pegado. No registra lo que pasa en otros programas ni en otros dispositivos. Es evidencia del proceso de escritura, no un detector.</p>'+
+      '<h2>Qué demuestra y qué no</h2><p class="m">El registro muestra cómo se escribió el documento dentro de OneBook, en este dispositivo: cuándo, cuánto se tecleó y cuánto se pegó, y el origen que la autora o el autor indicó para lo pegado. No registra lo que pasa en otros programas ni en otros dispositivos. Es evidencia del proceso de escritura, no un detector.</p>'+
       '</body></html>';
     var a=document.createElement('a');
     var nombre=(doc.titulo||'documento').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'documento';

@@ -69,12 +69,12 @@ prueba('Tesis · Protección de datos y piezas académicas',async function({brow
   await revisar(p,r,'ventana Proteger tu tesis');
   const [des]=await Promise.all([p.waitForEvent('download'),p.click('[data-pr="descargar"]')]);
   const copia=JSON.parse(fs.readFileSync(await des.path(),'utf8'));
-  r.cumple(des.suggestedFilename()==='tesis-sin-titulo.onelearn.json'&&copia.app==='OneLearn'&&copia.documentos.length===1&&copia.documentos[0].tipo==='tesis'&&/bachillerato/.test(JSON.stringify(copia.documentos[0].contenido))&&!!copia.documentos[0].autoria,'«Descargar copia» guarda la tesis completa, con su registro de autoría, en el formato del respaldo',des.suggestedFilename());
+  r.cumple(des.suggestedFilename()==='tesis-sin-titulo.onebook.json'&&copia.app==='OneBook'&&copia.documentos.length===1&&copia.documentos[0].tipo==='tesis'&&/bachillerato/.test(JSON.stringify(copia.documentos[0].contenido))&&!!copia.documentos[0].autoria,'«Descargar copia» guarda la tesis completa, con su registro de autoría, en el formato del respaldo',des.suggestedFilename());
   await p.waitForTimeout(200);
   r.cumple(/Última copia fuera del navegador: hace un momento/.test(await p.textContent('.pr-dlg'))&&/La última la descargaste hace un momento/.test(await p.textContent('.pr-dlg')),'la ventana anota la copia descargada');
   await p.click('[data-pr="elegir"]');await p.waitForFunction(function(){return window.__copias.length===1});await p.waitForTimeout(200);
   const c1=JSON.parse(await p.evaluate(function(){return window.__copias[0]}));
-  r.cumple(c1.documentos[0].id===copia.documentos[0].id&&await p.evaluate(function(){return window.__sugerido})==='tesis-sin-titulo.onelearn.json','«Elegir dónde copiar» escribe la tesis en el archivo elegido');
+  r.cumple(c1.documentos[0].id===copia.documentos[0].id&&await p.evaluate(function(){return window.__sugerido})==='tesis-sin-titulo.onebook.json','«Elegir dónde copiar» escribe la tesis en el archivo elegido');
   r.cumple(/Se copia en mi-tesis\.onelearn\.json cada vez que se guarda/.test((await p.textContent('.pr-dlg')).replace(/\s+/g,' '))&&await p.isVisible('[data-pr="soltar"]'),'y lo dice, con la opción de dejar de copiar');
   await p.keyboard.press('Escape');await p.waitForTimeout(150);
   rb=await p.evaluate(function(){var b=document.querySelector('[data-ts="respaldo"]');return {t:b.textContent,aviso:b.classList.contains('ts-aviso')}});

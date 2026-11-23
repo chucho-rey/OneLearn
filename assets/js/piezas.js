@@ -1,4 +1,4 @@
-/* OneLearn: piezas académicas de un documento (fase de tesis, hito T3).
+/* OneBook: piezas académicas de un documento (fase de tesis, hito T3).
    - figura: imagen comprimida en el dispositivo (WebP, máximo 1600 px) con número, título, texto alternativo y nota de origen.
    - tablaNumerada: una tabla con «Tabla N», título y nota, como pide APA.
    - ecuacion (bloque numerado) y formula (dentro del texto), escritas en LaTeX y dibujadas con KaTeX,
