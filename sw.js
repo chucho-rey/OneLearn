@@ -4,10 +4,11 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-29';
+const VERSION='onelearn-30';
 const ARCHIVOS=[
   './',
   'index.html',
+  'inicio.html',
   'documento.html',
   'acerca.html',
   'rutas.html',
@@ -22,10 +23,12 @@ const ARCHIVOS=[
   'manifest.webmanifest',
   'assets/css/base.css',
   'assets/css/editor.css',
+  'assets/css/landing.css',
   'assets/css/terminal.css',
   'assets/css/red.css',
   'assets/js/ajustes.js',
   'assets/js/catalogo.js',
+  'assets/js/landing.js',
   'assets/js/base.js',
   'assets/js/datos.js',
   'assets/js/respaldo.js',
@@ -259,7 +262,7 @@ async function redPrimero(req){
     const guardado=await cache.match(req,{ignoreSearch:true});
     if(guardado)return guardado;
     /* Una página que no está guardada: se lleva al inicio (con redirección, para que sus rutas relativas funcionen) */
-    if(req.mode==='navigate'&&await cache.match('index.html'))return Response.redirect(new URL('index.html',self.registration.scope).href,302);
+    if(req.mode==='navigate'&&await cache.match('inicio.html'))return Response.redirect(new URL('inicio.html',self.registration.scope).href,302);
     return red;
   }
 }

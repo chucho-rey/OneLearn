@@ -49,7 +49,7 @@ const TEXTO='La lectura en pantalla cambió la manera en que los estudiantes de 
 prueba('Tesis · Protección de datos y piezas académicas',async function({browser,base,r}){
   const p=await pagina(browser,{ancho:1280,alto:900,reducir:true});
   await p.context().addInitScript(simularArchivo);
-  await p.goto(base+'index.html');await listo(p);
+  await p.goto(base+'inicio.html');await listo(p);
   await p.click('#sideCrear');await p.waitForTimeout(200);
   await Promise.all([p.waitForURL(/documento\.html\?id=d-/),p.click('[data-tipo="tesis"]')]);await listo(p,500);
   const tipos=await p.evaluate(function(){return AT.docActual.contenido.content.slice(0,4).map(function(b){return b.type+(b.attrs.clase?':'+b.attrs.clase:'')}).join(' ')});
@@ -86,7 +86,7 @@ prueba('Tesis · Protección de datos y piezas académicas',async function({brow
   r.cumple(await p.waitForFunction(function(){var c=window.__copias;return c.length>=2&&/se discuten al final/.test(c[c.length-1])},null,{timeout:6000}).then(function(){return true},function(){return false}),'cada vez que se guarda, el archivo se actualiza solo');
   /* Recuperar la copia en otro navegador */
   const q=await pagina(browser,{ancho:1000,reducir:true});
-  await q.goto(base+'index.html');await listo(q);
+  await q.goto(base+'inicio.html');await listo(q);
   const rec=await q.evaluate(function(c){return AT.datos.importar(c).then(function(res){return AT.datos.documentos.leer(c.documentos[0].id).then(function(d){return {n:res.documentos,tipo:d&&d.tipo,sesiones:d&&d.autoria.sesiones.length}})})},copia);
   r.cumple(rec.n===1&&rec.tipo==='tesis'&&rec.sesiones>=1,'la copia se recupera en otro navegador con «Importar respaldo»',rec);
   await cerrar(q);
@@ -285,7 +285,7 @@ prueba('Tesis · Protección de datos y piezas académicas',async function({brow
 
   /* ---------- Celular, oscuro, alto contraste ×1.5 y OpenDyslexic ---------- */
   const m=await pagina(browser,{ancho:390,ajustes:{tema:'dark',contraste:'high',escala:1.5,fuente:'opendyslexic'},reducir:true});
-  await m.goto(base+'index.html');await listo(m);
+  await m.goto(base+'inicio.html');await listo(m);
   await m.evaluate(function(x){return AT.datos.documentos.guardar(x,{conservarFecha:true}).then(function(){return 1})},d);
   await m.goto(base+'documento.html?id='+d.id);await listo(m,500);
   if(/Editar/.test(await m.textContent('#docModo')))await m.click('#docModo');
@@ -303,7 +303,7 @@ prueba('Tesis · Protección de datos y piezas académicas',async function({brow
 
   /* ---------- En otros documentos: imágenes, ecuaciones y notas sí; numeración de tesis, no ---------- */
   const n=await pagina(browser,{ancho:1280,reducir:true});
-  await n.goto(base+'index.html');await listo(n);
+  await n.goto(base+'inicio.html');await listo(n);
   await Promise.all([n.waitForURL(/documento\.html/),n.evaluate(function(){AT.crear.nuevo('libreta');return 1}).catch(function(){return 1})]);await listo(n,400);
   await n.evaluate(function(){AT.editorActual.enfocar('end')});
   await n.keyboard.press('Enter');await n.keyboard.type('/tabla');await n.waitForTimeout(200);
@@ -322,7 +322,7 @@ prueba('Tesis · Protección de datos y piezas académicas',async function({brow
 
   /* ---------- Seguridad: solo imágenes guardadas en el documento ---------- */
   const s=await pagina(browser,{ancho:1000,reducir:true});
-  await s.goto(base+'index.html');await listo(s);
+  await s.goto(base+'inicio.html');await listo(s);
   await s.evaluate(function(){return AT.datos.documentos.guardar({id:'d-imagenes',formato:1,tipo:'tesis',titulo:'Prueba',props:[],fuentes:[],contenido:{type:'doc',content:[
     {type:'figura',attrs:{id:'b-aaaaaa',clave:'p-aaaaaa',src:'https://ejemplo.com/rastreo.png',titulo:'Externa'}},
     {type:'figura',attrs:{id:'b-bbbbbb',clave:'p-bbbbbb',src:'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',titulo:'SVG'}},

@@ -47,7 +47,7 @@ prueba('Cómo está hecho OneLearn',async function({browser,base,r}){
 
   /* Se llega desde Inicio y la búsqueda la encuentra */
   const q=await pagina(browser,{});
-  await q.goto(base+'index.html');await listo(q);
+  await q.goto(base+'inicio.html');await listo(q);
   r.cumple(await q.locator('.page a[href="acerca.html"]').isVisible(),'Inicio tiene un acceso a «Cómo está hecho»');
   await q.keyboard.press('Control+k');await q.waitForTimeout(200);
   await q.keyboard.type('service worker');await q.waitForTimeout(800);

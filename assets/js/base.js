@@ -153,6 +153,8 @@ var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA=
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
 AT.rutas={raiz:RAIZ,lecciones:LECC,esInicio:ES_INICIO,pagina:PAGINA};
+/* Marca que este navegador ya usa OneLearn: la página de bienvenida (index.html) lo manda directo a su Inicio */
+try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}
 var actual=null,grupo='',orden=[];
 catalogo.forEach(function(g){
   g.lecciones.forEach(function(l){

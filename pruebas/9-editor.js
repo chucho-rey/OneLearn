@@ -13,7 +13,7 @@ async function esperarGuardado(p){await p.waitForFunction(function(){return docu
 
 prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   const p=await pagina(browser,{ancho:1280,alto:900});
-  await p.goto(base+'index.html');await listo(p);
+  await p.goto(base+'inicio.html');await listo(p);
   r.cumple(/Crea una libreta/.test(await p.textContent('#iniDocs')),'el inicio invita a crear el primer documento');
 
   /* ---------- La ventana «¿Qué quieres crear?» ---------- */
@@ -177,7 +177,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Duplicar» crea una copia y la abre');
   await p.click('#docMas');await p.click('.menu-i:has-text("Eliminar")');await p.waitForTimeout(150);
   r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-el')==='no'}),'eliminar pide confirmación con el foco en «Cancelar»');
-  await Promise.all([p.waitForURL(/index\.html/),p.click('[data-el="si"]')]);await listo(p,300);
+  await Promise.all([p.waitForURL(/inicio\.html/),p.click('[data-el="si"]')]);await listo(p,300);
   r.cumple(/Se eliminó «Copia de Fotosíntesis»/.test(await p.textContent('#avisoApp')),'al eliminar, el inicio avisa y ofrece deshacer');
   r.cumple((await p.$$('#iniDocs .nota')).length===1,'el inicio lista los documentos que quedan');
   await Promise.all([p.waitForURL(/documento\.html/),p.click('#avisoApp .btn')]);await listo(p,300);
@@ -187,7 +187,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
 
   /* ---------- Notas y apuntes de clase, en celular ---------- */
   const c=await pagina(browser,{ancho:390,alto:844,movil:true});
-  await c.goto(base+'index.html');await listo(c);
+  await c.goto(base+'inicio.html');await listo(c);
   await c.tap('[data-crear]');await c.waitForTimeout(300);
   await revisar(c,r,'ventana Crear en celular');
   await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="clase"]')]);await listo(c,500);
@@ -201,7 +201,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   await c.tap('#docModo');await c.waitForTimeout(300);
   r.cumple(/Biología/.test(await c.textContent('.props'))&&await c.$('li.tarea.hecha'),'al leer, la materia y la tarea hecha se muestran');
   await revisar(c,r,'apuntes de clase al leer en celular');
-  await c.goto(base+'index.html');await listo(c);
+  await c.goto(base+'inicio.html');await listo(c);
   await c.tap('[data-crear]');await c.waitForTimeout(200);
   await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="notas"]')]);await listo(c,500);
   r.cumple(await c.evaluate(function(){return document.querySelectorAll('.ed-cuerpo > *').length===1&&!document.querySelector('.dp-fila')}),'las notas empiezan como una página en blanco');
@@ -223,7 +223,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   /* ---------- El editor en varios tamaños y modos ---------- */
   for(const [ancho,escala,fuente,tema,contraste] of [[390,1.5,'opendyslexic','dark','high'],[1280,1.3,'atkinson','light','high'],[1600,1,'normal','dark','normal']]){
     const v=await pagina(browser,{ancho:ancho,ajustes:{escala:escala,fuente:fuente,tema:tema,contraste:contraste}});
-    await v.goto(base+'index.html');await listo(v);
+    await v.goto(base+'inicio.html');await listo(v);
     await v.evaluate(function(){return AT.crear.nuevo('libreta')});
     await v.waitForURL(/documento/);await listo(v,500);
     await v.click('.ed-cuerpo h2');await v.keyboard.type('Sección de prueba con un título bastante largo para ver si cabe');

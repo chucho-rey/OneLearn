@@ -64,7 +64,7 @@ prueba('Rutas',async function({browser,base,r}){
   r.cumple(/1 de \d+ terminados/.test(await txt(q,'.rt-av-t')),'el avance cuenta 1 terminada');
   r.cumple(/Terminada/.test(await txt(q,'.rt-m.actual .exp-i.hecho')),'Sistema operativo se marca como terminada');
   /* Inicio */
-  await q.goto(base+'index.html');await listo(q);
+  await q.goto(base+'inicio.html');await listo(q);
   r.cumple(/Sigue con: La terminal/.test(await txt(q,'#iniRutas .btn.pri')),'Inicio sugiere seguir la ruta con La terminal');
   await q.click('#iniRutas a[href^="rutas.html"]');await q.waitForURL(/rutas\.html#redes-sistemas/);await listo(q);
   r.cumple(q.errores.length===0,'sin errores con avance',q.errores);
@@ -83,7 +83,7 @@ prueba('Rutas',async function({browser,base,r}){
 
   /* La búsqueda encuentra la ruta */
   const b=await pagina(browser,{ancho:1280});
-  await b.goto(base+'index.html');await listo(b);
+  await b.goto(base+'inicio.html');await listo(b);
   await b.keyboard.press('Control+k');await b.waitForTimeout(200);
   await b.keyboard.type('redes y sistemas');await b.waitForTimeout(700);
   r.cumple(/Ruta: Redes y sistemas/.test(await b.textContent('dialog[open]')),'Ctrl K encuentra la ruta');

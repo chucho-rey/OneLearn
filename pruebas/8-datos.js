@@ -94,7 +94,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
 
   /* Navegador limpio: importar recupera todo */
   const n=await pagina(browser,{ancho:390,alto:844,movil:true});
-  await n.goto(base+'index.html');await listo(n);
+  await n.goto(base+'inicio.html');await listo(n);
   await n.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-local',titulo:'Ya estaba aquí',contenido:{type:'doc',content:[]}})});
   await n.tap('#menuBtn');await n.waitForTimeout(300);await n.tap('#sideDatos');await n.waitForTimeout(300);
   await revisar(n,r,'ventana Tus datos en celular');
@@ -146,7 +146,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
 
   /* La ventana en alto contraste oscuro y letra grande */
   const h=await pagina(browser,{ancho:1280,ajustes:{tema:'dark',contraste:'high',escala:1.5,fuente:'opendyslexic'}});
-  await h.goto(base+'index.html');await listo(h);
+  await h.goto(base+'inicio.html');await listo(h);
   await h.click('#sideDatos');await h.waitForTimeout(400);
   await revisar(h,r,'Tus datos ×1.5 OpenDyslexic oscuro/alto');
   await cerrar(h);
@@ -154,7 +154,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
 
   /* Recordatorio de respaldo en Inicio */
   const rr=await pagina(browser,{ancho:1280});
-  await rr.goto(base+'index.html');await listo(rr);
+  await rr.goto(base+'inicio.html');await listo(rr);
   r.cumple(await rr.isHidden('#iniRespaldo'),'sin documentos ni notas, Inicio no pide respaldo');
   await rr.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-rec',titulo:'Algo',contenido:{type:'doc',content:[]}})});
   await rr.reload();await listo(rr);

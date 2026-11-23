@@ -259,7 +259,7 @@ function eliminar(){
     if(ed)doc.contenido=ed.json();
     clearTimeout(timer);timer=null;pendiente=false;
     try{sessionStorage.setItem('onelearn:eliminado',JSON.stringify(doc))}catch(x){}
-    AT.datos.documentos.borrar(doc.id).then(function(){location.href='index.html'});
+    AT.datos.documentos.borrar(doc.id).then(function(){location.href='inicio.html'});
   });
   d.showModal();
   $('[data-el="no"]',d).focus();
@@ -344,7 +344,7 @@ AT.documentoMarkdown=aMarkdown;
 function noEncontrado(){
   page.innerHTML='<div class="page-icon">'+ico('notas')+'</div><h1>No encontramos este documento</h1>'+
     '<p>No está guardado en este navegador. Si lo creaste en otro dispositivo o navegador, descarga ahí un respaldo desde «Tus datos» e impórtalo aquí.</p>'+
-    '<p><a class="btn pri" href="index.html">Ir al inicio</a> <button class="btn" type="button" data-crear>Crear algo nuevo</button></p>';
+    '<p><a class="btn pri" href="inicio.html">Ir al inicio</a> <button class="btn" type="button" data-crear>Crear algo nuevo</button></p>';
   document.title='Documento no encontrado · OneLearn';
 }
 AT.documentoAbierto=ID;

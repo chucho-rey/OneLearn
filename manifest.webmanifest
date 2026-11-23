@@ -4,7 +4,7 @@
   "description": "Aprende cómo funciona la tecnología con lecciones y laboratorios interactivos. Tu avance y tus apuntes se guardan en tu dispositivo.",
   "lang": "es",
   "dir": "ltr",
-  "start_url": "./",
+  "start_url": "inicio.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#fbfcfc",

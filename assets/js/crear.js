@@ -127,6 +127,11 @@ AT.crear={abrir:abrir,cerrar:cerrar,nuevo:nuevo,tipos:TIPOS};
 document.addEventListener('click',function(e){
   if(e.target.closest('#sideCrear,[data-crear]'))abrir();
 });
+/* inicio.html#crear (desde la página de bienvenida) abre la ventana al llegar */
+if(AT.rutas&&AT.rutas.esInicio&&location.hash==='#crear'){
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  setTimeout(abrir,0);
+}
 
 /* ---------- Deshacer una eliminación (el documento se guardó en la sesión al borrarlo) ---------- */
 var borrado=null;

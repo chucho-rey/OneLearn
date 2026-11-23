@@ -18,7 +18,7 @@ prueba('Hito 4 · Avance, mapa del tema e inicio',async function({browser,base,r
   await p.clock.install();
 
   /* Primera visita */
-  await p.goto(base+'index.html');await p.clock.runFor(300);
+  await p.goto(base+'inicio.html');await p.clock.runFor(300);
   r.cumple(await visible(p,'#bienvenida')&&!await visible(p,'#continuar'),'la primera visita muestra la bienvenida');
   r.cumple(/Aún no tienes apuntes/.test(await texto(p,'#recientes')),'sin notas, el inicio explica dónde se escriben');
   r.igual(await p.getAttribute('#side .nv[data-id="ram"]','href'),'lecciones/ram.html','desde el inicio, los enlaces apuntan a lecciones/');
@@ -47,7 +47,7 @@ prueba('Hito 4 · Avance, mapa del tema e inicio',async function({browser,base,r
   await p.evaluate(function(){document.getElementById('s-celda').scrollIntoView({block:'start'})});await p.clock.runFor(1500);
 
   /* Volver al inicio y continuar: el criterio del hito */
-  await p.goto(base+'index.html');await p.clock.runFor(300);
+  await p.goto(base+'inicio.html');await p.clock.runFor(300);
   r.cumple(/Memoria RAM/.test(await texto(p,'#continuar'))&&/Cómo guarda un bit la RAM/.test(await texto(p,'#continuar'))&&/44% leído/.test(await texto(p,'#continuar')),'«Continúa» muestra la lección, la sección y el avance',await texto(p,'#continuar'));
   r.igual(await p.getAttribute('#continuar a','href'),'lecciones/ram.html#s-celda','«Continúa» enlaza a la sección exacta');
   await Promise.all([p.waitForURL(/ram\.html/),p.click('#continuar a')]);await p.waitForLoadState('load');await p.clock.runFor(2000);
@@ -67,7 +67,7 @@ prueba('Hito 4 · Avance, mapa del tema e inicio',async function({browser,base,r
   await p.click('#shMain');await p.fill('#notes','nota de ram');await p.clock.runFor(1500);
   await p.goto(base+'lecciones/cpu.html');await p.clock.runFor(500);
   await p.click('#shMain');await p.type('#notes','nota de cpu');await p.clock.runFor(1500);
-  await p.goto(base+'index.html');await p.clock.runFor(300);
+  await p.goto(base+'inicio.html');await p.clock.runFor(300);
   r.igual(JSON.stringify(await p.$$eval('#recientes .nota b',function(e){return e.map(function(x){return x.textContent})})),JSON.stringify(['Procesador (CPU)','Memoria RAM']),'las notas recientes van de la más nueva a la más vieja');
   r.igual(await texto(p,'.exp-i[href="lecciones/ram.html"] em'),'100%','explorar muestra el avance de cada lección');
   await p.evaluate(function(){const d=JSON.parse(localStorage.getItem('aprende-tecnologia:avance'));d.ultima='ram';localStorage.setItem('aprende-tecnologia:avance',JSON.stringify(d))});
@@ -78,7 +78,7 @@ prueba('Hito 4 · Avance, mapa del tema e inicio',async function({browser,base,r
 
   /* Inicio y lecciones en varios tamaños y modos */
   const AVANCE=JSON.stringify({ultima:'ram',lecciones:{ram:{total:9,leidas:{'s-que':'x','s-escritorio':'x'},seccion:'s-jerarquia',seccionTitulo:'La jerarquía de memoria',repaso:{ok:3,total:4}}}});
-  for(const pag of ['index.html','lecciones/ram.html','lecciones/cpu.html'])for(const ancho of [390,1280,1600])
+  for(const pag of ['inicio.html','lecciones/ram.html','lecciones/cpu.html'])for(const ancho of [390,1280,1600])
   for(const [escala,fuente] of [[1,'normal'],[1.5,'opendyslexic']])for(const [tema,contraste] of [['light','normal'],['dark','high']]){
     const s=await pagina(browser,{ancho:ancho,ajustes:{escala:escala,fuente:fuente,tema:tema,contraste:contraste},
       local:{'aprende-tecnologia:avance':AVANCE,'aprende-tecnologia:apuntes:ram':'Una nota con texto suficiente para ver la tarjeta'}});
@@ -86,7 +86,7 @@ prueba('Hito 4 · Avance, mapa del tema e inicio',async function({browser,base,r
     await s.evaluate(function(){document.querySelectorAll('details').forEach(function(d){d.open=true})});
     const et=pag+' '+ancho+'px ×'+escala+' '+fuente+' '+tema+'/'+contraste;
     await revisar(s,r,et);
-    if(pag!=='index.html'){
+    if(pag!=='inicio.html'){
       const m=await s.evaluate(function(){const e=document.querySelector('.mapa');return {ve:getComputedStyle(e).display!=='none',ov:e.scrollWidth-e.clientWidth}});
       r.cumple(m.ov<=0,et+': el mapa no se desborda',m);
       if(ancho>=1280&&escala===1)r.cumple(m.ve,et+': el mapa se ve cuando hay espacio',m);

@@ -83,7 +83,7 @@ prueba('Proyectos',async function({browser,base,r}){
   const resp=await p.evaluate(function(){return AT.datos.exportar()});
   r.cumple(resp.proyectos&&resp.proyectos.portafolio&&Object.keys(resp.proyectos.portafolio.tareas).length===n1&&resp.proyectos.portafolio.enlace,'el respaldo incluye el avance y el enlace del proyecto');
   const q=await pagina(browser,{ancho:1280});
-  await q.goto(base+'index.html');await listo(q);
+  await q.goto(base+'inicio.html');await listo(q);
   r.cumple(/Empezar el proyecto/.test(await txt(q,'#iniProyectos')),'en Inicio, sin avance, invita a empezar el proyecto');
   const imp=await q.evaluate(function(d){return AT.datos.importar(d)},resp);
   r.cumple(imp.proyectos===true,'importar el respaldo trae el avance del proyecto',imp);
