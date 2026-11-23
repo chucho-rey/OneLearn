@@ -21,7 +21,7 @@ function plan(p,sel){
 
 prueba('Páginas de bienvenida',async function({browser,base,r}){
   /* ---------- Negocios: primera visita ---------- */
-  const p=await pagina(browser,{ancho:1280,alto:900,reducir:true});
+  const p=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:false});
   await p.goto(base);await listo(p,300);
   const v=await p.evaluate(function(){
     return {url:location.pathname+location.search,h1:document.querySelectorAll('h1').length,titulo:document.querySelector('h1').textContent,
@@ -65,20 +65,23 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   /* Navegación, precios y preguntas */
   const enl=await p.evaluate(function(){
     return {nav:[].map.call(document.querySelectorAll('.lp-nav a'),function(a){return a.textContent+'→'+a.getAttribute('href')}).join(', '),
-      empieza:[].filter.call(document.querySelectorAll('a.btn'),function(a){return a.textContent==='Empieza gratis'}).every(function(a){return a.getAttribute('href')==='inicio.html'}),
+      empieza:[].filter.call(document.querySelectorAll('a.btn'),function(a){return a.textContent==='Empieza gratis'}).every(function(a){return a.getAttribute('href')==='entrar.html?perfil=negocio'}),
       planes:[].map.call(document.querySelectorAll('.lp-planes>li'),function(li){return li.querySelector('h3').firstChild.textContent.trim()+' '+li.querySelector('.lp-precio b').textContent}).join(' / '),
       nota:/estimados/.test(document.querySelector('#precios').textContent),
       faq:document.querySelectorAll('.lp-faq details').length,cfdi:/CFDI/.test(document.querySelector('.lp-faq').textContent)};
   });
   r.igual(enl.nav,'Cómo funciona→#como, Precios→#precios, Estudiantes→estudiantes.html, Entrar→inicio.html','la cabecera lleva a cómo funciona, precios, estudiantes y la app');
-  r.cumple(enl.empieza,'«Empieza gratis» abre la app');
+  r.cumple(enl.empieza,'«Empieza gratis» abre «Crea tu espacio» con el perfil de negocio');
   r.cumple(enl.planes==='Local Gratis / Nube $99 / Equipo $199'&&enl.nota,'precios: local gratis y la nube con precio estimado',enl);
   r.cumple(enl.faq>=5&&enl.cfdi,'preguntas frecuentes, incluida la factura (CFDI)');
   await p.click('.lp-faq summary:has-text("¿Es gratis?")');
   r.cumple(await p.isVisible('.lp-faq details[open] p'),'una pregunta se abre al tocarla');
 
   /* ---------- Guárdalo en tu espacio ---------- */
-  await Promise.all([p.waitForURL(/documento\.html\?id=/,{timeout:10000}),p.click('#lpGuardar')]);await listo(p,500);
+  await Promise.all([p.waitForURL(/entrar\.html\?perfil=negocio#guardar-pagos$/),p.click('#lpGuardar')]);await listo(p);
+  r.cumple(/Paso 2 de 3/.test(await p.textContent('#enPaso')),'primero se crea el espacio, ya con el perfil de negocio');
+  await p.fill('#enNegocio','Mi tiendita');await p.click('#enSig');await p.waitForTimeout(150);
+  await Promise.all([p.waitForURL(/documento\.html\?id=/,{timeout:10000}),p.click('#enSig')]);await listo(p,500);
   const g=await p.evaluate(function(){
     var d=AT.docActual,b=d.contenido.content[0];
     return {titulo:d.titulo,tipo:d.tipo,bloque:b.type,monto:b.attrs.monto,pagos:b.attrs.pagos,frec:b.attrs.frecuencia,inicio:b.attrs.inicio,
@@ -86,7 +89,8 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
       quedo:sessionStorage.getItem('onebook:pagos-bienvenida')};
   });
   r.cumple(g.titulo==='Mi plan de pagos'&&g.tipo==='notas'&&g.bloque==='pagos'&&g.monto==='6000'&&g.pagos==='3'&&g.frec==='quincenal'&&g.inicio==='2026-01-15'&&g.pagados==='1'&&g.id&&g.quedo===null,
-    '«Guárdalo en tu espacio» crea un documento con ese plan de pagos (y lo marcado) y lo abre',g);
+    '«Guárdalo en tu espacio»: al crear el espacio, se crea un documento con ese plan de pagos (y lo marcado) y se abre',g);
+  r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.length})}),5,'junto con las páginas sugeridas para empezar');
   await p.goto(base);await p.waitForURL(/inicio\.html$/);await listo(p);
   r.cumple(/inicio\.html$/.test(p.url())&&!!await p.$('#saludo'),'después, la raíz lleva directo al Inicio');
   await p.goto(base+'index.html?conoce');await listo(p);
@@ -104,7 +108,7 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   await cerrar(p);
 
   /* ---------- Estudiantes ---------- */
-  const e=await pagina(browser,{ancho:1280,alto:900,reducir:true});
+  const e=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:false});
   await e.goto(base+'estudiantes.html');await listo(e);
   const est=await e.evaluate(function(){
     var AT=window.AT,n=0,ruta=0;
@@ -121,14 +125,16 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   r.cumple(est.hrefs.indexOf('Entrar→inicio.html')>=0&&est.hrefs.indexOf('Crear un documento→inicio.html#crear')>=0,'los botones llevan a la app',est.hrefs);
   r.cumple(await nadaGuardado(e),'verla no guarda nada en el navegador');
   await revisar(e,r,'bienvenida de estudiantes en escritorio');
-  await Promise.all([e.waitForURL(/inicio\.html/),e.click('a[href="inicio.html#crear"]')]);await listo(e,300);
-  r.cumple(await e.isVisible('dialog.crear-dlg[open]')&&!/#crear/.test(e.url()),'«Crear un documento» abre la ventana de Crear en el Inicio');
+  await Promise.all([e.waitForURL(/entrar\.html#crear$/),e.click('a[href="inicio.html#crear"]')]);await listo(e);
+  await e.check('input[name="perfil"][value="estudio"]');await e.click('#enSig');await e.click('#enSig');await e.waitForTimeout(100);
+  await Promise.all([e.waitForURL(/inicio\.html/),e.click('#enSig')]);await listo(e,300);
+  r.cumple(await e.isVisible('dialog.crear-dlg[open]')&&!/#crear/.test(e.url()),'«Crear un documento» pasa por «Crea tu espacio» y abre la ventana de Crear en el Inicio');
   await e.goto(base+'estudiantes.html');await e.waitForURL(/inicio\.html$/);
   r.cumple(/inicio\.html$/.test(e.url()),'quien ya usa OneBook pasa de estudiantes.html a su Inicio');
   await cerrar(e);
 
   /* ---------- Celular y variantes de lectura ---------- */
-  const c=await pagina(browser,{ancho:390,alto:844,reducir:true});
+  const c=await pagina(browser,{ancho:390,alto:844,reducir:true,perfil:false});
   await c.goto(base);await listo(c,300);
   await revisar(c,r,'bienvenida de negocios en celular');
   r.cumple(await c.evaluate(function(){var n=document.querySelector('.lp-nav'),b=n.querySelector('.btn');return getComputedStyle(n.querySelector('a:not(.btn)')).display==='none'&&b.getBoundingClientRect().height>=34}),'en celular la cabecera deja solo «Entrar», con buen tamaño para el dedo');

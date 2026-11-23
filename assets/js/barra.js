@@ -3,6 +3,8 @@
    la barra superior y el enlace a la siguiente lección a partir de AT.catalogo; maneja el menú en celular
    (panel modal con trampa de foco), la barra contraída en escritorio y las pestañas.
    Los grupos del temario se pliegan; se recuerda cuáles dejaste abiertos (aprende-tecnologia:grupos).
+   Sin el módulo de estudio (perfil.js), la barra deja solo Inicio, Crear, Buscar y «Tus páginas», sin pestañas,
+   temario, rutas ni proyectos.
    Expone AT.setNav, AT.esEscritorio y AT.refrescarNotas. */
 (function(){
 'use strict';
@@ -10,6 +12,9 @@ var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,reduce=AT.reduce;
 var R=AT.rutas,RAIZ=R.raiz,LECC=R.lecciones,ES_INICIO=R.esInicio;
 var catalogo=AT.catalogo||[],actual=AT.leccion;
 var grupo=AT.grupoActual,orden=AT.orden;
+/* ¿Se ve lo de estudio? (lecciones, rutas, proyectos, notas y marcadores) */
+var EST=!AT.perfil||AT.perfil.tiene('estudio');
+var MENU=EST?'lecciones':'menú';
 
 /* ---------- Grupos plegables del temario ---------- */
 var CLAVE_GRUPOS='aprende-tecnologia:grupos';
@@ -30,7 +35,8 @@ function guardarGrupos(){
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'inicio.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
-    '<a class="nv'+(R.pagina==='rutas'?' on" aria-current="page':'')+'" href="'+RAIZ+'rutas.html" id="sideRutas">'+ico('ruta')+'<span>Rutas</span></a>'+
+    '';
+  if(EST)h+='<a class="nv'+(R.pagina==='rutas'?' on" aria-current="page':'')+'" href="'+RAIZ+'rutas.html" id="sideRutas">'+ico('ruta')+'<span>Rutas</span></a>'+
     '<a class="nv'+(R.pagina==='proyectos'||R.pagina==='proyecto'?' on" aria-current="page':'')+'" href="'+RAIZ+'proyectos/index.html" id="sideProyectos">'+ico('proyecto')+'<span>Proyectos</span></a>'+
     '<div class="tabs" role="tablist" aria-label="Secciones">'+
       '<button class="tab" type="button" role="tab" id="tab-temas" aria-controls="pn-temas">Temas</button>'+
@@ -42,8 +48,8 @@ function guardarGrupos(){
      Abiertos: el grupo de la página actual y los que dejaste abiertos. La primera vez, fuera de una lección,
      solo el primer grupo con lecciones publicadas. */
   var abiertos=gruposAbiertos(),primero=null;
-  catalogo.some(function(g){if(g.lecciones.some(function(l){return l.archivo})){primero=g;return true}});
-  catalogo.forEach(function(g){
+  if(EST)catalogo.some(function(g){if(g.lecciones.some(function(l){return l.archivo})){primero=g;return true}});
+  if(EST)catalogo.forEach(function(g){
     var id=slugGrupo(g.grupo),listas=g.lecciones.filter(function(l){return l.archivo}).length;
     var abierto=g.grupo===grupo||(abiertos?abiertos.indexOf(id)>=0:!grupo&&g===primero);
     var cuenta=listas?'<em aria-hidden="true">'+listas+'/'+g.lecciones.length+'</em><span class="vh">, '+listas+' de '+g.lecciones.length+' lecciones disponibles</span>':
@@ -59,7 +65,7 @@ function guardarGrupos(){
     });
     h+='</div></div>';
   });
-  h+='</nav></div>'+
+  if(EST)h+='</nav></div>'+
     '<div class="tabp" role="tabpanel" id="pn-apuntes" aria-labelledby="tab-apuntes" hidden>'+
       '<div class="grp">Documentos</div>'+
       '<ul class="docs" id="docsLista"></ul>'+
@@ -72,19 +78,23 @@ function guardarGrupos(){
     '<div class="tabp" role="tabpanel" id="pn-comunidad" aria-labelledby="tab-comunidad" hidden>'+
       '<p class="side-txt">Aquí podrás publicar tus temas, explorar los de otros estudiantes y guardar una copia en tus apuntes para editarla.</p>'+
       '<p class="side-txt side-soon"><b>Pronto:</b> llega cuando OneBook tenga cuentas.</p>'+
-    '</div>'+
-    '<div class="side-foot">'+
+    '</div>';
+  /* Sin estudio: solo tus páginas, sin pestañas */
+  else h+='<div class="tabp" id="pn-apuntes"><div class="grp">Tus páginas</div><ul class="docs" id="docsLista"></ul>'+
+      '<p class="side-txt">Todo se guarda en este dispositivo.</p></div>';
+  h+='<div class="side-foot">'+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
       '<button class="nv" type="button" id="sideDatos">'+ico('datos')+'<span>Tus datos</span></button>'+
-      '<a class="nv'+(R.pagina==='acerca'?' on" aria-current="page':'')+'" href="'+RAIZ+'acerca.html">'+ico('codigo')+'<span>Cómo está hecho</span></a>'+
+      (EST?'<a class="nv'+(R.pagina==='acerca'?' on" aria-current="page':'')+'" href="'+RAIZ+'acerca.html">'+ico('codigo')+'<span>Cómo está hecho</span></a>':'')+
       (ES_INICIO?'':
         '<button class="nv" type="button" id="sideZen">'+ico('zen')+'<span>Modo zen</span><kbd>Z</kbd></button>'+
         '<button class="nv solo-teclado" type="button" id="sideAtajos">'+ico('teclado')+'<span>Atajos de teclado</span><kbd>?</kbd></button>')+
     '</div>';
   $('#side').innerHTML=h+'</div>';
+  if(!EST)$('#side').setAttribute('aria-label','Navegación');
 
   $('#topbar').innerHTML=
-    '<button class="icon-btn" id="menuBtn" type="button" aria-label="Abrir lecciones" aria-expanded="false" aria-controls="side">'+ico('menu')+'</button>'+
+    '<button class="icon-btn" id="menuBtn" type="button" aria-label="Abrir '+MENU+'" aria-expanded="false" aria-controls="side">'+ico('menu')+'</button>'+
     '<nav class="crumbs" aria-label="Ruta">'+(grupo?'<span>'+esc(grupo)+'</span><span class="sep" aria-hidden="true">/</span>':'')+
     '<span class="cur" aria-current="page">'+esc(actual.titulo)+'</span></nav>'+
     (ES_INICIO?'':'<button class="icon-btn zen-btn" id="zenBtn" type="button" aria-label="Modo zen (Z)" title="Modo zen (Z)" aria-pressed="false">'+ico('zen')+'</button>')+
@@ -123,8 +133,8 @@ function navOpen(){return document.body.classList.contains('nav-open')}
 function syncMenu(){
   var desk=isDesk();
   var exp=desk?!collapsed():navOpen();
-  var lab=desk?(collapsed()?'Expandir barra lateral':'Contraer barra lateral'):'Abrir lecciones';
-  var sideLab=desk?'Contraer barra lateral':'Cerrar lecciones';
+  var lab=desk?(collapsed()?'Expandir barra lateral':'Contraer barra lateral'):'Abrir '+MENU;
+  var sideLab=desk?'Contraer barra lateral':'Cerrar '+MENU;
   menuBtn.setAttribute('aria-expanded',exp?'true':'false');
   menuBtn.setAttribute('aria-label',lab);
   menuBtn.setAttribute('title',lab);
@@ -215,7 +225,7 @@ document.addEventListener('click',function(e){
     t.addEventListener('click',function(){aj.set('pestana',t.id.slice(4));elegir(t.id.slice(4))});
   });
   /* Flechas, Inicio y Fin mueven entre pestañas (patrón de pestañas de WAI-ARIA) */
-  $('.tabs',sideEl).addEventListener('keydown',function(e){
+  if(tabs.length)$('.tabs',sideEl).addEventListener('keydown',function(e){
     var i=tabs.indexOf(document.activeElement),n=tabs.length,j=-1;
     if(i<0)return;
     if(e.key==='ArrowRight'||e.key==='ArrowDown')j=(i+1)%n;
@@ -247,6 +257,7 @@ document.addEventListener('click',function(e){
   Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos()]).then(function(r){if(!cache)cache=r[0];if(!docsCache)docsCache=r[1];if(!marcCache)marcCache=r[2]});
   /* Marcadores: los más nuevos primero, con un botón para quitarlos */
   function pintarMarcCon(ms){
+    if(!listaMarc)return;
     var h=htmlMarc(ms);
     if(h!==ultimoMarc){listaMarc.innerHTML=h;ultimoMarc=h}
   }
@@ -258,7 +269,7 @@ document.addEventListener('click',function(e){
     }).join('');
     return h||'<li class="side-txt">Guarda bloques de las lecciones con el botón de marcador que aparece a su lado, o con la tecla M.</li>';
   }
-  listaMarc.addEventListener('click',function(e){
+  if(listaMarc)listaMarc.addEventListener('click',function(e){
     var x=e.target.closest('.marc-x');
     if(x){
       var li=x.closest('li'),sig=li.nextElementSibling||li.previousElementSibling,mid=x.getAttribute('data-marc');
@@ -297,10 +308,11 @@ document.addEventListener('click',function(e){
       return '<li><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+'documento.html?id='+encodeURIComponent(d.id)+'"'+(aqui?' aria-current="page"':'')+'>'+
         ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></a></li>';
     }).join('');
-    h=h||'<li class="side-txt">Todavía no creas documentos. Toca «Crear» para empezar una libreta o unas notas.</li>';
+    h=h||'<li class="side-txt">'+(EST?'Todavía no creas documentos. Toca «Crear» para empezar una libreta o unas notas.':'Todavía no tienes páginas. Toca «Crear» para empezar.')+'</li>';
     if(h!==ultimoDocs){listaDocs.innerHTML=h;ultimoDocs=h}
   }
   function pintarNotasCon(notas){
+    if(!lista)return;
     var h='',porId={};
     notas.forEach(function(x){porId[x.id]=x.texto||''});
     catalogo.forEach(function(g){
@@ -317,7 +329,7 @@ document.addEventListener('click',function(e){
     h=h||'<li class="side-txt">Todavía no tienes apuntes. Abre una lección y toca «Apuntes», abajo, para escribir.</li>';
     if(h!==ultimo){lista.innerHTML=h;ultimo=h}
   }
-  lista.addEventListener('click',function(e){
+  if(lista)lista.addEventListener('click',function(e){
     var a=e.target.closest('a[data-aqui]');
     if(!a)return;
     /* La nota de esta misma lección: se abre sin recargar */
@@ -330,6 +342,7 @@ document.addEventListener('click',function(e){
   AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='marcadores'||c.almacen==='*')AT.refrescarNotas()});
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
-  elegir(aj.get('pestana'));
+  /* Sin pestañas (sin el módulo de estudio), la lista de páginas siempre está a la vista */
+  if(tabs.length)elegir(aj.get('pestana'));else pintarNotas();
 })();
 })();

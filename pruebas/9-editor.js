@@ -19,8 +19,10 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   /* ---------- La ventana «¿Qué quieres crear?» ---------- */
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.crear-dlg').open}),'«+ Crear» del inicio abre la pregunta');
-  const opciones=await p.$$eval('.crear-o b',function(e){return e.map(function(x){return x.textContent})});
+  const opciones=await p.$$eval('.crear-g[data-modulo="estudio"] .crear-o b',function(e){return e.map(function(x){return x.textContent})});
   r.igual(opciones.join(' | '),'Libreta de estudio | Notas | Apuntes de clase | Tesis','se ofrecen libreta, notas, apuntes de clase y tesis');
+  r.cumple(await p.evaluate(function(){var g=document.querySelectorAll('.crear-g');return g.length===2&&g[1].getAttribute('data-modulo')==='negocio'&&/Préstamo o crédito/.test(g[1].textContent)}),
+    'quien usaba OneLearn también tiene las plantillas de negocio, en su propio grupo');
   r.cumple(/Libro/.test(await p.textContent('.crear-p'))&&!/Tesis/.test(await p.textContent('.crear-p')),'libro, investigación y los demás se anuncian para después; la tesis ya no')
   r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'libreta','el foco empieza en la primera opción');
   await revisar(p,r,'ventana Crear en escritorio');

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Crea tu espacio · OneBook</title>
+<meta name="description" content="Elige para qué usarás OneBook y empieza con las páginas que necesitas. Sin cuenta: todo se guarda en tu dispositivo.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icono-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="assets/js/ajustes.js"></script>
+<script src="assets/js/perfil.js"></script>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/entrar.css">
+</head>
+<body data-pagina="entrar" class="en">
+
+<header class="en-cab">
+  <a class="brand" href="./" aria-label="OneBook, página principal"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M18.5 22.5 27.5 16v32M27.5 16h8a7.5 7.5 0 0 1 0 15h-8M27.5 31h9.5a8.5 8.5 0 0 1 0 17h-9.5"/></svg><span>One<b>Book</b></span></a>
+</header>
+
+<main class="en-main" id="principal">
+  <form class="en-caja" id="enForm" novalidate>
+    <p class="en-paso" id="enPaso">Paso 1 de 3</p>
+    <div class="en-avance" aria-hidden="true"><i id="enAvance"></i></div>
+
+    <section class="en-sec" data-paso="1" aria-labelledby="enT1">
+      <h1 id="enT1" tabindex="-1">¿Para qué usarás OneBook?</h1>
+      <p class="en-txt">Así te mostramos solo las herramientas que necesitas. Lo puedes cambiar cuando quieras.</p>
+      <fieldset class="en-ops" id="enPerfiles">
+        <legend class="vh">Para qué usarás OneBook</legend>
+        <noscript><p>OneBook necesita JavaScript para crear tu espacio.</p></noscript>
+      </fieldset>
+    </section>
+
+    <section class="en-sec" data-paso="2" aria-labelledby="enT2" hidden>
+      <h1 id="enT2" tabindex="-1">Tu negocio</h1>
+      <div class="en-negocio" id="enNegocioCampos">
+        <label class="en-campo"><span>Nombre del negocio</span><input id="enNegocio" type="text" autocomplete="organization" maxlength="80" placeholder="Por ejemplo, Abarrotes Lupita"></label>
+        <label class="en-campo"><span>Giro</span><select id="enGiro"></select></label>
+        <label class="en-campo"><span>Teléfono del negocio <small>(opcional)</small></span><input id="enTel" type="tel" autocomplete="tel" maxlength="30"></label>
+        <p class="en-nota">Los montos van en pesos mexicanos (MXN).</p>
+      </div>
+      <div class="en-persona" id="enPersonaCampos">
+        <label class="en-campo"><span>Tu nombre <small>(opcional)</small></span><input id="enNombre" type="text" autocomplete="given-name" maxlength="60"></label>
+        <p class="en-nota">Solo para saludarte en tu Inicio.</p>
+      </div>
+    </section>
+
+    <section class="en-sec" data-paso="3" aria-labelledby="enT3" hidden>
+      <h1 id="enT3" tabindex="-1">¿Con qué empiezas?</h1>
+      <p class="en-txt" id="enT3Txt">Te creamos estas páginas para empezar. Quita las que no quieras; después puedes crear más con «Crear».</p>
+      <fieldset class="en-ops en-pls" id="enPlantillas">
+        <legend class="vh">Páginas para empezar</legend>
+      </fieldset>
+      <fieldset class="en-ops en-mods" id="enModulos" hidden>
+        <legend>Herramientas que se ven</legend>
+      </fieldset>
+    </section>
+
+    <p class="en-msg" id="enMsg" role="status"></p>
+    <div class="en-bt">
+      <button type="button" class="btn" id="enAtras" hidden>Atrás</button>
+      <button type="submit" class="btn pri" id="enSig">Siguiente</button>
+    </div>
+  </form>
+
+  <aside class="en-lado" aria-label="Sobre tus datos">
+    <p><b>Todo se guarda en este dispositivo.</b> No necesitas cuenta ni tarjeta. De vez en cuando descarga un respaldo desde «Tus datos».</p>
+    <p id="enRestaurarP">¿Ya tienes un respaldo? <button class="en-link" type="button" id="enRestaurar">Restáuralo</button><input type="file" accept=".json,application/json" id="enArchivo" hidden></p>
+  </aside>
+</main>
+
+<script src="assets/js/catalogo.js"></script>
+<script src="assets/js/base.js"></script>
+<script src="assets/js/datos.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/crear.js"></script>
+<script src="assets/js/entrar.js"></script>
+</body>
+</html>

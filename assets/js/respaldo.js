@@ -33,6 +33,7 @@ function crear(){
   dlg.innerHTML='<div class="at-h"><h2 id="tdT">Tus datos</h2>'+
     '<button class="lec-x" type="button" data-td="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
     '<p class="td-p">Lo que escribes en OneBook se guarda solo en este navegador, en este dispositivo. No se sube a ningún servidor.</p>'+
+    '<div class="td-sec td-espacio" id="tdEspacio"></div>'+
     '<dl class="td-res" id="tdRes"></dl>'+
     '<div class="td-esp" id="tdEsp" hidden><div class="td-bar" aria-hidden="true"><i id="tdBar"></i></div>'+
       '<p class="td-p td-nota" id="tdNotaEsp"></p></div>'+
@@ -87,7 +88,18 @@ function mensaje(t,error){
   m.textContent=t;
   m.classList.toggle('err',!!error);
 }
+/* Tu espacio: el perfil, el negocio y los módulos encendidos, con el enlace para cambiarlos (entrar.html?editar) */
+function pintarEspacio(){
+  var caja=$('#tdEspacio',dlg),P=AT.perfil,p=P&&P.actual();
+  if(!p){caja.hidden=true;return}
+  var mods=p.modulos.map(function(m){return P.MODULOS[m].nombre}).join(', ')||'Solo lo básico';
+  var neg=p.negocio&&p.negocio.nombre?' · '+esc(p.negocio.nombre)+' ('+esc(P.nombreGiro(p.negocio.giro))+')':'';
+  caja.hidden=false;
+  caja.innerHTML='<h3>Tu espacio</h3><p class="td-p"><b>'+esc(P.PERFILES[p.perfil].nombre)+'</b>'+neg+'. Herramientas: '+esc(mods)+'.</p>'+
+    '<div class="td-bt"><a class="btn" href="'+AT.rutas.raiz+'entrar.html?editar">Cambiar tu espacio</a></div>';
+}
 function pintar(){
+  pintarEspacio();
   Promise.all([AT.datos.documentos.todos(),AT.datos.notas.todas(),AT.datos.marcadores.todos(),AT.datos.espacio(),AT.datos.persistente()]).then(function(r){
     var notas=r[1].filter(function(n){return n.texto&&n.texto.trim()}).length,esp=r[3],pers=r[4];
     $('#tdRes',dlg).innerHTML=

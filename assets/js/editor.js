@@ -422,8 +422,8 @@ var INSERTAR=[
     f:function(c){return c.insertContent({type:'columnas',content:[{type:'columna',content:[P()]},{type:'columna',content:[P()]}]})}},
   {k:'columnas3',t:'Tres columnas',d:'Como las tarjetas de una lección',i:'columnas',p:'columnas tarjetas',
     f:function(c){return c.insertContent({type:'columnas',content:[{type:'columna',content:[P()]},{type:'columna',content:[P()]},{type:'columna',content:[P()]}]})}},
-  {k:'repaso',t:'Preguntas de repaso',d:'Opción múltiple, con explicación',i:'repaso',p:'quiz examen preguntas',f:function(c){return c.insertContent({type:'repaso',attrs:{preguntas:[preguntaVacia()]}})}},
-  {k:'resumen',t:'Resumen',d:'Las ideas clave, al final',i:'resumen',p:'conclusion ideas clave',f:function(c){return c.insertContent({type:'resumen',content:[{type:'bulletList',content:[{type:'listItem',content:[P()]}]}]})}},
+  {k:'repaso',modulo:'estudio',t:'Preguntas de repaso',d:'Opción múltiple, con explicación',i:'repaso',p:'quiz examen preguntas',f:function(c){return c.insertContent({type:'repaso',attrs:{preguntas:[preguntaVacia()]}})}},
+  {k:'resumen',modulo:'estudio',t:'Resumen',d:'Las ideas clave, al final',i:'resumen',p:'conclusion ideas clave',f:function(c){return c.insertContent({type:'resumen',content:[{type:'bulletList',content:[{type:'listItem',content:[P()]}]}]})}},
   {k:'indice',t:'Índice',d:'La lista de secciones, al día',i:'indice',p:'contenido toc',f:function(c){return c.insertContent({type:'indice'})}},
   {k:'cita',t:'Cita textual',d:'Palabras de otra persona',i:'comillas',p:'blockquote',f:function(c){return c.toggleBlockquote()}},
   {k:'codigo',t:'Bloque de código',d:'Texto con letra de ancho fijo',i:'codigo',p:'programa code',f:function(c){return c.toggleCodeBlock()}},
@@ -517,7 +517,8 @@ AT.menu={abrir:abrirMenu,cerrar:cerrarMenu,abierto:function(){return menuAbierto
 
 /* ---------- Menú «/» ---------- */
 /* Citas a fuentes, bibliografía y declaración: solo en documentos académicos (tesis) */
-function insertables(){var t=AT.tiposDoc&&AT.docActual&&AT.tiposDoc[AT.docActual.tipo];return INSERTAR.filter(function(it){return !it.academico||!!(t&&t.academico)})}
+/* Lo que ofrece «/»: lo académico solo en documentos académicos, y cada bloque de un módulo (it.modulo) solo si está encendido (perfil.js) */
+function insertables(){var t=AT.tiposDoc&&AT.docActual&&AT.tiposDoc[AT.docActual.tipo];return INSERTAR.filter(function(it){return (!it.academico||!!(t&&t.academico))&&(!it.modulo||!AT.perfil||AT.perfil.tiene(it.modulo))})}
 function filtrarInsertar(q){
   q=sinAcentos(q);
   if(!q)return insertables();

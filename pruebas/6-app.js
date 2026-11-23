@@ -102,6 +102,8 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
 
   /* iPhone: se explica cómo instalar */
   const ctx=await browser.newContext({viewport:{width:390,height:844},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',isMobile:true,hasTouch:true});
+  /* Con un espacio ya creado (perfil.js), para que Inicio no mande a «Crea tu espacio» */
+  await ctx.addInitScript(function(){try{localStorage.setItem('aprende-tecnologia:perfil',JSON.stringify({perfil:'estudio',modulos:['estudio','negocio']}))}catch(e){}});
   const i=await ctx.newPage();
   await i.goto(base+'inicio.html');await i.waitForLoadState('load');
   r.cumple(await i.isVisible('#instalar')&&await i.isHidden('#instalarBtn')&&/Agregar a inicio/.test(await i.textContent('#instalarTxt')),'en iPhone se explica cómo agregarlo al inicio');

@@ -207,7 +207,8 @@ function exportar(){
     return {
       app:'OneBook',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],
-      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal')
+      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
+      perfil:leerJSON(PREF+'perfil')
     };
   });
 }
@@ -235,7 +236,7 @@ function importar(datos){
   if(!esObjeto(datos)||(datos.app!=='OneBook'&&datos.app!=='OneLearn')||typeof datos.formato!=='number')
     return Promise.reject(new Error('El archivo no es un respaldo de OneBook.'));
   if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneBook. Actualiza la página e inténtalo otra vez.'));
-  var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false,terminal:false};
+  var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false,terminal:false,perfil:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
     return esObjeto(d)&&idValido(d.id)&&esObjeto(d.contenido)&&d.contenido.type==='doc'&&(d.contenido.content==null||Array.isArray(d.contenido.content));
@@ -303,6 +304,9 @@ function importar(datos){
         });
         lsSet(PREF+'terminal',JSON.stringify(ta));
       }
+      /* El perfil del espacio: solo si aquí todavía no hay uno (por ejemplo, al restaurar en «Crea tu espacio»).
+         AT.perfil.guardar lo limpia: solo entran campos conocidos */
+      if(esObjeto(datos.perfil)&&AT.perfil&&!AT.perfil.actual())res.perfil=!!AT.perfil.guardar(datos.perfil);
       /* Ajustes: solo si en este navegador no has cambiado ninguno */
       if(esObjeto(datos.ajustes)&&AT.ajustes&&AT.ajustes.esInicial()&&lsGet(PREF+'ajustes')===null){
         Object.keys(datos.ajustes).forEach(function(k){try{AT.ajustes.set(k,datos.ajustes[k])}catch(e){}});

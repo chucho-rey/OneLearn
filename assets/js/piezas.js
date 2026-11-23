@@ -818,13 +818,13 @@ function edDe(c){return c.editor||AT.editorActual&&AT.editorActual.tiptap}
 var nuevos=[
   {k:'imagen',t:'Imagen',d:'Con título y nota; se comprime sola',i:'imagen',p:'figura foto grafica dibujo png jpg captura',
     f:function(c){var ed=edDe(c);setTimeout(function(){elegirArchivo().then(function(f){if(f)insertarImagen(ed,f)})},0);return c}},
-  {k:'tablaNumerada',t:'Tabla numerada',d:'«Tabla N» con título y nota, como pide APA',i:'tabla',p:'cuadro apa titulo numero',academico:true,
+  {k:'tablaNumerada',modulo:'estudio',t:'Tabla numerada',d:'«Tabla N» con título y nota, como pide APA',i:'tabla',p:'cuadro apa titulo numero',academico:true,
     f:function(c){var clave=AT.bloques.nuevoId().replace(/^b-/,'p-');abrirNueva=clave;return c.insertContent({type:'tablaNumerada',attrs:{clave:clave},content:[tablaVacia()]})}},
-  {k:'ecuacion',t:'Ecuación',d:'Numerada, en LaTeX; también con «$$»',i:'ecuacion',p:'formula matematicas latex katex numerada',f:function(c){return nuevaEcuacion(c)}},
-  {k:'formula',t:'Fórmula en el texto',d:'Dentro del párrafo; también con $x^2$',i:'ecuacion',p:'matematicas latex katex inline',
+  {k:'ecuacion',modulo:'estudio',t:'Ecuación',d:'Numerada, en LaTeX; también con «$$»',i:'ecuacion',p:'formula matematicas latex katex numerada',f:function(c){return nuevaEcuacion(c)}},
+  {k:'formula',modulo:'estudio',t:'Fórmula en el texto',d:'Dentro del párrafo; también con $x^2$',i:'ecuacion',p:'matematicas latex katex inline',
     f:function(c){var ed=edDe(c);setTimeout(function(){pedirFormula(ed,'',rectCursor(ed),function(v){if(v)ed.chain().focus().insertContent({type:'formula',attrs:{latex:v}}).run()})},0);return c}},
-  {k:'notaPie',t:'Nota al pie',d:'Ctrl+Alt+F',i:'note',p:'pie footnote aclaracion',f:function(c){var ed=edDe(c);setTimeout(function(){nuevaNota(ed)},0);return c}},
-  {k:'refCruzada',t:'Referencia cruzada',d:'«ver Figura 2»: el número se actualiza solo',i:'enlace',p:'ver figura tabla ecuacion seccion xref remitir',academico:true,
+  {k:'notaPie',modulo:'estudio',t:'Nota al pie',d:'Ctrl+Alt+F',i:'note',p:'pie footnote aclaracion',f:function(c){var ed=edDe(c);setTimeout(function(){nuevaNota(ed)},0);return c}},
+  {k:'refCruzada',modulo:'estudio',t:'Referencia cruzada',d:'«ver Figura 2»: el número se actualiza solo',i:'enlace',p:'ver figura tabla ecuacion seccion xref remitir',academico:true,
     f:function(c){var ed=edDe(c);setTimeout(function(){elegirDestino(ed,rectCursor(ed),function(clave){ed.chain().focus().insertContent([{type:'refCruzada',attrs:{destino:clave}},{type:'text',text:' '}]).run()})},0);return c}},
   {k:'indiceFiguras',t:'Índice de figuras',d:'La lista de figuras, al día',i:'indice',p:'lista figuras imagenes',academico:true,f:function(c){return c.insertContent({type:'indicePiezas',attrs:{clase:'figura'}})}},
   {k:'indiceTablas',t:'Índice de tablas',d:'La lista de tablas numeradas, al día',i:'indice',p:'lista tablas cuadros',academico:true,f:function(c){return c.insertContent({type:'indicePiezas',attrs:{clase:'tabla'}})}}

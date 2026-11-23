@@ -61,7 +61,8 @@ async function prueba(nombre,fn){
 
 /* Abre una página nueva.
    opciones: ancho, alto, ajustes (se fijan en cada carga), local (claves de localStorage, solo la primera
-   carga), movil, reducir (movimiento reducido), contraste ('more' simula que el sistema pide contraste). */
+   carga), movil, reducir (movimiento reducido), contraste ('more' simula que el sistema pide contraste),
+   perfil (el espacio: por omisión estudio y negocio; false, sin espacio; o un objeto de perfil). */
 async function pagina(browser,o){
   o=o||{};
   const ctx=await browser.newContext(Object.assign({
@@ -69,6 +70,12 @@ async function pagina(browser,o){
     reducedMotion:o.reducir?'reduce':'no-preference'
   },o.contraste?{contrast:o.contraste}:{},o.movil?{isMobile:true,hasTouch:true}:{}));
   if(o.ajustes)await ctx.addInitScript(function(a){try{localStorage.setItem('aprende-tecnologia:ajustes',JSON.stringify(a))}catch(e){}},o.ajustes);
+  /* El espacio ya creado (perfil.js): por omisión, el de quien usaba OneLearn (estudio y negocio), así las pruebas
+     de antes ven todo. perfil:false deja el navegador sin espacio («Crea tu espacio»); un objeto, ese perfil. */
+  if(o.perfil!==false){
+    const pf=o.perfil||{perfil:'estudio',modulos:['estudio','negocio'],nombre:'',negocio:null,creado:'2026-01-01',migrado:true};
+    await ctx.addInitScript(function(v){try{if(!localStorage.getItem('aprende-tecnologia:perfil'))localStorage.setItem('aprende-tecnologia:perfil',v)}catch(e){}},JSON.stringify(pf));
+  }
   const p=await ctx.newPage();
   p.setDefaultTimeout(8000);
   p.errores=[];

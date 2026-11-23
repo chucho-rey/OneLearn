@@ -81,8 +81,13 @@ function cargarTuyo(){
     return out;
   });
 }
+/* Sin el módulo de estudio (perfil.js) solo se busca en tus páginas: ni lecciones, ni notas de lección, ni marcadores */
+function conEstudio(){return !AT.perfil||AT.perfil.tiene('estudio')}
 function cargar(){
-  return Promise.all([cargarLecciones(),cargarTuyo()]).then(function(r){return r[1].concat(r[0])});
+  return Promise.all([conEstudio()?cargarLecciones():[],cargarTuyo()]).then(function(r){
+    var tuyo=conEstudio()?r[1]:r[1].filter(function(e){return e.tipo!=='nota'&&e.tipo!=='marcador'});
+    return tuyo.concat(r[0]);
+  });
 }
 /* Puntaje: todas las palabras deben aparecer; pesa más el título */
 var PESO={marcador:6,documento:5,leccion:5,seccion:4,'seccion-doc':4,nota:2,bloque:1};
@@ -126,14 +131,14 @@ AT.indice={cargar:cargar,buscar:buscar,fragmento:fragmento,norma:norma,olvidarTu
 
 /* ---------- Ventana de búsqueda ---------- */
 var dlg=null,abridor=null,entradas=[],resultados=[],activo=0,ultimaQ='';
-var GRUPOS=[['leccion','Lecciones'],['documento','Tus documentos'],['marcador','Marcadores'],['nota','Notas rápidas']];
+var GRUPOS=[['leccion','Lecciones'],['documento',conEstudio()?'Tus documentos':'Tus páginas'],['marcador','Marcadores'],['nota','Notas rápidas']];
 function grupoDe(e){return e.tipo==='seccion'||e.tipo==='bloque'?'leccion':e.tipo==='seccion-doc'?'documento':e.tipo}
 function crear(){
   dlg=document.createElement('dialog');
   dlg.className='atajos buscar-dlg';
   dlg.setAttribute('aria-label','Buscar en OneBook');
   dlg.innerHTML='<div class="bus-campo">'+ico('investigacion')+
-    '<input id="busQ" type="text" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar en lecciones, documentos, notas y marcadores" '+
+    '<input id="busQ" type="text" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="'+(conEstudio()?'Buscar en lecciones, documentos, notas y marcadores':'Buscar en tus páginas')+'" '+
       'role="combobox" aria-expanded="false" aria-controls="busRes" aria-autocomplete="list" aria-label="Buscar">'+
     '<kbd class="bus-esc">Esc</kbd></div>'+
     '<div class="bus-res" id="busRes" role="listbox" aria-label="Resultados"></div>'+
