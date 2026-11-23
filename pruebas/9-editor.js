@@ -224,8 +224,8 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   for(const [ancho,escala,fuente,tema,contraste] of [[390,1.5,'opendyslexic','dark','high'],[1280,1.3,'atkinson','light','high'],[1600,1,'normal','dark','normal']]){
     const v=await pagina(browser,{ancho:ancho,ajustes:{escala:escala,fuente:fuente,tema:tema,contraste:contraste}});
     await v.goto(base+'inicio.html');await listo(v);
-    await v.evaluate(function(){return AT.crear.nuevo('libreta')});
-    await v.waitForURL(/documento/);await listo(v,500);
+    /* nuevo() navega al documento: se espera la página, no la promesa (que se pierde al navegar) */
+    await Promise.all([v.waitForURL(/documento/),v.evaluate(function(){AT.crear.nuevo('libreta');return 1}).catch(function(){return 1})]);await listo(v,500);
     await v.click('.ed-cuerpo h2');await v.keyboard.type('Sección de prueba con un título bastante largo para ver si cabe');
     await v.keyboard.press('Enter');await v.keyboard.type('/');await v.waitForTimeout(200);
     await revisar(v,r,'editor '+ancho+'px ×'+escala+' '+fuente+' '+tema+'/'+contraste);

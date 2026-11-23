@@ -86,9 +86,9 @@ Las pruebas automáticas usan Chromium. Falta probar a mano en:
 
 Llegaron con la fase de tesis (T3): «/imagen», pegar o arrastrar, en cualquier documento. La imagen se achica y se comprime a WebP en el dispositivo; en las tesis lleva número, título, texto alternativo y nota de origen.
 
-### 3.9 Imprimir o guardar como PDF · Recomendado
+### 3.9 Imprimir o guardar como PDF · Hecho
 
-El hito 3.2 del plan. Es pequeño y permite entregar trabajos hechos en OneLearn.
+Llegó con la fase de tesis (T4): cualquier documento se imprime o se guarda como PDF desde «⋯», con números de página; la tesis, con portada, preliminares en romanos y su formato de entrega, y también en Word.
 
 ### 3.10 Dominio propio · Recomendado
 
@@ -131,7 +131,7 @@ Si una meta no se cumple, la tabla te dice dónde mirar: el contenido, las razon
 4. ~~Recordatorio de respaldo y almacenamiento persistente~~ (hecho).
 5. Pruebas en dispositivos reales.
 6. Lanzamiento con un grupo pequeño (un salón, un club de programación, un servidor de Discord).
-7. En paralelo, si da tiempo: PDF (las imágenes ya están).
+7. ~~Imágenes y PDF~~ (hechos).
 
 ## 7. Costos del MVP
 

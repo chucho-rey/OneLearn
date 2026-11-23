@@ -105,6 +105,7 @@ function pintarTesis(){
     '<button class="btn" type="button" data-ts="citar">'+ico('comillas')+'<span>Citar</span></button>'+
     '<button class="btn" type="button" data-ts="autoria">'+ico('tesis')+'<span>Autoría</span></button>'+
     (AT.proteger?'<button class="btn ts-resp" type="button" data-ts="respaldo">'+ico('escudo')+'<span class="ts-resp-t">Respaldo</span></button>':'')+
+    (AT.entrega?'<button class="btn" type="button" data-ts="entregar">'+ico('descargar')+'<span>Entregar</span></button>':'')+
     '<span class="ts-palabras" aria-live="off"></span>';
   $('.ts-n',b).textContent=n?String(n):'';
   $('[data-ts="fuentes"]',b).setAttribute('aria-label','Fuentes: '+n);
@@ -124,6 +125,24 @@ function pintarRespaldo(w){
   });
 }
 if(AT.proteger)AT.proteger.vigilar(function(){pintarRespaldo()});
+/* «Entregar»: formato, revisión previa, PDF (imprimir.html) y Word */
+function abrirEntregar(){
+  if(ed)doc.contenido=ed.json();
+  AT.entrega.dialogo(doc,{
+    alCambiar:function(k){
+      cambio();
+      if(k==='estilo'&&AT.fuentes)AT.fuentes.refrescar();
+    },
+    alPdf:function(){
+      if(ed)doc.contenido=ed.json();
+      guardar().then(function(){location.href='imprimir.html?id='+encodeURIComponent(doc.id)});
+    },
+    alDocx:function(){
+      if(ed)doc.contenido=ed.json();
+      return guardar().then(function(){return AT.exportarDocx.descargar(doc)}).then(function(n){cambio();return n});
+    }
+  });
+}
 function abrirProteger(){if(ed)doc.contenido=ed.json();AT.proteger.dialogo(doc,{antes:function(){if(ed)doc.contenido=ed.json()}})}
 function abrirFuentes(){AT.fuentes.dialogo({doc:doc,alCambiar:function(){cambio();pintarTesis()}})}
 function abrirAutoria(){if(ed)doc.contenido=ed.json();AT.autoria.panel(doc,{alCambiar:cambio})}
@@ -133,6 +152,7 @@ page.addEventListener('click',function(e){
   if(k==='fuentes')abrirFuentes();
   else if(k==='autoria')abrirAutoria();
   else if(k==='respaldo')abrirProteger();
+  else if(k==='entregar')abrirEntregar();
   else if(ed)ed.citarFuente();
 });
 function pintarProps(){
@@ -216,8 +236,10 @@ masBtn.addEventListener('click',function(){
     {t:'Fuentes',i:'libro',d:'Agregar, importar y editar',f:abrirFuentes},
     {t:'Autoría y constancia',i:'tesis',d:'Cómo escribiste este documento',f:abrirAutoria},
     {t:'Proteger y respaldar',i:'escudo',d:'Copias fuera de este navegador',f:abrirProteger},
+    {t:'Entregar: PDF y Word',i:'descargar',d:'Formato, revisión y exportar',f:abrirEntregar},
     {sep:true}]:[]).concat([
-    {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd},
+    {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd}
+  ],academico()||!AT.entrega?[]:[{t:'Imprimir o guardar como PDF',i:'page',d:'Con números de página',f:abrirEntregar}],[
     {t:'Duplicar documento',i:'copiar',f:duplicar},
     {sep:true},
     {t:'Eliminar documento',i:'basura',peligro:true,f:eliminar}
@@ -270,7 +292,7 @@ function mdTexto(lista){
   return (lista||[]).map(function(n){
     if(n.type==='hardBreak')return '  \n';
     if(n.type==='cita')return '['+((n.attrs||{}).texto||'cita')+']('+((n.attrs||{}).href||'')+')';
-    if(n.type==='referencia')return AT.fuentes?AT.fuentes.cita(n.attrs||{},mdDoc.fuentes):'';
+    if(n.type==='referencia')return AT.fuentes?AT.fuentes.cita(n.attrs||{},mdDoc.fuentes,mdDoc):'';
     if(AT.piezas&&AT.piezas.md[n.type])return AT.piezas.md[n.type](n,mdAyuda);
     if(n.type!=='text')return '';
     var t=n.text||'',ms=(n.marks||[]).map(function(m){return m.type});

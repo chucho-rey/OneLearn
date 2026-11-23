@@ -72,7 +72,7 @@ prueba('Hito 2.4 · Marcadores y búsqueda',async function({browser,base,r}){
   r.cumple(/Buscar/.test(await p.textContent('#sideBuscar')),'«Buscar» está también en la barra lateral');
 
   /* ---------- Citar el marcador en una libreta ---------- */
-  await p.evaluate(function(){return AT.crear.nuevo('libreta')});await p.waitForURL(/documento/);await listo(p,500);
+  await Promise.all([p.waitForURL(/documento/),p.evaluate(function(){AT.crear.nuevo('libreta');return 1}).catch(function(){return 1})]);await listo(p,500);
   await p.keyboard.type('Repaso de memoria');await p.keyboard.press('Enter');await p.waitForTimeout(60);
   await p.keyboard.type('DRAM');await p.keyboard.press('Enter');await p.waitForTimeout(60);
   await p.keyboard.type('Según la lección ');await p.keyboard.type('@capacitor');await p.waitForTimeout(700);

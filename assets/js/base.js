@@ -148,7 +148,7 @@ var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
 /* Páginas: inicio, documento, acerca («Cómo está hecho») y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir';
 /* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
