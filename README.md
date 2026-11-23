@@ -44,6 +44,8 @@ assets/
                             constancia con huella SHA-256 (AT.autoria)
   js/piezas.js              Piezas académicas: figuras con imagen comprimida, tablas numeradas, ecuaciones y fórmulas (KaTeX),
                             notas al pie, índices de figuras y tablas, y referencias cruzadas (AT.piezas)
+  js/pagos.js               Bloque «Plan de pagos»: una deuda en pagos (por número de pagos o pago fijo), calendario y pagos
+                            marcados que se descuentan, al editar y al leer (AT.pagos)
   js/proteger.js            «Respaldo» de la tesis: aviso, copia descargable y copia automática en un archivo (AT.proteger)
   js/entrega.js             «Entregar»: formato de entrega, portada, preliminares y cuerpo, revisión previa y registro de
                             cada entrega en la autoría (AT.entrega)
@@ -182,7 +184,7 @@ OneLearn se puede instalar como app desde el navegador (en iPhone, con Compartir
 Cada documento se abre en `documento.html?id=...` con dos modos: **Editar** (título, propiedades y el editor) y **Leer** (dibujado con `bloques.js`, igual que una lección; la tecla E vuelve a editar). Se guarda solo, unos instantes después de cada cambio. En el editor:
 
 - Barra de herramientas (con flechas entre botones): deshacer, tipo de bloque, negrita, cursiva, subrayado, tachado, resaltado, código, enlace, listas, «Insertar» y opciones del bloque.
-- **«/»** abre el menú para insertar: secciones, listas, tareas, callouts (información, aviso, idea), tabla, desplegable, columnas, preguntas de repaso, resumen, índice, cita textual, código y separador.
+- **«/»** abre el menú para insertar: secciones, listas, tareas, callouts (información, aviso, idea), tabla, desplegable, columnas, preguntas de repaso, resumen, índice, cita textual, código, separador, imagen, ecuación, nota al pie y **plan de pagos** (`pagos.js`: el monto total y el número de pagos o un pago fijo, semanal, quincenal o mensual; calcula cada pago, el último absorbe el redondeo, y los pagos marcados se descuentan de lo que falta, también en modo lectura).
 - **Asa del bloque** (al pasar el ratón): «+» inserta debajo; «⋮⋮» se arrastra para mover el bloque o abre sus opciones.
 - Atajos: Alt+↑/↓ mueven el bloque, Ctrl+Mayús+D lo duplica, Ctrl+Z deshace, Esc suelta el editor (y otro Esc sale del modo zen).
 - «⋯» descarga el documento como Markdown, lo duplica o lo elimina (con «Deshacer»).

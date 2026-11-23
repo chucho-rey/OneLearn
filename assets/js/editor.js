@@ -18,7 +18,7 @@ function sinAcentos(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,
 /* ---------- Identificadores de bloque ---------- */
 var CON_ID=['paragraph','heading','bulletList','orderedList','taskList','blockquote','codeBlock','horizontalRule','table',
   'callout','columnas','desplegable','laboratorio','repaso','indice','resumen','bibliografia','declaracion',
-  'figura','tablaNumerada','ecuacion','indicePiezas'];
+  'figura','tablaNumerada','ecuacion','indicePiezas','pagos'];
 var claveIds=new pm.PluginKey('idsDeBloque');
 var Ids=T.Extension.create({
   name:'idsDeBloque',
