@@ -35,12 +35,27 @@
       </div>
       <div class="m-estudio" id="continuar" hidden></div>
 
+      <section class="ini-sec ini-rapidas" id="iniRapidas" aria-labelledby="t-rapidas" hidden>
+        <h2 id="t-rapidas" class="vh">Acciones rápidas</h2>
+        <div class="ini-acc" id="iniAcciones"></div>
+      </section>
+
+      <section class="ini-sec ini-prepara" id="iniPrepara" aria-labelledby="t-prepara" hidden>
+        <div class="ini-sec-h"><h2 id="t-prepara" tabindex="-1">Prepara tu negocio</h2><span class="ini-prep-n" id="iniPrepN"></span></div>
+        <div class="ini-prep-bar" aria-hidden="true"><i id="iniPrepBar"></i></div>
+        <ol class="ini-prep" id="iniPrepLista"></ol>
+        <button class="btn ini-prep-x" type="button" id="iniPrepOcultar">Ocultar esta lista</button>
+      </section>
+
       <section class="ini-sec" aria-labelledby="t-docs">
         <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus documentos</h2><button class="btn" type="button" data-crear>+ Crear</button></div>
         <div class="ini-resp" id="iniRespaldo" role="region" aria-label="Recordatorio de respaldo" hidden>
           <p id="iniRespaldoTxt"></p>
           <div class="ini-resp-b"><button class="btn pri" type="button" id="iniRespaldoSi">Descargar respaldo</button><button class="btn" type="button" id="iniRespaldoNo">Recordármelo en una semana</button></div>
         </div>
+        <h3 class="ini-sub-h" id="iniFavsT" hidden>Favoritas</h3>
+        <ul class="ini-notas" id="iniFavs" aria-labelledby="iniFavsT" hidden></ul>
+        <h3 class="ini-sub-h" id="iniRecT" hidden>Recientes</h3>
         <ul class="ini-notas" id="iniDocs"></ul>
       </section>
 
@@ -48,6 +63,7 @@
         <h2 id="t-empezar">Páginas listas para usar</h2>
         <p class="ini-nota">Empieza con una de estas y cámbiala a tu gusto con «/».</p>
         <div class="ini-plantillas" id="iniPlantillas"></div>
+        <p class="ini-mas"><button class="btn" type="button" data-crear>Ver todas las plantillas</button></p>
       </section>
 
       <section class="ini-sec m-estudio" aria-labelledby="t-notas">

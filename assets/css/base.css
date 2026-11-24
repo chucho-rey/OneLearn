@@ -664,7 +664,7 @@ dialog.atajos::backdrop{background:rgba(0,0,0,.45)}
 .atajos dt,.atajos dd{margin:0}
 .atajos dd{font-size:0.9375rem}
 /* Crear */
-dialog.crear-dlg{width:min(36rem,calc(100vw - 2rem))}
+dialog.crear-dlg{width:min(50rem,calc(100vw - 2rem))}
 .crear-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:0.5rem;margin:0 0 1rem}
 .crear-o,.ini-pl{display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);text-align:left;cursor:pointer}
 .crear-o:hover,.ini-pl:hover{border-color:var(--accent);background:var(--accent-bg)}
@@ -681,6 +681,62 @@ dialog.crear-dlg{width:min(36rem,calc(100vw - 2rem))}
 .crear-p{display:flex;flex-wrap:wrap;gap:0.375rem;margin:0;padding:0;list-style:none}
 .crear-p li{display:inline-flex;align-items:center;gap:0.375rem;padding:0.25rem 0.625rem;border:1px dashed var(--line-strong);border-radius:1rem;font-size:0.8125rem;color:var(--fg-2)}
 .crear-p .ico{font-size:1rem}
+/* Galería de plantillas (crear.js, fase F5) */
+.crear-filtros{display:flex;flex-direction:column;gap:0.5rem;margin:0 0 1rem}
+.crear-buscar{width:100%;min-width:0;min-height:2.5rem;padding:0.375rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.crear-buscar:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.crear-chips{display:flex;flex-wrap:wrap;gap:0.375rem}
+.crear-chip{min-height:2rem;padding:0.25rem 0.75rem;border:1px solid var(--line-strong);border-radius:1rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.8125rem;cursor:pointer}
+.crear-chip:hover{background:var(--hover)}
+.crear-chip[aria-pressed="true"]{border-color:var(--accent-solid);background:var(--accent-solid);color:var(--on-accent)}
+.crear-sec[hidden],.crear-mia[hidden],.crear-o[hidden]{display:none}
+.crear-o{font:inherit;width:100%}
+.crear-trae{font-style:normal;font-size:0.75rem;color:var(--accent-ink);line-height:1.4}
+.crear-tuyo{margin-left:0.25rem;padding:0 0.375rem;border-radius:0.5rem;background:var(--accent-bg);color:var(--accent-ink);font-style:normal;font-size:0.6875rem;font-weight:600;vertical-align:0.0625rem}
+.crear-mia{position:relative;display:flex}
+.crear-mia .crear-o{padding-right:2.75rem}
+.crear-x{position:absolute;top:0.375rem;right:0.375rem;display:grid;place-items:center;width:2rem;height:2rem;padding:0;border:0;border-radius:0.375rem;background:none;color:var(--fg-2);font-size:1rem;cursor:pointer}
+.crear-x:hover{background:var(--hover);color:var(--bad-ink)}
+/* Favoritas: la estrella junto al nombre (barra lateral e Inicio) y la papelera al final de tus páginas */
+.doc-est{display:inline-flex;flex:none;margin-left:auto;padding-left:0.25rem;color:var(--accent-ink);font-style:normal}
+.doc-est .ico{font-size:0.8125rem}
+.nota .doc-t .doc-est .ico{color:var(--accent-ink)}
+.doc-pap{width:100%;border:0;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--fg-2)}
+.doc-pap em{margin-left:auto;font-style:normal;font-family:var(--font-mono);font-size:0.75rem}
+/* Papelera (respaldo.js) */
+dialog.pap-dlg{width:min(36rem,calc(100vw - 2rem))}
+.pap-l{display:flex;flex-direction:column;margin:0 0 0.75rem;padding:0;list-style:none}
+.pap-l li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0.25rem 0.625rem;align-items:start;padding:0.625rem 0;border-top:1px solid var(--line)}
+.pap-l li>.ico{margin-top:0.1875rem;color:var(--fg-2)}
+.pap-t{display:flex;flex-direction:column;gap:0.125rem;min-width:0;overflow-wrap:anywhere}
+.pap-t small{font-size:0.8125rem;color:var(--fg-2)}
+.pap-b{grid-column:2;display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem}
+.pap-seguro{font-size:0.875rem;font-weight:600}
+.pap-l .pap-vacia{display:block;color:var(--fg-2);font-size:0.9375rem}
+/* Inicio: acciones rápidas, «Prepara tu negocio», favoritas y recientes */
+.ini-rapidas{margin-top:1.25rem}
+.ini-acc{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,10rem),1fr));gap:0.5rem}
+.ini-acc-b{display:flex;align-items:center;gap:0.625rem;min-height:3rem;padding:0.5rem 0.875rem;border:1px solid var(--accent);border-radius:0.625rem;background:var(--accent-bg);color:var(--fg);font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.ini-acc-b:hover{border-color:var(--accent-solid)}
+.ini-acc-b .ico{flex:none;font-size:1.375rem;color:var(--accent-ink)}
+.ini-acc-b[aria-disabled="true"]{opacity:.6;cursor:progress}
+.ini-prep-n{font-family:var(--font-mono);font-size:0.875rem;color:var(--fg-2)}
+.ini-prep-bar{height:0.375rem;margin:0 0 0.75rem;border-radius:0.25rem;background:var(--bg-soft);overflow:hidden}
+.ini-prep-bar i{display:block;height:100%;background:var(--good)}
+.ini-prep{display:flex;flex-direction:column;gap:0.375rem;margin:0 0 0.75rem;padding:0;list-style:none}
+.ini-prep-i{display:grid;grid-template-columns:1.5rem minmax(0,1fr) auto;gap:0.625rem;align-items:center;padding:0.5rem 0.75rem;border:1px solid var(--line);border-radius:0.625rem}
+.ini-prep-c{display:grid;place-items:center;width:1.375rem;height:1.375rem;border:2px solid var(--line-strong);border-radius:50%;color:var(--good-ink)}
+.ini-prep-i.hecho .ini-prep-c{border-color:var(--good);background:var(--good-bg)}
+.ini-prep-c .ico{font-size:0.875rem}
+.ini-prep-t{display:flex;flex-direction:column;gap:0.125rem;min-width:0}
+.ini-prep-t b{font-size:0.9375rem}
+.ini-prep-t small{font-size:0.8125rem;color:var(--fg-2)}
+.ini-prep-i.hecho .ini-prep-t b{color:var(--fg-2)}
+.ini-prep-i .btn{white-space:nowrap}
+@media (max-width:599px){.ini-prep-i{grid-template-columns:1.5rem minmax(0,1fr)}.ini-prep-i .btn{grid-column:2;justify-self:start}}
+.ini-sub-h{margin:0.75rem 0 0.375rem;font-family:var(--font-mono);font-size:0.6875rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
+.ini-sub-h[hidden],.ini-notas[hidden]{display:none}
+.ini-mas{margin:0.75rem 0 0}
 /* Tus datos */
 dialog.tus-datos{width:min(31rem,calc(100vw - 2rem))}
 .td-p{margin:0 0 0.75rem;font-size:0.9375rem;color:var(--fg-2)}

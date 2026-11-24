@@ -7,12 +7,19 @@
      página se cierra a la mitad, la próxima carga termina de guardarla. Así se pasaron también las notas
      que ya existían: nada se pierde.
    - Otras pestañas se enteran de los cambios con BroadcastChannel.
-   - Respaldo: exportar todo a un archivo JSON e importarlo después (combina; gana lo más reciente).
+   - Respaldo: exportar todo a un archivo JSON e importarlo después (combina; gana lo más reciente). Entran
+     también tus plantillas; la papelera no.
+   - Plantillas propias (fase F5, «Guardar como plantilla»): almacén «plantillas» ({id, nombre, desc, tipo,
+     titulo, props, contenido, creado, editado}).
+   - Papelera (fase F5): al eliminar una página pasa al almacén «papelera» con la fecha (eliminado); se
+     restaura, se borra para siempre o se vacía, y lo que lleva más de 30 días se borra solo.
    Expone AT.datos. Se carga después de base.js. */
 (function(){
 'use strict';
 var AT=window.AT;
-var NOMBRE='onelearn',VERSION_DB=1,ALMACENES=['documentos','notas','marcadores'];
+/* Versión 2 (fase F5): agrega los almacenes de plantillas y de la papelera; lo demás no cambia */
+var NOMBRE='onelearn',VERSION_DB=2,ALMACENES=['documentos','notas','marcadores','plantillas','papelera'];
+var DIAS_PAPELERA=30;
 var PREF='aprende-tecnologia:',CLAVE_NOTA=PREF+'apuntes:',CLAVE_RESPALDO=PREF+'ultimo-respaldo';
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
@@ -203,10 +210,11 @@ function coleccion(nombre){
 /* ---------- Respaldo ---------- */
 function leerJSON(k){try{return JSON.parse(lsGet(k)||'null')}catch(e){return null}}
 function exportar(){
-  return Promise.all([notas.todas(),conMotor(function(m){return m.todos('documentos')}),conMotor(function(m){return m.todos('marcadores')})]).then(function(r){
+  return Promise.all([notas.todas(),conMotor(function(m){return m.todos('documentos')}),conMotor(function(m){return m.todos('marcadores')}),
+    conMotor(function(m){return m.todos('plantillas')})]).then(function(r){
     return {
       app:'OneBook',formato:1,exportado:ahora(),
-      documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],
+      documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],plantillas:r[3],
       avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
       perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios')
     };
@@ -236,7 +244,7 @@ function importar(datos){
   if(!esObjeto(datos)||(datos.app!=='OneBook'&&datos.app!=='OneLearn')||typeof datos.formato!=='number')
     return Promise.reject(new Error('El archivo no es un respaldo de OneBook.'));
   if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneBook. Actualiza la página e inténtalo otra vez.'));
-  var res={documentos:0,notas:0,marcadores:0,avance:false,proyectos:false,terminal:false,perfil:false};
+  var res={documentos:0,notas:0,marcadores:0,plantillas:0,avance:false,proyectos:false,terminal:false,perfil:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
     return esObjeto(d)&&idValido(d.id)&&esObjeto(d.contenido)&&d.contenido.type==='doc'&&(d.contenido.content==null||Array.isArray(d.contenido.content));
@@ -244,6 +252,9 @@ function importar(datos){
   var ns=lista(datos.notas).filter(function(n){return esObjeto(n)&&idValido(n.id)&&typeof n.texto==='string'})
     .map(function(n){return {id:n.id,texto:n.texto,editado:typeof n.editado==='string'?n.editado:''}});
   var ms=lista(datos.marcadores).filter(function(x){return esObjeto(x)&&idValido(x.id)});
+  var pls=lista(datos.plantillas).filter(function(x){
+    return esObjeto(x)&&idValido(x.id)&&typeof x.nombre==='string'&&esObjeto(x.contenido)&&x.contenido.type==='doc'&&(x.contenido.content==null||Array.isArray(x.contenido.content));
+  });
   function combinar(almacen,entrantes,clave){
     return conMotor(function(m){return m.todos(almacen)}).then(function(actuales){
       var porId={};actuales.forEach(function(a){porId[a.id]=a});
@@ -260,6 +271,7 @@ function importar(datos){
       return poner.length?motor.poner('notas',poner).then(function(){poner.forEach(function(n){if(lsGet(CLAVE_NOTA+n.id)!==null){lsDel(CLAVE_NOTA+n.id);lsDel(CLAVE_NOTA+n.id+':editado')}})}):null;
     })
     .then(function(){return combinar('marcadores',ms,'marcadores')})
+    .then(function(){return combinar('plantillas',pls,'plantillas')})
     .then(function(){
       /* Avance: se suman las secciones leídas; el resto se toma del más reciente */
       var ent=datos.avance;
@@ -340,11 +352,43 @@ function espacio(){
   return almacenamiento.estimate().then(function(e){return {usado:e.usage||0,cuota:e.quota||0}}).catch(function(){return null});
 }
 
+/* ---------- Papelera ---------- */
+var docsCol=coleccion('documentos'),papCol=coleccion('papelera');
+var papelera={
+  /* Lo que hay en la papelera, lo más reciente primero (lo que lleva más de 30 días se borra solo) */
+  todos:function(){
+    return papCol.todos().then(function(l){
+      var limite=new Date(Date.now()-DIAS_PAPELERA*864e5).toISOString(),viejos=l.filter(function(d){return (d.eliminado||'')<limite});
+      return Promise.all(viejos.map(function(d){return papCol.borrar(d.id)})).then(function(){
+        return l.filter(function(d){return viejos.indexOf(d)<0}).sort(function(a,b){return (b.eliminado||'')<(a.eliminado||'')?-1:1});
+      });
+    });
+  },
+  /* Manda un documento a la papelera (lo quita de tus páginas) */
+  mover:function(doc){
+    var d=JSON.parse(JSON.stringify(doc));d.eliminado=ahora();
+    return papCol.guardar(d,{conservarFecha:true}).then(function(){return docsCol.borrar(d.id)}).then(function(){return d});
+  },
+  /* Lo regresa a tus páginas, tal como estaba */
+  restaurar:function(id){
+    return papCol.leer(id).then(function(d){
+      if(!d)throw new Error('Esa página ya no está en la papelera');
+      delete d.eliminado;
+      return docsCol.guardar(d,{conservarFecha:true}).then(function(){return papCol.borrar(id)}).then(function(){return d});
+    });
+  },
+  eliminar:function(id){return papCol.borrar(id)},
+  vaciar:function(){return papCol.todos().then(function(l){return Promise.all(l.map(function(d){return papCol.borrar(d.id)}))})},
+  DIAS:DIAS_PAPELERA
+};
+
 AT.datos={
   listo:listo,
   motor:function(){return motor&&motor.tipo},
-  documentos:coleccion('documentos'),
+  documentos:docsCol,
   marcadores:coleccion('marcadores'),
+  plantillas:coleccion('plantillas'),
+  papelera:papelera,
   notas:notas,
   exportar:exportar,
   descargar:descargar,

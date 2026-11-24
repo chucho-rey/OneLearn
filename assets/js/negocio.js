@@ -287,6 +287,23 @@ function editor(nombre,d){
   }});
 }
 
+/* documento.html#agregar=<bloque> (acciones rápidas del Inicio): si la página ya tiene ese bloque se va a él; si no
+   (o, en el corte de caja, si no hay uno de hoy), lo agrega al final, listo para escribir */
+document.addEventListener('onebook:agregar',function(e){
+  var tipo=e.detail&&e.detail.tipo,d=BLOQUES[tipo],ed=AT.editorActual&&AT.editorActual.tiptap;
+  if(!d||!ed||!d.insertar)return;
+  var pos=null,h=hoy();
+  ed.state.doc.forEach(function(n,o){if(n.type.name===tipo&&(tipo!=='corte'||n.attrs.fecha===h))pos=o});
+  if(pos!=null){
+    var dom=ed.view.nodeDOM(pos);
+    if(dom&&dom.scrollIntoView)dom.scrollIntoView({block:'start'});
+    var f=dom&&d.foco&&dom.querySelector(d.foco);if(f)f.focus({preventScroll:true});
+    return;
+  }
+  abrirNuevo=tipo;
+  ed.chain().insertContentAt(ed.state.doc.content.size,{type:tipo,attrs:Object.assign(clonar(d.def),d.insertar.attrs?d.insertar.attrs():{})}).run();
+});
+
 /* ---------- Piezas de HTML que repiten los bloques ---------- */
 /* Un campo con etiqueta: campo(etiqueta, ruta, valor, {tipo, ph, modo:'decimal'|'numeric', clase, extra}) */
 function campo(et,k,v,o){

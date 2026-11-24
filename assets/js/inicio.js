@@ -3,6 +3,9 @@
      explorar temas; la primera visita (sin avance ni notas) sugiere empezar por Memoria RAM.
    - Sin él (negocio o personal): el nombre del negocio (o tu nombre) y la fecha, tus páginas y páginas listas
      para usar (las plantillas de los módulos encendidos, AT.crear.plantillasInicio).
+   - Fase F5: acciones rápidas (negocio y personal: el corte de hoy, una venta, el fiado, un gasto; abren la página
+     que ya tienes, con documento.html#agregar=<bloque>, o la crean), «Prepara tu negocio» (una lista que se marca
+     sola al revisar tus páginas; se puede ocultar) y, en tus páginas, las favoritas primero y después las recientes.
    Las secciones de un módulo apagado llevan .m-estudio y base.css las oculta.
    Usa AT.avance (avance.js) y AT.datos (datos.js). */
 (function(){
@@ -107,21 +110,114 @@ $('#iniRespaldoNo').addEventListener('click',function(){
   pintarRespaldo();$('#t-docs').focus();
 });
 
+function tarjeta(d){
+  var t=AT.tiposDoc&&AT.tiposDoc[d.tipo],w=AT.bloques?AT.bloques.palabras(d):0;
+  return '<li><a class="nota" href="documento.html?id='+encodeURIComponent(d.id)+'"><b class="doc-t">'+ico(t?t.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span>'+
+    (d.favorito?'<i class="doc-est" title="Favorita">'+ico('estrella-llena')+'<span class="vh"> (favorita)</span></i>':'')+'</b>'+
+    '<span>'+esc(t?t.nombre:'Documento')+(AT.bloques?' · '+(w===1?'1 palabra':w+' palabras'):'')+'</span><small>'+esc(cuando(d.editado))+'</small></a></li>';
+}
+/* Tus páginas: las favoritas (todas) y las 6 más recientes que no son favoritas */
 function pintarDocs(){
   var ul=$('#iniDocs');
   if(!ul)return;
-  var docs=docsCache.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0}).slice(0,6);
+  var orden=docsCache.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
+  var favs=orden.filter(function(d){return d.favorito}),docs=orden.filter(function(d){return !d.favorito}).slice(0,6);
+  $('#iniFavs').hidden=$('#iniFavsT').hidden=$('#iniRecT').hidden=!favs.length;
+  $('#iniFavs').innerHTML=favs.map(tarjeta).join('');
   if(!docs.length){
-    ul.innerHTML='<li class="ini-vacio">'+(EST?'Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.':
+    ul.innerHTML=favs.length?'<li class="ini-vacio">Tus demás páginas aparecerán aquí.</li>':'<li class="ini-vacio">'+(EST?'Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.':
       'Todavía no tienes páginas. Crea la primera con «Crear» o con una de las que están aquí abajo. Se guardan en este dispositivo.')+'</li>';
     return;
   }
-  ul.innerHTML=docs.map(function(d){
-    var t=AT.tiposDoc&&AT.tiposDoc[d.tipo],w=AT.bloques?AT.bloques.palabras(d):0;
-    return '<li><a class="nota" href="documento.html?id='+encodeURIComponent(d.id)+'"><b class="doc-t">'+ico(t?t.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></b>'+
-      '<span>'+esc(t?t.nombre:'Documento')+(AT.bloques?' · '+(w===1?'1 palabra':w+' palabras'):'')+'</span><small>'+esc(cuando(d.editado))+'</small></a></li>';
+  ul.innerHTML=docs.map(tarjeta).join('');
+}
+
+/* ---------- Acciones rápidas y «Prepara tu negocio» (fase F5) ---------- */
+/* Los bloques de un tipo en tus páginas: [{doc, attrs}], de la página editada más recientemente a la más vieja */
+function bloquesDe(tipo){
+  var out=[];
+  docsCache.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:1}).forEach(function(d){
+    ((d.contenido||{}).content||[]).forEach(function(b){if(b&&b.type===tipo)out.push({doc:d,attrs:b.attrs||{}})});
+  });
+  return out;
+}
+/* Abre la página que ya tiene ese bloque (el corte agrega el de hoy si falta) o crea una con su plantilla */
+function irA(bloque,plantilla){
+  var b=bloquesDe(bloque)[0];
+  if(b){location.href='documento.html?id='+encodeURIComponent(b.doc.id)+'#agregar='+bloque;return Promise.resolve()}
+  return AT.crear.nuevo(plantilla||bloque);
+}
+var ACCIONES={
+  negocio:[
+    {k:'corte',t:'Corte de hoy',i:'caja',f:function(){return irA('corte')}},
+    {k:'venta',t:'Nueva venta',i:'venta',f:function(){return AT.crear.nuevo('venta')}},
+    {k:'fiado',t:'Anotar fiado',i:'fiado',f:function(){return irA('fiado')}},
+    {k:'gasto',t:'Anotar un gasto',i:'gastos',f:function(){return irA('gastos')}}],
+  personal:[
+    {k:'gasto',t:'Anotar un gasto',i:'gastos',f:function(){return irA('gastos','finanzas')}},
+    {k:'medeben',t:'Me deben',i:'fiado',f:function(){return irA('fiado','medeben')}},
+    {k:'deuda',t:'Una deuda',i:'pagos',f:function(){return AT.crear.nuevo('prestamo')}}]
+};
+function pintarAcciones(){
+  var l=ACCIONES[PER&&PER.tipo()];
+  $('#iniRapidas').hidden=!l||!AT.crear||!PER.tiene('negocio');
+  if($('#iniRapidas').hidden)return;
+  $('#iniAcciones').innerHTML=l.map(function(a){
+    return '<button type="button" class="ini-acc-b" data-accion="'+a.k+'">'+ico(a.i)+'<span>'+esc(a.t)+'</span></button>';
   }).join('');
 }
+$('#iniAcciones').addEventListener('click',function(e){
+  var b=e.target.closest('[data-accion]');if(!b||b.getAttribute('aria-disabled')==='true')return;
+  var a=(ACCIONES[PER.tipo()]||[]).filter(function(x){return x.k===b.getAttribute('data-accion')})[0];if(!a)return;
+  b.setAttribute('aria-disabled','true');
+  a.f().catch(function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo abrir. Inténtalo otra vez.')});
+});
+function cent(v){var n=parseFloat(String(v==null?'':v).replace(/[$,\s]/g,''));return isFinite(n)&&n>0?Math.round(n*100):0}
+var CLAVE_PREPARA='aprende-tecnologia:prepara';
+/* Cada paso se marca solo al revisar tus páginas */
+var PASOS=[
+  {k:'corte',t:'Haz tu primer corte de caja',d:'Anota las ventas del día y cuenta la caja.',hecho:function(){
+    return bloquesDe('corte').some(function(b){var v=b.attrs.ventas||{};return cent(v.efectivo)+cent(v.tarjeta)+cent(v.transferencia)+cent(v.otras)>0||String(b.attrs.contado||'').trim()!==''})},
+    f:function(){return irA('corte')},b:'Hacer el corte'},
+  {k:'gastos',t:'Anota tus gastos fijos',d:'Renta, luz, internet: una vez, y «Generar mes» los agrega cada mes.',hecho:function(){
+    return bloquesDe('gastos').some(function(b){return (b.attrs.fijos||[]).some(function(f){return f&&(String(f.concepto||'').trim()||cent(f.monto))})})},
+    f:function(){return irA('gastos')},b:'Anotar gastos'},
+  {k:'fiado',t:'Anota a quién le fías',d:'Cada cliente con lo que se lleva y sus abonos.',hecho:function(){
+    return bloquesDe('fiado').some(function(b){return (b.attrs.clientes||[]).some(function(c){return c&&String(c.nombre||'').trim()})})},
+    f:function(){return irA('fiado')},b:'Abrir el fiado'},
+  {k:'venta',t:'Haz tu primera nota de venta',d:'Con folio, para imprimirla o mandarla en PDF.',hecho:function(){
+    return bloquesDe('venta').some(function(b){return (b.attrs.conceptos||[]).some(function(c){return c&&(String(c.desc||'').trim()||cent(c.precio))})})},
+    f:function(){return AT.crear.nuevo('venta')},b:'Nueva venta'},
+  {k:'respaldo',t:'Descarga un respaldo',d:'Una copia de todo en un archivo, por si cambias de celular.',hecho:function(){return !!AT.datos.ultimoRespaldo()},
+    f:function(){return AT.datos.descargar().then(function(){AT.aviso('Respaldo descargado. Guárdalo en tu nube o en una memoria USB.');pintar()})},b:'Descargar respaldo'}
+];
+function pintarPrepara(){
+  var caja=$('#iniPrepara'),oculta=false;
+  try{oculta=localStorage.getItem(CLAVE_PREPARA)==='oculta'}catch(e){}
+  caja.hidden=oculta||!PER||PER.tipo()!=='negocio'||!PER.tiene('negocio');
+  if(caja.hidden)return;
+  var hechos=0;
+  $('#iniPrepLista').innerHTML=PASOS.map(function(p){
+    var h=false;try{h=p.hecho()}catch(e){}
+    if(h)hechos++;
+    return '<li class="ini-prep-i'+(h?' hecho':'')+'"><span class="ini-prep-c" aria-hidden="true">'+(h?ico('check'):'')+'</span>'+
+      '<span class="ini-prep-t"><b>'+esc(p.t)+'</b><small>'+(h?'Hecho.':esc(p.d))+'</small></span>'+
+      (h?'<span class="vh">Hecho</span>':'<button class="btn" type="button" data-paso="'+p.k+'">'+esc(p.b)+'</button>')+'</li>';
+  }).join('');
+  $('#iniPrepN').textContent=hechos===PASOS.length?'¡Listo!':hechos+' de '+PASOS.length;
+  $('#iniPrepBar').style.width=Math.round(hechos/PASOS.length*100)+'%';
+}
+$('#iniPrepLista').addEventListener('click',function(e){
+  var b=e.target.closest('[data-paso]');if(!b||b.getAttribute('aria-disabled')==='true')return;
+  var p=PASOS.filter(function(x){return x.k===b.getAttribute('data-paso')})[0];if(!p)return;
+  b.setAttribute('aria-disabled','true');
+  p.f().then(function(){b.removeAttribute('aria-disabled')},function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo. Inténtalo otra vez.')});
+});
+$('#iniPrepOcultar').addEventListener('click',function(){
+  try{localStorage.setItem(CLAVE_PREPARA,'oculta')}catch(e){}
+  pintarPrepara();$('#t-docs').focus();
+  AT.aviso('Lista oculta. Todo lo que tiene está en «Crear» y en tus páginas.');
+});
 
 /* Cada grupo se pliega. Abiertos: los que tienen alguna lección empezada (o el primero, si no hay ninguna),
    hasta que abras o cierres uno: desde ahí se respeta lo que elegiste mientras sigas en la página. */
@@ -220,9 +316,10 @@ function pintarSaludo(){
   }
   if(!EST)$('#t-docs').textContent='Tus páginas';
 }
-function pintar(){pintarContinuar();pintarRutas();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar()}
+function pintar(){pintarContinuar();pintarRutas();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar();pintarPrepara()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 pintarSaludo();
+pintarAcciones();
 pintarPlantillas();
 pintar();
 recargar();
