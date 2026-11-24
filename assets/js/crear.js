@@ -39,7 +39,8 @@ var TIPOS=AT.tiposDoc={
   precio:{nombre:'Precios de venta',icono:'precio',desc:'A cuánto vender con tu ganancia, el IVA y la comisión de la tarjeta.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta']},
   surtir:{nombre:'Lista para surtir',icono:'lista',desc:'Lo que se acaba, cuánto queda y a quién pedirlo.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   proveedores:{nombre:'Proveedores',icono:'porpagar',desc:'Quién te surte, su día de visita y lo que le debes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla','Cuentas por pagar']},
-  clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
+  inventario:{nombre:'Inventario',icono:'datos',desc:'Productos con costo, precio y existencias; vistas por categoría y por surtir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
+  clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar; en tabla o en tarjetas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
   lista:{nombre:'Lista de precios',icono:'tabla',desc:'Tus productos y servicios con su precio, para imprimir o compartir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   plan:{nombre:'Plan de negocio',icono:'idea',desc:'En una página: qué vendes, a quién, a cuánto, cuánto ganas y tus metas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta','Lista de tareas']},
   cotizacion:{nombre:'Cotización',icono:'notas',desc:'Conceptos, precios e IVA para enviar; después, nota de venta.',modulo:'negocio',cat:'negocio'},
@@ -48,7 +49,7 @@ var TIPOS=AT.tiposDoc={
   medeben:{nombre:'Me deben',icono:'fiado',desc:'A quién le prestaste, lo que te ha abonado y cuánto falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Fiado']},
   prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Plan de pagos']}
 };
-var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','proveedores','clientes','lista','plan',
+var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','proveedores','clientes','lista','plan',
   'finanzas','medeben','prestamo','cotizacion','libro','investigacion','guia','bitacora','presentacion','blanco'];
 var CATS={negocio:'Para tu negocio',finanzas:'Tus finanzas',paquetes:'Paquetes por giro',estudio:'Estudio',mis:'Mis plantillas'};
 var CAT_MOD={negocio:'negocio',finanzas:'negocio',paquetes:'negocio',estudio:'estudio',mis:'nucleo'};
@@ -71,6 +72,31 @@ function tabla(titulos,filas){
   for(var i=0;i<(filas||3);i++)rs.push({type:'tableRow',content:titulos.map(function(){return celda('')})});
   return {type:'table',attrs:{id:id()},content:rs};
 }
+/* Bases de datos de las plantillas (fase F6): el bloque lleva su semilla y la base se crea al abrir la página */
+function vista(id,nombre,tipo,extra){return Object.assign({id:id,nombre:nombre,tipo:tipo,q:'',f:{col:'',op:'contiene',val:''},s:{col:'',dir:1},s2:{col:'',dir:1},ocultas:[]},extra||{})}
+function baseDatos(semilla){return {type:'basedatos',attrs:{id:id(),base:'',vista:'',semilla:semilla}}}
+var SEMILLAS={
+  inventario:function(){return {nombre:'Inventario',columnas:[
+    {id:'c-nombre',nombre:'Producto',tipo:'texto'},
+    {id:'c-cat',nombre:'Categoría',tipo:'seleccion',opciones:['Abarrotes','Bebidas','Botanas','Limpieza','Otros']},
+    {id:'c-costo',nombre:'Costo',tipo:'moneda'},
+    {id:'c-precio',nombre:'Precio',tipo:'moneda'},
+    {id:'c-exist',nombre:'Existencias',tipo:'numero',pie:'suma'},
+    {id:'c-min',nombre:'Mínimo',tipo:'numero'},
+    {id:'c-falta',nombre:'Por surtir',tipo:'formula',expr:'{Mínimo} - {Existencias}'},
+    {id:'c-valor',nombre:'Valor',tipo:'formula',expr:'{Costo} * {Existencias}',moneda:true,pie:'suma'},
+    {id:'c-gan',nombre:'Ganancia por pieza',tipo:'formula',expr:'{Precio} - {Costo}',moneda:true}],
+    vistas:[vista('v-todos','Todos','tabla',{s:{col:'c-nombre',dir:1},s2:{col:'',dir:1}}),
+      vista('v-cat','Por categoría','tablero',{agrupar:'c-cat'}),
+      vista('v-surtir','Por surtir','tabla',{f:{col:'c-falta',op:'mayor',val:'0'},s:{col:'c-falta',dir:-1},s2:{col:'',dir:1}})],filas:[]}},
+  clientes:function(){return {nombre:'Clientes',columnas:[
+    {id:'c-nombre',nombre:'Nombre',tipo:'texto'},
+    {id:'c-tel',nombre:'Teléfono',tipo:'telefono'},
+    {id:'c-compra',nombre:'Qué compra',tipo:'texto'},
+    {id:'c-cumple',nombre:'Cumpleaños',tipo:'fecha'},
+    {id:'c-notas',nombre:'Notas',tipo:'texto'}],
+    vistas:[vista('v-tabla','Tabla','tabla',{s:{col:'c-nombre',dir:1},s2:{col:'',dir:1}}),vista('v-tarjetas','Tarjetas','galeria')],filas:[]}}
+};
 var PLANTILLAS={
   libreta:function(){return {titulo:'Libreta sin título',props:[{nombre:'Materia',valor:'',estilo:'etiqueta'}],contenido:[
     {type:'indice',attrs:{id:id()}},
@@ -131,8 +157,12 @@ var PLANTILLAS={
     H('Lo que les debes'),{type:'porpagar',attrs:{id:id(),titulo:'',cuentas:[]}},P()
   ]}},
   clientes:function(){return {titulo:'Clientes',props:[],contenido:[
-    P('Una fila por cliente. Agrega filas desde el menú de la tabla.'),
-    tabla(['Nombre','Teléfono','Qué compra','Notas'],4),P()
+    P('Una fila por cliente. Toca el cuadrito de la izquierda para ver su ficha.'),
+    baseDatos(SEMILLAS.clientes()),P()
+  ]}},
+  inventario:function(){return {titulo:'Inventario',props:[],contenido:[
+    P('Anota cada producto con su costo, su precio, cuántos tienes y el mínimo. «Por surtir» muestra lo que está bajo el mínimo.'),
+    baseDatos(SEMILLAS.inventario()),P()
   ]}},
   lista:function(){return {titulo:'Lista de precios',props:[],contenido:[
     {type:'callout',attrs:{id:id(),variante:'info'},content:[{type:'paragraph',content:[{type:'text',text:'Precios vigentes. Pregunta por mayoreo.'}]}]},
@@ -251,7 +281,14 @@ function plantillaDe(doc,op){
   if(Array.isArray(doc.fuentes)&&doc.fuentes.length)pl.fuentes=clonar(doc.fuentes);
   return pl;
 }
-function guardarPlantilla(doc,op){return AT.datos.plantillas.guardar(plantillaDe(doc,op))}
+/* Las bases de datos van como semilla: su estructura y, si no se quita lo anotado, sus filas */
+function guardarPlantilla(doc,op){
+  op=op||{};
+  var pl=plantillaDe(doc,op),bds=(pl.contenido.content||[]).filter(function(b){return b.type==='basedatos'&&b.attrs&&b.attrs.base});
+  return Promise.all(bds.map(function(b){
+    return AT.bases?AT.bases.semillaDe(b.attrs.base,!op.vaciar).then(function(s){if(s){b.attrs.semilla=s;b.attrs.base='';b.attrs.vista=''}}):null;
+  })).then(function(){return AT.datos.plantillas.guardar(pl)});
+}
 /* Un documento nuevo desde una de tus plantillas (cada bloque con id nuevo y listo para usarse) */
 function desdePlantilla(pl){
   var tipo=TIPOS[pl.tipo]&&TIPOS[pl.tipo].listo?pl.tipo:'notas',ahora=new Date().toISOString(),folioViejo='',folioNuevo='';

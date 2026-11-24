@@ -3,6 +3,7 @@
    y permite descargar un respaldo e importarlo. Se abre desde «Tus datos» en la barra lateral.
    También la ventana «Papelera» (fase F5): las páginas que eliminaste, para recuperarlas o borrarlas para siempre
    (se abre desde «Tus datos», desde «Papelera» al final de tus páginas o con cualquier [data-papelera]).
+   «Importar respaldo» también abre un respaldo de Bases unificadas (cada libro, una página con sus bases).
    Usa AT.datos (datos.js). Expone AT.tusDatos.abrir() y AT.papelera.abrir(). */
 (function(){
 'use strict';
@@ -77,7 +78,11 @@ function crear(){
       try{datos=JSON.parse(t)}catch(e){throw new Error('El archivo no es un respaldo de OneBook.')}
       return AT.datos.importar(datos);
     }).then(function(r){
-      var n=r.documentos+r.notas+r.marcadores+(r.plantillas||0);
+      if(r.basesUnificadas){
+        mensaje('Se abrieron '+plural(r.documentos,'libro','libros')+' de Bases unificadas como páginas, con '+plural(r.bases,'base de datos','bases de datos')+' y '+plural(r.filas,'fila','filas')+'. Están en tus páginas.',false);
+        pintar();return;
+      }
+      var n=r.documentos+r.notas+r.marcadores+(r.plantillas||0)+(r.bases||0);
       if(!n&&!r.avance)mensaje('No había nada nuevo: todo lo del respaldo ya estaba aquí.',false);
       else mensaje('Se recuperaron '+plural(r.documentos,'documento','documentos')+', '+plural(r.notas,'nota','notas')+' y '+plural(r.marcadores,'marcador','marcadores')+(r.plantillas?', '+plural(r.plantillas,'plantilla','plantillas'):'')+(r.avance?', y tu avance de lectura':'')+'. Lo que ya tenías y era más reciente se conservó.',false);
       pintar();
