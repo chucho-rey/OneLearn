@@ -164,7 +164,8 @@ Object.keys(BLOQUES).forEach(function(nombre){
   if(AT.bloques&&AT.bloques.registrar)AT.bloques.registrar(nombre,{
     dibujar:function(n,ctx,h){
       var a=h.attrs(n),s=document.createElement('section');s.setAttribute('aria-label',D.etiqueta);
-      if(document.body.getAttribute('data-pagina')!=='documento'){s.className=nombre==='indicadores'?'ind-b ind-papel':'ven-b ven-papel';s.innerHTML=D.papel(a);return s}
+      var pag=document.body.getAttribute('data-pagina');
+      if(pag!=='documento'&&pag!=='inicio'){s.className=nombre==='indicadores'?'ind-b ind-papel':'ven-b ven-papel';s.innerHTML=D.papel(a);return s}
       D.montar(s,{cfg:a.cfg,editable:false});
       return s;
     },

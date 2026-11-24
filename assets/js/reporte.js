@@ -333,7 +333,8 @@ if(AT.bloques&&AT.bloques.registrar){
     dibujar:function(n,ctx,h){
       var a=h.attrs(n),s=document.createElement('section');
       s.setAttribute('aria-label','Reporte');
-      if(document.body.getAttribute('data-pagina')!=='documento'){s.className='rep rep-papel';s.innerHTML=html(a.cfg,{sinGrafica:!(a.cfg&&a.cfg.grafica)});return s}
+      var pag=document.body.getAttribute('data-pagina');
+      if(pag!=='documento'&&pag!=='inicio'){s.className='rep rep-papel';s.innerHTML=html(a.cfg,{sinGrafica:!(a.cfg&&a.cfg.grafica)});return s}
       montar(s,{cfg:a.cfg,editable:true});
       return s;
     },

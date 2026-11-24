@@ -314,7 +314,8 @@ document.addEventListener('click',function(e){
      Al final, «Papelera» si hay algo en ella (respaldo.js abre la ventana) */
   function pintarDocsCon(docs){
     var abierto=AT.documentoAbierto||'';
-    docs=docs.slice().sort(function(a,b){return (!!b.favorito-!!a.favorito)||((b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0)});
+    /* «Mi negocio» (fase F7e) es el Inicio de un negocio: no se repite entre tus páginas (salvo si estás en ella) */
+    docs=docs.filter(function(d){return d.id!=='d-minegocio'||abierto==='d-minegocio'}).sort(function(a,b){return (!!b.favorito-!!a.favorito)||((b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0)});
     var h=docs.map(function(d){
       var aqui=d.id===abierto,tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo];
       var u='documento.html?id='+encodeURIComponent(d.id);

@@ -218,8 +218,8 @@ var PLANTILLAS={
 };
 /* Paquetes por giro: varias páginas de una vez */
 var PAQUETES={
-  tienda:{nombre:'Tienda o abarrotes',tipos:['corte','fiado','gastos','surtir','proveedores']},
-  comida:{nombre:'Comida (cocina, cafetería, repostería)',tipos:['corte','gastos','precio','surtir','pendientes']},
+  tienda:{nombre:'Tienda o abarrotes',tipos:['corte','inventario','reporte','fiado','proveedores']},
+  comida:{nombre:'Comida (cocina, cafetería, repostería)',tipos:['corte','inventario','presupuesto','precio','pendientes']},
   servicios:{nombre:'Servicios (estética, taller, consultorio)',tipos:['venta','clientes','gastos','pendientes']},
   catalogo:{nombre:'Ventas por catálogo o redes',tipos:['lista','clientes','venta','gastos']},
   freelance:{nombre:'Freelance o profesional independiente',tipos:['venta','clientes','precio','gastos']}

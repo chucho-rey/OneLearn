@@ -8,7 +8,8 @@ const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 const NEGOCIO={perfil:'negocio',modulos:['negocio'],nombre:'',negocio:{nombre:'Abarrotes Lupita',giro:'tienda',telefono:'55 1234 5678'},creado:'2026-01-01'};
 function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 const HOY=iso(new Date());
-function docs(p){return p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.map(function(d){return {id:d.id,tipo:d.tipo,titulo:d.titulo,fav:!!d.favorito,editado:d.editado,tipos:(d.contenido.content||[]).map(function(b){return b.type})}})})})}
+/* Sin «Mi negocio» (fase F7e): el Inicio de un negocio la crea sola */
+function docs(p){return p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.filter(function(d){return d.id!=='d-minegocio'}).map(function(d){return {id:d.id,tipo:d.tipo,titulo:d.titulo,fav:!!d.favorito,editado:d.editado,tipos:(d.contenido.content||[]).map(function(b){return b.type})}})})})}
 function visibles(p){return p.evaluate(function(){return [].filter.call(document.querySelectorAll('dialog.crear-dlg .crear-o'),function(o){return o.getClientRects().length}).map(function(o){return o.querySelector('b').firstChild.textContent.trim()})})}
 /* En celular la barra lateral está cerrada: se abre el menú y ahí «Crear» */
 async function abrirCrear(p){
@@ -54,8 +55,8 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   /* Paquete por giro: varias páginas de una vez */
   await Promise.all([p.waitForURL(/inicio\.html$/),p.click('.crear-o[data-paquete="tienda"]')]);await listo(p,400);
   let ds=await docs(p);
-  r.igual(ds.map(function(d){return d.tipo}).sort().join(),'corte,fiado,gastos,proveedores,surtir','el paquete de tienda crea sus 5 páginas');
-  r.cumple(/Se crearon 5 páginas: Cortes de caja, Fiado, Gastos, Lista para surtir, Proveedores\./.test(await p.textContent('#avisoApp')),'y el Inicio lo avisa');
+  r.igual(ds.map(function(d){return d.tipo}).sort().join(),'corte,fiado,inventario,proveedores,reporte','el paquete de tienda crea sus 5 páginas');
+  r.cumple(/Se crearon 5 páginas: Cortes de caja, Inventario, Reporte de .+, Fiado, Proveedores\./.test(await p.textContent('#avisoApp')),'y el Inicio lo avisa',await p.textContent('#avisoApp'));
 
   /* Las plantillas nuevas traen sus bloques */
   const pl=await p.evaluate(function(){var o={};['plan','finanzas','medeben','clientes','lista'].forEach(function(t){var d=AT.crear.armar(t);o[t]=d.titulo+': '+d.contenido.content.map(function(b){return b.type}).filter(function(x){return x!=='paragraph'&&x!=='heading'}).join(',')});return o});

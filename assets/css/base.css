@@ -576,6 +576,9 @@ a.next:hover{background:var(--hover)}
 
 /* ---------- Pantalla de inicio ---------- */
 .page.inicio{padding-bottom:4rem}
+/* «Mi negocio» (fase F7e): la página de bloques del negocio, arriba del Inicio */
+.ini-neg-c>p:first-child{color:var(--fg-2);font-size:0.9375rem}
+.ini-neg-c h2{font-size:1.0625rem;margin:1.25rem 0 0.375rem}
 .ini-sub{margin-top:-0.25rem;color:var(--fg-2)}
 .bienv,.cont{display:flex;flex-direction:column;gap:0.25rem;margin-top:1.5rem;padding:1.125rem 1.25rem;border:1px solid var(--line-strong);border-radius:0.75rem;background:var(--bg-side);color:var(--fg);text-decoration:none}
 .bienv{gap:0.75rem;align-items:flex-start}
