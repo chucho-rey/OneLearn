@@ -29,9 +29,30 @@ var masBtn=document.createElement('button');
 masBtn.type='button';masBtn.className='icon-btn';masBtn.id='docMas';
 masBtn.setAttribute('aria-label','Más opciones del documento');masBtn.title='Más opciones';masBtn.setAttribute('aria-haspopup','menu');
 masBtn.innerHTML=ico('puntos');
+/* Favorita (fase F5): sale primero en la barra lateral y en el Inicio */
+var favBtn=document.createElement('button');
+favBtn.type='button';favBtn.className='icon-btn doc-fav';favBtn.id='docFav';
 var ref=$('#zenBtn')||$('#aaBtn');
-topbar.insertBefore(estado,ref);topbar.insertBefore(modoBtn,ref);topbar.insertBefore(masBtn,ref);
-modoBtn.hidden=masBtn.hidden=true;
+topbar.insertBefore(estado,ref);topbar.insertBefore(favBtn,ref);topbar.insertBefore(modoBtn,ref);topbar.insertBefore(masBtn,ref);
+modoBtn.hidden=masBtn.hidden=favBtn.hidden=true;
+function pintarFav(){
+  var f=!!(doc&&doc.favorito);
+  favBtn.innerHTML=ico(f?'estrella-llena':'estrella');
+  favBtn.setAttribute('aria-pressed',String(f));
+  favBtn.setAttribute('aria-label','Favorita');
+  favBtn.title=f?'Quitar de favoritas':'Agregar a favoritas';
+}
+/* Se guarda sin cambiar la fecha de edición (no sube en «Recientes») */
+function favorita(){
+  if(!doc||bloqueado)return;
+  var f=!doc.favorito;
+  (pendiente||timer?guardar():Promise.resolve()).then(function(){
+    if(f)doc.favorito=true;else delete doc.favorito;
+    pintarFav();
+    return AT.datos.documentos.guardar(doc,{conservarFecha:true});
+  }).then(function(){AT.aviso(f?'Agregada a favoritas.':'Ya no es favorita.')},function(){AT.aviso('No se pudo guardar. Inténtalo otra vez.')});
+}
+favBtn.addEventListener('click',favorita);
 
 function ponerEstado(t,k){estadoT.textContent=t;estado.setAttribute('data-k',k||'')}
 
@@ -243,9 +264,11 @@ masBtn.addEventListener('click',function(){
     {sep:true}]:[]).concat([
     {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd}
   ],academico()||!AT.entrega?[]:[{t:'Imprimir o guardar como PDF',i:'page',d:'Con números de página',f:abrirEntregar}],[
+    {t:doc&&doc.favorito?'Quitar de favoritas':'Agregar a favoritas',i:'estrella',f:favorita},
+    {t:'Guardar como plantilla',i:'crear',d:'Para crear páginas iguales desde «Crear»',f:comoPlantilla},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
     {sep:true},
-    {t:'Eliminar documento',i:'basura',peligro:true,f:eliminar}
+    {t:'Mover a la papelera',i:'basura',peligro:true,f:eliminar}
   ]),{etiqueta:'Más opciones del documento',devolver:masBtn,alElegir:function(it){it.f()}});
 });
 function nombreArchivo(ext){
@@ -265,16 +288,16 @@ function duplicar(){
     var c=JSON.parse(JSON.stringify(doc));
     c.id='d-'+AT.bloques.nuevoId().slice(2)+AT.bloques.nuevoId().slice(4);
     c.titulo='Copia de '+(doc.titulo||'Sin título');
-    delete c.creado;
+    delete c.creado;delete c.favorito;
     return AT.datos.documentos.guardar(c);
   }).then(function(c){location.href='documento.html?id='+encodeURIComponent(c.id)});
 }
 function eliminar(){
   var d=document.createElement('dialog');
   d.className='atajos';d.setAttribute('aria-labelledby','elT');
-  d.innerHTML='<div class="at-h"><h2 id="elT">¿Eliminar este documento?</h2></div>'+
-    '<p class="td-p">«'+esc(doc.titulo||'Sin título')+'» se borrará de este dispositivo. Podrás deshacerlo justo después.</p>'+
-    '<div class="td-bt"><button class="btn danger" type="button" data-el="si">Eliminar</button><button class="btn" type="button" data-el="no">Cancelar</button></div>';
+  d.innerHTML='<div class="at-h"><h2 id="elT">¿Mover a la papelera?</h2></div>'+
+    '<p class="td-p">«'+esc(doc.titulo||'Sin título')+'» sale de tus páginas. Puedes recuperarla desde la papelera durante '+AT.datos.papelera.DIAS+' días; después se borra sola.</p>'+
+    '<div class="td-bt"><button class="btn danger" type="button" data-el="si">Mover a la papelera</button><button class="btn" type="button" data-el="no">Cancelar</button></div>';
   document.body.appendChild(d);
   d.addEventListener('close',function(){d.remove();masBtn.focus({preventScroll:true})});
   d.addEventListener('click',function(e){
@@ -283,11 +306,46 @@ function eliminar(){
     if(!b)return;
     if(ed)doc.contenido=ed.json();
     clearTimeout(timer);timer=null;pendiente=false;
-    try{sessionStorage.setItem('onelearn:eliminado',JSON.stringify(doc))}catch(x){}
-    AT.datos.documentos.borrar(doc.id).then(function(){location.href='inicio.html'});
+    try{sessionStorage.setItem('onelearn:eliminado',JSON.stringify({id:doc.id,titulo:doc.titulo}))}catch(x){}
+    AT.datos.papelera.mover(doc).then(function(){location.href='inicio.html'},function(){AT.aviso('No se pudo mover a la papelera. Inténtalo otra vez.')});
   });
   d.showModal();
   $('[data-el="no"]',d).focus();
+}
+
+/* «Guardar como plantilla»: queda en «Crear», en «Mis plantillas» (crear.js) */
+function comoPlantilla(){
+  if(!AT.crear||!AT.crear.guardarPlantilla)return;
+  var d=document.createElement('dialog');
+  d.className='atajos';d.setAttribute('aria-labelledby','plT');
+  d.innerHTML='<div class="at-h"><h2 id="plT">Guardar como plantilla</h2></div>'+
+    '<p class="td-p">Después, en «Crear», la eliges en «Mis plantillas» para empezar una página igual.</p>'+
+    '<form class="pl-form" method="dialog">'+
+      '<label class="campo-l"><span>Nombre de la plantilla</span><input type="text" id="plNombre" maxlength="80" required></label>'+
+      '<label class="campo-l"><span>Para qué sirve (opcional)</span><input type="text" id="plDesc" maxlength="160" placeholder="Ej. El corte de la sucursal centro"></label>'+
+      '<label class="pl-op"><input type="checkbox" id="plVaciar" checked><span><b>Sin lo anotado</b><small>Quita ventas, abonos, gastos del mes, cuentas, pagos marcados y tareas hechas; se quedan los nombres, los gastos fijos y lo que escribiste.</small></span></label>'+
+      '<p class="td-msg" id="plMsg" role="status"></p>'+
+      '<div class="td-bt"><button class="btn pri" type="submit" id="plSi">Guardar plantilla</button><button class="btn" type="button" data-pl="no">Cancelar</button></div>'+
+    '</form>';
+  document.body.appendChild(d);
+  $('#plNombre',d).value=doc.titulo||'';
+  d.addEventListener('close',function(){d.remove();masBtn.focus({preventScroll:true})});
+  d.addEventListener('click',function(e){if(e.target===d||e.target.closest('[data-pl="no"]'))d.close()});
+  $('form',d).addEventListener('submit',function(e){
+    e.preventDefault();
+    var nombre=$('#plNombre',d).value.trim();
+    if(!nombre){$('#plMsg',d).textContent='Escribe un nombre para la plantilla.';$('#plNombre',d).focus();return}
+    $('#plSi',d).setAttribute('aria-disabled','true');
+    (pendiente||timer?guardar():Promise.resolve()).then(function(){
+      if(ed)doc.contenido=ed.json();
+      return AT.crear.guardarPlantilla(doc,{nombre:nombre,desc:$('#plDesc',d).value,vaciar:$('#plVaciar',d).checked});
+    }).then(function(pl){
+      d.close();
+      AT.aviso('Se guardó la plantilla «'+pl.nombre+'». Está en «Crear», en «Mis plantillas».');
+    },function(){$('#plSi',d).removeAttribute('aria-disabled');$('#plMsg',d).textContent='No se pudo guardar. Inténtalo otra vez.'});
+  });
+  d.showModal();
+  $('#plNombre',d).select();
 }
 
 /* ---------- Markdown ---------- */
@@ -381,11 +439,16 @@ AT.datos.documentos.leer(ID).then(function(d){
   if(tipo().academico&&!Array.isArray(doc.fuentes))doc.fuentes=[];
   AT.docActual=doc;AT.docCambio=cambio;
   titulo();
-  modoBtn.hidden=masBtn.hidden=false;
+  modoBtn.hidden=masBtn.hidden=favBtn.hidden=false;
+  pintarFav();
   var nuevo=false;
   try{nuevo=sessionStorage.getItem('onelearn:recien-creado')===ID;if(nuevo)sessionStorage.removeItem('onelearn:recien-creado')}catch(e){}
-  var conAncla=location.hash.length>1;
-  ponerModo(nuevo?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo?'titulo':false);
+  /* #agregar=<bloque> (acciones rápidas del Inicio): se abre para editar y negocio.js agrega el bloque */
+  var agregar=/^#agregar=(\w+)$/.exec(location.hash);
+  if(agregar)try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  var conAncla=!agregar&&location.hash.length>1;
+  ponerModo(nuevo||agregar?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo?'titulo':false);
+  if(agregar)document.dispatchEvent(new CustomEvent('onebook:agregar',{detail:{tipo:agregar[1]}}));
   ponerEstado('Guardado','ok');
   avisarAbierto();
   if(AT.refrescarNotas)AT.refrescarNotas();
@@ -420,7 +483,7 @@ function bloquear(){
   (pendiente||timer?guardar():Promise.resolve()).then(function(){
     /* Sin AT.docCambio, el plan de pagos y lo demás se ven pero no se marcan */
     AT.docCambio=null;
-    modoBtn.hidden=true;
+    modoBtn.hidden=favBtn.hidden=true;
     ponerModo('leer',false,true);
     ponerEstado('Solo lectura');
   });

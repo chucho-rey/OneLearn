@@ -57,7 +57,9 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo del negocio */
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
-  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Proveedores | Préstamo o crédito','«Crear» ofrece notas y las plantillas de negocio, sin libreta ni tesis');
+  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Proveedores | Clientes | Lista de precios | Plan de negocio | '+
+    'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes | Freelance o profesional independiente | Finanzas del mes | Me deben | Préstamo o crédito',
+    '«Crear» ofrece notas, las plantillas de negocio, los paquetes por giro (el suyo marcado) y las de finanzas, sin libreta ni tesis');
   const pronto=await p.textContent('dialog.crear-dlg .crear-p');
   r.cumple(/Cotización/.test(pronto)&&!/Corte de caja|Fiado/.test(pronto)&&!/Libro|Bitácora/.test(pronto),'«Llegan después» anuncia lo de negocio que falta y no lo académico',pronto);
   await revisar(p,r,'Crear de negocio en celular');
@@ -110,7 +112,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
     tabs:!!s.querySelector('.tabs'),rutas:!!document.querySelector('#iniRutas').getClientRects().length}});
   r.cumple(con.mods==='negocio,estudio'&&con.tabs&&con.rutas,'encender «Estudio» trae las lecciones a la barra y al Inicio',con);
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
-  r.cumple(await p.evaluate(function(){var g=[].map.call(document.querySelectorAll('dialog.crear-dlg .crear-g'),function(x){return x.getAttribute('data-modulo')});return g.join()==='negocio,estudio'}),
+  r.cumple(await p.evaluate(function(){var g=[].map.call(document.querySelectorAll('dialog.crear-dlg .crear-g'),function(x){return x.getAttribute('data-modulo')});return g.join()==='negocio,paquetes,finanzas,estudio'}),
     '«Crear» muestra primero lo del negocio y después lo de estudio');
   r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.length})}),5,'cambiar el espacio no crea ni borra páginas');
   await cerrar(p);
@@ -121,7 +123,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   r.cumple(/Paso 2 de 3/.test(await q.textContent('#enPaso'))&&await q.textContent('#enT2')==='¿Cómo te llamas?'&&await q.isHidden('#enNegocioCampos'),'?perfil=personal empieza en el paso 2 y pide tu nombre');
   await revisar(q,r,'Crea tu espacio en escritorio');
   await q.fill('#enNombre','Ana');await q.click('#enSig');await q.waitForTimeout(150);
-  r.igual(await q.$$eval('input[name="plantilla"]',function(e){return e.map(function(x){return x.value+(x.checked?'+':'-')}).join(' ')}),'gastos+ prestamo+ notas-','para tus finanzas vienen gastos del mes y préstamo');
+  r.igual(await q.$$eval('input[name="plantilla"]',function(e){return e.map(function(x){return x.value+(x.checked?'+':'-')}).join(' ')}),'finanzas+ prestamo- medeben- notas-','para tus finanzas viene marcada «Finanzas del mes»');
   await Promise.all([q.waitForURL(/inicio\.html$/),q.click('#enSig')]);await listo(q,400);
   r.cumple(/^Buen(os|as) \w+, Ana$/.test(await q.textContent('#saludo'))&&!/aprender/.test(await q.textContent('#iniSub')),'Inicio saluda con tu nombre y la fecha');
   await revisar(q,r,'Inicio personal en escritorio');

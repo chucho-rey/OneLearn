@@ -248,19 +248,19 @@ document.addEventListener('click',function(e){
   /* Mis apuntes: una tarjeta por lección con nota (las notas vienen de AT.datos, en IndexedDB) */
   /* Se dibuja al instante con las notas ya cargadas y después se confirma con la base;
      si no cambió nada, no se toca la lista (así no se pierde el foco) */
-  var pintando=0,cache=null,ultimo='',docsCache=null,ultimoDocs='',listaDocs=$('#docsLista',sideEl);
+  var pintando=0,cache=null,ultimo='',docsCache=null,ultimoDocs='',listaDocs=$('#docsLista',sideEl),enPapelera=0;
   var marcCache=null,ultimoMarc='',listaMarc=$('#marcLista',sideEl);
   function pintarNotas(){
     if(cache)pintarNotasCon(cache);
     if(docsCache)pintarDocsCon(docsCache);
     if(marcCache)pintarMarcCon(marcCache);
     var n0=++pintando;
-    Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos()]).then(function(r){
-      cache=r[0];docsCache=r[1];marcCache=r[2];
+    Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos(),AT.datos.papelera?AT.datos.papelera.todos():[]]).then(function(r){
+      cache=r[0];docsCache=r[1];marcCache=r[2];enPapelera=r[3].length;
       if(n0===pintando&&!$('#pn-apuntes').hidden){pintarNotasCon(r[0]);pintarDocsCon(r[1]);pintarMarcCon(r[2])}
     });
   }
-  Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos()]).then(function(r){if(!cache)cache=r[0];if(!docsCache)docsCache=r[1];if(!marcCache)marcCache=r[2]});
+  Promise.all([AT.datos.notas.todas(),AT.datos.documentos.todos(),AT.datos.marcadores.todos(),AT.datos.papelera?AT.datos.papelera.todos():[]]).then(function(r){if(!cache)cache=r[0];if(!docsCache)docsCache=r[1];if(!marcCache)marcCache=r[2];enPapelera=r[3].length});
   /* Marcadores: los más nuevos primero, con un botón para quitarlos */
   function pintarMarcCon(ms){
     if(!listaMarc)return;
@@ -310,18 +310,20 @@ document.addEventListener('click',function(e){
     var b=e.target.closest('[data-pt-url]');
     if(b&&AT.pestanas){setNav(false);AT.pestanas.abrir(new URL(RAIZ+b.getAttribute('data-pt-url'),location.href).href)}
   });
-  /* Documentos: los más recientes primero; el que está abierto, marcado */
+  /* Documentos: las favoritas primero (con su estrella) y después los más recientes; el que está abierto, marcado.
+     Al final, «Papelera» si hay algo en ella (respaldo.js abre la ventana) */
   function pintarDocsCon(docs){
     var abierto=AT.documentoAbierto||'';
-    docs=docs.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
+    docs=docs.slice().sort(function(a,b){return (!!b.favorito-!!a.favorito)||((b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0)});
     var h=docs.map(function(d){
       var aqui=d.id===abierto,tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo];
       var u='documento.html?id='+encodeURIComponent(d.id);
       return '<li'+(AT.enPestana?' class="doc-li"':'')+'><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+u+'"'+(aqui?' aria-current="page"':'')+'>'+
-        ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span></a>'+
+        ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span>'+(d.favorito?'<i class="doc-est" title="Favorita">'+ico('estrella-llena')+'<span class="vh"> (favorita)</span></i>':'')+'</a>'+
         (AT.enPestana?'<button class="doc-pt" type="button" data-pt-url="'+esc(u)+'" aria-label="Abrir «'+esc(d.titulo||'Sin título')+'» en una pestaña nueva" title="Abrir en una pestaña nueva">'+ico('pestanas')+'</button>':'')+'</li>';
     }).join('');
     h=h||'<li class="side-txt">'+(EST?'Todavía no creas documentos. Toca «Crear» para empezar una libreta o unas notas.':'Todavía no tienes páginas. Toca «Crear» para empezar.')+'</li>';
+    if(enPapelera)h+='<li><button class="nv doc-pap" type="button" data-papelera>'+ico('basura')+'<span>Papelera</span><em>'+enPapelera+'</em></button></li>';
     if(h!==ultimoDocs){listaDocs.innerHTML=h;ultimoDocs=h}
   }
   function pintarNotasCon(notas){
@@ -352,7 +354,7 @@ document.addEventListener('click',function(e){
   });
   var espera=null;
   AT.refrescarNotas=function(){clearTimeout(espera);espera=setTimeout(function(){if(!$('#pn-apuntes').hidden)pintarNotas()},400)};
-  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='marcadores'||c.almacen==='*')AT.refrescarNotas()});
+  AT.datos.on(function(c){if(c.almacen==='notas'||c.almacen==='documentos'||c.almacen==='marcadores'||c.almacen==='papelera'||c.almacen==='*')AT.refrescarNotas()});
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
   /* Sin pestañas (sin el módulo de estudio), la lista de páginas siempre está a la vista */

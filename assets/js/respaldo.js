@@ -1,7 +1,9 @@
 /* OneBook: ventana «Tus datos».
    Explica dónde se guarda lo que escribes, cuánto espacio ocupa, si el navegador lo protege,
    y permite descargar un respaldo e importarlo. Se abre desde «Tus datos» en la barra lateral.
-   Usa AT.datos (datos.js). Expone AT.tusDatos.abrir(). */
+   También la ventana «Papelera» (fase F5): las páginas que eliminaste, para recuperarlas o borrarlas para siempre
+   (se abre desde «Tus datos», desde «Papelera» al final de tus páginas o con cualquier [data-papelera]).
+   Usa AT.datos (datos.js). Expone AT.tusDatos.abrir() y AT.papelera.abrir(). */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,esc=AT.esc,ico=AT.ico;
@@ -38,6 +40,7 @@ function crear(){
     '<div class="td-esp" id="tdEsp" hidden><div class="td-bar" aria-hidden="true"><i id="tdBar"></i></div>'+
       '<p class="td-p td-nota" id="tdNotaEsp"></p></div>'+
     '<div class="td-sec" id="tdProt"></div>'+
+    '<div class="td-sec" id="tdPap"></div>'+
     '<div class="td-sec"><h3>Respaldo</h3>'+
       '<p class="td-p">Descarga una copia de todo en un archivo y guárdala en otro lugar, como tu nube o una memoria USB. Con ella recuperas tus datos en otro navegador o si borras los de este.</p>'+
       '<p class="td-p td-ult" id="tdUlt"></p>'+
@@ -61,6 +64,7 @@ function crear(){
       },function(){mensaje('No se pudo crear el respaldo. Inténtalo otra vez.',true)});
     }else if(a==='importar')$('#tdArchivo',dlg).click();
     else if(a==='proteger')AT.datos.pedirPersistencia().then(pintar);
+    else if(a==='papelera'){cerrar();abrirPapelera()}
   });
   $('#tdArchivo',dlg).addEventListener('change',function(){
     var f=this.files&&this.files[0];
@@ -73,9 +77,9 @@ function crear(){
       try{datos=JSON.parse(t)}catch(e){throw new Error('El archivo no es un respaldo de OneBook.')}
       return AT.datos.importar(datos);
     }).then(function(r){
-      var n=r.documentos+r.notas+r.marcadores;
+      var n=r.documentos+r.notas+r.marcadores+(r.plantillas||0);
       if(!n&&!r.avance)mensaje('No había nada nuevo: todo lo del respaldo ya estaba aquí.',false);
-      else mensaje('Se recuperaron '+plural(r.documentos,'documento','documentos')+', '+plural(r.notas,'nota','notas')+' y '+plural(r.marcadores,'marcador','marcadores')+(r.avance?', y tu avance de lectura':'')+'. Lo que ya tenías y era más reciente se conservó.',false);
+      else mensaje('Se recuperaron '+plural(r.documentos,'documento','documentos')+', '+plural(r.notas,'nota','notas')+' y '+plural(r.marcadores,'marcador','marcadores')+(r.plantillas?', '+plural(r.plantillas,'plantilla','plantillas'):'')+(r.avance?', y tu avance de lectura':'')+'. Lo que ya tenías y era más reciente se conservó.',false);
       pintar();
     }).catch(function(e){mensaje(e&&e.message||'No se pudo importar el archivo.',true)});
   });
@@ -100,6 +104,10 @@ function pintarEspacio(){
 }
 function pintar(){
   pintarEspacio();
+  AT.datos.papelera.todos().then(function(l){
+    $('#tdPap',dlg).innerHTML='<h3>Papelera</h3><p class="td-p">'+(l.length?plural(l.length,'página','páginas')+' en la papelera. Se borran solas a los '+AT.datos.papelera.DIAS+' días.':'La papelera está vacía.')+'</p>'+
+      (l.length?'<div class="td-bt"><button class="btn" type="button" data-td="papelera">Ver la papelera</button></div>':'');
+  });
   Promise.all([AT.datos.documentos.todos(),AT.datos.notas.todas(),AT.datos.marcadores.todos(),AT.datos.espacio(),AT.datos.persistente()]).then(function(r){
     var notas=r[1].filter(function(n){return n.texto&&n.texto.trim()}).length,esp=r[3],pers=r[4];
     $('#tdRes',dlg).innerHTML=
@@ -140,4 +148,79 @@ function cerrar(){if(dlg&&dlg.open)dlg.close()}
 AT.tusDatos={abrir:abrir,cerrar:cerrar};
 var b=$('#sideDatos');
 if(b)b.addEventListener('click',abrir);
+
+/* ---------- Papelera ---------- */
+var $$=AT.$$,pap=null,papAbridor=null,papLista=[];
+function diasQuedan(d){return Math.max(1,AT.datos.papelera.DIAS-Math.floor((Date.now()-new Date(d.eliminado).getTime())/864e5))}
+function crearPapelera(){
+  pap=document.createElement('dialog');
+  pap.className='atajos pap-dlg';
+  pap.setAttribute('aria-labelledby','papT');
+  pap.innerHTML='<div class="at-h"><h2 id="papT">Papelera</h2>'+
+    '<button class="lec-x" type="button" data-pap="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
+    '<p class="td-p">Las páginas que eliminaste. Recupéralas o bórralas para siempre; las que llevan '+AT.datos.papelera.DIAS+' días aquí se borran solas.</p>'+
+    '<ul class="pap-l" id="papL"></ul>'+
+    '<div class="td-bt" id="papBt"></div>'+
+    '<p class="td-msg" id="papMsg" role="status"></p>';
+  document.body.appendChild(pap);
+  pap.addEventListener('click',function(e){
+    if(e.target===pap){pap.close();return}
+    var b=e.target.closest('[data-pap]');if(!b)return;
+    var a=b.getAttribute('data-pap'),id=b.getAttribute('data-id'),d=papLista.filter(function(x){return x.id===id})[0];
+    if(a==='cerrar')pap.close();
+    else if(a==='restaurar'&&d)AT.datos.papelera.restaurar(id).then(function(){
+      papMsg('Se recuperó «'+(d.titulo||'Sin título')+'». Ya está en tus páginas.');pintarPapelera(id);
+    },function(){papMsg('No se pudo recuperar. Inténtalo otra vez.')});
+    else if(a==='borrar'&&d){
+      /* Borrar para siempre pide confirmar ahí mismo */
+      var fila=b.closest('li');
+      $('.pap-b',fila).innerHTML='<span class="pap-seguro">¿Borrarla para siempre?</span>'+
+        '<button class="btn danger" type="button" data-pap="si-borrar" data-id="'+esc(id)+'">Borrar</button><button class="btn" type="button" data-pap="no" data-id="'+esc(id)+'">Cancelar</button>';
+      $('[data-pap="no"]',fila).focus();
+    }
+    else if(a==='no')pintarPapelera(id,'borrar');
+    else if(a==='si-borrar'&&d)AT.datos.papelera.eliminar(id).then(function(){papMsg('Se borró «'+(d.titulo||'Sin título')+'» para siempre.');pintarPapelera(id)});
+    else if(a==='vaciar'){
+      $('#papBt',pap).innerHTML='<span class="pap-seguro">¿Borrar todo para siempre?</span><button class="btn danger" type="button" data-pap="si-vaciar">Vaciar</button><button class="btn" type="button" data-pap="no-vaciar">Cancelar</button>';
+      $('[data-pap="no-vaciar"]',pap).focus();
+    }
+    else if(a==='no-vaciar')pintarPapelera(null).then(function(){var v=$('[data-pap="vaciar"]',pap);if(v)v.focus()});
+    else if(a==='si-vaciar')AT.datos.papelera.vaciar().then(function(){papMsg('La papelera quedó vacía.');pintarPapelera('*')});
+  });
+  pap.addEventListener('close',function(){if(papAbridor&&document.contains(papAbridor))papAbridor.focus({preventScroll:true})});
+}
+function papMsg(t){$('#papMsg',pap).textContent=t}
+/* Pinta la lista; el foco va a la fila vecina de la que cambió (o al botón que se indique) */
+function pintarPapelera(cambio,boton){
+  var antes=papLista.map(function(d){return d.id}).indexOf(cambio);
+  return AT.datos.papelera.todos().then(function(l){
+    papLista=l;
+    var tipos=AT.tiposDoc||{};
+    $('#papL',pap).innerHTML=l.length?l.map(function(d){
+      var t=tipos[d.tipo],q=diasQuedan(d);
+      return '<li>'+ico(t?t.icono:'page')+'<span class="pap-t"><b>'+esc(d.titulo||'Sin título')+'</b>'+
+        '<small>Eliminada el '+esc(new Date(d.eliminado).toLocaleDateString('es-MX',{day:'numeric',month:'short'}))+' · se borra en '+q+(q===1?' día':' días')+'</small></span>'+
+        '<span class="pap-b"><button class="btn" type="button" data-pap="restaurar" data-id="'+esc(d.id)+'">Recuperar</button>'+
+        '<button class="btn" type="button" data-pap="borrar" data-id="'+esc(d.id)+'">Borrar para siempre</button></span></li>';
+    }).join(''):'<li class="pap-vacia">La papelera está vacía.</li>';
+    $('#papBt',pap).innerHTML=l.length?'<button class="btn danger" type="button" data-pap="vaciar">Vaciar la papelera</button>':'';
+    var f=null;
+    if(boton&&cambio)f=$('[data-pap="'+boton+'"][data-id="'+cambio+'"]',pap);
+    else if(cambio&&antes>=0){var filas=$$('#papL [data-pap="restaurar"]',pap);f=filas[Math.min(antes,filas.length-1)]||null}
+    if(!f&&cambio)f=$('[data-pap="cerrar"]',pap);
+    if(f)f.focus();
+  });
+}
+function abrirPapelera(){
+  if(!pap)crearPapelera();
+  papAbridor=document.activeElement;
+  papMsg('');
+  if(AT.setNav)AT.setNav(false);
+  return pintarPapelera(null).then(function(){
+    pap.showModal();
+    var f=$('[data-pap="restaurar"]',pap)||$('[data-pap="cerrar"]',pap);if(f)f.focus();
+  });
+}
+AT.papelera={abrir:abrirPapelera};
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-papelera]'))abrirPapelera()});
 })();

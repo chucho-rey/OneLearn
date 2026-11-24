@@ -21,8 +21,9 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.crear-dlg').open}),'«+ Crear» del inicio abre la pregunta');
   const opciones=await p.$$eval('.crear-g[data-modulo="estudio"] .crear-o b',function(e){return e.map(function(x){return x.textContent})});
   r.igual(opciones.join(' | '),'Libreta de estudio | Notas | Apuntes de clase | Tesis','se ofrecen libreta, notas, apuntes de clase y tesis');
-  r.cumple(await p.evaluate(function(){var g=document.querySelectorAll('.crear-g');return g.length===2&&g[1].getAttribute('data-modulo')==='negocio'&&/Préstamo o crédito/.test(g[1].textContent)}),
-    'quien usaba OneLearn también tiene las plantillas de negocio, en su propio grupo');
+  r.cumple(await p.evaluate(function(){var g=[].slice.call(document.querySelectorAll('.crear-g'));return g.map(function(x){return x.getAttribute('data-modulo')}).join()==='estudio,negocio,paquetes,finanzas'&&
+    /Corte de caja/.test(g[1].textContent)&&/Préstamo o crédito/.test(g[3].textContent)}),
+    'quien usaba OneLearn también tiene las plantillas de negocio, de finanzas y los paquetes, en sus grupos');
   r.cumple(/Libro/.test(await p.textContent('.crear-p'))&&!/Tesis/.test(await p.textContent('.crear-p')),'libro, investigación y los demás se anuncian para después; la tesis ya no')
   r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'libreta','el foco empieza en la primera opción');
   await revisar(p,r,'ventana Crear en escritorio');
@@ -179,13 +180,13 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   const original=p.url();
   await Promise.all([p.waitForURL(function(u){return u.href.indexOf(base)===0&&/documento/.test(u.href)&&u.href!==original}),p.click('.menu-i:has-text("Duplicar")')]);await listo(p,400);
   r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Duplicar» crea una copia y la abre');
-  await p.click('#docMas');await p.click('.menu-i:has-text("Eliminar")');await p.waitForTimeout(150);
-  r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-el')==='no'}),'eliminar pide confirmación con el foco en «Cancelar»');
+  await p.click('#docMas');await p.click('.menu-i:has-text("Mover a la papelera")');await p.waitForTimeout(150);
+  r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-el')==='no'}),'mover a la papelera pide confirmación con el foco en «Cancelar»');
   await Promise.all([p.waitForURL(/inicio\.html/),p.click('[data-el="si"]')]);await listo(p,300);
-  r.cumple(/Se eliminó «Copia de Fotosíntesis»/.test(await p.textContent('#avisoApp')),'al eliminar, el inicio avisa y ofrece deshacer');
+  r.cumple(/«Copia de Fotosíntesis» se movió a la papelera/.test(await p.textContent('#avisoApp')),'al eliminar, el inicio avisa que está en la papelera y ofrece deshacer');
   r.cumple((await p.$$('#iniDocs .nota')).length===1,'el inicio lista los documentos que quedan');
   await Promise.all([p.waitForURL(/documento\.html/),p.click('#avisoApp .btn')]);await listo(p,300);
-  r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Deshacer» recupera el documento eliminado');
+  r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Deshacer» la saca de la papelera');
   r.cumple(p.errores.length===0,'sin errores en escritorio',p.errores);
   await cerrar(p);
 

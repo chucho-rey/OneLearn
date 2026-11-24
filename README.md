@@ -48,12 +48,14 @@ assets/
   js/catalogo.js            Temario: grupos y lecciones (en la barra lateral, cada grupo se pliega y se recuerda cuáles dejaste abiertos),
                             proyectos (AT.proyectos) y rutas de aprendizaje por módulos (AT.caminos)
   js/base.js                Utilidades (AT.$, AT.esc, AT.ico...), íconos, página actual y repaso (AT.repaso)
-  js/datos.js               Tus datos en IndexedDB: documentos, notas y marcadores, respaldo e importación (AT.datos)
+  js/datos.js               Tus datos en IndexedDB: documentos, notas, marcadores, tus plantillas y la papelera, respaldo e
+                            importación (AT.datos)
   js/barra.js               Barra lateral, barra superior, menú en celular y pestañas Temas / Mis apuntes / Comunidad
   js/lectura.js             Panel Lectura (tamaño de texto, tema, contraste, fuente y espacios)
   js/apuntes.js             Hoja de apuntes de cada lección (abajo o acoplada a la derecha)
   js/app.js                 App instalable: service worker, aviso de actualización e instalación
-  js/respaldo.js            Ventana «Tus datos»: espacio, protección del navegador, descargar e importar respaldo
+  js/respaldo.js            Ventana «Tus datos»: espacio, protección del navegador, descargar e importar respaldo; y la ventana
+                            «Papelera»: recuperar, borrar para siempre y vaciar (AT.tusDatos, AT.papelera)
   js/crear.js               «Crear»: tipos de documento (cada uno de un módulo), sus plantillas (también las de negocio: pendientes,
                             corte de caja, fiado, gastos, nota de venta, precios, surtir, proveedores, préstamo) y la ventana
                             «¿Qué quieres crear?» (AT.crear)
@@ -87,7 +89,8 @@ assets/
   js/buscar.js              Búsqueda con Ctrl K en lecciones, documentos, notas y marcadores; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una lección o un documento a partir de su JSON (AT.bloques)
   js/avance.js              Avance de lectura por lección, mapa del tema y porcentajes; expone AT.avance
-  js/inicio.js              Pantalla de inicio (inicio.html)
+  js/inicio.js              Pantalla de inicio (inicio.html): con negocio, acciones rápidas, «Prepara tu negocio», favoritas y
+                            recientes, y páginas listas para usar
   js/landing.js             Bienvenidas: manda al Inicio a quien ya usa OneBook; en index.html dibuja la página de ejemplo, el
                             plan de pagos y la calculadora de precio para probar; en estudiantes.html cuenta lecciones, ruta y proyectos
   css/landing.css           Estilos de las dos páginas de bienvenida
@@ -204,6 +207,7 @@ No cambies el `id` de una lección ya publicada: es la clave con la que se guard
 Todo lo que escribe cada estudiante se guarda solo en su navegador; nada se sube a un servidor (la sincronización llegará con las cuentas).
 
 - **IndexedDB** (base `onelearn`, `assets/js/datos.js`) guarda los documentos, las notas rápidas de cada lección y los marcadores. Si el navegador no tiene IndexedDB, se usa `localStorage`.
+- La base va en su versión 2: además de documentos, notas y marcadores, guarda **tus plantillas** (almacén `plantillas`, entran en el respaldo) y la **papelera** (almacén `papelera`: al eliminar una página pasa ahí con la fecha; se recupera tal como estaba, se borra para siempre o se vacía, y lo que lleva más de 30 días se borra solo; no entra en el respaldo).
 - Cada nota se escribe primero en `localStorage` (al instante) y luego en IndexedDB; si la página se cierra a la mitad, la siguiente carga termina de guardarla. Así se pasaron también las notas de la fase 1, sin perder ninguna.
 - El avance de lectura y los ajustes siguen en `localStorage`, porque se leen antes de pintar la página.
 - **Tus datos** (barra lateral) muestra cuánto hay guardado, el espacio usado y el disponible (lo que el navegador reserva para OneBook), si el navegador protege los datos (almacenamiento persistente) y permite **descargar un respaldo** en JSON e **importarlo** en otro navegador. Importar combina: entra lo que no existe y lo más reciente; nunca se borra nada.
@@ -217,7 +221,13 @@ OneBook se puede instalar como app desde el navegador (en iPhone, con Compartir 
 
 ## Crear y editar
 
-«Crear» (barra lateral e inicio) pregunta qué quieres crear: **libreta de estudio** (índice, secciones, preguntas de repaso y resumen, como una lección), **notas** (una página en blanco), **apuntes de clase** (materia, profesor y fecha arriba; tareas al final) o **tesis** (ver «Tesis y autoría» abajo). Libro, documento de investigación, guía para examen, bitácora, presentación y documento en blanco llegan después.
+«Crear» (barra lateral e inicio) abre la **galería de plantillas** (fase F5): categorías que se filtran (para tu negocio, tus finanzas, paquetes por giro, estudio y «Mis plantillas»), búsqueda sin acentos y, en cada plantilla, los bloques que trae. Estudio: **libreta de estudio** (índice, secciones, preguntas de repaso y resumen, como una lección), **notas** (una página en blanco), **apuntes de clase** (materia, profesor y fecha arriba; tareas al final) o **tesis** (ver «Tesis y autoría» abajo). Negocio: pendientes del día, cortes de caja, fiado, gastos, nota de venta, precios de venta, lista para surtir, proveedores, clientes, lista de precios y plan de negocio; finanzas: finanzas del mes, me deben y préstamo o crédito. Los **paquetes por giro** (tienda, comida, servicios, catálogo y freelance) crean varias páginas de una vez. Libro, documento de investigación, guía para examen, bitácora, presentación, documento en blanco y cotización llegan después.
+
+**Tus plantillas:** en un documento, «⋯ › Guardar como plantilla» la guarda con un nombre y para qué sirve; «Sin lo anotado» (marcado) quita ventas, abonos, gastos del mes, cuentas, pagos marcados y tareas hechas, y deja nombres, gastos fijos y lo escrito. En la galería salen primero, en «Mis plantillas», con un botón para eliminarlas («Deshacer» en el aviso). Al usarlas, cada bloque se prepara (`AL_CREAR` en `crear.js`): el corte con la fecha de hoy, la nota de venta con folio nuevo (también en el título) y los gastos en el mes actual.
+
+**Favoritas y papelera:** la estrella de la barra superior de un documento (o «⋯ › Agregar a favoritas») la marca sin cambiarle la fecha; las favoritas salen primero en la barra lateral, con su estrella, y aparte en el Inicio. «⋯ › Mover a la papelera» la saca de tus páginas; el Inicio ofrece «Deshacer», y la papelera (al final de tus páginas o en «Tus datos») la recupera o la borra para siempre. No hay páginas dentro de páginas, a propósito.
+
+**Inicio de negocio:** acciones rápidas (el corte de hoy, una venta, el fiado, un gasto; abren la página que ya tienes con `documento.html#agregar=<bloque>`, que la abre para editar y agrega el corte de hoy si falta, o la crean), «Prepara tu negocio» (cinco pasos que se marcan solos al revisar tus páginas; se puede ocultar) y las páginas listas para usar con «Ver todas las plantillas». Con el perfil personal, las acciones son de finanzas.
 
 Cada documento se abre en `documento.html?id=...` con dos modos: **Editar** (título, propiedades y el editor) y **Leer** (dibujado con `bloques.js`, igual que una lección; la tecla E vuelve a editar). Se guarda solo, unos instantes después de cada cambio. En el editor:
 
