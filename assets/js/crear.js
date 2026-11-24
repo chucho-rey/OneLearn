@@ -39,7 +39,7 @@ var TIPOS=AT.tiposDoc={
   precio:{nombre:'Precios de venta',icono:'precio',desc:'A cuánto vender con tu ganancia, el IVA y la comisión de la tarjeta.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta']},
   surtir:{nombre:'Lista para surtir',icono:'lista',desc:'Lo que se acaba, cuánto queda y a quién pedirlo.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   proveedores:{nombre:'Proveedores',icono:'porpagar',desc:'Quién te surte, su día de visita y lo que le debes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla','Cuentas por pagar']},
-  inventario:{nombre:'Inventario',icono:'datos',desc:'Productos con costo, precio y existencias; vistas por categoría y por surtir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
+  inventario:{nombre:'Inventario',icono:'datos',desc:'Productos, entradas y salidas; las existencias se calculan solas, las ventas las descuentan y armas el pedido al proveedor.',listo:true,modulo:'negocio',cat:'negocio',trae:['Resumen del inventario','Productos','Entradas y salidas','Compras']},
   clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar; en tabla o en tarjetas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
   lista:{nombre:'Lista de precios',icono:'tabla',desc:'Tus productos y servicios con su precio, para imprimir o compartir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   plan:{nombre:'Plan de negocio',icono:'idea',desc:'En una página: qué vendes, a quién, a cuánto, cuánto ganas y tus metas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta','Lista de tareas']},
@@ -76,19 +76,10 @@ function tabla(titulos,filas){
 function vista(id,nombre,tipo,extra){return Object.assign({id:id,nombre:nombre,tipo:tipo,q:'',f:{col:'',op:'contiene',val:''},s:{col:'',dir:1},s2:{col:'',dir:1},ocultas:[]},extra||{})}
 function baseDatos(semilla){return {type:'basedatos',attrs:{id:id(),base:'',vista:'',semilla:semilla}}}
 var SEMILLAS={
-  inventario:function(){return {nombre:'Inventario',columnas:[
-    {id:'c-nombre',nombre:'Producto',tipo:'texto'},
-    {id:'c-cat',nombre:'Categoría',tipo:'seleccion',opciones:['Abarrotes','Bebidas','Botanas','Limpieza','Otros']},
-    {id:'c-costo',nombre:'Costo',tipo:'moneda'},
-    {id:'c-precio',nombre:'Precio',tipo:'moneda'},
-    {id:'c-exist',nombre:'Existencias',tipo:'numero',pie:'suma'},
-    {id:'c-min',nombre:'Mínimo',tipo:'numero'},
-    {id:'c-falta',nombre:'Por surtir',tipo:'formula',expr:'{Mínimo} - {Existencias}'},
-    {id:'c-valor',nombre:'Valor',tipo:'formula',expr:'{Costo} * {Existencias}',moneda:true,pie:'suma'},
-    {id:'c-gan',nombre:'Ganancia por pieza',tipo:'formula',expr:'{Precio} - {Costo}',moneda:true}],
-    vistas:[vista('v-todos','Todos','tabla',{s:{col:'c-nombre',dir:1},s2:{col:'',dir:1}}),
-      vista('v-cat','Por categoría','tablero',{agrupar:'c-cat'}),
-      vista('v-surtir','Por surtir','tabla',{f:{col:'c-falta',op:'mayor',val:'0'},s:{col:'c-falta',dir:-1},s2:{col:'',dir:1}})],filas:[]}},
+  /* El inventario (fase F7) usa las bases con rol del espacio: la página las busca o las crea (inventario.js) */
+  productos:function(vista){return {rol:'productos',nombre:'Productos',vista:vista||''}},
+  movimientos:function(){return {rol:'movimientos',nombre:'Entradas y salidas'}},
+  compras:function(){return {rol:'compras',nombre:'Compras'}},
   clientes:function(){return {nombre:'Clientes',columnas:[
     {id:'c-nombre',nombre:'Nombre',tipo:'texto'},
     {id:'c-tel',nombre:'Teléfono',tipo:'telefono'},
@@ -161,8 +152,13 @@ var PLANTILLAS={
     baseDatos(SEMILLAS.clientes()),P()
   ]}},
   inventario:function(){return {titulo:'Inventario',props:[],contenido:[
-    P('Anota cada producto con su costo, su precio, cuántos tienes y el mínimo. «Por surtir» muestra lo que está bajo el mínimo.'),
-    baseDatos(SEMILLAS.inventario()),P()
+    P('Anota cada producto con su costo, su precio, cuántos tenías al empezar y el mínimo. Las existencias se calculan solas: lo que tenías más lo que entra menos lo que sale. Las notas de venta descuentan lo que vendes.'),
+    {type:'inventario',attrs:{id:id(),titulo:''}},
+    baseDatos(SEMILLAS.productos()),
+    P('Cada vez que llega mercancía, anótala abajo, en «Entradas y salidas» (o con «Registrar entrada»). Las ventas aparecen solas.'),
+    baseDatos(SEMILLAS.movimientos()),
+    P('Las facturas de tus proveedores: «Importar factura XML» anota la compra, las entradas y el costo nuevo de cada producto.'),
+    baseDatos(SEMILLAS.compras()),P()
   ]}},
   lista:function(){return {titulo:'Lista de precios',props:[],contenido:[
     {type:'callout',attrs:{id:id(),variante:'info'},content:[{type:'paragraph',content:[{type:'text',text:'Precios vigentes. Pregunta por mayoreo.'}]}]},

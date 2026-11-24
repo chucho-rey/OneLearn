@@ -8,6 +8,7 @@
      formulario, su dibujo al leer (AT.bloques.registrar), su texto y su Markdown (AT.piezas.md) y su entrada en «/».
      Definición: {etiqueta, def, filas:{lista: () => fila nueva (sin datos al azar: también completa lo guardado)}, editar(x, uid), resultado(x, uid), leer(x, uid, op),
        refrescar(x, dom), acciones:{nombre(x, datos, boton) → ruta a enfocar}, texto(x), md(x), clases(x),
+       alCambiar(x, ruta, campo, raiz) (al escribir o elegir, antes de guardar: puede completar otros campos),
        insertar:{t, d, i, p, attrs()}, foco}.
      Los campos se enlazan con data-k="ruta" (por ejemplo filas.2.monto); las casillas con data-fecha guardan la
      fecha del día en lugar de true; los botones con data-acc="acción" (agregar y quitar ya existen: data-lista y
@@ -109,12 +110,15 @@ function enlazar(raiz,d,o){
   raiz.addEventListener('input',function(e){
     var t=e.target,k=t.getAttribute&&t.getAttribute('data-k');
     if(!k||t.type==='checkbox'||t.type==='radio'||t.tagName==='SELECT')return;
-    poner(o.x(),k,valor(t));o.cambio(false);
+    poner(o.x(),k,valor(t));
+    if(d.alCambiar)d.alCambiar(o.x(),k,t,raiz);
+    o.cambio(false);
   });
   raiz.addEventListener('change',function(e){
     var t=e.target,k=t.getAttribute&&t.getAttribute('data-k');
     if(!k)return;
     poner(o.x(),k,valor(t));
+    if(d.alCambiar)d.alCambiar(o.x(),k,t,raiz);
     var todo=t.type==='checkbox'||t.type==='radio'||t.tagName==='SELECT'||t.hasAttribute('data-repintar');
     o.cambio(todo,todo?marca(t):null);
   });

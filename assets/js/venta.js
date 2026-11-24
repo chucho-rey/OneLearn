@@ -3,8 +3,11 @@
    IVA (sin IVA, incluido en los precios o aparte, 16 %), forma de pago y, en efectivo, lo recibido y el cambio.
    Al leer y al imprimir sale como recibo con el nombre y el teléfono del negocio (de «Tu espacio»). No es una
    factura (CFDI): lo dice al pie.
-   attrs: {folio, fecha, cliente, conceptos:[{cant, desc, precio}], descuento, iva:'no'|'incluido'|'aparte',
-           pago:'efectivo'|'tarjeta'|'transferencia'|'otro', recibido, notas}. */
+   attrs: {folio, fecha, cliente, conceptos:[{cant, desc, precio, prod}], descuento, iva:'no'|'incluido'|'aparte',
+           pago:'efectivo'|'tarjeta'|'transferencia'|'otro', recibido, notas}.
+   Con inventario (inventario.js, fase F7): la descripción sugiere tus productos; al escribir uno, el concepto se liga
+   a él (prod, la fila de Productos), toma su precio si no tenía y muestra cuántos quedan. Al guardarse la página,
+   inventario.js descuenta de las existencias lo que se vendió. */
 (function(){
 'use strict';
 var AT=window.AT,N=AT.negocio;if(!N)return;
@@ -13,7 +16,22 @@ var TASA=0.16;
 var IVA=[['no','Sin IVA'],['incluido','IVA incluido en los precios (16 %)'],['aparte','Más IVA (16 %)']];
 var PAGO=[['efectivo','Efectivo'],['tarjeta','Tarjeta'],['transferencia','Transferencia'],['otro','Otro']];
 var DEF={folio:'',fecha:'',cliente:'',conceptos:[],descuento:'',iva:'no',pago:'efectivo',recibido:'',notas:''};
-function concepto(){return {cant:'1',desc:'',precio:''}}
+function concepto(){return {cant:'1',desc:'',precio:'',prod:''}}
+/* El producto del inventario que corresponde a lo escrito (si hay inventario) */
+function ligar(f,campo,raiz,i){
+  var I=AT.inventario;if(!I)return;
+  var p=I.porTexto(f.desc);
+  f.prod=p?p.id:'';
+  if(p&&!String(f.precio).trim()&&p.precio){
+    f.precio=String(p.precio);
+    var e=raiz&&raiz.querySelector('[data-k="conceptos.'+i+'.precio"]');if(e)e.value=f.precio;
+  }
+}
+function existencias(f){
+  var p=f.prod&&AT.inventario&&AT.inventario.producto(f.prod);
+  if(!p)return '';
+  return p.existencias<=0?'Agotado en tu inventario':'Quedan '+N.cantidad(p.existencias)+' en tu inventario';
+}
 
 function cant(v){var t=String(v==null?'':v).trim();if(!t)return 1;var n=N.num(t);return n>0?n:0}
 function importe(f){return Math.round(cant(f.cant)*c(f.precio))}
@@ -49,10 +67,11 @@ function editar(x,uid){
     var b='conceptos.'+i+'.';
     return '<div class="nb-fila nb-con">'+
       '<input type="text" inputmode="decimal" class="nb-num" data-k="'+b+'cant" value="'+esc(f.cant)+'" aria-label="Cantidad" placeholder="1">'+
-      '<input type="text" data-k="'+b+'desc" value="'+esc(f.desc)+'" placeholder="Descripción" aria-label="Descripción">'+
+      '<input type="text" data-k="'+b+'desc" value="'+esc(f.desc)+'" placeholder="Descripción" aria-label="Descripción"'+(AT.inventario?' list="invProductos" autocomplete="off" aria-describedby="'+uid+'-st'+i+'"':'')+'>'+
       '<input type="text" inputmode="decimal" class="nb-num" data-k="'+b+'precio" value="'+esc(f.precio)+'" placeholder="$0" aria-label="Precio unitario" data-enter="agregar">'+
       '<output class="nb-imp" data-imp="'+i+'">'+dinero(importe(f))+'</output>'+
-      N.quitar('conceptos',i,'el concepto '+(f.desc||''))+'</div>';
+      N.quitar('conceptos',i,'el concepto '+(f.desc||''))+
+      (AT.inventario?'<small class="nb-stock" id="'+uid+'-st'+i+'" data-stock="'+i+'">'+esc(existencias(f))+'</small>':'')+'</div>';
   }).join('');
   return '<div class="nb-form nb-form3">'+campo('Folio','folio',x.folio,{ph:'V-001'})+campo('Fecha','fecha',x.fecha,{tipo:'date'})+campo('Cliente (opcional)','cliente',x.cliente,{ph:'Nombre'})+'</div>'+
     '<div class="nb-con-h" aria-hidden="true"><span>Cant.</span><span>Descripción</span><span>Precio</span><span>Importe</span></div>'+
@@ -66,7 +85,14 @@ function editar(x,uid){
     '<div class="nb-res"></div>';
 }
 function refrescar(x,dom){
-  x.conceptos.forEach(function(f,i){var o=dom.querySelector('[data-imp="'+i+'"]');if(o)o.textContent=dinero(importe(f))});
+  x.conceptos.forEach(function(f,i){
+    var o=dom.querySelector('[data-imp="'+i+'"]');if(o)o.textContent=dinero(importe(f));
+    var s=dom.querySelector('[data-stock="'+i+'"]');if(s)s.textContent=existencias(f);
+  });
+}
+function alCambiar(x,k,t,raiz){
+  var m=/^conceptos\.(\d+)\.desc$/.exec(k);
+  if(m&&x.conceptos[+m[1]])ligar(x.conceptos[+m[1]],t,raiz,+m[1]);
 }
 
 /* ---------- Al leer y al imprimir: el recibo ---------- */
@@ -102,7 +128,7 @@ function md(x){
 N.bloque('venta',{
   etiqueta:'Nota de venta',def:DEF,
   filas:{conceptos:concepto},
-  editar:editar,resultado:resultado,refrescar:refrescar,leer:leer,texto:texto,md:md,
+  editar:editar,resultado:resultado,refrescar:refrescar,alCambiar:alCambiar,leer:leer,texto:texto,md:md,
   foco:'[data-k="conceptos.0.desc"]',
   insertar:{t:'Nota de venta',d:'Recibo con folio, conceptos, IVA, total y cambio',i:'venta',
     p:'nota venta recibo ticket folio cobro cliente total iva cambio vender',
