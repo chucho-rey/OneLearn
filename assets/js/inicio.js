@@ -6,6 +6,9 @@
    - Fase F5: acciones rápidas (negocio y personal: el corte de hoy, una venta, el fiado, un gasto; abren la página
      que ya tienes, con documento.html#agregar=<bloque>, o la crean), «Prepara tu negocio» (una lista que se marca
      sola al revisar tus páginas; se puede ocultar) y, en tus páginas, las favoritas primero y después las recientes.
+   - Fase F7e: en un espacio de negocio, «Mi negocio» arriba: una página de bloques (d-minegocio) que se crea sola
+     con indicadores, próximos vencimientos y el resumen del inventario, y que se edita como cualquier página
+     («Editar esta sección»); no sale entre tus páginas recientes.
    Las secciones de un módulo apagado llevan .m-estudio y base.css las oculta.
    Usa AT.avance (avance.js) y AT.datos (datos.js). */
 (function(){
@@ -78,7 +81,41 @@ function pintarNotas(){
 
 /* Tus documentos: los 6 más recientes */
 var docsCache=[];
-function cargarDocs(){return AT.datos.documentos.todos().then(function(l){docsCache=l})}
+var docsListos=false;
+function cargarDocs(){return AT.datos.documentos.todos().then(function(l){docsCache=l;docsListos=true})}
+
+/* ---------- Mi negocio (fase F7e): una página de bloques arriba del Inicio ---------- */
+var MI='d-minegocio',miPintado='',creandoMi=false;
+function esNegocio(){return !!(PER&&PER.tipo()==='negocio'&&PER.tiene('negocio')&&AT.bloques&&AT.bloques.dibujar)}
+function miNegocioNuevo(){
+  var n=function(){return AT.bloques.nuevoId()},ahora=new Date().toISOString();
+  function P(t){return {type:'paragraph',attrs:{id:n()},content:[{type:'text',text:t}]}}
+  function H(t){return {type:'heading',attrs:{id:n(),level:2},content:[{type:'text',text:t}]}}
+  return {formato:1,tipo:'notas',id:MI,titulo:'Mi negocio',props:[],creado:ahora,editado:ahora,contenido:{type:'doc',content:[
+    P('Tu negocio de un vistazo: esta página es tu Inicio. Agrégale con «/» lo que quieras ver al abrir OneBook (un reporte, tus pendientes) o quita lo que no uses.'),
+    {type:'indicadores',attrs:{id:n(),cfg:null}},
+    H('Próximos vencimientos'),{type:'vencimientos',attrs:{id:n(),cfg:{dias:30}}},
+    H('Inventario'),{type:'inventario',attrs:{id:n(),titulo:''}}
+  ]}};
+}
+function pintarMiNegocio(){
+  var sec=$('#iniNegocio');if(!sec)return;
+  var ver=esNegocio();sec.hidden=!ver;if(!ver)return;
+  var d=docsCache.filter(function(x){return x.id===MI})[0];
+  if(!d){
+    /* Solo si de verdad no existe (todavía no se leen tus páginas, o se creó en otra pestaña): nunca la pisa */
+    if(creandoMi||!docsListos)return;creandoMi=true;
+    AT.datos.documentos.leer(MI).then(function(ya){return ya||AT.datos.documentos.guardar(miNegocioNuevo(),{conservarFecha:true})})
+      .then(function(){creandoMi=false;recargar()},function(){creandoMi=false});
+    return;
+  }
+  /* Se vuelve a dibujar solo si la página cambió (sus bloques se actualizan solos) */
+  var clave=d.editado+'|'+JSON.stringify(d.contenido).length;
+  if(clave===miPintado)return;
+  miPintado=clave;
+  var c=$('#iniNegocioC');c.innerHTML='';
+  AT.bloques.dibujar(d,c,{encabezado:false});
+}
 function cuando(iso){
   if(!iso)return '';
   var d=new Date(iso),min=(Date.now()-d.getTime())/6e4;
@@ -120,7 +157,7 @@ function tarjeta(d){
 function pintarDocs(){
   var ul=$('#iniDocs');
   if(!ul)return;
-  var orden=docsCache.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
+  var orden=docsCache.filter(function(d){return d.id!==MI||!esNegocio()}).sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
   var favs=orden.filter(function(d){return d.favorito}),docs=orden.filter(function(d){return !d.favorito}).slice(0,6);
   $('#iniFavs').hidden=$('#iniFavsT').hidden=$('#iniRecT').hidden=!favs.length;
   $('#iniFavs').innerHTML=favs.map(tarjeta).join('');
@@ -316,7 +353,7 @@ function pintarSaludo(){
   }
   if(!EST)$('#t-docs').textContent='Tus páginas';
 }
-function pintar(){pintarContinuar();pintarRutas();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar();pintarPrepara()}
+function pintar(){pintarMiNegocio();pintarContinuar();pintarRutas();pintarProyectos();pintarRespaldo();pintarDocs();pintarNotas();pintarExplorar();pintarInstalar();pintarPrepara()}
 function recargar(){Promise.all([cargarNotas(),cargarDocs()]).then(pintar)}
 pintarSaludo();
 pintarAcciones();

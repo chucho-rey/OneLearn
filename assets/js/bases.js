@@ -3,7 +3,9 @@
      base  {id, nombre, doc (la página que la creó), columnas:[col], vistas:[vista]}
      fila  {id, base, v:{idColumna: valor}, orden}
      col   {id, nombre, tipo, opciones (selección), base y rel/campo (relación, dato de la relación, suma), expr (fórmula),
-            moneda (mostrar en pesos un cálculo), pie (suma|promedio|conteo), negritas, resaltado}
+            moneda (mostrar en pesos un cálculo), pie (suma|promedio|conteo), negritas, resaltado,
+            colores:[{op, val, tono}] (formato condicional: la primera regla que se cumple pinta la celda; tono
+            bien|aviso|mal|info)}
      vista {id, nombre, tipo (tabla|tablero|galeria|calendario), q (búsqueda), f:{col, op, val} (filtro),
             s y s2:{col, dir} (orden en dos niveles), agrupar (columna), fecha (columna del calendario),
             ocultas:[idColumna], mes (AAAA-MM del calendario)}
@@ -361,6 +363,13 @@ function cumpleFiltro(b,f,filtro){
   if(op==='distinto')return !igual;
   return sinAcentos(t).indexOf(sinAcentos(q))>=0;
 }
+/* El color de una celda (formato condicional): el tono de la primera regla que se cumple, o '' */
+var TONOS=[['','Sin color'],['bien','Verde'],['aviso','Amarillo'],['mal','Rojo'],['info','Azul']];
+function tonoCelda(b,f,col){
+  var l=col&&Array.isArray(col.colores)?col.colores:null;if(!l)return '';
+  for(var i=0;i<l.length;i++){var r=l[i];if(r&&r.tono&&cumpleFiltro(b,f,{col:col.id,op:r.op||'igual',val:r.val}))return r.tono}
+  return '';
+}
 /* Las filas que se ven en una vista (búsqueda extra opcional), ya filtradas y ordenadas */
 function filasVista(b,vista,extra){
   var q=sinAcentos(((vista.q||'')+' '+(extra||'')).trim()),palabras=q?q.split(/\s+/):[];
@@ -517,10 +526,18 @@ function textoPlano(id){
   return b.nombre+'\n'+filasDe(id).map(function(f){return b.columnas.map(function(c){return texto(b,f,c)}).filter(Boolean).join(' · ')}).join('\n');
 }
 /* Lee de una vez las bases de un documento (para imprimir sin esperar) */
+/* Otros bloques que leen bases (reportes, inventario) agregan aquí lo que necesitan: fn(doc) → promesa */
+var precargas=[];
 function precargar(doc){
   var ids=[];
-  (function rec(l){(l||[]).forEach(function(n){if(n&&n.type==='basedatos'&&n.attrs&&n.attrs.base)ids.push(n.attrs.base);rec(n.content)})})(doc&&doc.contenido&&doc.contenido.content);
-  return Promise.all(ids.map(function(id){return cargar(id).catch(function(){return null})}));
+  (function rec(l){(l||[]).forEach(function(n){
+    if(n&&n.attrs){
+      if(n.type==='basedatos'&&n.attrs.base)ids.push(n.attrs.base);
+      if(n.attrs.cfg&&typeof n.attrs.cfg==='object'&&n.attrs.cfg.base)ids.push(n.attrs.cfg.base);
+    }
+    rec(n&&n.content);
+  })})(doc&&doc.contenido&&doc.contenido.content);
+  return Promise.all(ids.map(function(id){return cargar(id).catch(function(){return null})}).concat(precargas.map(function(fn){try{return Promise.resolve(fn(doc)).catch(function(){return null})}catch(e){return null}})));
 }
 
 /* Otras pestañas: si cambió una base que está en memoria, se vuelve a leer */
@@ -536,7 +553,7 @@ AT.bases={TIPOS:TIPOS,CALCULADO:CALCULADO,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clon
   guardarBase:guardarBase,guardarFila:guardarFila,guardarFilas:guardarFilas,nuevaFila:nuevaFila,borrarFila:borrarFila,
   crear:crear,semillaDe:semillaDe,vistaNueva:vistaNueva,normal:normal,
   compilar:compilar,referencias:referencias,valor:valor,texto:texto,titulo:titulo,tipoVisto:tipoVisto,esNumerica:esNumerica,
-  dinero:dinero,numero:numero,fechaTexto:fechaTexto,filasVista:filasVista,agrupar:agrupar,total:total,totalTexto:totalTexto,cumpleFiltro:cumpleFiltro,
+  TONOS:TONOS,tonoCelda:tonoCelda,dinero:dinero,numero:numero,fechaTexto:fechaTexto,filasVista:filasVista,agrupar:agrupar,total:total,totalTexto:totalTexto,cumpleFiltro:cumpleFiltro,
   capturar:capturar,aNumero:aNumero,aFecha:aFecha,leerCSV:leerCSV,detectarTipo:detectarTipo,escribirCSV:escribirCSV,deCSV:deCSV,
-  tablaMd:tablaMd,textoPlano:textoPlano,precargar:precargar,on:on};
+  tablaMd:tablaMd,textoPlano:textoPlano,precargar:precargar,precargas:precargas,on:on};
 })();

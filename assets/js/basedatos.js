@@ -137,6 +137,8 @@ function montar(raiz,op){
   }
   function errorTexto(t){return t==='#REF'?'Una columna o una base que usa ya no existe':t==='#CICLO'?'Se usa a sí misma':t==='#ERROR'?'La fórmula está mal escrita o divide entre cero':''}
   function claseCol(c){return (c.negritas?' bd-neg':'')+(c.resaltado?' bd-res-c':'')+(B.esNumerica(b,c)?' bd-num-c':'')}
+  /* Formato condicional: la celda lleva el tono de su regla (y se vuelve a revisar al cambiar los valores) */
+  function tonoTd(c,f){if(!c.colores||!c.colores.length)return '';var t=B.tonoCelda(b,f,c);return (t?' bd-t-'+t:'')+'" data-tc="'+esc(c.id)+'" data-tf="'+esc(f.id)}
   /* ---------- Tabla ---------- */
   function tabla(v,fs){
     var cols=visibles(v),gc=v.agrupar&&B.col(b,v.agrupar);
@@ -146,7 +148,7 @@ function montar(raiz,op){
     }).join('')+(ed?'<th class="bd-nc"><button type="button" class="bd-th" data-acc="nuevaCol" aria-label="Nueva columna" title="Nueva columna">+</button></th>':'')+'</tr></thead>';
     function filaHtml(f){
       return '<tr data-fila="'+esc(f.id)+'"><td class="bd-abrir"><button type="button" class="bd-ab" data-ficha="'+esc(f.id)+'" aria-label="Abrir la ficha de «'+esc(B.titulo(b,f)||'Sin nombre')+'»" title="Abrir ficha">'+ico('expand')+'</button></td>'+
-        cols.map(function(c){return '<td class="'+claseCol(c)+'">'+celda(c,f)+'</td>'}).join('')+(ed?'<td></td>':'')+'</tr>';
+        cols.map(function(c){return '<td class="'+claseCol(c)+tonoTd(c,f)+'">'+celda(c,f)+'</td>'}).join('')+(ed?'<td></td>':'')+'</tr>';
     }
     function pie(filas,clase,etiqueta){
       if(!cols.some(function(c){return c.pie}))return '';
@@ -272,6 +274,10 @@ function montar(raiz,op){
     $$('output[data-calc]',raiz).forEach(function(o){
       var f=fila(o.getAttribute('data-f')),c=B.col(b,o.getAttribute('data-calc'));if(!f||!c)return;
       var t=B.texto(b,f,c),n=B.valor(b,f,c);o.textContent=t;o.classList.toggle('neg',typeof n==='number'&&n<0);o.classList.toggle('err',typeof n==='string'&&n.charAt(0)==='#');
+    });
+    $$('td[data-tc]',raiz).forEach(function(td){
+      var f=fila(td.getAttribute('data-tf')),c=B.col(b,td.getAttribute('data-tc'));if(!f||!c)return;
+      var t=B.tonoCelda(b,f,c);['bien','aviso','mal','info'].forEach(function(k){td.classList.toggle('bd-t-'+k,t===k)});
     });
     var fs=B.filasVista(b,v,busca);
     $$('tfoot [data-total]',raiz).forEach(function(x){var c=B.col(b,x.getAttribute('data-total')),t=c&&B.total(b,fs,c);if(t){x.textContent=B.totalTexto(t);x.classList.toggle('neg',t.v<0)}});
@@ -478,6 +484,11 @@ function montar(raiz,op){
         '<div class="bd-col-ops"><label class="pl-op"><input type="checkbox" name="negritas"'+(c.negritas?' checked':'')+'><span>Negritas</span></label>'+
         '<label class="pl-op"><input type="checkbox" name="resaltado"'+(c.resaltado?' checked':'')+'><span>Resaltado</span></label>'+
         (primera?'':'<label class="pl-op"><input type="checkbox" name="oculta"'+(v.ocultas.indexOf(c.id)>=0?' checked':'')+'><span>Ocultar en esta vista</span></label>')+'</div>'+
+        '<fieldset class="bd-colores"><legend>Color según el valor</legend>'+[0,1,2].map(function(i){var r=(c.colores||[])[i]||{};
+          return '<div class="bd-regla"><select name="cop'+i+'" aria-label="Regla '+(i+1)+': condición">'+opciones([['igual','es'],['distinto','no es'],['contiene','contiene'],['mayor','es mayor que'],['menor','es menor que'],['vacio','está vacío']],r.op||'igual')+'</select>'+
+            '<input type="text" name="cval'+i+'" value="'+esc(r.val==null?'':r.val)+'" aria-label="Regla '+(i+1)+': valor" autocomplete="off">'+
+            '<select name="cton'+i+'" aria-label="Regla '+(i+1)+': color">'+opciones(B.TONOS,r.tono||'')+'</select></div>'}).join('')+
+          '<p class="hint">La primera regla que se cumple pinta la celda. Ejemplo: es «Agotado» → Rojo.</p></fieldset>'+
         (nueva||primera?'':'<div class="td-bt bd-mover-c"><button class="btn" type="button" data-mover="-1">← Mover a la izquierda</button><button class="btn" type="button" data-mover="1">Mover a la derecha →</button></div>')+
         '<p class="td-msg" data-msg role="status"></p>'+
         '<div class="td-bt"><button class="btn pri" type="submit">'+(nueva?'Agregar columna':'Guardar')+'</button>'+(nueva||primera?'':'<button class="btn danger" type="button" data-eliminar>Eliminar columna</button>')+'</div></form>');
@@ -539,6 +550,8 @@ function montar(raiz,op){
         if(sel('pie').value)x.pie=sel('pie').value;
         if(sel('negritas').checked)x.negritas=true;
         if(sel('resaltado').checked)x.resaltado=true;
+        var colores=[0,1,2].map(function(i){return {op:sel('cop'+i).value,val:sel('cval'+i).value.trim(),tono:sel('cton'+i).value}}).filter(function(r){return r.tono&&(r.val!==''||r.op==='vacio')});
+        if(colores.length)x.colores=colores;
         var oculta=!primera&&sel('oculta').checked,viejo=nueva?null:B.col(b,c.id);
         /* Cambiar de tipo convierte lo escrito; renombrar actualiza las fórmulas que la usan */
         var convertir=viejo&&viejo.tipo!==tipo&&!B.CALCULADO[tipo]&&!B.CALCULADO[viejo.tipo]&&tipo!=='relacion'&&viejo.tipo!=='relacion';
@@ -648,7 +661,7 @@ function tablaPapel(a){
   var pie=cols.some(function(c){return c.pie});
   s.innerHTML='<h3 class="bd-nombre-t">'+esc(b.nombre)+(v.nombre&&b.vistas.length>1&&v.nombre!==b.nombre?' <small>'+esc(v.nombre)+'</small>':'')+'</h3>'+
     '<table class="nb-tab bd-tabla-p'+(cols.length>10?' bd-p-muchas':cols.length>6?' bd-p-varias':'')+'"><thead><tr>'+cols.map(function(c){return '<th scope="col"'+(B.esNumerica(b,c)?' class="num"':'')+'>'+esc(c.nombre)+'</th>'}).join('')+'</tr></thead><tbody>'+
-    fs.map(function(f){return '<tr>'+cols.map(function(c){var n=B.valor(b,f,c);return '<td class="'+(B.esNumerica(b,c)?'num':'')+(typeof n==='number'&&n<0?' neg':'')+(c.negritas?' bd-neg':'')+'">'+esc(B.texto(b,f,c))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody>'+
+    fs.map(function(f){return '<tr>'+cols.map(function(c){var n=B.valor(b,f,c),t=B.tonoCelda(b,f,c);return '<td class="'+(B.esNumerica(b,c)?'num':'')+(typeof n==='number'&&n<0?' neg':'')+(c.negritas?' bd-neg':'')+(t?' bd-t-'+t:'')+'">'+esc(B.texto(b,f,c))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody>'+
     (pie&&fs.length?'<tfoot><tr class="nb-tot">'+cols.map(function(c){var t=B.total(b,fs,c);return '<td'+(B.esNumerica(b,c)?' class="num"':'')+'>'+(t?esc(B.totalTexto(t)):'')+'</td>'}).join('')+'</tr></tfoot>':'')+'</table>'+
     '<p class="bd-n">'+fs.length+(fs.length===1?' fila':' filas')+'</p>';
   return s;

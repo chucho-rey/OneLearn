@@ -39,7 +39,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await Promise.all([p.waitForURL(/inicio\.html$/),p.click('#enSig')]);await listo(p,500);
   const pf=await perfil(p);
   r.cumple(pf.perfil==='negocio'&&pf.modulos.join()==='negocio'&&pf.negocio.nombre==='Abarrotes Lupita'&&pf.negocio.giro==='tienda'&&pf.negocio.telefono==='55 1234 5678'&&!pf.migrado,'«Crear mi espacio» guarda el perfil de negocio',pf);
-  const docs=await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.map(function(d){return d.tipo}).sort().join(',')})});
+  const docs=await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.filter(function(d){return d.id!=='d-minegocio'}).map(function(d){return d.tipo}).sort().join(',')})});
   r.igual(docs,'corte,gastos,prestamo,surtir','y crea las páginas marcadas');
   const ini=await p.evaluate(function(){
     function ve(s){var e=document.querySelector(s);return !!e&&!!e.getClientRects().length}
@@ -57,8 +57,8 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo del negocio */
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
-  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Proveedores | Clientes | Lista de precios | Plan de negocio | '+
-    'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes | Freelance o profesional independiente | Finanzas del mes | Me deben | Préstamo o crédito',
+  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Proveedores | Clientes | Lista de precios | Plan de negocio | '+
+    'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes | Freelance o profesional independiente | Presupuesto del mes | Finanzas del mes | Me deben | Préstamo o crédito',
     '«Crear» ofrece notas, las plantillas de negocio, los paquetes por giro (el suyo marcado) y las de finanzas, sin libreta ni tesis');
   const pronto=await p.textContent('dialog.crear-dlg .crear-p');
   r.cumple(/Cotización/.test(pronto)&&!/Corte de caja|Fiado/.test(pronto)&&!/Libro|Bitácora/.test(pronto),'«Llegan después» anuncia lo de negocio que falta y no lo académico',pronto);
@@ -114,7 +114,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
   r.cumple(await p.evaluate(function(){var g=[].map.call(document.querySelectorAll('dialog.crear-dlg .crear-g'),function(x){return x.getAttribute('data-modulo')});return g.join()==='negocio,paquetes,finanzas,estudio'}),
     '«Crear» muestra primero lo del negocio y después lo de estudio');
-  r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.length})}),5,'cambiar el espacio no crea ni borra páginas');
+  r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.filter(function(d){return d.id!=='d-minegocio'}).length})}),5,'cambiar el espacio no crea ni borra páginas (sin contar «Mi negocio», el Inicio de un negocio)');
   await cerrar(p);
 
   /* ---------- Personal, en escritorio ---------- */

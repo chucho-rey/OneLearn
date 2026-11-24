@@ -14,13 +14,14 @@
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico;
 
-var DEF={estilo:'apa',papel:'carta',letra:'times',interlineado:'2',margen:'normal'};
+var DEF={estilo:'apa',papel:'carta',letra:'times',interlineado:'2',margen:'normal',orientacion:'vertical'};
 var OPCIONES={
   estilo:[['apa','APA 7'],['ieee','IEEE']],
   papel:[['carta','Carta'],['a4','A4']],
   letra:[['times','Times New Roman'],['arial','Arial']],
   interlineado:[['2','Doble (APA)'],['1.5','1.5']],
-  margen:[['normal','2.54 cm'],['encuadernar','4 cm (para encuadernar)']]
+  margen:[['normal','2.54 cm'],['encuadernar','4 cm (para encuadernar)']],
+  orientacion:[['vertical','Vertical'],['horizontal','Horizontal']]
 };
 function academico(doc){var t=AT.tiposDoc&&doc&&AT.tiposDoc[doc.tipo];return !!(t&&t.academico)}
 function formato(doc){
@@ -134,7 +135,8 @@ function dialogo(doc,op){
         '<div class="en-rev" role="region" aria-labelledby="enRevT"><h3 id="enRevT">Antes de entregar</h3>'+
           (av.length?'<ul class="en-av">'+av.map(function(x){return '<li>'+ico('aviso')+'<span>'+esc(x)+'</span></li>'}).join('')+'</ul>':
             '<p class="td-p td-ok">'+ico('escudo')+'<span>Todo en orden: declaración, orígenes, citas y portada.</span></p>')+'</div>'
-        :'<p class="td-p">Una vista lista para imprimir, con números de página. En la ventana de impresión elige «Guardar como PDF».</p>')+
+        :'<p class="td-p">Una vista lista para imprimir, con números de página. En la ventana de impresión elige «Guardar como PDF».</p>'+
+          '<fieldset class="en-f"><legend>Papel</legend>'+campo('papel','Tamaño')+campo('orientacion','Orientación (horizontal para tablas anchas y reportes)')+'</fieldset>')+
       '<div class="td-bt en-bt"><button class="btn pri" type="button" data-en="pdf">'+ico('page')+'PDF: vista para imprimir</button>'+
       (aca?'<button class="btn" type="button" data-en="docx">'+ico('descargar')+'Descargar Word (DOCX)</button>':'')+'</div>'+
       (aca?'<p class="td-p en-nota">Cada vez que exportas, tu registro de autoría anota la fecha y la huella del texto: la constancia dirá qué versión entregaste.</p>':'')+
