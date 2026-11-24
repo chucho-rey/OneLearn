@@ -244,7 +244,7 @@ prueba('Bases de datos y vistas',async function({browser,base:raiz,r}){
   /* Inventario: la plantilla con sus vistas y fórmulas */
   await nuevoDoc(q,raiz,'inventario');await esperarBd(q);
   const inv=await q.evaluate(function(){var b=AT.bases.base(document.querySelector('.bd').getAttribute('data-bd'));return {vistas:b.vistas.map(function(v){return v.nombre}).join(','),cols:b.columnas.map(function(c){return c.nombre}).join(',')}});
-  r.cumple(inv.vistas==='Todos,Por categoría,Por surtir'&&/Por surtir,Valor,Ganancia por pieza/.test(inv.cols),'la plantilla «Inventario» trae sus columnas y sus vistas',inv);
+  r.cumple(inv.vistas==='Productos,Por surtir,Por categoría,Lista de precios'&&/Existencias,Mínimo,Por surtir,Estado,Valor,Ganancia por pieza/.test(inv.cols),'la plantilla «Inventario» trae sus columnas y sus vistas',inv);
   await revisar(q,r,'inventario en celular (oscuro)');
   await cerrar(q);
 

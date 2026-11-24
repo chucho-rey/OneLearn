@@ -98,7 +98,7 @@ function hoja(p){
     '.papel .nv-h{display:flex;justify-content:space-between;gap:12pt;margin:0 0 9pt;padding-bottom:6pt;border-bottom:1pt solid #000}.papel .nv-neg,.papel .nv-folio{display:flex;flex-direction:column}.papel .nv-neg b{font-size:13pt}',
     '.papel .nv-folio{align-items:flex-end;text-align:right;margin-left:auto}.papel .nv-folio b{font-size:13pt}.papel .nb-totales{width:auto;min-width:6cm;margin-left:auto}.papel .nv-legal{font-size:8pt;margin-top:9pt}',
     '.papel .nb-desglose{width:auto;min-width:8cm}',
-    '.papel .bd-papel{margin:9pt 0 12pt}.papel .bd-papel h3{font-size:12pt;margin:0 0 4pt}.papel .bd-papel h3 small{font-weight:400;font-size:10pt}.papel .bd-papel .bd-n{font-size:9pt;margin:2pt 0 0}.papel .bd-papel .neg{color:#a00}.papel .bd-papel .bd-neg{font-weight:700}',
+    '.papel .bd-papel{margin:9pt 0 12pt}.papel .bd-papel h3{font-size:12pt;margin:0 0 4pt}.papel .bd-papel h3 small{font-weight:400;font-size:10pt}.papel .bd-papel .bd-n{font-size:9pt;margin:2pt 0 0}.papel .bd-papel .neg{color:#a00}.papel .bd-papel .bd-p-varias{font-size:8.5pt}.papel .bd-papel .bd-p-muchas{font-size:7pt}.papel .bd-papel .bd-p-varias th,.papel .bd-papel .bd-p-muchas th,.papel .bd-papel .bd-p-varias td,.papel .bd-papel .bd-p-muchas td{padding:2pt 3pt;hyphens:auto;overflow-wrap:break-word}.papel .bd-papel .bd-neg{font-weight:700}',
     '.papel dl.props{display:grid;grid-template-columns:auto 1fr;gap:2pt 12pt;margin:0 0 12pt;font-size:10pt}',
     '.papel dl.props div{display:contents}.papel dl.props dt{font-weight:700}.papel dl.props dd{margin:0}',
     '.papel .tag{border:0;padding:0;background:none;font:inherit}',

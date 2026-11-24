@@ -325,7 +325,9 @@ function eliminar(){
     if(ed)doc.contenido=ed.json();
     clearTimeout(timer);timer=null;pendiente=false;
     try{sessionStorage.setItem('onelearn:eliminado',JSON.stringify({id:doc.id,titulo:doc.titulo}))}catch(x){}
-    AT.datos.papelera.mover(doc).then(function(){location.href='inicio.html'},function(){AT.aviso('No se pudo mover a la papelera. Inténtalo otra vez.')});
+    /* Sus ventas dejan de descontar del inventario antes de salir de la página */
+    (AT.inventario?AT.inventario.quitarDoc(doc.id).catch(function(){}):Promise.resolve()).then(function(){return AT.datos.papelera.mover(doc)})
+      .then(function(){location.href='inicio.html'},function(){AT.aviso('No se pudo mover a la papelera. Inténtalo otra vez.')});
   });
   d.showModal();
   $('[data-el="no"]',d).focus();

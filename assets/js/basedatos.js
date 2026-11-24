@@ -49,8 +49,14 @@ function montar(raiz,op){
   if(op.base)arranque=B.cargar(op.base);
   else if(op.semilla&&ed){
     var clave=op.clave||JSON.stringify(op.semilla).length+'|'+(op.semilla.nombre||'');
-    if(!CREANDO[clave])CREANDO[clave]=B.crear(op.semilla,AT.docActual&&AT.docActual.id);
-    arranque=CREANDO[clave].then(function(x){if(x&&op.alCambiar)op.alCambiar({base:x.id,vista:x.vistas[0].id,semilla:null});return x});
+    /* Con rol (el inventario, fase F7): la base de ese rol del espacio, la misma en todas las páginas */
+    var rol=op.semilla.rol&&AT.inventario&&AT.inventario.ROLES.indexOf(op.semilla.rol)>=0;
+    if(!CREANDO[clave])CREANDO[clave]=rol?AT.inventario.base(op.semilla.rol,AT.docActual&&AT.docActual.id):B.crear(op.semilla,AT.docActual&&AT.docActual.id);
+    arranque=CREANDO[clave].then(function(x){
+      var vi=x&&op.semilla.vista&&x.vistas.some(function(w){return w.id===op.semilla.vista})?op.semilla.vista:x&&x.vistas[0].id;
+      if(x){vistaId=vi;if(op.alCambiar)op.alCambiar({base:x.id,vista:vi,semilla:null})}
+      return x;
+    });
   }else arranque=Promise.resolve(null);
   arranque.then(function(x){
     if(!vivo)return;
@@ -466,7 +472,7 @@ function montar(raiz,op){
         '<label class="campo-l" data-si="suma"><span>Las filas que se relacionan por</span><select name="srel"></select></label>'+
         '<label class="campo-l" data-si="suma"><span>Suma el campo</span><select name="scampo"></select></label>'+
         '<label class="campo-l" data-si="formula"><span>Fórmula</span><input type="text" name="expr" value="'+esc(c.expr||'')+'" placeholder="{Cantidad} * {Precio}" autocomplete="off" spellcheck="false"></label>'+
-        '<p class="hint" data-si="formula">Usa el nombre de otras columnas entre llaves, + − × ÷ y paréntesis. <span class="bd-prev" aria-live="polite"></span></p>'+
+        '<p class="hint" data-si="formula">Usa el nombre de otras columnas entre llaves, + − × ÷ y paréntesis. También compara y decide: SI({Existencias} &lt; {Mínimo}; "Bajo"; "Bien"), MAX, MIN, REDONDEAR y DIAS({Vence}) (días que faltan). <span class="bd-prev" aria-live="polite"></span></p>'+
         '<label class="pl-op" data-si="formula suma"><input type="checkbox" name="moneda"'+(c.moneda?' checked':'')+'><span>Mostrar en pesos</span></label>'+
         '<label class="campo-l"><span>Total al pie</span><select name="pie">'+opciones(B.PIES,c.pie||'')+'</select></label>'+
         '<div class="bd-col-ops"><label class="pl-op"><input type="checkbox" name="negritas"'+(c.negritas?' checked':'')+'><span>Negritas</span></label>'+
@@ -640,8 +646,8 @@ function tablaPapel(a){
   if(!b){s.innerHTML='<p class="hint">Base de datos.</p>';return s}
   var v=b.vistas.filter(function(x){return x.id===a.vista})[0]||b.vistas[0],cols=b.columnas.filter(function(c,i){return i===0||v.ocultas.indexOf(c.id)<0}),fs=B.filasVista(b,v);
   var pie=cols.some(function(c){return c.pie});
-  s.innerHTML='<h3 class="bd-nombre-t">'+esc(b.nombre)+(v.nombre&&b.vistas.length>1?' <small>'+esc(v.nombre)+'</small>':'')+'</h3>'+
-    '<table class="nb-tab bd-tabla-p"><thead><tr>'+cols.map(function(c){return '<th scope="col"'+(B.esNumerica(b,c)?' class="num"':'')+'>'+esc(c.nombre)+'</th>'}).join('')+'</tr></thead><tbody>'+
+  s.innerHTML='<h3 class="bd-nombre-t">'+esc(b.nombre)+(v.nombre&&b.vistas.length>1&&v.nombre!==b.nombre?' <small>'+esc(v.nombre)+'</small>':'')+'</h3>'+
+    '<table class="nb-tab bd-tabla-p'+(cols.length>10?' bd-p-muchas':cols.length>6?' bd-p-varias':'')+'"><thead><tr>'+cols.map(function(c){return '<th scope="col"'+(B.esNumerica(b,c)?' class="num"':'')+'>'+esc(c.nombre)+'</th>'}).join('')+'</tr></thead><tbody>'+
     fs.map(function(f){return '<tr>'+cols.map(function(c){var n=B.valor(b,f,c);return '<td class="'+(B.esNumerica(b,c)?'num':'')+(typeof n==='number'&&n<0?' neg':'')+(c.negritas?' bd-neg':'')+'">'+esc(B.texto(b,f,c))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody>'+
     (pie&&fs.length?'<tfoot><tr class="nb-tot">'+cols.map(function(c){var t=B.total(b,fs,c);return '<td'+(B.esNumerica(b,c)?' class="num"':'')+'>'+(t?esc(B.totalTexto(t)):'')+'</td>'}).join('')+'</tr></tfoot>':'')+'</table>'+
     '<p class="bd-n">'+fs.length+(fs.length===1?' fila':' filas')+'</p>';

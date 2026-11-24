@@ -11,7 +11,10 @@
    Tipos: texto, número, moneda, fecha, selección, selección múltiple, casilla, teléfono, relación (con una fila de
    cualquier base del espacio), dato de la relación (trae un campo de la fila relacionada), fórmula ({Cantidad} *
    {Precio}, con + − × ÷ y paréntesis; analizador propio, sin eval; errores #REF, #ERROR y #CICLO) y suma de otra base
-   (suma un campo de las filas de otra base que se relacionan con esta fila), como en Bases unificadas.
+   (suma un campo de las filas de otra base que se relacionan con esta fila), como en Bases unificadas. Las fórmulas
+   también comparan y deciden: SI({Existencias} < {Mínimo}; "Bajo"; "Bien"), MAX, MIN, DIAS({Vence}) y más.
+   Una base puede tener un rol (rol: productos, movimientos o compras; lo usa inventario.js) que se conserva en su
+   semilla, para que las páginas que la muestran hablen de la misma base.
    Valores guardados: texto y teléfono como texto, número y moneda como número, fecha AAAA-MM-DD, selección texto,
    múltiple lista, casilla verdadero o falso, relación el id de la fila. Los cálculos no se guardan.
    Además: filtrar, buscar, ordenar, agrupar, totales al pie, CSV (leer con tipos detectados, $1,250.50 y día/mes/año;
@@ -117,6 +120,7 @@ function guardarFilas(lista){
 /* Crea una base a partir de su semilla {nombre, columnas, vistas, filas:[{v}]} (de una plantilla o de duplicar) */
 function crear(semilla,doc){
   var s=clonar(semilla||{}),b=normal({id:nuevoId('bd'),nombre:s.nombre||'Base de datos',doc:doc||'',columnas:s.columnas,vistas:s.vistas});
+  if(s.rol)b.rol=String(s.rol);
   var mapa={},fs=(s.filas||[]).map(function(x,i){var id=nuevoId('f');if(x.id)mapa[x.id]=id;return {id:id,base:b.id,v:clonar(x.v||{}),orden:i+1}});
   /* Las relaciones con filas de la misma base siguen apuntando a sus copias */
   b.columnas.forEach(function(c){if(c.tipo==='relacion'&&(!c.base||c.base===s.id||c.base==='propia'))c.base=b.id});
@@ -128,57 +132,121 @@ function crear(semilla,doc){
 function semillaDe(id,conFilas){
   return cargar(id).then(function(b){
     if(!b)return null;
-    return {id:b.id,nombre:b.nombre,columnas:clonar(b.columnas),vistas:clonar(b.vistas),
+    return {id:b.id,nombre:b.nombre,rol:b.rol||undefined,columnas:clonar(b.columnas),vistas:clonar(b.vistas),
       filas:conFilas?filasDe(id).map(function(f){return {id:f.id,v:clonar(f.v)}}):[]};
   });
 }
 
 /* ---------- Fórmulas (sin eval) ----------
-   {Columna}, números, + − * / y paréntesis, y menos unario. Se compila una vez a una función */
+   {Columna}, números, "texto", + − * / y paréntesis, menos unario, & (une textos), comparaciones (= <> < > <= >=) y
+   funciones: SI(condición; sí; no), Y(…), O(…), NO(x), MIN(…), MAX(…), ABS(x), REDONDEAR(x; decimales), DIAS(fecha)
+   (días de hoy a esa fecha; negativos si ya pasó) y HOY(). Los argumentos se separan con ; o con ,. Se compila una
+   vez a una función; fn.tipo dice qué da: 'numero', 'texto' o 'logico' (para alinear y totalizar). */
 var COMPILADAS={};
+function aNum(v){
+  if(typeof v==='number')return v;
+  if(typeof v==='boolean')return v?1:0;
+  if(v===''||v==null)return 0;
+  var n=Number(String(v).replace(/[$,\s]/g,''));
+  return String(v).trim()&&isFinite(n)?n:NaN;
+}
+function cierto(v){return typeof v==='number'?v!==0&&!isNaN(v):typeof v==='boolean'?v:!!String(v==null?'':v).trim()}
+function compararF(a,b){
+  var na=typeof a==='number'||typeof a==='boolean',nb=typeof b==='number'||typeof b==='boolean';
+  if((na||nb)&&isFinite(aNum(a))&&isFinite(aNum(b)))return aNum(a)-aNum(b);
+  return sinAcentos(a).localeCompare(sinAcentos(b),'es',{numeric:true});
+}
+function hoyISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function diasA(t){
+  var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(t||''));if(!m)return '';
+  var h=new Date();h=new Date(h.getFullYear(),h.getMonth(),h.getDate());
+  return Math.round((new Date(+m[1],+m[2]-1,+m[3])-h)/864e5);
+}
+/* Cada función: [mínimo de argumentos, máximo, tipo, (args evaluados con g) → valor]; SI, Y y O evalúan solo lo que hace falta */
+var FUNCIONES={
+  min:[1,99,'numero',function(a){var n=a.map(aNum);return n.length?Math.min.apply(null,n):0}],
+  max:[1,99,'numero',function(a){var n=a.map(aNum);return n.length?Math.max.apply(null,n):0}],
+  abs:[1,1,'numero',function(a){return Math.abs(aNum(a[0]))}],
+  redondear:[1,2,'numero',function(a){var d=a.length>1?Math.max(0,Math.min(6,Math.round(aNum(a[1])))):0,k=Math.pow(10,d);return Math.round(aNum(a[0])*k)/k}],
+  dias:[1,1,'numero',function(a){return diasA(a[0])}],
+  hoy:[0,0,'texto',function(){return hoyISO()}],
+  no:[1,1,'logico',function(a){return !cierto(a[0])}]
+};
 function compilar(expr){
   if(Object.prototype.hasOwnProperty.call(COMPILADAS,expr))return COMPILADAS[expr];
   var fn=null;
   try{
-    var toks=[],re=/\s*(?:(\{[^}]*\})|(\d+(?:\.\d+)?)|([-+*\/()×÷]))/y,i=0;
+    var toks=[],re=/\s*(?:(\{[^}]*\})|(\d+(?:\.\d+)?)|["“”]([^"“”]*)["“”]|([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ_0-9]*)|(<=|>=|<>|!=|[-+*\/()×÷=<>;,&]))/y,i=0;
     while(i<expr.length){
       if(!expr.slice(i).trim())break;
       re.lastIndex=i;
       var m=re.exec(expr);
       if(!m)throw 0;
-      toks.push(m[1]?{r:m[1].slice(1,-1).trim()}:m[2]?{n:+m[2]}:{o:m[3]==='×'?'*':m[3]==='÷'?'/':m[3]});
+      toks.push(m[1]?{r:m[1].slice(1,-1).trim()}:m[2]?{n:+m[2]}:m[3]!==undefined?{s:m[3]}:m[4]?{id:sinAcentos(m[4])}:
+        {o:m[5]==='×'?'*':m[5]==='÷'?'/':m[5]==='!='?'<>':m[5]===','?';':m[5]});
       i=re.lastIndex;
     }
     if(!toks.length)throw 0;
     var p=0;
     var mira=function(){return toks[p]&&toks[p].o};
+    var con=function(f,t){f.tipo=t;return f};
+    var num=function(f){return function(g){return aNum(f(g))}};
+    var args=function(){
+      if(!toks[p]||toks[p++].o!=='(')throw 0;
+      var l=[];
+      if(mira()===')'){p++;return l}
+      for(;;){l.push(expr0());var o=toks[p++];if(!o)throw 0;if(o.o===')')return l;if(o.o!==';')throw 0}
+    };
     var prim=function(){
       var t=toks[p++];
       if(!t)throw 0;
-      if(t.n!==undefined){var v=t.n;return function(){return v}}
-      if(t.r!==undefined){var n=t.r;return function(g){return g(n)}}
-      if(t.o==='('){var e=suma();if(!toks[p]||toks[p++].o!==')')throw 0;return e}
-      if(t.o==='-'){var u=prim();return function(g){return -u(g)}}
+      if(t.n!==undefined){var v=t.n;return con(function(){return v},'numero')}
+      if(t.s!==undefined){var s=t.s;return con(function(){return s},'texto')}
+      if(t.r!==undefined){var n=t.r;return con(function(g){return g(n)},'dato')}
+      if(t.o==='('){var e=expr0();if(!toks[p]||toks[p++].o!==')')throw 0;return e}
+      if(t.o==='-'){var u=prim();return con(function(g){return -aNum(u(g))},'numero')}
+      if(t.id==='verdadero')return con(function(){return true},'logico');
+      if(t.id==='falso')return con(function(){return false},'logico');
+      if(t.id==='si'){
+        var a=args();if(a.length<2||a.length>3)throw 0;
+        var c=a[0],s1=a[1],s2=a[2];
+        var tipo=s1.tipo===(s2?s2.tipo:'texto')?s1.tipo:(s1.tipo==='texto'||(s2&&s2.tipo==='texto'))?'texto':s1.tipo==='dato'?(s2?s2.tipo:'dato'):s1.tipo;
+        return con(function(g){return cierto(c(g))?s1(g):s2?s2(g):''},tipo);
+      }
+      if(t.id==='y'||t.id==='o'){
+        var l=args(),y=t.id==='y';if(!l.length)throw 0;
+        return con(function(g){for(var k=0;k<l.length;k++){var v=cierto(l[k](g));if(y&&!v)return false;if(!y&&v)return true}return y},'logico');
+      }
+      var F=t.id&&FUNCIONES[t.id];
+      if(F){
+        var la=args();if(la.length<F[0]||la.length>F[1])throw 0;
+        return con(function(g){return F[3](la.map(function(f){return f(g)}))},F[2]);
+      }
       throw 0;
     };
-    var prod=function(){
-      var a=prim();
-      while(mira()==='*'||mira()==='/'){
-        var o=toks[p++].o,b=prim(),l=a;
-        a=o==='*'?function(g){return l(g)*b(g)}:function(g){return l(g)/b(g)};
+    /* Cada operación guarda sus dos lados en su propio cierre (con var en el ciclo, {A} + {B} + {C} se llamaba a sí misma) */
+    var dos=function(o,l,b){
+      if(o==='&')return con(function(g){var x=l(g),y=b(g);return (x==null?'':String(x))+(y==null?'':String(y))},'texto');
+      var x=num(l),y=num(b);
+      return con(o==='*'?function(g){return x(g)*y(g)}:o==='/'?function(g){return x(g)/y(g)}:o==='+'?function(g){return x(g)+y(g)}:function(g){return x(g)-y(g)},'numero');
+    };
+    var nivel=function(sig,ops){return function(){
+      var a=sig();
+      while(ops.indexOf(mira())>=0){var o=toks[p++].o;a=dos(o,a,sig())}
+      return a;
+    }};
+    var prod=nivel(prim,['*','/']),suma=nivel(prod,['+','-']),une=nivel(suma,['&']);
+    var expr0=function(){
+      var a=une(),o=mira();
+      if(o==='='||o==='<>'||o==='<'||o==='>'||o==='<='||o==='>='){
+        p++;var b=une(),l=a;
+        return con(function(g){var r=compararF(l(g),b(g));return o==='='?r===0:o==='<>'?r!==0:o==='<'?r<0:o==='>'?r>0:o==='<='?r<=0:r>=0},'logico');
       }
       return a;
     };
-    var suma=function(){
-      var a=prod();
-      while(mira()==='+'||mira()==='-'){
-        var o=toks[p++].o,b=prod(),l=a;
-        a=o==='+'?function(g){return l(g)+b(g)}:function(g){return l(g)-b(g)};
-      }
-      return a;
-    };
-    fn=suma();
+    fn=expr0();
     if(p<toks.length)fn=null;
+    else if(fn.tipo==='dato')fn.tipo='numero';
   }catch(e){fn=null}
   COMPILADAS[expr]=fn;
   return fn;
@@ -224,10 +292,11 @@ function valor(b,f,col,d){
       if(c===col){malo='#CICLO';return NaN}
       var v=valor(b,f,c,d+1);
       if(typeof v==='string'&&v.charAt(0)==='#'){malo=v;return NaN}
-      if(typeof v==='boolean')return v?1:0;
-      return v===''||v==null?0:Number(v);
+      return Array.isArray(v)?v.join(', '):v==null?'':v;
     });
-    return malo||(isFinite(r)?Math.round(r*1e6)/1e6:'#ERROR');
+    if(malo)return malo;
+    if(typeof r==='number')return isFinite(r)?Math.round(r*1e6)/1e6:'#ERROR';
+    return typeof r==='boolean'?r:r==null?'':String(r);
   }
   if(col.tipo==='suma'){var m=sumas(col);return m?Math.round((m[f.id]||0)*100)/100:'#REF'}
   var v=f.v[col.id];
@@ -239,6 +308,7 @@ function valor(b,f,col,d){
 /* Cómo se ve un cálculo: el tipo de la columna de origen (dato de la relación) o pesos si se pidió */
 function tipoVisto(b,col){
   if(col.tipo==='referencia'){var rc=colPorId(b,col.rel),tb=rc&&base(rc.base),tc=tb&&colPorId(tb,col.campo);return tc?tipoVisto(tb,tc):'texto'}
+  if(col.tipo==='formula'){var fn=compilar(col.expr||'');if(fn&&fn.tipo!=='numero')return 'texto'}
   if(col.tipo==='formula'||col.tipo==='suma')return col.moneda?'moneda':'numero';
   return col.tipo;
 }
