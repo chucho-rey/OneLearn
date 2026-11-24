@@ -59,7 +59,7 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
 
   /* Las plantillas nuevas traen sus bloques */
   const pl=await p.evaluate(function(){var o={};['plan','finanzas','medeben','clientes','lista'].forEach(function(t){var d=AT.crear.armar(t);o[t]=d.titulo+': '+d.contenido.content.map(function(b){return b.type}).filter(function(x){return x!=='paragraph'&&x!=='heading'}).join(',')});return o});
-  r.cumple(pl.plan==='Plan de negocio: precio,taskList'&&pl.finanzas==='Finanzas del mes: gastos,pagos,taskList'&&pl.medeben==='Me deben: fiado'&&pl.clientes==='Clientes: table'&&pl.lista==='Lista de precios: callout,table',
+  r.cumple(pl.plan==='Plan de negocio: precio,taskList'&&pl.finanzas==='Finanzas del mes: gastos,pagos,taskList'&&pl.medeben==='Me deben: fiado'&&pl.clientes==='Clientes: basedatos'&&pl.lista==='Lista de precios: callout,table',
     'plan de negocio, finanzas del mes, me deben, clientes y lista de precios traen sus bloques',pl);
 
   /* ---------- Acciones rápidas ---------- */

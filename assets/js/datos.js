@@ -12,13 +12,18 @@
    - Plantillas propias (fase F5, «Guardar como plantilla»): almacén «plantillas» ({id, nombre, desc, tipo,
      titulo, props, contenido, creado, editado}).
    - Papelera (fase F5): al eliminar una página pasa al almacén «papelera» con la fecha (eliminado); se
-     restaura, se borra para siempre o se vacía, y lo que lleva más de 30 días se borra solo.
+     restaura, se borra para siempre o se vacía, y lo que lleva más de 30 días se borra solo. Al borrarla para
+     siempre se borran también las bases de datos que eran suyas.
+   - Bases de datos (fase F6): almacén «bases» ({id, nombre, doc, columnas, vistas}) y «filas» ({id, base, v,
+     orden}), aparte de las páginas, para que las relaciones y los reportes las lean sin abrirlas. Las filas
+     tienen un índice por base (AT.datos.filas.deBase). Entran en el respaldo.
    Expone AT.datos. Se carga después de base.js. */
 (function(){
 'use strict';
 var AT=window.AT;
-/* Versión 2 (fase F5): agrega los almacenes de plantillas y de la papelera; lo demás no cambia */
-var NOMBRE='onelearn',VERSION_DB=2,ALMACENES=['documentos','notas','marcadores','plantillas','papelera'];
+/* Versión 2 (fase F5): almacenes de plantillas y de la papelera. Versión 3 (fase F6): bases y filas (con índice
+   por base). Lo demás no cambia */
+var NOMBRE='onelearn',VERSION_DB=3,ALMACENES=['documentos','notas','marcadores','plantillas','papelera','bases','filas'];
 var DIAS_PAPELERA=30;
 var PREF='aprende-tecnologia:',CLAVE_NOTA=PREF+'apuntes:',CLAVE_RESPALDO=PREF+'ultimo-respaldo';
 
@@ -45,6 +50,8 @@ function abrirIDB(){
     r.onupgradeneeded=function(){
       var db=r.result;
       ALMACENES.forEach(function(a){if(!db.objectStoreNames.contains(a))db.createObjectStore(a,{keyPath:'id'})});
+      var f=r.transaction.objectStore('filas');
+      if(!f.indexNames.contains('base'))f.createIndex('base','base',{unique:false});
     };
     r.onsuccess=function(){
       var db=r.result;
@@ -72,6 +79,8 @@ function motorIDB(db){
     tipo:'indexeddb',
     leer:function(a,id){return tx(a,'readonly',function(s){return s.get(id)})},
     todos:function(a){return tx(a,'readonly',function(s){return s.getAll()})},
+    /* Los registros con ese valor en un índice (las filas de una base) */
+    porIndice:function(a,ind,v){return tx(a,'readonly',function(s){return s.index(ind).getAll(v)})},
     poner:function(a,lista){return tx(a,'readwrite',function(s){lista.forEach(function(o){s.put(o)})})},
     borrar:function(a,id){return tx(a,'readwrite',function(s){return s.delete(id)})}
   };
@@ -86,6 +95,7 @@ function motorLocal(){
     tipo:'localstorage',
     leer:function(a,id){return Promise.resolve(mapa(a)[id])},
     todos:function(a){var m=mapa(a);return Promise.resolve(Object.keys(m).map(function(k){return m[k]}))},
+    porIndice:function(a,ind,v){var m=mapa(a);return Promise.resolve(Object.keys(m).map(function(k){return m[k]}).filter(function(o){return o[ind]===v}))},
     poner:function(a,lista){var m=mapa(a);lista.forEach(function(o){m[o.id]=o});return escribir(a,m)},
     borrar:function(a,id){var m=mapa(a);delete m[id];return escribir(a,m)}
   };
@@ -211,10 +221,10 @@ function coleccion(nombre){
 function leerJSON(k){try{return JSON.parse(lsGet(k)||'null')}catch(e){return null}}
 function exportar(){
   return Promise.all([notas.todas(),conMotor(function(m){return m.todos('documentos')}),conMotor(function(m){return m.todos('marcadores')}),
-    conMotor(function(m){return m.todos('plantillas')})]).then(function(r){
+    conMotor(function(m){return m.todos('plantillas')}),conMotor(function(m){return m.todos('bases')}),conMotor(function(m){return m.todos('filas')})]).then(function(r){
     return {
       app:'OneBook',formato:1,exportado:ahora(),
-      documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],plantillas:r[3],
+      documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],plantillas:r[3],bases:r[4],filas:r[5],
       avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
       perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios')
     };
@@ -239,12 +249,88 @@ function esObjeto(x){return !!x&&typeof x==='object'&&!Array.isArray(x)}
 function idValido(id){return typeof id==='string'&&/^[\w-]{1,80}$/.test(id)}
 /* Combina un respaldo con lo que hay: entra lo que no existe y lo que es más nuevo.
    Devuelve {documentos, notas, marcadores, avance} con cuántas cosas entraron. */
+/* ---------- Bases unificadas (el proyecto anterior) ----------
+   Su respaldo ({app:'bases-unificadas', state:{books:[{id, name, tables:[{id, name, cols, rows, vistas}]}]}}) se abre
+   sin recapturar: cada libro es una página con una base de datos por tabla; las columnas conservan su id (las
+   fórmulas, los datos de la relación y las sumas las siguen encontrando) y las filas reciben ids nuevos (las
+   relaciones se traducen). Sus vistas guardadas pasan como vistas de tabla. */
+var TIPO_BU={text:'texto',number:'numero',date:'fecha',select:'seleccion',multi:'multiple',check:'casilla',relation:'relacion',lookup:'referencia',formula:'formula',sum:'suma'};
+var OP_BU={has:'contiene',eq:'igual',gt:'mayor',lt:'menor'},PIE_BU={sum:'suma',avg:'promedio',count:'conteo'};
+function idNuevo(pref){return pref+'-'+Math.random().toString(36).slice(2,10)}
+function deBasesUnificadas(d){
+  var st=d.state,bases={},filasDe={},docs=[],bs=[],fs=[];
+  var libros=(Array.isArray(st.books)?st.books:[]).filter(function(b){return esObjeto(b)&&Array.isArray(b.tables)});
+  /* Primero los ids nuevos de bases y filas (las relaciones pueden ir a cualquier tabla) */
+  libros.forEach(function(l){l.tables.forEach(function(t){
+    if(!esObjeto(t)||!idValido(t.id))return;
+    bases[t.id]=idNuevo('bd');filasDe[t.id]={};
+    (Array.isArray(t.rows)?t.rows:[]).forEach(function(r){if(esObjeto(r)&&idValido(r.id))filasDe[t.id][r.id]=idNuevo('f')});
+  })});
+  var ahoraT=ahora();
+  libros.forEach(function(l){
+    var docId='d-'+Math.random().toString(36).slice(2,10),bloques=[{type:'paragraph',attrs:{id:idNuevo('b')},content:[{type:'text',text:'Importado de Bases unificadas el '+new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})+'.'}]}];
+    l.tables.forEach(function(t){
+      if(!bases[t&&t.id])return;
+      var cols=(Array.isArray(t.cols)?t.cols:[]).filter(function(c){return esObjeto(c)&&idValido(c.id)}).map(function(c){
+        var x={id:c.id,nombre:String(c.name==null?'':c.name).slice(0,80),tipo:TIPO_BU[c.type]||'texto'};
+        if(Array.isArray(c.options))x.opciones=c.options.map(String);
+        if(x.tipo==='formula')x.expr=String(c.expr||'');
+        if(x.tipo==='relacion')x.base=bases[c.table]||'';
+        if(x.tipo==='referencia'){x.rel=String(c.rel||'');x.campo=String(c.target||'')}
+        if(x.tipo==='suma'){x.base=bases[c.table]||'';x.rel=String(c.rel||'');x.campo=String(c.target||'')}
+        if(PIE_BU[c.pie])x.pie=PIE_BU[c.pie];
+        return x;
+      });
+      if(!cols.length)cols=[{id:'c-nombre',nombre:'Nombre',tipo:'texto'}];
+      var ocultas=(Array.isArray(t.cols)?t.cols:[]).filter(function(c){return esObjeto(c)&&c.oculta}).map(function(c){return c.id});
+      function orden(o){return esObjeto(o)&&o.col?{col:String(o.col),dir:o.dir===-1?-1:1}:{col:'',dir:1}}
+      var vistas=[{id:idNuevo('v'),nombre:'Tabla',tipo:'tabla',q:'',f:{col:'',op:'contiene',val:''},s:{col:'',dir:1},s2:{col:'',dir:1},ocultas:ocultas}]
+        .concat((Array.isArray(t.vistas)?t.vistas:[]).filter(esObjeto).map(function(v){
+          var f=esObjeto(v.f)&&v.f.col?{col:String(v.f.col),op:OP_BU[v.f.op]||'contiene',val:String(v.f.val==null?'':v.f.val)}:{col:'',op:'contiene',val:''};
+          return {id:idNuevo('v'),nombre:String(v.name||'Vista').slice(0,60),tipo:'tabla',q:String(v.q||''),f:f,s:orden(v.s),s2:orden(v.s2),ocultas:ocultas.slice()};
+        }));
+      var bid=bases[t.id];
+      bs.push({id:bid,nombre:String(t.name||'Tabla').slice(0,80),doc:docId,columnas:cols,vistas:vistas,creado:ahoraT,editado:ahoraT});
+      (Array.isArray(t.rows)?t.rows:[]).forEach(function(r,i){
+        if(!esObjeto(r)||!filasDe[t.id][r.id])return;
+        var c=esObjeto(r.c)?r.c:{},v={};
+        cols.forEach(function(col){
+          var x=c[col.id];
+          if(x==null||x==='')return;
+          if(col.tipo==='relacion'){var orig=(Array.isArray(t.cols)?t.cols:[]).filter(function(k){return k&&k.id===col.id})[0];var m=orig&&filasDe[orig.table];if(m&&m[x])v[col.id]=m[x];return}
+          if(col.tipo==='numero'){var n=Number(x);if(isFinite(n))v[col.id]=n;return}
+          if(col.tipo==='casilla'){v[col.id]=!!x;return}
+          if(col.tipo==='multiple'){v[col.id]=(Array.isArray(x)?x:[x]).map(String);return}
+          if(col.tipo==='referencia'||col.tipo==='formula'||col.tipo==='suma')return;
+          v[col.id]=String(x);
+        });
+        fs.push({id:filasDe[t.id][r.id],base:bid,v:v,orden:i+1,creado:ahoraT,editado:ahoraT});
+      });
+      bloques.push({type:'basedatos',attrs:{id:idNuevo('b'),base:bid,vista:''}});
+    });
+    bloques.push({type:'paragraph',attrs:{id:idNuevo('b')}});
+    docs.push({formato:1,tipo:'notas',id:docId,titulo:String(l.name||'Libro').slice(0,120),props:[],creado:ahoraT,editado:ahoraT,contenido:{type:'doc',content:bloques}});
+  });
+  return {documentos:docs,bases:bs,filas:fs};
+}
+function importarBasesUnificadas(d){
+  if(!esObjeto(d.state)||!Array.isArray(d.state.books))return Promise.reject(new Error('Este archivo no es un respaldo de Bases unificadas.'));
+  var x=deBasesUnificadas(d);
+  if(!x.documentos.length)return Promise.reject(new Error('El respaldo de Bases unificadas no tiene libros.'));
+  return conMotor(function(m){return m.poner('bases',x.bases)}).then(function(){return x.filas.length?motor.poner('filas',x.filas):null})
+    .then(function(){return motor.poner('documentos',x.documentos)}).then(function(){
+      avisar({almacen:'*'});
+      return {documentos:x.documentos.length,bases:x.bases.length,filas:x.filas.length,notas:0,marcadores:0,plantillas:0,basesUnificadas:true,
+        primero:x.documentos[0].id};
+    });
+}
 function importar(datos){
+  if(esObjeto(datos)&&datos.app==='bases-unificadas')return importarBasesUnificadas(datos);
   /* Los respaldos de antes del cambio de nombre dicen app:'OneLearn' y se siguen aceptando */
   if(!esObjeto(datos)||(datos.app!=='OneBook'&&datos.app!=='OneLearn')||typeof datos.formato!=='number')
     return Promise.reject(new Error('El archivo no es un respaldo de OneBook.'));
   if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneBook. Actualiza la página e inténtalo otra vez.'));
-  var res={documentos:0,notas:0,marcadores:0,plantillas:0,avance:false,proyectos:false,terminal:false,perfil:false};
+  var res={documentos:0,notas:0,marcadores:0,plantillas:0,bases:0,filas:0,avance:false,proyectos:false,terminal:false,perfil:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
     return esObjeto(d)&&idValido(d.id)&&esObjeto(d.contenido)&&d.contenido.type==='doc'&&(d.contenido.content==null||Array.isArray(d.contenido.content));
@@ -252,6 +338,8 @@ function importar(datos){
   var ns=lista(datos.notas).filter(function(n){return esObjeto(n)&&idValido(n.id)&&typeof n.texto==='string'})
     .map(function(n){return {id:n.id,texto:n.texto,editado:typeof n.editado==='string'?n.editado:''}});
   var ms=lista(datos.marcadores).filter(function(x){return esObjeto(x)&&idValido(x.id)});
+  var bss=lista(datos.bases).filter(function(x){return esObjeto(x)&&idValido(x.id)&&typeof x.nombre==='string'&&Array.isArray(x.columnas)&&x.columnas.length&&x.columnas.every(esObjeto)});
+  var fls=lista(datos.filas).filter(function(x){return esObjeto(x)&&idValido(x.id)&&idValido(x.base)&&esObjeto(x.v)});
   var pls=lista(datos.plantillas).filter(function(x){
     return esObjeto(x)&&idValido(x.id)&&typeof x.nombre==='string'&&esObjeto(x.contenido)&&x.contenido.type==='doc'&&(x.contenido.content==null||Array.isArray(x.contenido.content));
   });
@@ -272,6 +360,8 @@ function importar(datos){
     })
     .then(function(){return combinar('marcadores',ms,'marcadores')})
     .then(function(){return combinar('plantillas',pls,'plantillas')})
+    .then(function(){return combinar('bases',bss,'bases')})
+    .then(function(){return combinar('filas',fls,'filas')})
     .then(function(){
       /* Avance: se suman las secciones leídas; el resto se toma del más reciente */
       var ent=datos.avance;
@@ -352,14 +442,36 @@ function espacio(){
   return almacenamiento.estimate().then(function(e){return {usado:e.usage||0,cuota:e.quota||0}}).catch(function(){return null});
 }
 
+/* ---------- Bases de datos ---------- */
+var basesCol=coleccion('bases'),filasCol=coleccion('filas');
+filasCol.deBase=function(id){return conMotor(function(m){return m.porIndice('filas','base',id)})};
+/* Varias filas de una vez (importar, pegar, deshacer) */
+filasCol.guardarVarias=function(lista){
+  var t=ahora(),l=lista.map(function(o){o=JSON.parse(JSON.stringify(o));o.editado=t;if(!o.creado)o.creado=t;return o});
+  return conMotor(function(m){return m.poner('filas',l)}).then(function(){avisar({almacen:'filas',base:l[0]&&l[0].base,varias:true});return l});
+};
+/* Una base con todas sus filas */
+function borrarBase(id){
+  return filasCol.deBase(id).then(function(fs){
+    return Promise.all(fs.map(function(f){return conMotor(function(m){return m.borrar('filas',f.id)})}));
+  }).then(function(){return basesCol.borrar(id)}).then(function(){avisar({almacen:'filas',base:id,varias:true})});
+}
+basesCol.borrarConFilas=borrarBase;
+
 /* ---------- Papelera ---------- */
 var docsCol=coleccion('documentos'),papCol=coleccion('papelera');
+/* Borrar para siempre: la página y las bases de datos que eran suyas */
+function borrarDeVerdad(id){
+  return papCol.borrar(id).then(function(){return basesCol.todos()}).then(function(bs){
+    return Promise.all(bs.filter(function(b){return b.doc===id}).map(function(b){return borrarBase(b.id)}));
+  });
+}
 var papelera={
   /* Lo que hay en la papelera, lo más reciente primero (lo que lleva más de 30 días se borra solo) */
   todos:function(){
     return papCol.todos().then(function(l){
       var limite=new Date(Date.now()-DIAS_PAPELERA*864e5).toISOString(),viejos=l.filter(function(d){return (d.eliminado||'')<limite});
-      return Promise.all(viejos.map(function(d){return papCol.borrar(d.id)})).then(function(){
+      return Promise.all(viejos.map(function(d){return borrarDeVerdad(d.id)})).then(function(){
         return l.filter(function(d){return viejos.indexOf(d)<0}).sort(function(a,b){return (b.eliminado||'')<(a.eliminado||'')?-1:1});
       });
     });
@@ -377,8 +489,8 @@ var papelera={
       return docsCol.guardar(d,{conservarFecha:true}).then(function(){return papCol.borrar(id)}).then(function(){return d});
     });
   },
-  eliminar:function(id){return papCol.borrar(id)},
-  vaciar:function(){return papCol.todos().then(function(l){return Promise.all(l.map(function(d){return papCol.borrar(d.id)}))})},
+  eliminar:function(id){return borrarDeVerdad(id)},
+  vaciar:function(){return papCol.todos().then(function(l){return Promise.all(l.map(function(d){return borrarDeVerdad(d.id)}))})},
   DIAS:DIAS_PAPELERA
 };
 
@@ -389,6 +501,8 @@ AT.datos={
   marcadores:coleccion('marcadores'),
   plantillas:coleccion('plantillas'),
   papelera:papelera,
+  bases:basesCol,
+  filas:filasCol,
   notas:notas,
   exportar:exportar,
   descargar:descargar,

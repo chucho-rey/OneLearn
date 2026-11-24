@@ -286,6 +286,12 @@ function descargarMd(){
 function duplicar(){
   guardar().then(function(){
     var c=JSON.parse(JSON.stringify(doc));
+    /* Las bases de datos se copian con sus filas: la copia se crea al abrir la página nueva (semilla) */
+    var bloques=(c.contenido.content||[]).filter(function(b){return b.type==='basedatos'&&b.attrs&&b.attrs.base});
+    return Promise.all(bloques.map(function(b){
+      return AT.bases.semillaDe(b.attrs.base,true).then(function(s){if(s){b.attrs.semilla=s;b.attrs.base='';b.attrs.vista=''}});
+    })).then(function(){return c});
+  }).then(function(c){
     c.id='d-'+AT.bloques.nuevoId().slice(2)+AT.bloques.nuevoId().slice(4);
     c.titulo='Copia de '+(doc.titulo||'Sin título');
     delete c.creado;delete c.favorito;
