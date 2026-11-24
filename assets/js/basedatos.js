@@ -108,18 +108,26 @@ function montar(raiz,op){
       case 'casilla':return '<input type="checkbox" class="bd-cas"'+a+(v?' checked':'')+'>';
       case 'seleccion':{
         var ops=(c.opciones||[]).slice();if(v&&ops.indexOf(v)<0)ops.push(v);
-        return '<select class="bd-in"'+a+'><option value=""></option>'+ops.map(function(o){return '<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select>';
+        return '<select class="bd-in bd-sel" data-tono="'+tono(v,ops.indexOf(v))+'"'+a+'><option value=""></option>'+ops.map(function(o){return '<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select>';
       }
       case 'multiple':return '<button type="button" class="bd-in bd-multi" data-multi'+a+'>'+(t?esc(t):'<span class="bd-vacio">—</span>')+'</button>';
       case 'relacion':{
         var tb=B.base(c.base);
         if(!tb)return '<span class="bd-calc err" title="La base relacionada no está en este dispositivo">#REF</span>';
         var rs=B.filas(tb.id).map(function(x){return [x.id,B.titulo(tb,x)||'Sin nombre']}).sort(function(x,y){return x[1].localeCompare(y[1],'es')});
-        return '<select class="bd-in"'+a+'><option value=""></option>'+opciones(rs,v)+'</select>';
+        return '<select class="bd-in bd-rel"'+a+'><option value=""></option>'+opciones(rs,v)+'</select>';
       }
       case 'telefono':return '<input type="tel" class="bd-in"'+a+' value="'+esc(v)+'">';
       default:return '<input type="text" class="bd-in'+(c===b.columnas[0]?' bd-tit':'')+'"'+a+' value="'+esc(v)+'">';
     }
+  }
+  /* El color de una opción de selección: por lo que dice (pagado, pendiente, vencido) o, si no, por su lugar */
+  function tono(o,i){
+    var s=String(o||'').toLowerCase();if(!s)return '';
+    if(/^(sin|no) |pendiente|por (pagar|cobrar|surtir)|falta/.test(s))return 'aviso';
+    if(/pagad|recibid|hech|complet|terminad|entregad|activ|^s[ií]$/.test(s))return 'bien';
+    if(/vencid|cancelad|urgente|atrasad|^baja/.test(s))return 'mal';
+    return ['a','b','c'][Math.max(0,i)%3];
   }
   function errorTexto(t){return t==='#REF'?'Una columna o una base que usa ya no existe':t==='#CICLO'?'Se usa a sí misma':t==='#ERROR'?'La fórmula está mal escrita o divide entre cero':''}
   function claseCol(c){return (c.negritas?' bd-neg':'')+(c.resaltado?' bd-res-c':'')+(B.esNumerica(b,c)?' bd-num-c':'')}
@@ -282,6 +290,7 @@ function montar(raiz,op){
     var t=e.target;
     if(t.hasAttribute('data-bd-nombre')){var n=t.value.trim()||'Base de datos';if(n!==b.nombre)cambiarBase(function(x){x.nombre=n},'el nombre de la base');return}
     var fid=t.getAttribute('data-f'),cid=t.getAttribute('data-c');if(!fid||!cid)return;
+    if(t.classList.contains('bd-sel'))t.setAttribute('data-tono',tono(t.value,t.selectedIndex-1));
     var f=fila(fid),c=B.col(b,cid),k=fid+'|'+cid;if(!f||!c)return;
     clearTimeout(esperaTexto[k]);
     var antes=antesTexto[k]||B.clonar(f);delete antesTexto[k];

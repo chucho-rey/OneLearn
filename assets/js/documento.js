@@ -53,6 +53,17 @@ function favorita(){
   }).then(function(){AT.aviso(f?'Agregada a favoritas.':'Ya no es favorita.')},function(){AT.aviso('No se pudo guardar. Inténtalo otra vez.')});
 }
 favBtn.addEventListener('click',favorita);
+/* Ancho completo: la página usa todo el ancho de la pantalla (se guarda en el documento, como en Notion) */
+function pintarAncho(){document.documentElement.classList.toggle('doc-completo',!!(doc&&doc.anchoCompleto))}
+function anchoCompleto(){
+  if(!doc||bloqueado)return;
+  var a=!doc.anchoCompleto;
+  (pendiente||timer?guardar():Promise.resolve()).then(function(){
+    if(a)doc.anchoCompleto=true;else delete doc.anchoCompleto;
+    pintarAncho();
+    return AT.datos.documentos.guardar(doc,{conservarFecha:true});
+  }).then(null,function(){AT.aviso('No se pudo guardar. Inténtalo otra vez.')});
+}
 
 function ponerEstado(t,k){estadoT.textContent=t;estado.setAttribute('data-k',k||'')}
 
@@ -265,6 +276,7 @@ masBtn.addEventListener('click',function(){
     {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd}
   ],academico()||!AT.entrega?[]:[{t:'Imprimir o guardar como PDF',i:'page',d:'Con números de página',f:abrirEntregar}],[
     {t:doc&&doc.favorito?'Quitar de favoritas':'Agregar a favoritas',i:'estrella',f:favorita},
+    {t:doc&&doc.anchoCompleto?'Ancho normal':'Ancho completo',i:'ancho',d:doc&&doc.anchoCompleto?'Vuelve a la columna de siempre':'Usa todo el ancho de la pantalla',f:anchoCompleto},
     {t:'Guardar como plantilla',i:'crear',d:'Para crear páginas iguales desde «Crear»',f:comoPlantilla},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
     {sep:true},
@@ -446,7 +458,7 @@ AT.datos.documentos.leer(ID).then(function(d){
   AT.docActual=doc;AT.docCambio=cambio;
   titulo();
   modoBtn.hidden=masBtn.hidden=favBtn.hidden=false;
-  pintarFav();
+  pintarFav();pintarAncho();
   var nuevo=false;
   try{nuevo=sessionStorage.getItem('onelearn:recien-creado')===ID;if(nuevo)sessionStorage.removeItem('onelearn:recien-creado')}catch(e){}
   /* #agregar=<bloque> (acciones rápidas del Inicio): se abre para editar y negocio.js agrega el bloque */
@@ -505,7 +517,7 @@ function releer(){
     if(ed){if(registro){registro.desactivar();registro=null}ed.destruir();ed=null}
     doc=d;if(!doc.props)doc.props=[];
     if(tipo().academico&&!Array.isArray(doc.fuentes))doc.fuentes=[];
-    AT.docActual=doc;
+    AT.docActual=doc;pintarFav();pintarAncho();
     titulo();ponerModo(modo,false,true);ponerEstado('Guardado','ok');
   });
 }

@@ -16,7 +16,7 @@ var catalogo=AT.catalogo||[],actual=AT.leccion;
     {k:'fuente',t:'Fuente',o:[['normal','IBM Plex',"'IBM Plex Sans'"],['atkinson','Atkinson',"'Atkinson Hyperlegible'"],['opendyslexic','OpenDyslexic',"'OpenDyslexic'"]]},
     {k:'espaciado',t:'Espacio entre letras',o:[['normal','Normal'],['amplio','Amplio']]},
     {k:'interlineado',t:'Interlineado',o:[['normal','Normal'],['amplio','Amplio']]},
-    {k:'ancho',t:'Ancho de columna',o:[['estrecho','Estrecho'],['normal','Normal'],['amplio','Amplio']]}
+    {k:'ancho',t:'Ancho de columna',o:[['estrecho','Estrecho'],['normal','Normal'],['amplio','Amplio'],['completo','Toda la pantalla']]}
   ];
   var h='<div class="lec-h"><h2 id="lecT">Lectura</h2><button class="lec-x" type="button" id="lecX" aria-label="Cerrar Lectura">'+ico('close')+'</button></div>'+
     '<div class="lec-g"><span class="lec-l" id="lec-escala">Tamaño de texto</span>'+

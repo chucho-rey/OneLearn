@@ -20,7 +20,9 @@
   --font-ui:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   --font-head:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --lh:1.6; --page-w:51.25rem; --focus:2px;
+  --lh:1.6; --page-w:51.25rem; --app-w:78rem; --focus:2px;
+  /* Sombras suaves de tarjetas, barras y menús */
+  --sh-1:0 1px 2px rgba(16,40,36,.06); --sh-2:0 0.375rem 1.25rem -0.375rem rgba(16,40,36,.18);
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
@@ -115,8 +117,13 @@
 :root[data-fuente="opendyslexic"]{--font-ui:"OpenDyslexic",ui-sans-serif,system-ui,sans-serif;--font-head:var(--font-ui)}
 :root[data-espaciado="amplio"] body{letter-spacing:.05em;word-spacing:.16em}
 :root[data-interlineado="amplio"]{--lh:1.85}
-:root[data-ancho="estrecho"]{--page-w:43rem}
-:root[data-ancho="amplio"]{--page-w:60rem}
+/* Ancho de columna: --page-w para leer (lecciones), --app-w para trabajar (documentos e Inicio) */
+:root[data-ancho="estrecho"]{--page-w:43rem;--app-w:51.25rem}
+:root[data-ancho="amplio"]{--page-w:60rem;--app-w:100rem}
+:root[data-ancho="completo"]{--page-w:100%;--app-w:100%}
+/* Sombras en los temas oscuros */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sh-1:0 1px 2px rgba(0,0,0,.4);--sh-2:0 0.5rem 1.5rem -0.5rem rgba(0,0,0,.7)}}
+:root[data-theme="dark"]{--sh-1:0 1px 2px rgba(0,0,0,.4);--sh-2:0 0.5rem 1.5rem -0.5rem rgba(0,0,0,.7)}
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -236,6 +243,11 @@ button.nv{font:inherit;font-size:0.875rem}
 
 /* ---------- Página ---------- */
 .page{width:100%;max-width:var(--page-w);margin:0 auto;padding-top:1.25rem;padding-bottom:calc(50vh + 2.5rem);padding-bottom:calc(50dvh + 2.5rem);padding-left:max(1rem,env(safe-area-inset-left,0px));padding-right:max(1rem,env(safe-area-inset-right,0px));overflow-wrap:break-word}
+/* Las páginas de trabajo (documentos e Inicio) aprovechan el ancho del escritorio; las lecciones conservan su columna
+   de lectura. Un documento puede pedir todo el ancho (documento.js pone .doc-completo en <html>). */
+body[data-pagina="documento"] .page,body[data-pagina="inicio"] .page{max-width:var(--app-w)}
+.doc-completo body[data-pagina="documento"] .page{max-width:none}
+body[data-pagina="documento"] .page p{max-width:none}
 @media (min-width:900px){
   .page{padding-left:max(3rem,env(safe-area-inset-left,0px));padding-right:max(3rem,env(safe-area-inset-right,0px));padding-top:2.25rem}
 }
@@ -406,9 +418,13 @@ dialog.buscar-dlg[open]{display:flex}
 .demo .num{width:4.5rem;max-width:none}
 .hint{font-size:0.875rem;color:var(--fg-2);margin:0 0 0.75rem;max-width:none}
 .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 0.75rem;margin:0.75rem 0 0}
-.btn{padding:0.3125rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);font-size:0.875rem;cursor:pointer;line-height:1.4}
+.btn{padding:0.3125rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg);font-size:0.875rem;cursor:pointer;line-height:1.4;transition:background-color .15s,border-color .15s,box-shadow .15s}
 .btn:hover:not(:disabled){background:var(--hover)}
-.btn.pri{background:var(--accent-solid);border-color:var(--accent-solid);color:var(--on-accent)}
+.btn.pri{background:var(--accent-solid);border-color:var(--accent-solid);color:var(--on-accent);box-shadow:var(--sh-1)}
+/* Un enlace con forma de botón no lleva el azul ni el subrayado de un enlace */
+a.btn,.page a.btn{display:inline-flex;align-items:center;gap:0.375rem;color:var(--fg);text-decoration:none}
+a.btn.pri,.page a.btn.pri{color:var(--on-accent)}
+a.btn.danger,.page a.btn.danger{color:var(--bad-ink)}
 .btn.pri:hover:not(:disabled){background:var(--accent-solid);filter:brightness(1.1)}
 .btn.danger{background:var(--bad-bg);border-color:var(--bad);color:var(--bad-ink)}
 .btn:disabled,.btn[aria-disabled="true"]{opacity:.5;cursor:default}
@@ -578,8 +594,10 @@ a.cont:hover{border-color:var(--accent)}
 .nota .doc-t{display:flex;align-items:center;gap:0.375rem}
 .nota .doc-t .ico{flex:none;color:var(--accent-ink)}
 .ini-notas{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,14rem),1fr));gap:0.5rem}
-.ini-notas .nota{height:100%;border:1px solid var(--line)}
-.ini-vacio{color:var(--fg-2);font-size:0.9375rem}
+.ini-notas .nota{height:100%;padding:0.625rem 0.75rem;border:1px solid var(--line);border-radius:0.625rem;background:var(--bg);transition:border-color .15s,box-shadow .15s,transform .15s}
+.ini-notas .nota:hover{background:var(--bg);border-color:var(--line-strong);box-shadow:var(--sh-2);transform:translateY(-1px)}
+@media (prefers-reduced-motion:reduce){.ini-notas .nota:hover{transform:none}}
+.ini-vacio{grid-column:1/-1;color:var(--fg-2);font-size:0.9375rem}
 .exp-g+.exp-g{margin-top:0.5rem}
 details.exp-g{border-bottom:1px solid var(--line)}
 details.exp-g[open]{padding-bottom:0.75rem}
@@ -666,8 +684,8 @@ dialog.atajos::backdrop{background:rgba(0,0,0,.45)}
 /* Crear */
 dialog.crear-dlg{width:min(50rem,calc(100vw - 2rem))}
 .crear-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:0.5rem;margin:0 0 1rem}
-.crear-o,.ini-pl{display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);text-align:left;cursor:pointer}
-.crear-o:hover,.ini-pl:hover{border-color:var(--accent);background:var(--accent-bg)}
+.crear-o,.ini-pl{display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;border:1px solid var(--line-strong);border-radius:0.75rem;background:var(--bg);color:var(--fg);text-align:left;cursor:pointer;transition:border-color .15s,background-color .15s,box-shadow .15s}
+.crear-o:hover,.ini-pl:hover{border-color:var(--accent);background:var(--accent-bg);box-shadow:var(--sh-2)}
 .crear-o[aria-disabled="true"],.ini-pl[aria-disabled="true"]{opacity:.6;cursor:progress}
 .crear-o>.ico,.ini-pl>.ico{flex:none;font-size:1.5rem;color:var(--accent-ink);margin-top:0.125rem}
 .crear-o>span,.ini-pl>span{display:flex;flex-direction:column;gap:0.125rem;min-width:0}

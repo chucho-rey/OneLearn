@@ -23,7 +23,7 @@
     fuente:['normal','atkinson','opendyslexic'],
     interlineado:['normal','amplio'],
     espaciado:['normal','amplio'],
-    ancho:['estrecho','normal','amplio'],
+    ancho:['estrecho','normal','amplio','completo'],
     barra:['abierta','cerrada'],
     pestana:['temas','apuntes','comunidad'],
     nota:['abajo','derecha']
