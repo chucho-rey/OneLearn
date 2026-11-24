@@ -37,7 +37,8 @@ assets/
                             .nb-f), en documento.html y en la bienvenida
   css/terminal.css          Estilos de la terminal simulada (solo en las lecciones que la usan)
   css/red.css               Estilos de los diagramas del simulador de red (solo en las lecciones que lo usan)
-  js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho, barra lateral); se carga en el <head> y expone AT.ajustes
+  js/ajustes.js             Ajustes de lectura (tema, contraste, tamaño, fuente, espacios, ancho hasta toda la pantalla, barra
+                            lateral); se carga en el <head> y expone AT.ajustes
   js/perfil.js              El perfil del espacio y sus módulos (negocio, estudio); en el <head> de todas las páginas, después de
                             ajustes.js. Marca <html> con con-/sin-<módulo>, migra a quien ya usaba OneLearn y manda a entrar.html
                             si no hay espacio (AT.perfil)
