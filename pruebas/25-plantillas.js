@@ -43,7 +43,7 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   r.cumple(await p.evaluate(function(){var o=document.querySelector('.crear-o[data-paquete="tienda"]');return !!o&&/Tu giro/.test(o.textContent)&&/Crea 5 páginas/.test(o.textContent)}),'el paquete del giro del negocio se marca como «Tu giro»');
   await revisar(p,r,'galería de plantillas en celular');
   await p.click('.crear-chip[data-filtro="finanzas"]');await p.waitForTimeout(100);
-  r.igual((await visibles(p)).join(' | '),'Finanzas del mes | Me deben | Préstamo o crédito','«Tus finanzas» filtra la galería');
+  r.igual((await visibles(p)).join(' | '),'Presupuesto del mes | Finanzas del mes | Me deben | Préstamo o crédito','«Tus finanzas» filtra la galería');
   await p.click('.crear-chip[data-filtro="todas"]');
   await p.fill('#crBuscar','fiádo');await p.waitForTimeout(100);
   r.igual((await visibles(p)).join(' | '),'Fiado | Tienda o abarrotes | Me deben','la búsqueda (sin acentos) encuentra el fiado, el paquete que lo trae y «Me deben»');

@@ -57,8 +57,8 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo del negocio */
   await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
-  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Proveedores | Clientes | Lista de precios | Plan de negocio | '+
-    'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes | Freelance o profesional independiente | Finanzas del mes | Me deben | Préstamo o crédito',
+  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Proveedores | Clientes | Lista de precios | Plan de negocio | '+
+    'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes | Freelance o profesional independiente | Presupuesto del mes | Finanzas del mes | Me deben | Préstamo o crédito',
     '«Crear» ofrece notas, las plantillas de negocio, los paquetes por giro (el suyo marcado) y las de finanzas, sin libreta ni tesis');
   const pronto=await p.textContent('dialog.crear-dlg .crear-p');
   r.cumple(/Cotización/.test(pronto)&&!/Corte de caja|Fiado/.test(pronto)&&!/Libro|Bitácora/.test(pronto),'«Llegan después» anuncia lo de negocio que falta y no lo académico',pronto);

@@ -60,7 +60,7 @@ const ARCHIVOS=[
   'assets/js/precio.js',
   'assets/js/porpagar.js',
   'assets/js/bases.js',
-  'assets/js/basedatos.js','assets/js/inventario.js','assets/js/factura.js',
+  'assets/js/basedatos.js','assets/js/inventario.js','assets/js/factura.js','assets/js/reporte.js','assets/js/indicadores.js',
   'assets/js/proteger.js',
   'assets/js/entrega.js',
   'assets/js/exportar-docx.js',

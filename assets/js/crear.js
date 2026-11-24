@@ -39,6 +39,8 @@ var TIPOS=AT.tiposDoc={
   precio:{nombre:'Precios de venta',icono:'precio',desc:'A cuánto vender con tu ganancia, el IVA y la comisión de la tarjeta.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta']},
   surtir:{nombre:'Lista para surtir',icono:'lista',desc:'Lo que se acaba, cuánto queda y a quién pedirlo.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   proveedores:{nombre:'Proveedores',icono:'porpagar',desc:'Quién te surte, su día de visita y lo que le debes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla','Cuentas por pagar']},
+  presupuesto:{nombre:'Presupuesto del mes',icono:'gastos',desc:'Cuánto quieres gastar por categoría y cuánto llevas: lo disponible en rojo si te pasas.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Reporte','Gastos','Presupuesto']},
+  reporte:{nombre:'Reporte del mes',icono:'grafica',desc:'Ventas por producto y compras por proveedor del mes, contra el mes pasado, con gráficas. Crea uno cada mes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Reportes']},
   inventario:{nombre:'Inventario',icono:'datos',desc:'Productos, entradas y salidas; las existencias se calculan solas, las ventas las descuentan y armas el pedido al proveedor.',listo:true,modulo:'negocio',cat:'negocio',trae:['Resumen del inventario','Productos','Entradas y salidas','Compras']},
   clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar; en tabla o en tarjetas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
   lista:{nombre:'Lista de precios',icono:'tabla',desc:'Tus productos y servicios con su precio, para imprimir o compartir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
@@ -49,13 +51,14 @@ var TIPOS=AT.tiposDoc={
   medeben:{nombre:'Me deben',icono:'fiado',desc:'A quién le prestaste, lo que te ha abonado y cuánto falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Fiado']},
   prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Plan de pagos']}
 };
-var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','proveedores','clientes','lista','plan',
+var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','clientes','lista','plan',
   'finanzas','medeben','prestamo','cotizacion','libro','investigacion','guia','bitacora','presentacion','blanco'];
 var CATS={negocio:'Para tu negocio',finanzas:'Tus finanzas',paquetes:'Paquetes por giro',estudio:'Estudio',mis:'Mis plantillas'};
 var CAT_MOD={negocio:'negocio',finanzas:'negocio',paquetes:'negocio',estudio:'estudio',mis:'nucleo'};
 var PER=AT.perfil;
 function tiene(m){return !PER||PER.tiene(m)}
 function hoyISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function isoDe(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 function sinAcentos(t){return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
 function clonar(o){return JSON.parse(JSON.stringify(o))}
 
@@ -80,6 +83,8 @@ var SEMILLAS={
   productos:function(vista){return {rol:'productos',nombre:'Productos',vista:vista||''}},
   movimientos:function(){return {rol:'movimientos',nombre:'Entradas y salidas'}},
   compras:function(){return {rol:'compras',nombre:'Compras'}},
+  gastos:function(){return {rol:'gastos',nombre:'Gastos'}},
+  presupuesto:function(){return {rol:'presupuesto',nombre:'Presupuesto'}},
   clientes:function(){return {nombre:'Clientes',columnas:[
     {id:'c-nombre',nombre:'Nombre',tipo:'texto'},
     {id:'c-tel',nombre:'Teléfono',tipo:'telefono'},
@@ -151,6 +156,28 @@ var PLANTILLAS={
     P('Una fila por cliente. Toca el cuadrito de la izquierda para ver su ficha.'),
     baseDatos(SEMILLAS.clientes()),P()
   ]}},
+  presupuesto:function(){
+    var d=new Date(),i=new Date(d.getFullYear(),d.getMonth(),1),f=new Date(d.getFullYear(),d.getMonth()+1,0);
+    var mes=i.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+    return {titulo:'Presupuesto de '+mes,props:[],contenido:[
+      P('Anota en «Presupuesto» cuánto quieres gastar al mes en cada categoría y en «Gastos» lo que vas gastando. El reporte compara lo real contra lo presupuestado.'),
+      {type:'reporte',attrs:{id:id(),cfg:{titulo:'Gastos contra presupuesto',rol:'gastos',fecha:'g-fecha',periodo:'rango',desde:isoDe(i),hasta:isoDe(f),filas:'g-cat',valor:'g-monto',calculo:'suma',grafica:true,prol:'presupuesto',pvalor:'r-monto'}}},
+      baseDatos(SEMILLAS.gastos()),
+      baseDatos(SEMILLAS.presupuesto()),P()
+    ]};
+  },
+  reporte:function(){
+    var d=new Date(),i=new Date(d.getFullYear(),d.getMonth(),1),f=new Date(d.getFullYear(),d.getMonth()+1,0);
+    var mes=i.toLocaleDateString('es-MX',{month:'long',year:'numeric'}),desde=isoDe(i),hasta=isoDe(f);
+    function rep(cfg){return {type:'reporte',attrs:{id:id(),cfg:Object.assign({periodo:'rango',desde:desde,hasta:hasta,calculo:'suma',comparar:true,grafica:true},cfg)}}}
+    return {titulo:'Reporte de '+mes,props:[],contenido:[
+      P('Lo que vendiste y lo que compraste en '+mes+', contra el mes anterior. Sale de tu Inventario: las notas de venta y las facturas de tus proveedores.'),
+      rep({titulo:'Ventas por producto',rol:'movimientos',fecha:'m-fecha',filas:'m-prod',valor:'m-importe',fcol:'m-tipo',fop:'igual',fval:'Venta'}),
+      rep({titulo:'Compras por proveedor',rol:'compras',fecha:'c-fecha',filas:'c-prov',valor:'c-total'}),
+      rep({titulo:'Piezas que entraron y salieron',rol:'movimientos',fecha:'m-fecha',filas:'m-tipo',valor:'m-cant',grafica:false}),
+      H('Notas del mes'),P()
+    ]};
+  },
   inventario:function(){return {titulo:'Inventario',props:[],contenido:[
     P('Anota cada producto con su costo, su precio, cuántos tenías al empezar y el mínimo. Las existencias se calculan solas: lo que tenías más lo que entra menos lo que sale. Las notas de venta descuentan lo que vendes.'),
     {type:'inventario',attrs:{id:id(),titulo:''}},
@@ -259,7 +286,14 @@ var VACIAR={
 var AL_CREAR={
   corte:function(a){a.fecha=hoyISO()},
   venta:function(a){a.folio=AT.folio('V');a.fecha=hoyISO()},
-  gastos:function(a){a.mes=hoyISO().slice(0,7)}
+  gastos:function(a){a.mes=hoyISO().slice(0,7)},
+  /* Un reporte de un mes completo pasa al mes en curso */
+  reporte:function(a){
+    var c=a.cfg;if(!c||c.periodo!=='rango'||!/^\d{4}-\d{2}-01$/.test(c.desde||''))return;
+    var h=c.hasta||'',y=+c.desde.slice(0,4),m=+c.desde.slice(5,7);
+    if(h!==isoDe(new Date(y,m,0)))return;
+    var d=new Date();c.desde=isoDe(new Date(d.getFullYear(),d.getMonth(),1));c.hasta=isoDe(new Date(d.getFullYear(),d.getMonth()+1,0));
+  }
 };
 function desmarcar(n){
   if(!n||typeof n!=='object')return;

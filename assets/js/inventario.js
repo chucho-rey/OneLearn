@@ -6,6 +6,8 @@
    - Movimientos (rol movimientos): cada entrada, salida, venta o ajuste, con su producto (relación) y su cantidad;
      «Cambio» le pone el signo (las entradas y los ajustes suman; las salidas y las ventas restan).
    - Compras (rol compras): las facturas de los proveedores (la llena la importación del XML, fase F7b).
+   - Gastos (rol gastos) y Presupuesto (rol presupuesto, cuánto quieres gastar al mes por categoría): los usa la
+     plantilla «Presupuesto del mes», con un reporte de lo gastado contra lo presupuestado (fase F7d).
    Las páginas las muestran con un bloque «Base de datos» cuya semilla lleva el rol ({rol:'productos'}): al abrir la
    página, AT.inventario.base(rol) la busca o la crea, así que la plantilla Inventario, sus duplicados y tus
    plantillas hablan de la misma base. Las notas de venta (venta.js) eligen el producto y, al guardarse la página,
@@ -18,8 +20,9 @@
 'use strict';
 var AT=window.AT,B=AT.bases,$=AT.$,esc=AT.esc;
 if(!B||!AT.datos)return;
-var ROLES=['productos','movimientos','compras'];
-var NOMBRES={productos:'Productos',movimientos:'Entradas y salidas',compras:'Compras'};
+var ROLES=['productos','movimientos','compras','gastos','presupuesto'];
+var NOMBRES={productos:'Productos',movimientos:'Entradas y salidas',compras:'Compras',gastos:'Gastos',presupuesto:'Presupuesto'};
+var CATS_GASTO=['Renta','Luz','Agua','Internet y teléfono','Sueldos','Mercancía','Transporte','Impuestos','Mantenimiento','Publicidad','Otros'];
 var CATS=['Abarrotes','Bebidas','Botanas','Lácteos','Limpieza','Higiene','Otros'];
 var TIPOS_MOV=['Entrada','Salida','Venta','Ajuste'];
 
@@ -40,7 +43,8 @@ function semilla(rol,ids){
     {id:'p-exist',nombre:'Existencias',tipo:'formula',expr:'{Al empezar} + {Entradas y salidas}',pie:'suma',negritas:true},
     {id:'p-min',nombre:'Mínimo',tipo:'numero'},
     {id:'p-falta',nombre:'Por surtir',tipo:'formula',expr:'MAX({Mínimo} - {Existencias}; 0)'},
-    {id:'p-estado',nombre:'Estado',tipo:'formula',expr:'SI({Existencias} <= 0; "Agotado"; SI({Existencias} < {Mínimo}; "Bajo"; "Bien"))'},
+    {id:'p-estado',nombre:'Estado',tipo:'formula',expr:'SI({Existencias} <= 0; "Agotado"; SI({Existencias} < {Mínimo}; "Bajo"; "Bien"))',
+      colores:[{op:'igual',val:'Agotado',tono:'mal'},{op:'igual',val:'Bajo',tono:'aviso'},{op:'igual',val:'Bien',tono:'bien'}]},
     {id:'p-valor',nombre:'Valor',tipo:'formula',expr:'{Costo} * MAX({Existencias}; 0)',moneda:true,pie:'suma'},
     {id:'p-gan',nombre:'Ganancia por pieza',tipo:'formula',expr:'{Precio} - {Costo}',moneda:true}],
     vistas:[vista('v-productos','Productos','tabla',{s:{col:'p-nombre',dir:1},ocultas:['p-mov']}),
@@ -73,11 +77,28 @@ function semilla(rol,ids){
     {id:'c-total',nombre:'Total',tipo:'moneda',pie:'suma',negritas:true},
     {id:'c-estado',nombre:'Estado',tipo:'seleccion',opciones:['Por pagar','Pagada']},
     {id:'c-vence',nombre:'Vence',tipo:'fecha'},
-    {id:'c-dias',nombre:'Días para pagar',tipo:'formula',expr:'SI({Estado} = "Pagada"; ""; DIAS({Vence}))'},
+    {id:'c-dias',nombre:'Días para pagar',tipo:'formula',expr:'SI({Estado} = "Pagada"; ""; DIAS({Vence}))',
+      colores:[{op:'menor',val:'0',tono:'mal'},{op:'menor',val:'4',tono:'aviso'}]},
     {id:'c-uuid',nombre:'Folio fiscal (UUID)',tipo:'texto'}],
     vistas:[vista('v-compras','Compras','tabla',{s:{col:'c-fecha',dir:-1},ocultas:['c-uuid']}),
       vista('v-porpagar','Por pagar','tabla',{f:{col:'c-estado',op:'igual',val:'Por pagar'},s:{col:'c-vence',dir:1},ocultas:['c-uuid','c-rfc']}),
       vista('v-cal','Vencimientos','calendario',{fecha:'c-vence'})],filas:[]};
+  if(rol==='gastos')return {nombre:NOMBRES.gastos,rol:rol,columnas:[
+    {id:'g-con',nombre:'Concepto',tipo:'texto'},
+    {id:'g-fecha',nombre:'Fecha',tipo:'fecha'},
+    {id:'g-cat',nombre:'Categoría',tipo:'seleccion',opciones:CATS_GASTO.slice()},
+    {id:'g-monto',nombre:'Monto',tipo:'moneda',pie:'suma',negritas:true},
+    {id:'g-forma',nombre:'Forma de pago',tipo:'seleccion',opciones:['Efectivo','Tarjeta','Transferencia']},
+    {id:'g-nota',nombre:'Nota',tipo:'texto'}],
+    vistas:[vista('v-gastos','Gastos','tabla',{s:{col:'g-fecha',dir:-1}}),
+      vista('v-cat','Por categoría','tabla',{agrupar:'g-cat',s:{col:'g-fecha',dir:-1}}),
+      vista('v-cal','Calendario','calendario',{fecha:'g-fecha'})],filas:[]};
+  if(rol==='presupuesto')return {nombre:NOMBRES.presupuesto,rol:rol,columnas:[
+    {id:'r-cat',nombre:'Categoría',tipo:'texto'},
+    {id:'r-monto',nombre:'Al mes',tipo:'moneda',pie:'suma',negritas:true},
+    {id:'r-nota',nombre:'Nota',tipo:'texto'}],
+    vistas:[vista('v-pres','Presupuesto','tabla')],
+    filas:CATS_GASTO.map(function(c){return {v:{'r-cat':c}}})};
   return null;
 }
 
@@ -99,10 +120,13 @@ function asegurar(doc,roles){
   return enCola(function(){
     return buscar().then(function(ids){
       var p=Promise.resolve();
-      if(!ids.productos)p=p.then(function(){return B.crear(semilla('productos',ids),doc)}).then(function(b){ids.productos=b.id});
-      if(roles.indexOf('movimientos')>=0&&!ids.movimientos)p=p.then(function(){return B.crear(semilla('movimientos',ids),doc)}).then(function(b){ids.movimientos=b.id});
-      if(roles.indexOf('compras')>=0&&!ids.compras)p=p.then(function(){return B.crear(semilla('compras',ids),doc)}).then(function(b){ids.compras=b.id});
+      /* En el orden de ROLES: productos antes que movimientos (la relación necesita su id) */
+      ROLES.forEach(function(rol){
+        if(roles.indexOf(rol)<0||ids[rol])return;
+        p=p.then(function(){return B.crear(semilla(rol,ids),doc)}).then(function(b){ids[rol]=b.id});
+      });
       return p.then(function(){
+        if(!ids.productos)return;
         /* La suma de los productos apunta a los movimientos (si se crearon después) */
         return B.cargar(ids.productos).then(function(pb){
           var c=pb&&B.col(pb,'p-mov');
@@ -361,6 +385,11 @@ if(AT.negocio){
   });
 }
 
+/* Al imprimir, el resumen necesita el inventario ya leído */
+B.precargas.push(function(doc){
+  var hay=JSON.stringify(doc&&doc.contenido||{}).indexOf('"type":"inventario"')>=0;
+  return hay?cargar():null;
+});
 /* Lee el inventario al abrir la página (si hay) */
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',cargar);else cargar();
 

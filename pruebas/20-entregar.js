@@ -166,7 +166,7 @@ prueba('Tesis · Entregar: PDF, Word e IEEE',async function({browser,base,r}){
   await Promise.all([n.waitForURL(function(u){return /documento\.html/.test(u.href)&&u.href!==antes}),n.evaluate(function(){AT.crear.nuevo('libreta');return 1}).catch(function(){return 1})]);await listo(n,400);
   r.cumple(!await n.isVisible('[data-ts="entregar"]'),'una libreta no tiene la barra de la tesis');
   await n.click('#docMas');await n.locator('.menu-i',{hasText:'Imprimir o guardar como PDF'}).click();await n.waitForSelector('dialog.en-dlg');
-  r.cumple(await n.textContent('.en-dlg h2')==='Imprimir o guardar como PDF'&&await n.locator('.en-dlg [data-en="docx"]').count()===0&&await n.locator('.en-dlg .en-f').count()===0,'desde «⋯», una libreta se imprime sin formato de tesis ni Word');
+  r.cumple(await n.textContent('.en-dlg h2')==='Imprimir o guardar como PDF'&&await n.locator('.en-dlg [data-en="docx"]').count()===0&&await n.locator('.en-dlg input[name="en-estilo"]').count()===0&&await n.locator('.en-dlg input[name="en-orientacion"]').count()===2,'desde «⋯», una libreta se imprime sin formato de tesis ni Word (solo papel y orientación)');
   await Promise.all([n.waitForURL(/imprimir\.html/),n.click('[data-en="pdf"]')]);
   await n.waitForSelector('body[data-listo]',{timeout:20000});
   const lib=await n.evaluate(function(){var pg=document.querySelectorAll('.pagedjs_page');return {n:pg.length,h1:(pg[0].querySelector('h1')||{}).textContent,portada:!!document.querySelector('.pagedjs_portada_page')}});
