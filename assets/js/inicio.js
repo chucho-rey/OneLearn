@@ -5,7 +5,9 @@
      para usar (las plantillas de los módulos encendidos, AT.crear.plantillasInicio).
    - Fase F5: acciones rápidas (negocio y personal: el corte de hoy, una venta, el fiado, un gasto; abren la página
      que ya tienes, con documento.html#agregar=<bloque>, o la crean), «Prepara tu negocio» (una lista que se marca
-     sola al revisar tus páginas; se puede ocultar) y, en tus páginas, las favoritas primero y después las recientes.
+     sola al revisar tus páginas; se puede ocultar).
+   - «Tus páginas» es un explorador (explorador.js): ubicaciones, columnas (modificado, tipo, quién la tiene abierta,
+     permisos y tamaño), buscar, ordenar y el menú de cada página.
    - Fase F7e: en un espacio de negocio, «Mi negocio» arriba: una página de bloques (d-minegocio) que se crea sola
      con indicadores, próximos vencimientos y el resumen del inventario, y que se edita como cualquier página
      («Editar esta sección»); no sale entre tus páginas recientes. Con recursos humanos, igual «Tu equipo»
@@ -80,7 +82,7 @@ function pintarNotas(){
   }).join('');
 }
 
-/* Tus documentos: los 6 más recientes */
+/* Tus páginas (las lee el explorador y las acciones rápidas) */
 var docsCache=[];
 var docsListos=false;
 function cargarDocs(){return AT.datos.documentos.todos().then(function(l){docsCache=l;docsListos=true})}
@@ -133,14 +135,6 @@ function pintarPaginaIni(P){
   AT.bloques.dibujar(d,c,{encabezado:false});
 }
 function pintarMiNegocio(){PAGINAS_INI.forEach(pintarPaginaIni)}
-function cuando(iso){
-  if(!iso)return '';
-  var d=new Date(iso),min=(Date.now()-d.getTime())/6e4;
-  if(min<1)return 'Hace un momento';
-  if(min<60)return 'Hace '+Math.round(min)+' min';
-  if(min<60*24&&d.getDate()===new Date().getDate())return 'Hoy, '+d.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'});
-  return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:d.getFullYear()===new Date().getFullYear()?undefined:'numeric'});
-}
 /* Recordatorio de respaldo: si tienes documentos o notas y no descargas un respaldo desde hace 14 días
    (o nunca), Inicio lo sugiere. «Recordármelo en una semana» lo pospone 7 días. Un espacio recién creado
    (menos de 3 días, perfil.js) todavía no lo pide: sus páginas acaban de salir de las plantillas. */
@@ -164,26 +158,14 @@ $('#iniRespaldoNo').addEventListener('click',function(){
   pintarRespaldo();$('#t-docs').focus();
 });
 
-function tarjeta(d){
-  var t=AT.tiposDoc&&AT.tiposDoc[d.tipo],w=AT.bloques?AT.bloques.palabras(d):0;
-  return '<li><a class="nota" href="documento.html?id='+encodeURIComponent(d.id)+'"><b class="doc-t">'+ico(t?t.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span>'+
-    (d.favorito?'<i class="doc-est" title="Favorita">'+ico('estrella-llena')+'<span class="vh"> (favorita)</span></i>':'')+'</b>'+
-    '<span>'+esc(t?t.nombre:'Documento')+(AT.bloques?' · '+(w===1?'1 palabra':w+' palabras'):'')+'</span><small>'+esc(cuando(d.editado))+'</small></a></li>';
-}
-/* Tus páginas: las favoritas (todas) y las 6 más recientes que no son favoritas */
+/* Tus páginas: el explorador (explorador.js), sin «Mi negocio» ni «Tu equipo», que ya están arriba */
 function pintarDocs(){
-  var ul=$('#iniDocs');
-  if(!ul)return;
-  var orden=docsCache.filter(function(d){return (d.id!==MI||!esNegocio())&&(d.id!==EQ||!esEquipo())}).sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
-  var favs=orden.filter(function(d){return d.favorito}),docs=orden.filter(function(d){return !d.favorito}).slice(0,6);
-  $('#iniFavs').hidden=$('#iniFavsT').hidden=$('#iniRecT').hidden=!favs.length;
-  $('#iniFavs').innerHTML=favs.map(tarjeta).join('');
-  if(!docs.length){
-    ul.innerHTML=favs.length?'<li class="ini-vacio">Tus demás páginas aparecerán aquí.</li>':'<li class="ini-vacio">'+(EST?'Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.':
-      'Todavía no tienes páginas. Crea la primera con «Crear» o con una de las que están aquí abajo. Se guardan en este dispositivo.')+'</li>';
-    return;
-  }
-  ul.innerHTML=docs.map(tarjeta).join('');
+  if(!AT.explorador)return;
+  var ocultos={};
+  if(esNegocio())ocultos[MI]=1;
+  if(esEquipo())ocultos[EQ]=1;
+  AT.explorador.datos(docsCache.filter(function(d){return !ocultos[d.id]}),{vacio:EST?'Crea una libreta de estudio, unas notas o tus apuntes de clase. Se guardan en este dispositivo.':
+    'Todavía no tienes páginas. Crea la primera con «Nuevo» o con una de las que están aquí abajo. Se guardan en este dispositivo.'});
 }
 
 /* ---------- Acciones rápidas y «Prepara tu negocio» (fase F5) ---------- */

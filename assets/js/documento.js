@@ -45,7 +45,7 @@ function pintarFav(){
 }
 /* Se guarda sin cambiar la fecha de edición (no sube en «Recientes») */
 function favorita(){
-  if(!doc||bloqueado)return;
+  if(!doc||bloqueado||sinPermiso)return;
   var f=!doc.favorito;
   (pendiente||timer?guardar():Promise.resolve()).then(function(){
     if(f)doc.favorito=true;else delete doc.favorito;
@@ -57,7 +57,7 @@ favBtn.addEventListener('click',favorita);
 /* Ancho completo: la página usa todo el ancho de la pantalla (se guarda en el documento, como en Notion) */
 function pintarAncho(){document.documentElement.classList.toggle('doc-completo',!!(doc&&doc.anchoCompleto))}
 function anchoCompleto(){
-  if(!doc||bloqueado)return;
+  if(!doc||bloqueado||sinPermiso)return;
   var a=!doc.anchoCompleto;
   (pendiente||timer?guardar():Promise.resolve()).then(function(){
     if(a)doc.anchoCompleto=true;else delete doc.anchoCompleto;
@@ -78,9 +78,11 @@ function guardar(){
   ponerEstado('Guardando…');
   return AT.datos.documentos.guardar(doc).then(function(d){
     doc.editado=d.editado;doc.creado=d.creado;
+    /* El acceso lo pudo cambiar otra ventana: se queda el guardado (datos.js no lo pisa) */
+    if(d.acceso)doc.acceso=d.acceso;if(d.editadoPor)doc.editadoPor=d.editadoPor;
     if(n===guardando&&!pendiente)ponerEstado('Guardado','ok');
     /* El historial decide si este guardado merece una versión (cada 5 minutos o antes de un borrado grande) */
-    if(AT.datos.versiones&&!bloqueado)AT.datos.versiones.observar(doc);
+    if(AT.datos.versiones&&!bloqueado&&!sinPermiso)AT.datos.versiones.observar(doc);
     if(AT.proteger&&academico())AT.proteger.guardado(doc);
   },function(){
     ponerEstado('No se pudo guardar','err');
@@ -93,7 +95,7 @@ function cambio(){
 }
 /* Al salir (o al cambiar de pestaña) se guarda lo pendiente y, si cambió algo desde la última versión, una nueva */
 function alSalir(){
-  if(!doc||bloqueado)return;
+  if(!doc||bloqueado||sinPermiso)return;
   if(pendiente||timer){if(ed)doc.contenido=ed.json();guardar()}
   if(AT.datos.versiones)AT.datos.versiones.tomar(doc);
 }
@@ -255,6 +257,9 @@ function ponerModo(m,enfocar,sinRecordar){
   modoBtn.title=m==='editar'?'Ver como lectura (se ve como una lección)':'Editar';
   if(m==='editar')pintarEditar();else pintarLeer();
   if(bloqueado)pintarBloqueo();
+  if(sinPermiso)pintarPermiso();
+  /* Quién tiene abierta esta página y si la edita o la lee (el explorador del Inicio lo muestra) */
+  if(AT.datos.presencia&&doc)AT.datos.presencia.anunciar(ID,bloqueado||sinPermiso?'leer':m);
   if(enfocar==='titulo'){var t=$('#docTitulo');if(t){t.focus();t.select()}}
   else if(enfocar==='cuerpo'&&ed)ed.enfocar('start');
   else if(enfocar)modoBtn.focus({preventScroll:true});
@@ -262,7 +267,7 @@ function ponerModo(m,enfocar,sinRecordar){
 modoBtn.addEventListener('click',function(){ponerModo(modo==='editar'?'leer':'editar',true)});
 /* E cambia a editar desde la lectura */
 document.addEventListener('keydown',function(e){
-  if(modo!=='leer'||bloqueado||e.ctrlKey||e.metaKey||e.altKey||e.defaultPrevented)return;
+  if(modo!=='leer'||bloqueado||sinPermiso||e.ctrlKey||e.metaKey||e.altKey||e.defaultPrevented)return;
   var t=e.target;
   if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
   if(e.key==='e'||e.key==='E'){e.preventDefault();ponerModo('editar','cuerpo')}
@@ -286,9 +291,11 @@ masBtn.addEventListener('click',function(){
   ],academico()||!AT.entrega?[]:[{t:'Imprimir o guardar como PDF',i:'page',d:'Con números de página',f:abrirEntregar}],[
     {t:doc&&doc.favorito?'Quitar de favoritas':'Agregar a favoritas',i:'estrella',f:favorita},
     {t:doc&&doc.anchoCompleto?'Ancho normal':'Ancho completo',i:'ancho',d:doc&&doc.anchoCompleto?'Vuelve a la columna de siempre':'Usa todo el ancho de la pantalla',f:anchoCompleto},
+    {t:'Personas y permisos',i:'users',d:permisoTexto(),f:function(){if(AT.permisos)AT.permisos.abrir(ID,masBtn)}},
     {t:'Historial de versiones',i:'historial',d:'Ver, comparar y recuperar lo de antes',f:function(){if(AT.versionesUI)AT.versionesUI.abrir(masBtn)}},
     {t:'Guardar como plantilla',i:'crear',d:'Para crear páginas iguales desde «Crear»',f:comoPlantilla},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
+  ],AT.datos.acceso&&!AT.datos.acceso.puede(doc,'compartir')?[]:[
     {sep:true},
     {t:'Mover a la papelera',i:'basura',peligro:true,f:eliminar}
   ]),{etiqueta:'Más opciones del documento',devolver:masBtn,alElegir:function(it){it.f()}});
@@ -469,18 +476,25 @@ AT.datos.documentos.leer(ID).then(function(d){
   if(tipo().academico&&!Array.isArray(doc.fuentes))doc.fuentes=[];
   AT.docActual=doc;AT.docCambio=cambio;
   titulo();
-  if(AT.datos.versiones)AT.datos.versiones.abrir(doc);
-  modoBtn.hidden=masBtn.hidden=favBtn.hidden=false;
+  sinPermiso=!!(AT.datos.acceso&&!AT.datos.acceso.puede(doc,'editar'));
+  /* Si te invitaron a esta página, al abrirla aceptas la invitación */
+  if(AT.datos.acceso)AT.datos.acceso.aceptar(ID).catch(function(){});
+  if(sinPermiso)AT.docCambio=null;
+  else if(AT.datos.versiones)AT.datos.versiones.abrir(doc);
+  modoBtn.hidden=sinPermiso;masBtn.hidden=false;favBtn.hidden=sinPermiso;
   pintarFav();pintarAncho();
   var nuevo=false;
   try{nuevo=sessionStorage.getItem('onelearn:recien-creado')===ID;if(nuevo)sessionStorage.removeItem('onelearn:recien-creado')}catch(e){}
   /* #agregar=<bloque> (acciones rápidas del Inicio): se abre para editar y negocio.js agrega el bloque */
-  var agregar=/^#agregar=(\w+)$/.exec(location.hash);
-  if(agregar)try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
-  var conAncla=!agregar&&location.hash.length>1;
-  ponerModo(nuevo||agregar?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo?'titulo':false);
+  var agregar=sinPermiso?null:/^#agregar=(\w+)$/.exec(location.hash);
+  /* #historial y #permisos (desde el explorador del Inicio) abren esa ventana */
+  var ventana=/^#(historial|permisos)$/.exec(location.hash);
+  if(agregar||ventana)try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  var conAncla=!agregar&&!ventana&&location.hash.length>1;
+  ponerModo(sinPermiso?'leer':nuevo||agregar?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo&&!sinPermiso?'titulo':false,sinPermiso);
+  if(ventana)setTimeout(function(){if(ventana[1]==='historial'&&AT.versionesUI)AT.versionesUI.abrir(masBtn);else if(ventana[1]==='permisos'&&AT.permisos)AT.permisos.abrir(ID,masBtn)},0);
   if(agregar)document.dispatchEvent(new CustomEvent('onebook:agregar',{detail:{tipo:agregar[1]}}));
-  ponerEstado('Guardado','ok');
+  ponerEstado(sinPermiso?'Solo lectura':'Guardado',sinPermiso?'':'ok');
   avisarAbierto();
   if(AT.refrescarNotas)AT.refrescarNotas();
   /* Si llegaste con #bloque (desde una cita o la búsqueda), se va a ese bloque en modo lectura */
@@ -492,7 +506,7 @@ AT.datos.documentos.leer(ID).then(function(d){
 
 /* ---------- Historial de versiones: restaurar una versión o recuperar un bloque (versiones.js) ---------- */
 /* Lo que una versión no cambia de la página: su id, su fecha de creación, si es favorita y el registro de autoría */
-var CONSERVAR=['id','creado','favorito','anchoCompleto','autoria'];
+var CONSERVAR=['id','creado','favorito','anchoCompleto','autoria','acceso','editadoPor'];
 function contenidoAhora(){if(ed)doc.contenido=ed.json();return doc}
 /* Vuelve a pintar la página con lo que tiene doc (sin pasar el editor viejo encima) */
 function repintar(){
@@ -502,10 +516,10 @@ function repintar(){
 }
 AT.docVersiones={
   doc:function(){return doc?contenidoAhora():null},
-  puede:function(){return !!doc&&!bloqueado},
+  puede:function(){return !!doc&&!bloqueado&&!sinPermiso},
   /* Restaura una versión completa; antes guarda la página como está (versión «Antes de restaurar») */
   restaurar:function(vdoc){
-    if(!doc||bloqueado)return Promise.reject(new Error('Esta página está abierta en otra pestaña'));
+    if(!doc||bloqueado||sinPermiso)return Promise.reject(new Error(sinPermiso?'No tienes permiso para editar esta página':'Esta página está abierta en otra pestaña'));
     contenidoAhora();clearTimeout(timer);timer=null;pendiente=false;
     return AT.datos.versiones.tomar(doc,{motivo:'restaurar'}).then(function(antes){
       var nuevo={};
@@ -523,7 +537,7 @@ AT.docVersiones={
      entra después del bloque que lo precedía (o al principio) */
   recuperarBloque:function(b,op){
     op=op||{};
-    if(!doc||bloqueado)return Promise.reject(new Error('Esta página está abierta en otra pestaña'));
+    if(!doc||bloqueado||sinPermiso)return Promise.reject(new Error(sinPermiso?'No tienes permiso para editar esta página':'Esta página está abierta en otra pestaña'));
     contenidoAhora();
     var c=doc.contenido.content||(doc.contenido.content=[]),blk=JSON.parse(JSON.stringify(b));
     var id=blk.attrs&&blk.attrs.id,i=-1;
@@ -549,6 +563,45 @@ AT.docVersiones={
    con un aviso y «Editar aquí» (que la vuelve la pestaña activa y deja a la otra para leer). La que lo acaba de
    abrir, si todavía no cambió nada, vuelve a leerlo cuando llega ese último guardado: así nada se pisa. */
 var YO=Math.random().toString(36).slice(2),bloqueado=false,abiertoEn=0,canalDoc=null;
+/* ---------- Permisos (datos.js: AT.datos.acceso; la ventana está en permisos.js) ----------
+   Con «Solo puede ver» (o sin estar en la lista de una página de otra persona) la página se abre para leer, con un
+   aviso y «Pedir permiso para editar». Si los permisos cambian en otra ventana, la página se ajusta. */
+var sinPermiso=false;
+function permisoTexto(){
+  var A=AT.datos.acceso;if(!A||!doc)return '';
+  var n=A.personas(doc).length,r=A.rol(doc);
+  return A.nombreRol(r)+(n>1?' · '+n+' personas':' · solo tú');
+}
+function pintarPermiso(){
+  var A=AT.datos.acceso,r=A.rol(doc),s=A.tuSolicitud(doc);
+  var v=document.createElement('div');
+  v.className='doc-bloqueo doc-permiso';v.setAttribute('role','status');
+  v.innerHTML='<p><b>Solo puedes ver esta página.</b> '+(r==='ninguno'?'No estás en la lista de personas con acceso.':'Tu permiso: '+esc(A.nombreRol(r))+'.')+
+    (s?' Ya pediste «'+esc(A.nombreRol(s.rol))+'»: está pendiente.':' Para editarla, pide permiso a quien la administra.')+'</p>'+
+    '<button class="btn" type="button" id="docPedirPermiso">'+(s?'Ver tu solicitud':'Pedir permiso para editar')+'</button>';
+  page.insertBefore(v,page.firstChild);
+  $('#docPedirPermiso',v).addEventListener('click',function(){if(AT.permisos)AT.permisos.abrir(ID,this,{pedir:'editor'})});
+}
+/* Los permisos de esta página cambiaron (aquí o en otra pestaña): se vuelve a ver qué puedes hacer */
+function revisarPermiso(){
+  AT.datos.documentos.leer(ID).then(function(d){
+    if(!d||!doc)return;
+    doc.acceso=d.acceso;
+    var antes=sinPermiso,ahora=!AT.datos.acceso.puede(doc,'editar');
+    if(ahora===antes){if(sinPermiso)ponerModo('leer',false,true);return}
+    if(ahora){
+      (pendiente||timer?guardar():Promise.resolve()).then(function(){
+        sinPermiso=true;AT.docCambio=null;modoBtn.hidden=favBtn.hidden=true;
+        ponerModo('leer',false,true);ponerEstado('Solo lectura');
+        AT.aviso('Ahora solo puedes ver esta página.');
+      });
+    }else{
+      sinPermiso=false;
+      if(!bloqueado){AT.docCambio=cambio;modoBtn.hidden=favBtn.hidden=false;ponerModo(modo,false,true);ponerEstado('Guardado','ok')}
+      AT.aviso('Ya puedes editar esta página.',bloqueado?null:'Editar',bloqueado?null:function(){ponerModo('editar','cuerpo')});
+    }
+  });
+}
 try{if('BroadcastChannel' in window)canalDoc=new BroadcastChannel('onebook-documentos')}catch(e){}
 function avisarAbierto(){
   abiertoEn=Date.now();
@@ -590,6 +643,9 @@ function releer(){
 }
 /* Otra pestaña cambió este documento */
 AT.datos.on(function(c,deOtra){
+  /* Solo cambió quién tiene acceso: no es «otra versión» de la página. Un respaldo importado ('*') también
+     pudo cambiarlo */
+  if(doc&&((c.almacen==='documentos'&&c.id===ID&&c.acceso)||c.almacen==='*')){revisarPermiso();if(c.almacen!=='*')return}
   if(!deOtra||!doc||c.almacen!=='documentos'||c.id!==ID)return;
   if(c.borrado){AT.aviso('Este documento se eliminó en otra pestaña.');return}
   if(bloqueado)return;

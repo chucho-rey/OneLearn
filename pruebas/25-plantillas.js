@@ -138,8 +138,10 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   r.cumple(await p.evaluate(function(){var a=document.querySelector('#docsLista li a.doc');return !!a&&/Nota de venta V-001/.test(a.textContent)&&!!a.querySelector('.doc-est')}),'en la barra lateral, las favoritas van primero, con su estrella');
   await p.keyboard.press('Escape');
   await p.goto(base+'inicio.html');await listo(p);
-  r.cumple(await p.evaluate(function(){var f=document.getElementById('iniFavs');return !f.hidden&&f.querySelectorAll('.nota').length===1&&/Nota de venta V-001/.test(f.textContent)&&!/Nota de venta V-001/.test(document.getElementById('iniDocs').textContent)&&!document.getElementById('iniRecT').hidden}),
-    'en el Inicio: favoritas y, aparte, las recientes');
+  r.cumple(await p.evaluate(function(){
+      var n=document.querySelector('#xpNav [data-ubic="favoritas"] em'),f=[].filter.call(document.querySelectorAll('#xpLista [data-fila]'),function(r){return /Nota de venta V-001/.test(r.textContent)})[0];
+      return !!n&&n.textContent==='1'&&!!f&&!!f.querySelector('.xp-fav');
+    }),'en el Inicio, el explorador marca la favorita con su estrella y la cuenta en «Favoritas»');
   /* «Prepara tu negocio» se marca solo */
   r.cumple(await p.evaluate(function(){return [].map.call(document.querySelectorAll('#iniPrepLista .hecho'),function(li){return li.querySelector('b').textContent}).join()==='Haz tu primer corte de caja,Anota a quién le fías,Haz tu primera nota de venta'&&document.getElementById('iniPrepN').textContent==='3 de 5'}),
     '«Prepara tu negocio» marca solos el corte, el fiado y la nota de venta');

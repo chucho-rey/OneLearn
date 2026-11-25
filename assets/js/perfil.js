@@ -52,7 +52,8 @@ function hayDatos(){
   try{
     for(var i=0;i<localStorage.length;i++){
       var k=String(localStorage.key(i));
-      if(k.indexOf(PREF)===0&&k!==CLAVE&&k!==PREF+'pestanas')return true;
+      /* Tu identidad y quién tiene abierta cada página tampoco cuentan: se crean solos */
+      if(k.indexOf(PREF)===0&&k!==CLAVE&&k!==PREF+'pestanas'&&k!==PREF+'yo'&&k!==PREF+'presencia')return true;
     }
   }catch(e){}
   return false;

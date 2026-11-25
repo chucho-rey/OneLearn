@@ -14,10 +14,10 @@ async function esperarGuardado(p){await p.waitForFunction(function(){return docu
 prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   const p=await pagina(browser,{ancho:1280,alto:900});
   await p.goto(base+'inicio.html');await listo(p);
-  r.cumple(/Crea una libreta/.test(await p.textContent('#iniDocs')),'el inicio invita a crear el primer documento');
+  r.cumple(/Crea una libreta/.test(await p.textContent('#xp')),'el inicio invita a crear el primer documento');
 
   /* ---------- La ventana «¿Qué quieres crear?» ---------- */
-  await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
+  await p.click('.xp-nuevo');await p.waitForTimeout(300);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.crear-dlg').open}),'«+ Crear» del inicio abre la pregunta');
   const opciones=await p.$$eval('.crear-g[data-modulo="estudio"] .crear-o b',function(e){return e.map(function(x){return x.textContent})});
   r.igual(opciones.join(' | '),'Libreta de estudio | Notas | Apuntes de clase | Tesis','se ofrecen libreta, notas, apuntes de clase y tesis');
@@ -28,7 +28,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'libreta','el foco empieza en la primera opción');
   await revisar(p,r,'ventana Crear en escritorio');
   await p.keyboard.press('Escape');await p.waitForTimeout(200);
-  r.cumple(await p.evaluate(function(){return !document.querySelector('dialog.crear-dlg').open&&document.activeElement.hasAttribute('data-crear')}),'Esc cierra y el foco vuelve a «+ Crear»');
+  r.cumple(await p.evaluate(function(){return !document.querySelector('dialog.crear-dlg').open&&document.activeElement.hasAttribute('data-crear')}),'Esc cierra y el foco vuelve a «Nuevo»');
 
   /* ---------- Crear una libreta ---------- */
   await p.click('#sideCrear');await p.waitForTimeout(200);
@@ -184,7 +184,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-el')==='no'}),'mover a la papelera pide confirmación con el foco en «Cancelar»');
   await Promise.all([p.waitForURL(/inicio\.html/),p.click('[data-el="si"]')]);await listo(p,300);
   r.cumple(/«Copia de Fotosíntesis» se movió a la papelera/.test(await p.textContent('#avisoApp')),'al eliminar, el inicio avisa que está en la papelera y ofrece deshacer');
-  r.cumple((await p.$$('#iniDocs .nota')).length===1,'el inicio lista los documentos que quedan');
+  r.cumple((await p.$$('#xpLista [data-fila]')).length===1,'el inicio lista los documentos que quedan');
   await Promise.all([p.waitForURL(/documento\.html/),p.click('#avisoApp .btn')]);await listo(p,300);
   r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Deshacer» la saca de la papelera');
   r.cumple(p.errores.length===0,'sin errores en escritorio',p.errores);
