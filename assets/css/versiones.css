@@ -1,0 +1,68 @@
+/* OneBook: la ventana «Historial de versiones» (versiones.js, documento.html). */
+dialog.ver-dlg{width:min(76rem,calc(100vw - 2rem));height:min(52rem,calc(100dvh - 2rem));max-width:none;max-height:none;padding:0;border:1px solid var(--line-strong);border-radius:0.75rem;background:var(--bg);color:var(--fg);box-shadow:0 1rem 3rem rgba(0,0,0,.25);overflow:hidden;display:none;flex-direction:column}
+dialog.ver-dlg[open]{display:flex}
+dialog.ver-dlg::backdrop{background:rgba(0,0,0,.45)}
+.ver-h{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.75rem 1rem 0.75rem 1.25rem;border-bottom:1px solid var(--line)}
+.ver-h h2{display:flex;align-items:center;gap:0.5rem;margin:0;font-size:1.125rem}
+.ver-h h2 .ico{color:var(--accent-ink)}
+.ver-c{flex:1;min-height:0;display:grid;grid-template-columns:minmax(16rem,22rem) minmax(0,1fr)}
+.ver-l{min-height:0;overflow-y:auto;padding:0.75rem;border-right:1px solid var(--line);background:var(--bg-side)}
+.ver-p{min-height:0;overflow-y:auto;padding:1rem 1.25rem 2rem}
+.ver-p:focus{outline:none}
+.ver-p:focus-visible{outline:var(--focus) solid var(--accent);outline-offset:-2px}
+/* Guardar una versión con nombre */
+.ver-nueva{display:grid;grid-template-columns:minmax(0,1fr);gap:0.375rem;margin:0 0 0.5rem;padding:0 0 0.75rem;border-bottom:1px solid var(--line)}
+.ver-nueva input{width:100%;min-width:0;min-height:2.25rem;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.ver-nueva input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ver-dia{margin:0.875rem 0.25rem 0.25rem;font-family:var(--font-mono);font-size:0.6875rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
+.ver-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.ver-i{display:flex;flex-direction:column;align-items:flex-start;gap:0.125rem;width:100%;padding:0.5rem 0.625rem;border:1px solid transparent;border-radius:0.5rem;background:transparent;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.ver-i:hover{background:var(--hover)}
+.ver-i[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-bg)}
+.ver-hora{font-weight:600;font-size:0.9375rem}
+.ver-igual{margin-left:0.375rem;font-style:normal;font-weight:400;font-size:0.75rem;color:var(--good-ink)}
+.ver-mot{font-size:0.875rem;color:var(--fg-2)}
+.ver-nom{font-size:0.875rem;color:var(--accent-ink)}
+.ver-i small{font-size:0.8125rem;color:var(--fg-2)}
+.ver-nota{margin:0.75rem 0.25rem 0;font-size:0.8125rem;color:var(--fg-2);max-width:none}
+/* La vista previa */
+.ver-p-h{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:0.75rem 1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--line)}
+.ver-p-t h3{margin:0;font-size:1.0625rem}
+.ver-p-t p{margin:0.125rem 0 0;font-size:0.875rem;color:var(--fg-2)}
+.ver-acc{display:flex;flex-wrap:wrap;gap:0.5rem}
+.ver-acc .btn .ico,.ver-atras .ico{margin-right:0.375rem;vertical-align:-0.125em}
+.ver-atras{display:none}
+.ver-nom-f{flex-basis:100%;max-width:28rem}
+.ver-res{margin:0.75rem 0 0.25rem;font-size:0.9375rem;max-width:none}
+.ver-aviso{margin:0.75rem 0 0;padding:0.5rem 0.75rem;border-left:3px solid var(--warn);background:var(--warn-bg);font-size:0.875rem;max-width:none}
+.ver-marcar{display:inline-flex;align-items:center;gap:0.5rem;margin:0.25rem 0 0.5rem;font-size:0.9375rem;cursor:pointer}
+.ver-marcar input{width:1.125rem;height:1.125rem;margin:0;accent-color:var(--accent-solid)}
+.ver-doc{margin-top:0.75rem;padding:1rem 1.25rem;border:1px dashed var(--line-strong);border-radius:0.75rem}
+.ver-tit{font-size:clamp(1.5rem,4vw,2rem);margin:0 0 0.75rem}
+.ver-b{position:relative;margin:0 -0.625rem;padding:0 0.625rem;border-left:3px solid transparent;border-radius:0.25rem}
+.ver-b+.ver-b{margin-top:0}
+.ver-quitado{border-left-color:var(--bad);background:var(--bad-bg)}
+.ver-cambio{border-left-color:var(--warn);background:var(--warn-bg)}
+.ver-b-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem 0.75rem;padding:0.5rem 0 0.125rem}
+.ver-et{font-family:var(--font-mono);font-size:0.6875rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.ver-quitado .ver-et{color:var(--bad-ink)}
+.ver-cambio .ver-et{color:var(--warn-ink)}
+.ver-b-bar .btn{min-height:2rem;padding:0.25rem 0.625rem;font-size:0.875rem}
+.ver-dif{flex-basis:100%;font-size:0.9375rem}
+.ver-dif summary{cursor:pointer;color:var(--fg-2);font-size:0.875rem}
+.ver-dif p{margin:0.375rem 0;max-width:none;overflow-wrap:anywhere}
+.ver-dif del{background:var(--bad-bg);color:var(--bad-ink);text-decoration:line-through}
+.ver-dif ins{background:var(--good-bg);color:var(--good-ink);text-decoration:underline}
+/* En pantallas angostas: primero la lista y, al elegir, la vista previa con «← Versiones» */
+@media (max-width:47.99rem){
+  dialog.ver-dlg{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0}
+  .ver-c{grid-template-columns:minmax(0,1fr)}
+  .ver-l{border-right:0}
+  .ver-p{display:none}
+  .ver-viendo .ver-l{display:none}
+  .ver-viendo .ver-p{display:block}
+  .ver-atras{display:inline-flex;align-items:center}
+  .ver-p-h{flex-direction:column}
+  .ver-doc{padding:0.75rem}
+}
+[data-contrast="high"] .ver-quitado,[data-contrast="high"] .ver-cambio{border-left-width:5px}
