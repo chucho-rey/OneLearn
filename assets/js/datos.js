@@ -108,6 +108,20 @@ function motorIDB(db){
         t.oncomplete=function(){ok()};t.onerror=function(){no(t.error)};t.onabort=function(){no(t.error||new Error('Se canceló la escritura'))};
       });
     },
+    /* Una versión con sus trozos, en una sola transacción: solo se escriben los trozos que todavía no están */
+    ponerVersion:function(trozos,v){
+      return new Promise(function(ok,no){
+        var t;
+        try{t=db.transaction(['trozos','versiones'],'readwrite')}catch(e){return no(e)}
+        var ts=t.objectStore('trozos');
+        trozos.forEach(function(o){
+          var r=ts.getKey?ts.getKey(o.id):ts.count(o.id);
+          r.onsuccess=function(){if(r.result===undefined||r.result===0)ts.put(o)};
+        });
+        t.objectStore('versiones').put(v);
+        t.oncomplete=function(){ok()};t.onerror=function(){no(t.error)};t.onabort=function(){no(t.error||new Error('Se canceló la escritura'))};
+      });
+    },
     /* Borra los trozos que ninguna versión usa; revisa y borra en la misma transacción */
     limpiarTrozos:function(){
       return new Promise(function(ok,no){
@@ -564,7 +578,7 @@ function guardarVersion(id,f,op,lista){
   /* Los trozos y la versión van en la misma transacción: nunca hay una versión sin sus bloques */
   var trozos=[{id:f.hm,t:f.meta}],vistos={};vistos[f.hm]=1;
   f.h.forEach(function(h,i){if(!vistos[h]){vistos[h]=1;trozos.push({id:h,t:f.ss[i]})}});
-  return motor.ponerVarios({trozos:trozos,versiones:[v]}).then(function(){
+  return motor.ponerVersion(trozos,v).then(function(){
     lista.unshift(v);
     avisar({almacen:'versiones',doc:id});
     return depurar(id,lista).then(function(){return v});
