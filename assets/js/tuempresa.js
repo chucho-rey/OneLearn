@@ -65,10 +65,20 @@ function pintar(){
       (ms.length?'<ul class="emp-d-l">'+ms.map(function(m){
         return '<li>'+AT.avatar(m.persona)+'<span>'+esc(m.persona.nombre||'Sin nombre')+'</span><small>'+esc(E.ROLES_DEP[m.rol].nombre)+'</small></li>';
       }).join('')+'</ul>':'')+
-      (E.puedeDepto(d.id,'administrar')?'<button class="btn" type="button" data-emp="depto" data-id="'+esc(d.id)+'">Administrar <span class="vh">'+esc(d.nombre)+'</span></button>':'')+
+      '<div class="emp-d-bt">'+(E.puedeDepto(d.id,'administrar')?'<button class="btn" type="button" data-emp="depto" data-id="'+esc(d.id)+'">Administrar <span class="vh">'+esc(d.nombre)+'</span></button>':'')+
+      (E.puedeSala(E.salaDeDepto(d.id),'ver')?'<a class="emp-link" href="sala.html?id='+encodeURIComponent(E.salaDeDepto(d.id))+'">Su sala<span class="vh"> de '+esc(d.nombre)+'</span></a>':'')+'</div>'+
     '</article>';
   }).join(''):'<p class="emp-vacio">Todavía no hay departamentos.'+(admin?' Agrega el primero: por ejemplo, Ventas o Almacén.':'')+'</p>';
 
+  /* Salas: las que ves */
+  var ss=E.salas(),TIPO={general:'Toda la empresa',depto:'Sala del departamento',libre:'Entre departamentos'};
+  $('#empSalN').textContent='('+ss.length+')';
+  $('#empAgregarS').hidden=!E.puedeCrearSalas();
+  $('#empSalas').innerHTML=ss.map(function(s){
+    var r=E.rolEnSala(s.id);
+    return '<li><a href="sala.html?id='+encodeURIComponent(s.id)+'"><i class="emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i><span>'+esc(s.tipo==='general'?'General':s.nombre)+'</span></a>'+
+      '<small>'+esc(TIPO[s.tipo])+' · tú '+esc(r==='admin'?'la administras':r==='editor'?'editas':'solo ves')+'</small></li>';
+  }).join('');
   $('#empRoles').innerHTML=Object.keys(E.ROLES).map(function(k){return '<div><dt>'+esc(E.ROLES[k].nombre)+'</dt><dd>'+esc(E.ROLES[k].desc)+'</dd></div>'}).join('')+
     Object.keys(E.ROLES_DEP).map(function(k){return '<div><dt>'+esc(E.ROLES_DEP[k].nombre)+' de un departamento</dt><dd>'+esc(E.ROLES_DEP[k].desc)+'</dd></div>'}).join('');
 }

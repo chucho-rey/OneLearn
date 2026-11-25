@@ -38,7 +38,9 @@ $('#iniAvisoResp').addEventListener('click',function(){
 });
 $('#iniAvisoOk').addEventListener('click',function(){if(PER&&PER.quitarAviso)PER.quitarAviso();pintarAviso();$('#t-docs').focus()});
 var docsListos=false;
-function cargarDocs(){return AT.datos.documentos.todos().then(function(l){docsCache=l;docsListos=true})}
+/* docsCache: las páginas que puedes ver (con salas); todosCache: todas, para no volver a crear las del Inicio */
+var todosCache=[];
+function cargarDocs(){return AT.datos.documentos.todos().then(function(l){todosCache=l;docsCache=l.filter(function(d){return !AT.datos.acceso||AT.datos.acceso.puede(d,'ver')});docsListos=true})}
 
 /* ---------- Mi negocio (fase F7e): una página de bloques arriba del Inicio ---------- */
 var MI='d-minegocio';
@@ -57,9 +59,17 @@ function miNegocioNuevo(){
 /* Tu equipo (módulo de recursos humanos): otra página de bloques (d-miequipo), igual que «Mi negocio» */
 var EQ='d-miequipo';
 function esEquipo(){return !!(esNegocio()&&PER.tiene('rh')&&AT.equipo)}
+/* «Tu equipo» trae sueldos: vive en la sala de Recursos humanos (si hay un departamento con ese nombre) o en
+   Privado del propietario de la empresa */
+function accesoEquipo(){
+  var E=AT.empresa;if(!E||!E.existe())return null;
+  var rh=E.departamentos().filter(function(d){return /^recursos humanos$|^rh$/i.test(d.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim())})[0];
+  var pr=E.personas().filter(function(p){return p.rol==='propietario'})[0];
+  return {dueno:pr?{id:pr.id,nombre:pr.nombre,correo:pr.correo}:AT.datos.yo(),personas:[],solicitudes:[],sala:rh?E.salaDeDepto(rh.id):'privado',empresa:E.id(),cambio:new Date().toISOString()};
+}
 function miEquipoNuevo(){
-  var n=function(){return AT.bloques.nuevoId()},ahora=new Date().toISOString();
-  return {formato:1,tipo:'notas',id:EQ,titulo:'Tu equipo',props:[],creado:ahora,editado:ahora,contenido:{type:'doc',content:[
+  var n=function(){return AT.bloques.nuevoId()},ahora=new Date().toISOString(),acc=accesoEquipo();
+  return {formato:1,tipo:'notas',id:EQ,titulo:'Tu equipo',props:[],creado:ahora,editado:ahora,acceso:acc||undefined,contenido:{type:'doc',content:[
     {type:'paragraph',attrs:{id:n()},content:[{type:'text',text:'Quién falta hoy, cumpleaños, aniversarios, vacaciones y lo que te cuesta tu equipo. Agrega a tu equipo y anota sus faltas o vacaciones desde «Mi equipo» (Crear → Recursos humanos).'}]},
     {type:'equipo',attrs:{id:n(),titulo:''}}
   ]}};
@@ -73,6 +83,10 @@ function pintarPaginaIni(P){
   var sec=$(P.sec);if(!sec)return;
   var ver=P.ver();sec.hidden=!ver;if(!ver)return;
   var d=docsCache.filter(function(x){return x.id===P.id})[0];
+  /* Existe, pero no la puedes ver (por ejemplo, «Tu equipo» en la sala de Recursos humanos) */
+  if(!d&&todosCache.some(function(x){return x.id===P.id})){sec.hidden=true;return}
+  /* «Tu equipo» de antes (sin lista de acceso, en la General) pasa una vez a su sala o a Privado */
+  if(d&&d.id===EQ&&!d.acceso&&!P.ubicando){var acc=accesoEquipo();if(acc){P.ubicando=true;d.acceso=acc;AT.datos.documentos.guardar(d,{conservarFecha:true}).then(function(){P.ubicando=false;recargar()},function(){P.ubicando=false})}}
   if(!d){
     /* Solo si de verdad no existe (todavía no se leen tus páginas, o se creó en otra pestaña): nunca la pisa */
     if(P.creando||!docsListos)return;P.creando=true;

@@ -50,6 +50,8 @@ function cargarTuyo(){
     var out=[];
     docs.forEach(function(d){
       if(AT.datos.deEstudio&&AT.datos.deEstudio(d))return;
+      /* Con salas, solo las páginas que puedes ver */
+      if(AT.datos.acceso&&!AT.datos.acceso.puede(d,'ver'))return;
       var tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo],href='documento.html?id='+encodeURIComponent(d.id);
       out.push({tipo:'documento',titulo:d.titulo||'Sin título',texto:AT.bloques.texto(d),href:href,sub:tipo?tipo.nombre:'Documento',icono:tipo?tipo.icono:'page',docId:d.id,editado:d.editado});
       var sec=null;

@@ -88,7 +88,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   const prov=await p.evaluate(function(){var d=AT.docActual;return {tipo:d.tipo,titulo:d.titulo,cols:d.contenido.content.filter(function(b){return b.type==='table'}).map(function(t){return t.content[0].content.length})[0],
     porPagar:d.contenido.content.some(function(b){return b.type==='porpagar'}),bloque:!!document.querySelector('.nb-porpagar')}});
   r.cumple(prov.tipo==='proveedores'&&prov.titulo==='Proveedores'&&prov.cols===4&&prov.porPagar&&prov.bloque,'«Proveedores» crea la página con su tabla y sus cuentas por pagar, y la abre',prov);
-  r.igual(await p.textContent('.crumbs'),'Tus páginas/Proveedores','la barra superior dice «Tus páginas»');
+  r.igual(await p.textContent('.crumbs'),'General/Proveedores','la barra superior dice en qué sala está (la General)');
   /* «/» en el editor */
   await p.evaluate(function(){AT.editorActual.tiptap.commands.focus('end')});await p.waitForTimeout(100);await p.keyboard.type('/');await p.waitForTimeout(250);
   const menu=await p.$$eval('.menu-barra .menu-i b',function(e){return e.map(function(x){return x.textContent})});

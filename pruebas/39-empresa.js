@@ -94,7 +94,8 @@ prueba('Tu empresa: personas, departamentos y cambiar de persona',async function
 
   /* ---------- Una página y «Alguien de tu empresa» ---------- */
   await p.goto(base+'inicio.html');await listo(p);
-  await p.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-precios',titulo:'Precios de mayoreo',props:[],
+  /* Una página privada (salas: solo su lista la ve) */
+  await p.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-precios',titulo:'Precios de mayoreo',props:[],acceso:AT.datos.acceso.nueva('privado'),
     contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-pre001'},content:[{type:'text',text:'Clavos a $40 el kilo.'}]}]}})});
   await p.goto(base+'documento.html?id=d-precios');await listo(p,500);
   await p.click('#docMas');await p.click('.menu-i:has-text("Personas y permisos")');await p.waitForSelector('dialog.perm-dlg[open]');
@@ -195,7 +196,7 @@ prueba('Tu empresa: personas, departamentos y cambiar de persona',async function
   /* ---------- Quien no tiene acceso a una página ---------- */
   await entrarComo(p,ids.mario,'1357');
   await p.goto(base+'documento.html?id=d-precios');await listo(p,500);
-  r.cumple(await p.evaluate(function(){return document.getElementById('docEstado').textContent==='Solo lectura'}),'Mario, que no está en la lista, la abre solo para leer');
+  r.cumple(/No tienes acceso/.test(await p.textContent('#docPage'))&&!(await p.$('.ProseMirror'))&&/Clavos/.test(await p.textContent('#docPage'))===false,'Mario, que no está en la lista de esa página privada, no la ve: solo puede pedir acceso');
 
   /* ---------- La computadora no sabe quién eres ---------- */
   await p.evaluate(function(){localStorage.setItem('aprende-tecnologia:yo',JSON.stringify({id:'u-fantasma1',nombre:'',correo:'',creado:'2026-01-01T00:00:00.000Z'}))});

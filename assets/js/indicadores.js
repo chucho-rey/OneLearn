@@ -10,6 +10,8 @@
    Expone AT.indicadores. Se carga después de reporte.js. */
 (function(){
 'use strict';
+/* Con salas, los vencimientos solo salen de las páginas que puedes ver */
+function visible(d){return !AT.datos.acceso||AT.datos.acceso.puede(d,'ver')}
 var AT=window.AT,B=AT.bases,R=AT.reporte,$=AT.$,esc=AT.esc,ico=AT.ico;
 if(!B||!R)return;
 var MAX=6;
@@ -140,7 +142,7 @@ function montarVen(raiz,op){
       htmlVen(vencimientos(n,docs),n);
   }
   function leer(){
-    return Promise.all([R.cargarBases(),AT.datos.bases.todos(),AT.datos.documentos.todos()]).then(function(r){LISTA=r[1];docs=r[2]});
+    return Promise.all([R.cargarBases(),AT.datos.bases.todos(),AT.datos.documentos.todos()]).then(function(r){LISTA=r[1];docs=r[2].filter(visible)});
   }
   raiz.addEventListener('change',function(e){var s=e.target.closest('[data-ven="dias"]');if(!s)return;n=+s.value;if(op.alCambiar)op.alCambiar({dias:n});pintar();var x=raiz.querySelector('[data-ven="dias"]');if(x)x.focus()});
   var quitar=null;
@@ -204,7 +206,7 @@ Object.keys(BLOQUES).forEach(function(nombre){
 if(B.precargas)B.precargas.push(function(doc){
   var t=JSON.stringify(doc&&doc.contenido||{});
   if(t.indexOf('"type":"indicadores"')<0&&t.indexOf('"type":"vencimientos"')<0)return null;
-  return (AT.inventario?AT.inventario.cargar():Promise.resolve()).then(R.cargarBases).then(function(){return Promise.all([AT.datos.bases.todos(),AT.datos.documentos.todos()])}).then(function(r){LISTA=r[0];DOCS=r[1]});
+  return (AT.inventario?AT.inventario.cargar():Promise.resolve()).then(R.cargarBases).then(function(){return Promise.all([AT.datos.bases.todos(),AT.datos.documentos.todos()])}).then(function(r){LISTA=r[0];DOCS=r[1].filter(visible)});
 });
 
 AT.indicadores={delNegocio:delNegocio,montarIndicadores:montarInd,montarVencimientos:montarVen,vencimientos:vencimientos,htmlIndicadores:htmlInd};

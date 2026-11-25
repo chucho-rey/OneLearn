@@ -4,7 +4,7 @@
      departamentos:[{id:'dp-…', nombre, color, creado, cambio, borrado}]}
    - Roles de la empresa (ROLES): propietario (uno; quien la creó: hace todo), admin (agrega y quita personas y
      departamentos y da permisos) y miembro. En cada departamento (ROLES_DEP): responsable (administra el departamento
-     y a su gente; con las salas, también sus salas), miembro (entra y edita) y consulta (solo ve). Una persona puede
+     y a su gente, y también su sala), miembro (entra y edita) y consulta (solo ve). Una persona puede
      estar en varios departamentos; la pertenencia vive en la persona (deptos), con su fecha de cambio.
    - Quien usa OneBook ahora es la persona de AT.datos.yo: entrarComo la cambia (pide su PIN si tiene) y lo demás
      (permisos de las páginas, presencia, «modificado por») ya la usa. Si otra pestaña cambia de persona, esta página
@@ -13,6 +13,12 @@
      de la misma empresa persona por persona y departamento por departamento (gana el cambio más reciente).
    - Un espacio que ya existía (perfil de negocio sin empresa) recibe su empresa sola, con quien usa este navegador
      como propietario (auto: mientras nadie la toque, un respaldo con empresa la reemplaza).
+   - Salas (E3), espacios de trabajo con sus páginas: salas:[{id:'sa-…', tipo general|depto|libre, nombre, color, depto,
+     acceso:{deptos:{'dp-…': edita|ve}, personas:{'u-…': admin|edita|ve}}, cambio, borrado}]. Hay una General ('sa-general',
+     toda la empresa edita) y una por departamento (id 'sa-d…' sacado del departamento, igual en cualquier navegador; su
+     nombre y su color son los del departamento: responsable administra, miembro edita, consulta ve). Las libres (entre
+     departamentos) las crean quien administra la empresa y los responsables. Quien administra la empresa administra
+     todas. La sala de cada página vive en su acceso (datos.js: doc.acceso.sala; Privado es solo de su lista).
    No es seguridad: sin servidor, quien tiene el navegador tiene los datos; el PIN solo ordena quién entra como quién.
    Con la nube (F9), las cuentas y los permisos por fila harán cumplir esto mismo.
    Expone AT.empresa. */
@@ -39,7 +45,7 @@ var SUGERIDOS={
   catalogo:['Ventas','Pedidos y envíos','Compras','Administración'],
   distribucion:['Ventas','Almacén','Reparto','Compras','Administración'],
   otro:['Ventas','Operación','Administración']};
-var MAX_PERSONAS=500,MAX_DEPTOS=60;
+var MAX_PERSONAS=500,MAX_DEPTOS=60,MAX_SALAS=200;
 
 function ahora(){return new Date().toISOString()}
 function idNuevo(p){return p+'-'+Math.random().toString(36).slice(2,10)}
@@ -79,6 +85,23 @@ function limpiarDepto(d){
   else if(!x.nombre)return null;
   return x;
 }
+var GENERAL='sa-general',ACC_SALA={admin:3,edita:2,ve:1};
+function idSala(v){return typeof v==='string'&&/^sa-[\w-]{4,40}$/.test(v)}
+function salaDeDepto(did){return 'sa-d'+did.slice(3)}
+function limpiarSala(s){
+  if(!esObjeto(s)||!idSala(s.id))return null;
+  var x={id:s.id,tipo:s.tipo==='general'||s.tipo==='depto'?s.tipo:'libre',nombre:limpio(s.nombre,40),color:COLOR[s.color]?s.color:'acento',
+    acceso:{deptos:{},personas:{}},creado:fecha(s.creado)||ahora(),cambio:fecha(s.cambio)||fecha(s.creado)||ahora()};
+  if(x.id===GENERAL){x.tipo='general';x.nombre='General'}
+  else if(x.tipo==='general')x.tipo='libre';
+  if(x.tipo==='depto'){if(!idDepto(s.depto))x.tipo='libre';else x.depto=s.depto}
+  var a=esObjeto(s.acceso)?s.acceso:{};
+  if(esObjeto(a.deptos))Object.keys(a.deptos).forEach(function(d){if(idDepto(d)&&(a.deptos[d]==='edita'||a.deptos[d]==='ve'))x.acceso.deptos[d]=a.deptos[d]});
+  if(esObjeto(a.personas))Object.keys(a.personas).forEach(function(q){if(idPersona(q)&&ACC_SALA[a.personas[q]])x.acceso.personas[q]=a.personas[q]});
+  if(s.borrado)x.borrado=true;
+  else if(x.tipo==='libre'&&!x.nombre)x.nombre='Sala';
+  return x;
+}
 function porId(lista,fn){
   var vistos={},r=[];
   (Array.isArray(lista)?lista:[]).forEach(function(x){var l=fn(x);if(l&&!vistos[l.id]){vistos[l.id]=1;r.push(l)}});
@@ -88,11 +111,23 @@ function limpiarEmpresa(e){
   if(!esObjeto(e)||typeof e.id!=='string'||!/^e-[\w-]{4,40}$/.test(e.id))return null;
   var x={formato:1,id:e.id,nombre:limpio(e.nombre,80),giro:limpio(e.giro,20),telefono:limpio(e.telefono,30),
     rfc:limpio(e.rfc,13).toUpperCase().replace(/[^A-ZÑ&0-9]/g,''),creado:fecha(e.creado)||ahora(),cambio:fecha(e.cambio)||fecha(e.creado)||ahora(),
-    personas:porId(e.personas,limpiarPersona).slice(0,MAX_PERSONAS*2),departamentos:porId(e.departamentos,limpiarDepto).slice(0,MAX_DEPTOS*2)};
+    personas:porId(e.personas,limpiarPersona).slice(0,MAX_PERSONAS*2),departamentos:porId(e.departamentos,limpiarDepto).slice(0,MAX_DEPTOS*2),
+    salas:porId(e.salas,limpiarSala).slice(0,MAX_SALAS*2)};
   if(e.auto)x.auto=true;
   /* Nadie pertenece a un departamento que ya no existe */
   var vivos={};x.departamentos.forEach(function(d){if(!d.borrado)vivos[d.id]=1});
   x.personas.forEach(function(p){Object.keys(p.deptos).forEach(function(d){if(!vivos[d])delete p.deptos[d]})});
+  /* Las salas tampoco dan acceso a departamentos ni a personas que ya no están; la sala de un departamento que ya
+     no existe queda como sala entre departamentos (sus páginas siguen ahí) */
+  var gente={};x.personas.forEach(function(p){if(!p.borrado)gente[p.id]=1});
+  x.salas.forEach(function(sa){
+    Object.keys(sa.acceso.deptos).forEach(function(d){if(!vivos[d])delete sa.acceso.deptos[d]});
+    Object.keys(sa.acceso.personas).forEach(function(q){if(!gente[q])delete sa.acceso.personas[q]});
+    if(sa.tipo==='depto'&&!vivos[sa.depto]){
+      var dd=x.departamentos.filter(function(d){return d.id===sa.depto})[0];
+      sa.tipo='libre';sa.nombre=sa.nombre||dd&&dd.nombre||'Sala';if(dd)sa.color=dd.color;delete sa.depto;
+    }
+  });
   /* Exactamente un propietario entre las personas activas: si hay dos (un respaldo con un traspaso), el traspaso más
      reciente (desde); si no hay ninguno, el administrador más antiguo */
   var activas=x.personas.filter(function(p){return !p.borrado}).sort(function(a,b){return a.creado<b.creado?-1:a.creado>b.creado?1:0});
@@ -120,6 +155,7 @@ function cambiar(fn,aviso){
   if(!e)throw new Error('Todavía no hay una empresa en este navegador.');
   var r=fn(e);
   delete e.auto;
+  asegurarSalas(e);
   var l=limpiarEmpresa(e);
   if(!l||!escribir(l))throw new Error('No se pudo guardar en este navegador. Revisa que no esté en modo privado o sin espacio.');
   avisar(aviso||{tipo:'empresa'});
@@ -130,6 +166,7 @@ function cambiar(fn,aviso){
 function yoId(){return AT.datos&&AT.datos.yoId?AT.datos.yoId():''}
 function buscar(e,pid){return e&&pid?e.personas.filter(function(p){return p.id===pid&&!p.borrado})[0]||null:null}
 function buscarDepto(e,did){return e&&did?e.departamentos.filter(function(d){return d.id===did&&!d.borrado})[0]||null:null}
+function buscarSala(e,sid){return e&&sid&&e.salas?e.salas.filter(function(x){return x.id===sid&&!x.borrado})[0]||null:null}
 function rolDe(pid){var p=buscar(leerGuardada(),pid);return p?p.rol:''}
 function esAdmin(pid){var r=rolDe(pid===undefined?yoId():pid);return r==='propietario'||r==='admin'}
 function rolEnDepto(did,pid){var p=buscar(leerGuardada(),pid===undefined?yoId():pid);return p&&p.deptos[did]||''}
@@ -156,14 +193,29 @@ function nombreLibre(e,nombre,salvo){
   return !e.departamentos.some(function(d){return !d.borrado&&d.id!==salvo&&norma(d.nombre)===n});
 }
 function validarNombre(nombre,que){
-  var n=limpio(nombre,que==='depto'?40:60);
-  if(!n)throw new Error(que==='depto'?'Escribe el nombre del departamento.':'Escribe el nombre de la persona.');
+  var n=limpio(nombre,que==='depto'||que==='sala'?40:60);
+  if(!n)throw new Error(que==='depto'?'Escribe el nombre del departamento.':que==='sala'?'Escribe el nombre de la sala.':'Escribe el nombre de la persona.');
   return n;
 }
 function validarCorreo(c){
   var k=limpio(String(c||''),254).toLowerCase();
   if(k&&!correoValido(k))throw new Error('Ese correo no parece válido.');
   return k;
+}
+
+/* ---------- Salas: la General y la de cada departamento existen siempre ---------- */
+/* Agrega lo que falte (ids fijos: un respaldo de otro navegador trae las mismas). Devuelve si cambió algo */
+function asegurarSalas(e){
+  if(!Array.isArray(e.salas))e.salas=[];
+  var t=ahora(),cambio=false;
+  function de(id){return e.salas.filter(function(x){return x.id===id})[0]}
+  if(!de(GENERAL)){e.salas.unshift({id:GENERAL,tipo:'general',nombre:'General',color:'gris',acceso:{deptos:{},personas:{}},creado:t,cambio:t});cambio=true}
+  (e.departamentos||[]).forEach(function(d){
+    if(d.borrado)return;
+    var id=salaDeDepto(d.id);
+    if(!de(id)){e.salas.push({id:id,tipo:'depto',depto:d.id,nombre:'',color:d.color,acceso:{deptos:{},personas:{}},creado:t,cambio:t});cambio=true}
+  });
+  return cambio;
 }
 
 /* ---------- Crear ---------- */
@@ -183,14 +235,16 @@ function crear(d,op){
   /* Quien crea la empresa es responsable de sus departamentos */
   e.departamentos.forEach(function(x){e.personas[0].deptos[x.id]='responsable'});
   if(op&&op.auto)e.auto=true;
+  asegurarSalas(e);
   var l=limpiarEmpresa(e);
   if(!escribir(l))throw new Error('No se pudo guardar tu empresa en este navegador. Revisa que no esté en modo privado o sin espacio.');
   avisar({tipo:'empresa',creada:true});
   return copia(l);
 }
-/* Un espacio de negocio que ya existía recibe su empresa (una sola vez) */
+/* Un espacio de negocio que ya existía recibe su empresa (una sola vez); una empresa de antes de las salas, sus salas */
 function asegurar(){
-  if(leerGuardada())return;
+  var ya=leerGuardada();
+  if(ya){var c=copia(ya);if(asegurarSalas(c))escribir(limpiarEmpresa(c));return}
   var p=AT.perfil&&AT.perfil.actual&&AT.perfil.actual();
   if(!p||!AT.datos||!AT.datos.yo)return;
   var n=p.negocio||{};
@@ -373,6 +427,12 @@ function quitarDepto(did){
     var x=buscarDepto(e,did);
     if(!x)throw new Error('Ese departamento ya no existe.');
     var t=ahora();
+    /* Su sala se queda (con sus páginas) como sala entre departamentos, con la misma gente */
+    var sa=buscarSala(e,salaDeDepto(did));
+    if(sa){
+      sa.tipo='libre';sa.nombre=x.nombre;sa.color=x.color;delete sa.depto;sa.cambio=t;
+      e.personas.forEach(function(p){var r=p.deptos[did];if(r&&!sa.acceso.personas[p.id])sa.acceso.personas[p.id]=r==='responsable'?'admin':r==='miembro'?'edita':'ve'});
+    }
     x.borrado=true;x.cambio=t;
     e.personas.forEach(function(p){if(p.deptos[did]){delete p.deptos[did];p.cambio=t}});
     return x;
@@ -389,6 +449,98 @@ function ponerEnDepto(did,pid,rol){
     p.cambio=ahora();
     return p;
   },{tipo:'depto',accion:'personas',id:did});
+}
+
+/* ---------- Salas: quién entra y cómo ---------- */
+/* La sala tal como se muestra: la de un departamento lleva su nombre y su color */
+function vistaSala(e,s){
+  var x=copia(s);
+  if(s.tipo==='depto'){var d=buscarDepto(e,s.depto);if(d){x.nombre=d.nombre;x.color=d.color}}
+  return x;
+}
+/* El rol de una persona en una sala: admin (la administra), editor (crea y edita sus páginas), lector (las ve) o ''.
+   Quien administra la empresa administra todas; en la General toda la empresa edita; en la de un departamento, su
+   responsable la administra, sus miembros editan y los de consulta ven; además, los departamentos y las personas
+   que la sala agrega (un miembro de consulta de esos departamentos solo ve) */
+function rolEnSala(sid,pid){
+  if(pid===undefined)pid=yoId();
+  var e=leerGuardada(),sa=buscarSala(e,sid),p=buscar(e,pid);
+  if(!sa||!p)return '';
+  if(p.rol==='propietario'||p.rol==='admin')return 'admin';
+  var n=sa.tipo==='general'?2:0;
+  if(sa.tipo==='depto'){var r=p.deptos[sa.depto];n=Math.max(n,r==='responsable'?3:r==='miembro'?2:r==='consulta'?1:0)}
+  Object.keys(sa.acceso.deptos).forEach(function(d){var r=p.deptos[d];if(r)n=Math.max(n,r==='consulta'||sa.acceso.deptos[d]==='ve'?1:2)});
+  if(sa.acceso.personas[pid])n=Math.max(n,ACC_SALA[sa.acceso.personas[pid]]);
+  return n>=3?'admin':n===2?'editor':n===1?'lector':'';
+}
+function puedeSala(sid,que,pid){
+  var n={admin:3,editor:2,lector:1}[rolEnSala(sid,pid)]||0;
+  return que==='administrar'?n>=3:que==='editar'?n>=2:n>=1;
+}
+function esResponsable(pid){var p=buscar(leerGuardada(),pid===undefined?yoId():pid);return !!p&&Object.keys(p.deptos).some(function(d){return p.deptos[d]==='responsable'})}
+/* Las salas: General primero, luego las de los departamentos y las demás, por nombre. Sin op.todas, solo las que
+   ve quien usa OneBook ahora */
+function salas(op){
+  var e=leerGuardada();if(!e||!e.salas)return [];
+  var orden={general:0,depto:1,libre:2};
+  return e.salas.filter(function(x){return !x.borrado&&(op&&op.todas||puedeSala(x.id,'ver'))}).map(function(x){return vistaSala(e,x)})
+    .sort(function(a,b){return orden[a.tipo]-orden[b.tipo]||a.nombre.localeCompare(b.nombre,'es',{sensitivity:'base'})});
+}
+function nombreLibreSala(e,nombre,salvo){
+  var n=norma(nombre);
+  return !e.salas.some(function(x){return !x.borrado&&x.id!==salvo&&norma(vistaSala(e,x).nombre)===n});
+}
+/* Acceso que agrega una sala: {deptos:{dp: edita|ve}, personas:{u: admin|edita|ve}} con lo que existe */
+function accesoSala(e,a,sinDepto){
+  var r={deptos:{},personas:{}};a=a||{};
+  if(esObjeto(a.deptos))Object.keys(a.deptos).forEach(function(d){if(d!==sinDepto&&buscarDepto(e,d)&&(a.deptos[d]==='edita'||a.deptos[d]==='ve'))r.deptos[d]=a.deptos[d]});
+  if(esObjeto(a.personas))Object.keys(a.personas).forEach(function(q){if(buscar(e,q)&&ACC_SALA[a.personas[q]])r.personas[q]=a.personas[q]});
+  return r;
+}
+/* Una sala entre departamentos: la crean quien administra la empresa y los responsables (quien la crea la administra) */
+function agregarSala(d){
+  d=d||{};
+  if(!esAdmin()&&!esResponsable())throw new Error('Solo quien administra la empresa o es responsable de un departamento puede crear salas.');
+  var nombre=validarNombre(d.nombre,'sala'),yo=yoId();
+  return vistaDe(cambiar(function(e){
+    if(e.salas.filter(function(x){return !x.borrado}).length>=MAX_SALAS)throw new Error('Una empresa puede tener hasta '+MAX_SALAS+' salas.');
+    if(!nombreLibreSala(e,nombre))throw new Error('Ya hay una sala con ese nombre.');
+    var t=ahora(),x={id:'sa-l'+Math.random().toString(36).slice(2,10),tipo:'libre',nombre:nombre,color:COLOR[d.color]?d.color:'acento',acceso:accesoSala(e,d),creado:t,cambio:t};
+    if(!esAdmin(yo))x.acceso.personas[yo]='admin';
+    e.salas.push(x);
+    return x;
+  },{tipo:'sala',accion:'agregar'}));
+}
+function vistaDe(x){var e=leerGuardada(),sa=x&&buscarSala(e,x.id);return sa?vistaSala(e,sa):x}
+/* c = {nombre, color, deptos, personas}. La de un departamento toma su nombre y su color del departamento; la
+   General es de toda la empresa y no se cambia */
+function cambiarSala(sid,c){
+  c=c||{};
+  var sa0=buscarSala(leerGuardada(),sid);
+  if(!sa0)throw new Error('Esa sala ya no existe.');
+  if(sa0.tipo==='general')throw new Error('La sala General es de toda la empresa: no se cambia.');
+  if(!puedeSala(sid,'administrar'))throw new Error('Solo quien administra la sala puede cambiarla.');
+  var nombre=c.nombre!=null&&sa0.tipo==='libre'?validarNombre(c.nombre,'sala'):null;
+  return vistaDe(cambiar(function(e){
+    var sa=buscarSala(e,sid);
+    if(nombre!=null&&nombre!==sa.nombre){if(!nombreLibreSala(e,nombre,sid))throw new Error('Ya hay una sala con ese nombre.');sa.nombre=nombre}
+    if(c.color!=null&&COLOR[c.color]&&sa.tipo==='libre')sa.color=c.color;
+    if(c.deptos||c.personas){
+      var n=accesoSala(e,{deptos:c.deptos||sa.acceso.deptos,personas:c.personas||sa.acceso.personas},sa.depto);
+      sa.acceso=n;
+    }
+    sa.cambio=ahora();
+    return sa;
+  },{tipo:'sala',accion:'cambiar',id:sid}));
+}
+/* Solo las salas entre departamentos se quitan (la General es de todos; la de un departamento se va con él).
+   Quien llama revisa antes que ya no tenga páginas */
+function quitarSala(sid){
+  var sa0=buscarSala(leerGuardada(),sid);
+  if(!sa0)throw new Error('Esa sala ya no existe.');
+  if(sa0.tipo!=='libre')throw new Error(sa0.tipo==='general'?'La sala General no se quita.':'La sala de un departamento se quita con su departamento.');
+  if(!puedeSala(sid,'administrar'))throw new Error('Solo quien administra la sala puede quitarla.');
+  return cambiar(function(e){var sa=buscarSala(e,sid);sa.borrado=true;sa.cambio=ahora();return sa},{tipo:'sala',accion:'quitar',id:sid});
 }
 
 /* ---------- Leer ---------- */
@@ -425,10 +577,10 @@ function combinar(entrante,op){
     }
     return '';
   }
-  /* La empresa del respaldo entra si aquí no hay, o si la de aquí es la automática y tú estás en la del respaldo;
-     otra empresa no se junta con la tuya */
-  if(!loc||(loc.id!==ent.id&&sinTocar(loc)&&buscar(ent,y))){
-    escribir(ent);avisar({tipo:'empresa',creada:true});
+  /* La empresa del respaldo entra si aquí no hay o si la de aquí es la automática sin tocar (si no estás en la del
+     respaldo, el Inicio te pregunta quién eres); otra empresa no se junta con la tuya */
+  if(!loc||(loc.id!==ent.id&&sinTocar(loc))){
+    asegurarSalas(ent);escribir(limpiarEmpresa(ent));avisar({tipo:'empresa',creada:true});
     return 'nueva';
   }
   if(loc.id!==ent.id)return 'otra';
@@ -442,6 +594,8 @@ function combinar(entrante,op){
   if(ent.cambio>loc.cambio)['nombre','giro','telefono','rfc','cambio'].forEach(function(k){r[k]=ent[k]});
   r.personas=juntar(loc.personas,ent.personas);
   r.departamentos=juntar(loc.departamentos,ent.departamentos);
+  r.salas=juntar(loc.salas,ent.salas);
+  asegurarSalas(r);
   var l=limpiarEmpresa(r);
   if(JSON.stringify(l)===JSON.stringify(loc))return '';
   escribir(l);avisar({tipo:'empresa'});
@@ -466,6 +620,7 @@ window.addEventListener('storage',function(ev){
 AT.empresa={
   ROLES:ROLES,ROLES_DEP:ROLES_DEP,COLORES:COLORES,
   existe:function(){return !!leerGuardada()},
+  id:function(){var e=leerGuardada();return e?e.id:''},
   /* La empresa que se creó sola para un espacio de antes, mientras nadie la toque */
   automatica:function(){return sinTocar(leerGuardada())},
   leer:function(){return copia(leerGuardada())},
@@ -503,6 +658,17 @@ AT.empresa={
   quitarDepto:quitarDepto,
   ponerEnDepto:ponerEnDepto,
   combinar:combinar,
+  /* Salas (E3) */
+  GENERAL:GENERAL,
+  salas:salas,
+  sala:function(sid){var e=leerGuardada(),sa=buscarSala(e,sid);return sa?vistaSala(e,sa):null},
+  salaDeDepto:salaDeDepto,
+  rolEnSala:rolEnSala,
+  puedeSala:puedeSala,
+  puedeCrearSalas:function(){return esAdmin()||esResponsable()},
+  agregarSala:agregarSala,
+  cambiarSala:cambiarSala,
+  quitarSala:quitarSala,
   /* Termina lo que quedó en curso (renombrar un departamento en las bases) */
   esperar:function(){return trabajo},
   /* fn({tipo:'empresa'|'persona'|'depto', accion, id, antes, nombre}, deOtraPestana) */

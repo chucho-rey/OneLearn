@@ -69,7 +69,7 @@ prueba('Plan de pagos',async function({browser,base,r}){
   for(const [ancho,aj] of [[390,{tema:'dark',contraste:'high',escala:1.5,fuente:'opendyslexic'}],[1280,{tema:'dark'}]]){
     const q=await pagina(browser,{ancho:ancho,ajustes:aj,reducir:true});
     await q.goto(base+'inicio.html');await listo(q);
-    await q.evaluate(function(x){return AT.datos.documentos.guardar(x,{conservarFecha:true}).then(function(){return 1})},doc);
+    await q.evaluate(function(x){x=JSON.parse(JSON.stringify(x));delete x.acceso;return AT.datos.documentos.guardar(x,{conservarFecha:true}).then(function(){return 1})},doc);
     await q.goto(base+'documento.html?id='+doc.id);await listo(q,500);
     const modo=await q.textContent('#docModo');
     await revisar(q,r,'plan de pagos '+ancho+'px ('+(/Editar/.test(modo)?'leer':'editar')+')');

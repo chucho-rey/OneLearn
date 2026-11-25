@@ -174,7 +174,7 @@ prueba('Piezas · Imágenes, tablas numeradas, notas al pie y referencias',async
   /* ---------- Celular, oscuro, alto contraste ×1.5 y OpenDyslexic ---------- */
   const m=await pagina(browser,{ancho:390,ajustes:{tema:'dark',contraste:'high',escala:1.5,fuente:'opendyslexic'},reducir:true});
   await m.goto(base+'inicio.html');await listo(m);
-  await m.evaluate(function(x){return AT.datos.documentos.guardar(x,{conservarFecha:true}).then(function(){return 1})},d);
+  await m.evaluate(function(x){x=JSON.parse(JSON.stringify(x));delete x.acceso;return AT.datos.documentos.guardar(x,{conservarFecha:true}).then(function(){return 1})},d);
   await m.goto(base+'documento.html?id='+d.id);await listo(m,500);
   if(/Editar/.test(await m.textContent('#docModo')))await m.click('#docModo');
   await m.waitForSelector('.ed-fig img');await m.waitForTimeout(300);
