@@ -245,18 +245,26 @@ $('#iniPlantillas').addEventListener('click',function(e){
   b.setAttribute('aria-disabled','true');
   AT.crear.nuevo(b.getAttribute('data-nuevo')).catch(function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo crear la página. Inténtalo otra vez.')});
 });
-/* Saludo: con negocio, su nombre y la fecha; si no, «Buenos días» y tu nombre */
+/* Saludo: el nombre de la empresa, el saludo con el nombre de quien entra y la fecha; sin nombre de empresa,
+   «Buenos días» y tu nombre */
 function pintarSaludo(){
-  var nombre=PER?PER.nombre():'',fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+  var E=AT.empresa,emp=E&&E.leer(),yo=E&&E.activa(),fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+  var nombre=emp&&emp.nombre||(PER?PER.nombre():''),tu=yo&&yo.nombre?yo.nombre.split(' ')[0]:'';
   if(PER&&PER.tipo()==='negocio'&&nombre){
     $('#saludo').textContent=nombre;
-    $('#iniSub').textContent=saludo()+' · '+fecha;
+    $('#iniSub').textContent=saludo()+(tu?', '+tu:'')+' · '+fecha;
   }else{
     $('#saludo').textContent=saludo()+(nombre?', '+nombre:'');
     $('#iniSub').textContent=fecha.charAt(0).toUpperCase()+fecha.slice(1);
   }
 }
-function pintar(){pintarMiNegocio();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
+/* La computadora no sabe quién la usa (por ejemplo, después de que te quitaron de la empresa): que elijas quién eres */
+function pintarQuien(){
+  var c=$('#iniQuien'),E=AT.empresa;if(!c)return;
+  c.hidden=!(E&&E.existe()&&!E.activa()&&AT.persona);
+}
+$('#iniQuienB').addEventListener('click',function(){if(AT.persona)AT.persona.abrir(this)});
+function pintar(){pintarQuien();pintarMiNegocio();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
 function recargar(){cargarDocs().then(pintar)}
 pintarSaludo();
 pintarAcciones();
@@ -264,6 +272,7 @@ pintarPlantillas();
 pintar();
 recargar();
 AT.datos.on(function(c){if(c.almacen==='documentos'||c.almacen==='*')recargar()});
+if(AT.empresa)AT.empresa.on(function(){pintarSaludo();pintarQuien()});
 /* Al volver con «atrás» desde una página, el navegador puede mostrar una copia vieja: se actualiza */
 window.addEventListener('pageshow',function(e){if(e.persisted)location.reload()});
 })();

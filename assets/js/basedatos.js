@@ -113,8 +113,8 @@ function montar(raiz,op){
       case 'fecha':return '<input type="date" class="bd-in"'+a+' value="'+esc(v)+'">';
       case 'casilla':return '<input type="checkbox" class="bd-cas"'+a+(v?' checked':'')+'>';
       case 'seleccion':{
-        var ops=(c.opciones||[]).slice();if(v&&ops.indexOf(v)<0)ops.push(v);
-        return '<select class="bd-in bd-sel" data-tono="'+tono(v,ops.indexOf(v))+'"'+a+'><option value=""></option>'+ops.map(function(o){return '<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select>';
+        var ops=B.opciones(c).slice();if(v&&ops.indexOf(v)<0)ops.push(v);
+        return '<select class="bd-in bd-sel" data-tono="'+tonoDe(c,v,ops.indexOf(v))+'"'+a+'><option value=""></option>'+ops.map(function(o){return '<option'+(o===v?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select>';
       }
       case 'multiple':return '<button type="button" class="bd-in bd-multi" data-multi'+a+'>'+(t?esc(t):'<span class="bd-vacio">—</span>')+'</button>';
       case 'relacion':{
@@ -134,6 +134,15 @@ function montar(raiz,op){
     if(/pagad|recibid|hech|complet|terminad|entregad|activ|^s[ií]$/.test(s))return 'bien';
     if(/vencid|cancelad|urgente|atrasad|^baja/.test(s))return 'mal';
     return ['a','b','c'][Math.max(0,i)%3];
+  }
+  /* Un departamento lleva el color que tiene en «Tu empresa» */
+  var TONO_DEP={acento:'a',morado:'b',verde:'bien',ambar:'aviso',rojo:'mal',gris:'c'};
+  function tonoDe(c,o,i){
+    if(c&&c.origen==='departamentos'&&AT.empresa&&o){
+      var d=AT.empresa.departamentos().filter(function(x){return x.nombre===o})[0];
+      if(d)return TONO_DEP[d.color]||'c';
+    }
+    return tono(o,i);
   }
   function errorTexto(t){return t==='#REF'?'Una columna o una base que usa ya no existe':t==='#CICLO'?'Se usa a sí misma':t==='#ERROR'?'La fórmula está mal escrita o divide entre cero':''}
   function claseCol(c){return (c.negritas?' bd-neg':'')+(c.resaltado?' bd-res-c':'')+(B.esNumerica(b,c)?' bd-num-c':'')}
@@ -185,7 +194,7 @@ function montar(raiz,op){
     if(!gc||gc.tipo!=='seleccion')gc=b.columnas.filter(function(c){return c.tipo==='seleccion'})[0];
     if(!gc)return '<p class="hint">El tablero ordena las filas por una columna de selección (por ejemplo, Estado). '+(ed?'Agrega una con «+» en la tabla o en «Ajustar vista».':'')+'</p>';
     var grupos={};fs.forEach(function(f){var k=B.valor(b,f,gc)||'';(grupos[k]=grupos[k]||[]).push(f)});
-    var claves=(gc.opciones||[]).slice();Object.keys(grupos).forEach(function(k){if(k&&claves.indexOf(k)<0)claves.push(k)});claves.push('');
+    var claves=B.opciones(gc).slice();Object.keys(grupos).forEach(function(k){if(k&&claves.indexOf(k)<0)claves.push(k)});claves.push('');
     return '<div class="bd-tablero">'+claves.filter(function(k){return k||grupos['']}).map(function(k){
       var l=grupos[k]||[];
       return '<section class="bd-carril" aria-label="'+esc((k||'Sin '+gc.nombre.toLowerCase())+' ('+l.length+')')+'"><h4 class="bd-carril-t">'+esc(k||'Sin '+gc.nombre.toLowerCase())+' <span class="bd-gn">'+l.length+'</span></h4>'+
@@ -302,7 +311,7 @@ function montar(raiz,op){
     var t=e.target;
     if(t.hasAttribute('data-bd-nombre')){var n=t.value.trim()||'Base de datos';if(n!==b.nombre)cambiarBase(function(x){x.nombre=n},'el nombre de la base');return}
     var fid=t.getAttribute('data-f'),cid=t.getAttribute('data-c');if(!fid||!cid)return;
-    if(t.classList.contains('bd-sel'))t.setAttribute('data-tono',tono(t.value,t.selectedIndex-1));
+    if(t.classList.contains('bd-sel'))t.setAttribute('data-tono',tonoDe(B.col(b,t.getAttribute('data-c')),t.value,t.selectedIndex-1));
     var f=fila(fid),c=B.col(b,cid),k=fid+'|'+cid;if(!f||!c)return;
     clearTimeout(esperaTexto[k]);
     var antes=antesTexto[k]||B.clonar(f);delete antesTexto[k];
@@ -401,7 +410,7 @@ function montar(raiz,op){
   /* Selección múltiple: casillas con las opciones */
   function multiple(f,c,boton){
     if(!f||!c)return;
-    var act=B.valor(b,f,c),ops=(c.opciones||[]).slice();act.forEach(function(o){if(ops.indexOf(o)<0)ops.push(o)});
+    var act=B.valor(b,f,c),ops=B.opciones(c).slice();act.forEach(function(o){if(ops.indexOf(o)<0)ops.push(o)});
     var d=dialogo('bd-mult',c.nombre,'<fieldset class="bd-ops"><legend class="vh">'+esc(c.nombre)+'</legend>'+
       (ops.length?ops.map(function(o,i){return '<label class="pl-op"><input type="checkbox" value="'+esc(o)+'"'+(act.indexOf(o)>=0?' checked':'')+'><span>'+esc(o)+'</span></label>'}).join(''):'<p class="hint">Esta columna no tiene opciones todavía. Agrégalas en sus opciones.</p>')+
       '</fieldset><div class="td-bt"><button class="btn pri" type="button" data-ok>Listo</button></div>');
@@ -470,7 +479,8 @@ function montar(raiz,op){
         '<label class="campo-l"><span>Nombre</span><input type="text" name="nombre" maxlength="60" value="'+esc(c.nombre)+'" required></label>'+
         '<label class="campo-l"><span>Tipo</span><select name="tipo"'+(primera?' disabled':'')+'>'+opciones(B.TIPOS,c.tipo)+'</select></label>'+
         (primera?'<p class="hint">La primera columna es el nombre de cada fila: siempre es de texto.</p>':'')+
-        '<label class="campo-l" data-si="seleccion multiple"><span>Opciones (una por renglón)</span><textarea name="opciones" rows="4">'+esc((c.opciones||[]).join('\n'))+'</textarea></label>'+
+        (c.origen==='departamentos'?'<p class="hint" data-si="seleccion">Las opciones son los departamentos de tu empresa: se agregan y se cambian en «Tu empresa».</p>':
+          '<label class="campo-l" data-si="seleccion multiple"><span>Opciones (una por renglón)</span><textarea name="opciones" rows="4">'+esc((c.opciones||[]).join('\n'))+'</textarea></label>')+
         '<label class="campo-l" data-si="relacion"><span>Con la base</span><select name="base">'+opciones(bs.map(function(x){return [x.id,x.id===b.id?x.nombre+' (esta misma)':x.nombre]}),c.base||'')+'</select></label>'+
         '<label class="campo-l" data-si="referencia"><span>De la relación</span><select name="rel"><option value=""></option>'+opciones(rels.map(function(k){return [k.id,k.nombre]}),c.rel||'')+'</select></label>'+
         '<label class="campo-l" data-si="referencia"><span>Trae el dato</span><select name="campo"></select></label>'+
@@ -541,7 +551,8 @@ function montar(raiz,op){
         if(!nombre){msg.textContent='Escribe el nombre de la columna.';sel('nombre').focus();return}
         if(b.columnas.some(function(k){return k.id!==c.id&&B.sinAcentos(k.nombre)===B.sinAcentos(nombre)})){msg.textContent='Ya hay una columna con ese nombre.';sel('nombre').focus();return}
         var x={id:c.id,nombre:nombre,tipo:tipo};
-        if(tipo==='seleccion'||tipo==='multiple')x.opciones=sel('opciones').value.split(/\n/).map(function(s){return s.trim()}).filter(function(s,i,a){return s&&a.indexOf(s)===i});
+        if(tipo==='seleccion'&&c.origen==='departamentos')x.origen='departamentos';
+        else if(tipo==='seleccion'||tipo==='multiple')x.opciones=(sel('opciones')?sel('opciones').value:'').split(/\n/).map(function(s){return s.trim()}).filter(function(s,i,a){return s&&a.indexOf(s)===i});
         if(tipo==='relacion'){x.base=sel('base').value;if(!x.base){msg.textContent='Elige con qué base se relaciona.';return}}
         if(tipo==='referencia'){x.rel=sel('rel').value;x.campo=sel('campo').value;if(!x.rel||!x.campo){msg.textContent='Elige la relación y el dato que trae.';return}}
         if(tipo==='suma'){x.base=sel('sbase').value;x.rel=sel('srel').value;x.campo=sel('scampo').value;if(!x.base||!x.rel||!x.campo){msg.textContent='Elige la base, la relación y el campo que se suma.';return}}

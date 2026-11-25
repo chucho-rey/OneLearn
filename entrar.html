@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Crea tu espacio · OneBook</title>
-<meta name="description" content="Crea el espacio de tu negocio en OneBook y empieza con las páginas que necesitas. Sin cuenta: todo se guarda en tu dispositivo.">
+<title>Crea tu empresa · OneBook</title>
+<meta name="description" content="Crea tu empresa en OneBook: sus departamentos y las páginas para empezar. Sin cuenta: todo se guarda en tu dispositivo.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
 <link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
@@ -39,23 +39,32 @@
     </section>
 
     <section class="en-sec" data-paso="2" aria-labelledby="enT2" hidden>
-      <h1 id="enT2" tabindex="-1">Tu negocio</h1>
+      <h1 id="enT2" tabindex="-1">Tu empresa</h1>
       <div class="en-negocio" id="enNegocioCampos">
-        <label class="en-campo"><span>Nombre del negocio</span><input id="enNegocio" type="text" autocomplete="organization" maxlength="80" placeholder="Por ejemplo, Abarrotes Lupita"></label>
+        <label class="en-campo"><span>Nombre de la empresa</span><input id="enNegocio" type="text" autocomplete="organization" maxlength="80" placeholder="Por ejemplo, Abarrotes Lupita"></label>
         <label class="en-campo"><span>Giro</span><select id="enGiro"></select></label>
-        <label class="en-campo"><span>Teléfono del negocio <small>(opcional)</small></span><input id="enTel" type="tel" autocomplete="tel" maxlength="30"></label>
+        <label class="en-campo"><span>Teléfono de la empresa <small>(opcional)</small></span><input id="enTel" type="tel" autocomplete="tel" maxlength="30"></label>
+        <label class="en-campo"><span>Tu nombre</span><input id="enNombre" type="text" autocomplete="name" maxlength="60"></label>
         <label class="en-op en-rh"><input type="checkbox" id="enRh"><span><b>Tengo empleados</b><small>Activa Recursos humanos: tu equipo, nómina, vacaciones, aguinaldo y finiquito.</small></span></label>
-        <p class="en-nota">Los montos van en pesos mexicanos (MXN).</p>
-      </div>
-      <div class="en-persona" id="enPersonaCampos">
-        <label class="en-campo"><span>Tu nombre <small>(opcional)</small></span><input id="enNombre" type="text" autocomplete="given-name" maxlength="60"></label>
-        <p class="en-nota">Solo para saludarte en tu Inicio.</p>
+        <p class="en-nota">Tú quedas como propietario de la empresa. Los montos van en pesos mexicanos (MXN).</p>
       </div>
     </section>
 
     <section class="en-sec" data-paso="3" aria-labelledby="enT3" hidden>
-      <h1 id="enT3" tabindex="-1">¿Con qué empiezas?</h1>
-      <p class="en-txt" id="enT3Txt">Te creamos estas páginas para empezar. Quita las que no quieras; después puedes crear más con «Crear».</p>
+      <h1 id="enT3" tabindex="-1">Departamentos</h1>
+      <p class="en-txt">Agrupan a tu gente: Ventas, Almacén, Administración… Pronto, cada uno tendrá su sala con sus páginas. Quita los que no quieras; los cambias cuando quieras en «Tu empresa».</p>
+      <fieldset class="en-ops en-deps" id="enDeptos">
+        <legend class="vh">Departamentos de tu empresa</legend>
+      </fieldset>
+      <div class="en-dep-nuevo">
+        <label class="en-campo"><span>Otro departamento</span><input id="enDepNuevo" type="text" maxlength="40" autocomplete="off" placeholder="Por ejemplo, Mantenimiento"></label>
+        <button type="button" class="btn" id="enDepAgregar">Agregar</button>
+      </div>
+    </section>
+
+    <section class="en-sec" data-paso="4" aria-labelledby="enT4" hidden>
+      <h1 id="enT4" tabindex="-1">¿Con qué empiezas?</h1>
+      <p class="en-txt" id="enT4Txt">Te creamos estas páginas para empezar. Quita las que no quieras; después puedes crear más con «Crear».</p>
       <fieldset class="en-ops en-pls" id="enPlantillas">
         <legend class="vh">Páginas para empezar</legend>
       </fieldset>
@@ -79,6 +88,7 @@
 
 <script src="assets/js/base.js"></script>
 <script src="assets/js/datos.js"></script>
+<script src="assets/js/empresa.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/crear.js"></script>
 <script src="assets/js/entrar.js"></script>

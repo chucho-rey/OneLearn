@@ -1,6 +1,6 @@
 # OneBook
 
-OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico, empresa y departamentos, salas, Inicio armable y la bienvenida para empresas).
+OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico y empresa, personas y departamentos, hechas; siguen las salas, el Inicio armable y la bienvenida para empresas).
 
 Lo académico de OneLearn (lecciones, rutas, proyectos, terminal simulada, libretas, apuntes y la tesis) se separó de OneBook el 25 de noviembre de 2026 (etapa E1). Queda completo en la historia de git: el último commit con todo es `b0e99c5` (y la etiqueta `onelearn-final`, `b4b9f6f`, es la versión de antes del cambio de nombre). Nadie pierde datos: ver «Lo de estudio que se separó» más abajo.
 
@@ -15,8 +15,9 @@ index.html                  Página de bienvenida (la raíz del sitio): una pág
                             navegador va directo a inicio.html (con ?conoce se queda en la bienvenida)
 app.html                    Pestañas dentro de la app, como en un navegador: cada pestaña es una página de la app en un iframe.
                             La app instalada abre aquí; «Abrir en pestañas» (barra lateral) entra con la página actual
-entrar.html                 «Crea tu espacio»: tu negocio (nombre, giro, teléfono, «Tengo empleados») y las páginas para empezar;
-                            con ?editar cambia los módulos; también restaura un respaldo
+entrar.html                 «Crea tu empresa»: tu empresa (nombre, giro, teléfono, tu nombre, «Tengo empleados»), sus
+                            departamentos y las páginas para empezar; con ?editar cambia los módulos; también restaura un respaldo
+empresa.html                «Tu empresa»: las personas (rol, departamentos, PIN) y los departamentos (tuempresa.js, empresa.css)
 inicio.html                 Inicio de la empresa: el nombre del negocio y la fecha, acciones rápidas, «Mi negocio» y «Tu equipo»,
                             tus páginas (explorador) y páginas listas para usar
 documento.html              Una página tuya (?id=...): editarla con el editor de bloques o leerla
@@ -35,11 +36,17 @@ assets/
   js/perfil.js              El perfil del espacio y sus módulos (negocio, rh); en el <head> de todas las páginas, después de
                             ajustes.js. Marca <html> con con-/sin-<módulo>, convierte los perfiles de antes (estudio, «Mis
                             finanzas») y manda a entrar.html si no hay espacio (AT.perfil)
-  js/entrar.js              El asistente de «Crea tu espacio» (entrar.html)
+  js/entrar.js              El asistente de «Crea tu empresa» (entrar.html)
   js/pestanas.js            El contenedor de pestañas (app.html): abrir, cerrar, cambiar, atajos, recordar, descargar las
                             que no se usan, hasta 12 y la lista en celular (AT.pestanas)
   fonts/                    IBM Plex Sans y Mono, Atkinson Hyperlegible y OpenDyslexic (SIL OFL 1.1), alojadas aquí
   js/base.js                Utilidades (AT.$, AT.esc, AT.ico...), íconos y la página actual (AT.paginaActual, AT.rutas)
+  js/empresa.js             La empresa (etapa Empresas): personas con rol (propietario, administrador, miembro), departamentos
+                            (responsable, miembro, consulta), PIN, «Cambiar de persona», respaldo y la empresa automática
+                            de los espacios de antes; en localStorage (AT.empresa, sin interfaz)
+  js/persona.js             La ventana «¿Quién usa OneBook?» (cambiar de persona, con PIN) desde la barra lateral (AT.persona)
+  js/tuempresa.js           La página «Tu empresa»: datos, personas, departamentos y sus ventanas
+  css/empresa.css           Estilos de «Tu empresa» y los colores de los departamentos
   js/datos.js               Tus datos en IndexedDB: páginas, tus plantillas, la papelera, las bases de datos (bases y filas),
                             el historial de versiones, quién eres, permisos y presencia; respaldo e importación, también de
                             Bases unificadas; y lo de estudio que quedó (notas, marcadores, avance) (AT.datos)
@@ -73,7 +80,8 @@ assets/
   js/permisos.js            Ventana «Personas y permisos» de una página: quién tiene acceso, invitar, cambiar,
                             quitar, solicitudes y pedir permisos (AT.permisos; en el Inicio y en la página)
   css/permisos.css          Estilos de esa ventana y de los avatares de las personas
-  js/barra.js               Barra lateral (Inicio, Crear, Buscar, «Tus páginas» y el pie), barra superior y menú en celular
+  js/barra.js               Barra lateral (Inicio, Crear, Buscar, Tu empresa, «Tus páginas» y el pie con quién entra), barra
+                            superior y menú en celular
   js/lectura.js             Panel Lectura (tamaño de texto, tema, contraste, fuente y espacios)
   js/app.js                 App instalable: service worker, aviso de actualización e instalación
   js/respaldo.js            Ventana «Tus datos»: espacio, protección del navegador, descargar e importar respaldo; y la ventana
@@ -110,7 +118,7 @@ assets/
   js/landing.js             Bienvenida: manda al Inicio a quien ya usa OneBook; dibuja la página de ejemplo, el plan de pagos
                             y la calculadora de precio para probar
   css/landing.css           Estilos de la página de bienvenida
-  css/entrar.css            Estilos de «Crea tu espacio»
+  css/entrar.css            Estilos de «Crea tu empresa»
   css/pestanas.css          Estilos del contenedor de pestañas
   js/ayuda.js               La página de ayuda: secciones por herramienta, filtro por módulo, buscador y «Crear …»
   css/ayuda.css             Estilos de la ayuda
@@ -125,7 +133,7 @@ herramientas/ayuda/         generar.py escribe ayuda.html (las secciones de la A
 pruebas/                    Pruebas automáticas con Playwright (ver pruebas/README.md)
 ```
 
-Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` y `perfil.js` (en el `<head>`), `base.js`, `datos.js`, `barra.js`, `lectura.js`, `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página. En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `piezas.js`, los bloques de negocio y de recursos humanos, `exportar.js`, `exportar-docx.js`, `documento.js`, `versiones.js`, `permisos.js` y `zen.js`. En `ayuda.html`: `bloques.js`, `zen.js` y `ayuda.js`.
+Los scripts son clásicos y comparten el objeto global `window.AT` (no se usan módulos ES) para que las páginas también funcionen abiertas con `file://`. Se cargan en este orden: `ajustes.js` y `perfil.js` (en el `<head>`), `base.js`, `datos.js`, `empresa.js`, `barra.js`, `persona.js`, `lectura.js`, `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de cada página (`entrar.html` e `imprimir.html` cargan `empresa.js` sin la barra). En `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `piezas.js`, los bloques de negocio y de recursos humanos, `exportar.js`, `exportar-docx.js`, `documento.js`, `versiones.js`, `permisos.js` y `zen.js`. En `ayuda.html`: `bloques.js`, `zen.js` y `ayuda.js`.
 
 Todos los tamaños del CSS van en `rem`, para que la página entera crezca con el tamaño de texto. Los colores son tokens en `base.css` con cuatro variantes (claro, oscuro, alto contraste claro y alto contraste oscuro); usa siempre los tokens, nunca colores sueltos.
 
@@ -138,11 +146,25 @@ OneBook es para empresas desde la etapa E1 (25 de noviembre de 2026). Salieron l
 - **Notas de las lecciones, marcadores, avance, proyectos y ejercicios de la terminal** siguen en IndexedDB y `localStorage` y entran en el respaldo.
 - **Perfiles de antes**: `perfil.js` convierte «estudio» y «personal» en «negocio» con `aviso` ('estudio' o 'personal'); el Inicio lo explica una vez (`AT.perfil.aviso`, `quitarAviso`).
 
+## Empresa, personas y departamentos
+
+Etapa Empresas, E2. La empresa vive en `localStorage` (`aprende-tecnologia:empresa`, entra en el respaldo) y la maneja `empresa.js` (`AT.empresa`, sin interfaz):
+
+- **Empresa**: `{id, nombre, giro, telefono, rfc, personas, departamentos}`. Una por espacio. «Crea tu empresa» (`entrar.html`) la crea con quien usa el navegador como **propietario** y responsable de los departamentos que elija. Un espacio de antes (perfil de negocio sin empresa) recibe la suya sola (`auto`), con su nombre de negocio. Sus datos también se guardan en el perfil (`perfil.negocio`).
+- **Personas**: `{id:'u-…', nombre, correo, rol, deptos:{'dp-…': rol}, pin}`. Roles de la empresa: **propietario** (uno; puede pasar la empresa a otra persona), **administrador** (agrega y quita personas y departamentos) y **miembro**. En cada departamento: **responsable** (administra el departamento y su gente), **miembro** y **consulta**. El PIN (4 a 8 números) se guarda como huella (cyrb53 con el id), no a la vista.
+- **Quién eres**: la persona activa es la de `AT.datos.yo` (`aprende-tecnologia:yo`). «Cambiar de persona» (`persona.js`, desde el pie de la barra lateral) pide el PIN si la persona tiene uno, guarda lo pendiente de la página y la vuelve a cargar como la persona nueva (`AT.empresa.entrarComo` → `AT.datos.ponerYo`); las otras pestañas también se recargan. Así los permisos de cada página, la presencia y «Modificado por» ya son de esa persona. Si la computadora no sabe quién eres, el Inicio lo pregunta.
+- **«Tu empresa»** (`empresa.html`): quien administra agrega, cambia y quita personas y departamentos (pide confirmar lo que quita); el responsable de un departamento cambia su nombre, su color y su gente; un miembro ve todo y cambia solo su nombre, su correo y su PIN. El modelo revisa los mismos permisos (lanza un error con el motivo).
+- **Páginas**: en «Personas y permisos», quien administra una página le da acceso directo a **alguien de tu empresa** (`AT.datos.acceso.dar`, sin invitación). Una página sin lista de acceso la puede editar cualquiera; las salas (E3) ordenarán eso por departamento.
+- **Recursos humanos**: la base Empleados tiene la columna **Departamento** (`em-depto`, selección con `origen:'departamentos'`): sus opciones son los departamentos (`AT.bases.opciones`), con su color, y renombrar un departamento cambia sus filas. Las bases de empleados de antes la reciben al usarse.
+- **Respaldo**: la empresa entra si aquí no hay (o solo la automática y tú estás en la del respaldo); la misma empresa se junta persona por persona y departamento por departamento (gana el cambio más reciente; lo quitado queda marcado y no revive); la de otra empresa no se junta.
+
+No es seguridad: sin servidor, quien tiene el navegador tiene los datos. Con la nube (F9), las cuentas y los permisos por fila harán cumplir este mismo modelo.
+
 ## Pestañas, bloques de la tienda y perfiles
 
 - **Pestañas** (`app.html`, `pestanas.js`, fase F3): varias páginas abiertas a la vez dentro de la app. Cada pestaña es un iframe del mismo origen; `base.js` detecta que vive en una (`AT.enPestana`) y le avisa al contenedor sus cambios de título y dirección, le pasa los atajos (Alt+T nueva, Alt+W cerrar, Alt+1…9, Alt+AvPág/RePág) y abre en pestaña nueva los enlaces con clic central o Ctrl/Cmd+clic. Hasta 12; se recuerdan (`aprende-tecnologia:pestanas`, que no cuenta como «ya usaba OneLearn») y al volver solo se carga la activa; las que llevan 10 minutos sin usarse se descargan. Antes de cerrar o descargar una pestaña se guarda lo pendiente (`AT.docGuardarYa`). En celular, un botón con el número de pestañas abre la lista. La misma página en dos pestañas (de la app o del navegador) no se pisa: `documento.js` avisa al abrir (BroadcastChannel `onebook-documentos`), la anterior guarda y queda solo para leer con «Editar aquí», y la nueva vuelve a leer el documento si llega ese último guardado. El botón Atrás del celular cierra primero lo abierto: las ventanas `<dialog>` lo hacen solas y los paneles usan `AT.alAtras` (CloseWatcher).
 - **Bloques de la tienda** (`negocio.js` y un archivo por bloque, fase F4): corte de caja (`caja.js`), fiado (`fiado.js`), gastos del mes (`gastos.js`), nota de venta (`venta.js`), precio de venta (`precio.js`) y cuentas por pagar (`porpagar.js`). Se insertan con «/» en cualquier documento (módulo negocio), calculan en centavos y en pesos, y los negativos salen siempre con signo (−) y en rojo; un sobrante o una ganancia, con + y en verde. `AT.negocio.bloque(nombre, definición)` registra cada uno: el nodo atómico del editor con un atributo JSON por clave, su formulario (los campos se enlazan con `data-k="ruta"`, las casillas con `data-fecha` guardan la fecha del día, los botones con `data-acc`), su vista al leer (sus casillas y botones también cambian el bloque y se guardan: marcar pagado, anotar abonos, cambiar de mes), su texto para la búsqueda y su Markdown. El mismo formulario sirve fuera del editor (`AT.negocio.formulario`, la calculadora de la bienvenida). **Gastos:** los gastos fijos (cada mes, cada año o una sola vez) se anotan una vez y «Generar mes» crea sus filas del mes como pendientes, sin repetir las que ya estén (idea de Bases unificadas). **Nota de venta:** folio consecutivo por prefijo con `AT.folio('V')` (base.js; `aprende-tecnologia:folios`, en el respaldo, y al importar se queda el número más alto); al leer sale como recibo con el nombre y el teléfono del negocio y aclara que no es un comprobante fiscal. Todos se imprimen (`imprimir.js` tiene sus estilos de papel) y en el DOCX van como texto. En un bloque angosto, las tablas de gastos, fiado y cuentas por pagar se vuelven tarjetas.
-- **Perfiles y módulos** (`perfil.js`, `entrar.html`, fase F2): el espacio tiene el perfil «negocio», que enciende módulos. El núcleo (páginas, notas, tablas, imágenes, imprimir, respaldo, búsqueda y ajustes) está siempre; el módulo **negocio** trae el plan de pagos, los bloques de la tienda y sus plantillas; el módulo **rh**, recursos humanos. Lo de un módulo apagado no se muestra (clases `con-`/`sin-<módulo>` en `<html>`, «Crear», el menú «/» con `modulo` en cada elemento de `AT.editorInsertar` y la Ayuda). Sin espacio, Inicio manda a «Crea tu espacio». El perfil entra en el respaldo.
+- **Perfiles y módulos** (`perfil.js`, `entrar.html`, fase F2): el espacio tiene el perfil «negocio», que enciende módulos (lo cambia quien administra la empresa). El núcleo (páginas, notas, tablas, imágenes, imprimir, respaldo, búsqueda y ajustes) está siempre; el módulo **negocio** trae el plan de pagos, los bloques de la tienda y sus plantillas; el módulo **rh**, recursos humanos. Lo de un módulo apagado no se muestra (clases `con-`/`sin-<módulo>` en `<html>`, «Crear», el menú «/» con `modulo` en cada elemento de `AT.editorInsertar` y la Ayuda). Sin espacio, Inicio manda a «Crea tu empresa». El perfil entra en el respaldo.
 - **Piezas** (`piezas.js`): `figura` (imagen comprimida en el dispositivo a WebP de hasta 1600 px, con pie y texto alternativo; se inserta con «/imagen», pegando o arrastrando), `tablaNumerada` («Tabla N», título y nota; cualquier tabla se puede numerar desde su menú), `notaPie` (Ctrl+Alt+F; al leer, las notas van al final con enlaces de ida y vuelta) y `refCruzada` («ver Tabla 2» o una sección; el número se actualiza solo). Las tablas llevan `attrs.clave` única (la cuida el plugin de ids).
 - **Imprimir o exportar** (`exportar.js`, `imprimir.js`, `exportar-docx.js`): «⋯ › Imprimir o exportar» elige el papel (`doc.formato`: carta o A4, vertical u horizontal) y ofrece el **PDF** (imprimir.html, paginado con Paged.js: título y propiedades arriba, número de página abajo, notas al pie al pie de su página e índice con páginas) y el **Word** (Arial de 11 puntos, interlineado 1.15, títulos de Word, tabla numerada, imagen, notas al pie y número de página).
 

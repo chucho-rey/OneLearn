@@ -368,9 +368,9 @@ var INICIO=['pendientes','corte','fiado','gastos','venta','precio','surtir','pro
 function plantillasInicio(){
   return INICIO.filter(function(k){return TIPOS[k]&&TIPOS[k].listo&&tiene(TIPOS[k].modulo)});
 }
-/* Lo que «Crea tu espacio» sugiere al empezar: [{tipo, marcado}] según el giro */
+/* Lo que «Crea tu empresa» sugiere al empezar: [{tipo, marcado}] según el giro */
 function sugeridas(perfil,giro,rh){
-  var tienda=giro==='tienda',mercancia=['tienda','comida','catalogo'].indexOf(giro)>=0;
+  var tienda=giro==='tienda',mercancia=['tienda','comida','catalogo','distribucion'].indexOf(giro)>=0;
   /* Con «Tengo empleados», primero tu equipo y su nómina */
   return (rh?[['equipo',true],['nominas',true]]:[]).concat([['corte',mercancia],['fiado',tienda],['gastos',true],['surtir',mercancia],['venta',!mercancia],['pendientes',!mercancia],
     ['proveedores',false],['precio',false],['prestamo',false],['notas',false]])

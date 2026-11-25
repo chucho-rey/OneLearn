@@ -88,8 +88,9 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
 
   /* ---------- Guárdalo en tu espacio ---------- */
   await Promise.all([p.waitForURL(/entrar\.html\?perfil=negocio#guardar-pagos$/),p.click('#lpGuardar')]);await listo(p);
-  r.cumple(/Paso 1 de 2/.test(await p.textContent('#enPaso'))&&await p.isVisible('#enNegocio'),'primero se crea el espacio: empieza en «Tu negocio»');
-  await p.fill('#enNegocio','Mi tiendita');await p.click('#enSig');await p.waitForTimeout(150);
+  r.cumple(/Paso 1 de 3/.test(await p.textContent('#enPaso'))&&await p.isVisible('#enNegocio'),'primero se crea la empresa: empieza en «Tu empresa»');
+  await p.fill('#enNegocio','Mi tiendita');await p.fill('#enNombre','Rosa');await p.click('#enSig');await p.waitForTimeout(150);
+  await p.click('#enSig');await p.waitForTimeout(150);
   await Promise.all([p.waitForURL(/documento\.html\?id=/,{timeout:10000}),p.click('#enSig')]);await listo(p,500);
   const g=await p.evaluate(function(){
     var d=AT.docActual,b=d.contenido.content[0];
@@ -98,7 +99,7 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
       quedo:sessionStorage.getItem('onebook:pagos-bienvenida')};
   });
   r.cumple(g.titulo==='Mi plan de pagos'&&g.tipo==='notas'&&g.bloque==='pagos'&&g.monto==='6000'&&g.pagos==='3'&&g.frec==='quincenal'&&g.inicio==='2026-01-15'&&g.pagados==='1'&&g.id&&g.quedo===null,
-    '«Guárdalo en tu espacio»: al crear el espacio, se crea un documento con ese plan de pagos (y lo marcado) y se abre',g);
+    '«Guárdalo en tu espacio»: al crear la empresa, se crea un documento con ese plan de pagos (y lo marcado) y se abre',g);
   r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.length})}),5,'junto con las páginas sugeridas para empezar');
   await p.goto(base);await p.waitForURL(/inicio\.html$/);await listo(p);
   r.cumple(/inicio\.html$/.test(p.url())&&!!await p.$('#saludo'),'después, la raíz lleva directo al Inicio');

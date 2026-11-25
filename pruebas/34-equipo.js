@@ -14,12 +14,15 @@ function haceAnios(a,dias){var d=new Date();d.setFullYear(d.getFullYear()-a);d.s
 function guardado(p){return p.waitForFunction(function(){var e=document.querySelector('.doc-estado');return e&&e.getAttribute('data-k')==='ok'},null,{timeout:8000})}
 
 prueba('Recursos humanos: tu equipo',async function({browser,base,r}){
-  /* ---------- «Crea tu espacio» con «Tengo empleados» ---------- */
+  /* ---------- «Crea tu empresa» con «Tengo empleados» ---------- */
   const e=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:false});
   await e.goto(base+'entrar.html?perfil=negocio');await listo(e,400);
-  await e.fill('#enNegocio','Fonda Lupita');await e.selectOption('#enGiro','comida');
-  r.cumple(await e.isVisible('#enRh'),'el paso del negocio pregunta «Tengo empleados»');
+  await e.fill('#enNegocio','Fonda Lupita');await e.selectOption('#enGiro','comida');await e.fill('#enNombre','Lupita');
+  r.cumple(await e.isVisible('#enRh'),'el paso de la empresa pregunta «Tengo empleados»');
   await e.check('#enRh');
+  await e.click('#enSig');await e.waitForTimeout(300);
+  r.igual(await e.$$eval('input[name="depto"]:checked',function(l){return l.map(function(x){return x.value}).join(', ')}),'Cocina, Servicio, Compras, Recursos humanos, Administración',
+    'con empleados, los departamentos sugeridos incluyen Recursos humanos');
   await e.click('#enSig');await e.waitForTimeout(300);
   const sug=await e.evaluate(function(){return [].map.call(document.querySelectorAll('input[name="plantilla"]:checked'),function(x){return x.value}).slice(0,2).join(',')});
   r.igual(sug,'equipo,nominas','con empleados sugiere «Mi equipo» y la nómina, ya marcadas');

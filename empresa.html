@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tu empresa · OneBook</title>
+<meta name="description" content="Tu empresa en OneBook: las personas que la usan, su rol y sus departamentos.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icono-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="assets/js/ajustes.js"></script>
+<script src="assets/js/perfil.js"></script>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/empresa.css">
+</head>
+<body data-pagina="empresa">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Navegación"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page emp" id="emp">
+      <noscript><p>Esta página necesita JavaScript para mostrarse.</p></noscript>
+      <div class="emp-cab">
+        <div class="emp-cab-t">
+          <h1 id="empNombre">Tu empresa</h1>
+          <p class="emp-sub" id="empSub"></p>
+        </div>
+        <button class="btn" type="button" id="empDatos" hidden>Editar datos</button>
+      </div>
+      <p class="emp-tu" id="empTu"></p>
+
+      <section class="emp-sec" aria-labelledby="empPerT">
+        <div class="emp-h">
+          <h2 id="empPerT">Personas <small id="empPerN"></small></h2>
+          <button class="btn pri" type="button" id="empAgregarP" hidden>Agregar persona</button>
+        </div>
+        <p class="emp-txt">Quienes usan OneBook en tu empresa. Cada quien entra con «Cambiar de persona» en la barra lateral (con su PIN, si tiene).</p>
+        <ul class="emp-l" id="empPersonas"></ul>
+      </section>
+
+      <section class="emp-sec" aria-labelledby="empDepT">
+        <div class="emp-h">
+          <h2 id="empDepT">Departamentos <small id="empDepN"></small></h2>
+          <button class="btn pri" type="button" id="empAgregarD" hidden>Agregar departamento</button>
+        </div>
+        <p class="emp-txt">Agrupan a tu gente. Pronto, cada departamento tendrá su sala con sus páginas, y solo entrará su gente.</p>
+        <div class="emp-deps" id="empDeptos"></div>
+      </section>
+
+      <details class="emp-roles">
+        <summary>Qué puede hacer cada quien</summary>
+        <dl id="empRoles"></dl>
+      </details>
+      <p class="emp-nota">Todo esto se guarda en esta computadora y entra en tus respaldos. Ordena quién ve qué, pero todavía no es seguridad: quien tiene el navegador tiene los datos. Con la nube, cada persona entrará con su propia cuenta.</p>
+      <p class="emp-msg vh" id="empMsg" role="status"></p>
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/base.js"></script>
+<script src="assets/js/datos.js"></script>
+<script src="assets/js/empresa.js"></script>
+<script src="assets/js/barra.js"></script>
+<script src="assets/js/persona.js"></script>
+<script src="assets/js/lectura.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/respaldo.js"></script>
+<script src="assets/js/crear.js"></script>
+<script src="assets/js/buscar.js"></script>
+<script src="assets/js/tuempresa.js"></script>
+</body>
+</html>

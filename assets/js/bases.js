@@ -389,6 +389,12 @@ function filasVista(b,vista,extra){
   });
   return l;
 }
+/* Las opciones de una selección. Las de una columna con origen 'departamentos' (Departamento en Empleados) son los
+   departamentos de la empresa (empresa.js): se cambian en «Tu empresa» */
+function opciones(c){
+  if(c&&c.origen==='departamentos')return AT.empresa?AT.empresa.departamentos().map(function(d){return d.nombre}):[];
+  return c&&Array.isArray(c.opciones)?c.opciones:[];
+}
 /* Grupos por una columna: [{clave, filas}] en el orden de sus opciones (o alfabético); lo vacío al final */
 function agrupar(b,filas,colId){
   var col=colPorId(b,colId);if(!col)return [{clave:'',filas:filas}];
@@ -398,7 +404,7 @@ function agrupar(b,filas,colId){
     if(!g[k]){g[k]=[];orden.push(k)}
     g[k].push(f);
   });
-  var ops=col.tipo==='seleccion'&&Array.isArray(col.opciones)?col.opciones:null;
+  var ops=col.tipo==='seleccion'?opciones(col):null;
   orden.sort(function(a,c){
     if(a==='')return 1;if(c==='')return -1;
     if(ops){var ia=ops.indexOf(a),ic=ops.indexOf(c);if(ia>=0&&ic>=0)return ia-ic;if(ia>=0)return -1;if(ic>=0)return 1}
@@ -549,7 +555,7 @@ if(AT.datos&&AT.datos.on)AT.datos.on(function(c,deOtra){
   else if(c.almacen==='*')Object.keys(BASES).forEach(function(id){recargar(id)});
 });
 
-AT.bases={TIPOS:TIPOS,CALCULADO:CALCULADO,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clonar:clonar,sinAcentos:sinAcentos,
+AT.bases={TIPOS:TIPOS,CALCULADO:CALCULADO,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clonar:clonar,sinAcentos:sinAcentos,opciones:opciones,
   cargar:cargar,recargar:recargar,todas:todas,base:base,filas:filasDe,fila:filaPorId,col:colPorId,colPorNombre:colPorNombre,
   guardarBase:guardarBase,guardarFila:guardarFila,guardarFilas:guardarFilas,nuevaFila:nuevaFila,borrarFila:borrarFila,
   crear:crear,semillaDe:semillaDe,vistaNueva:vistaNueva,normal:normal,

@@ -13,13 +13,9 @@
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,D=AT.datos,A=D&&D.acceso;
 if(!A)return;
 var ORDEN=['admin','editor','lector'];
-function iniciales(p){
-  var t=String(p.nombre||p.correo||'?').replace(/@.*/,'').trim().split(/[\s._-]+/).filter(Boolean);
-  return ((t[0]||'?').charAt(0)+(t[1]?t[1].charAt(0):'')).toUpperCase();
-}
-/* Un color (de los del sitio) para cada persona, siempre el mismo */
-function tono(p){var s=String(p.id||p.correo||''),h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h%5}
-function avatar(p,clase){return '<span class="perm-av t'+tono(p)+(clase?' '+clase:'')+'" aria-hidden="true">'+esc(iniciales(p))+'</span>'}
+/* Las iniciales y el color de cada persona son los de base.js (AT.iniciales, AT.tonoPersona) */
+var iniciales=AT.iniciales;
+function avatar(p,clase){return '<span class="perm-av t'+AT.tonoPersona(p)+(clase?' '+clase:'')+'" aria-hidden="true">'+esc(iniciales(p))+'</span>'}
 function nombreDe(p){return p.tu?(p.nombre?p.nombre+' (tú)':'Tú'):p.nombre||p.correo||'Sin nombre'}
 function cuando(t){
   if(!t)return '';
@@ -64,7 +60,9 @@ function crear(){
   dlg.addEventListener('submit',function(e){
     e.preventDefault();
     var f=e.target;
-    if(f.id==='permInv')hacer(A.invitar(docId,{nombre:f.elements.nombre.value,correo:f.elements.correo.value,rol:f.elements.rol.value}),
+    if(f.id==='permEmp'){var pe=AT.empresa&&AT.empresa.persona(f.elements.persona.value);hacer(A.dar(docId,pe,f.elements.rol.value),
+      'Listo: '+(pe&&pe.nombre||'esa persona')+' ya tiene acceso.',f.querySelector('[type="submit"]'),'#permEmpP, #permInvCorreo')}
+    else if(f.id==='permInv')hacer(A.invitar(docId,{nombre:f.elements.nombre.value,correo:f.elements.correo.value,rol:f.elements.rol.value}),
       'Invitación anotada: llegará cuando OneBook tenga cuentas en la nube.',f.querySelector('[type="submit"]'),'#permInvCorreo');
     else if(f.id==='permPedir')hacer(A.solicitar(docId,{rol:f.elements.rol.value,mensaje:f.elements.mensaje.value}),
       'Solicitud enviada: quienes administran la página la verán en su explorador.',f.querySelector('[type="submit"]'));
@@ -113,7 +111,15 @@ function pintar(foco){
           '<span class="perm-acc"><button type="button" class="btn pri" data-perm="aprobar" data-id="'+esc(s.id)+'">Aprobar</button>'+
           '<button type="button" class="btn" data-perm="rechazar" data-id="'+esc(s.id)+'">Rechazar</button></span></li>';
       }).join('')+'</ul>';
-      h+='<form class="perm-f" id="permInv" novalidate><h3 class="perm-h">Invitar a alguien</h3>'+
+      /* Alguien de tu empresa: entra directo (comparte este navegador) */
+      var E=AT.empresa,deEmpresa=E?E.personas().filter(function(x){return x.id!==y.id&&!gente.some(function(g){return g.id===x.id})}):[];
+      if(deEmpresa.length)h+='<form class="perm-f" id="permEmp" novalidate><h3 class="perm-h">Alguien de tu empresa</h3>'+
+        '<div class="perm-2"><label class="campo-l"><span>Persona</span><select name="persona" id="permEmpP">'+deEmpresa.map(function(x){
+          return '<option value="'+esc(x.id)+'">'+esc(x.nombre||'Sin nombre')+'</option>';
+        }).join('')+'</select></label>'+
+        '<label class="campo-l"><span>Permiso</span><select name="rol">'+opciones('editor')+'</select></label></div>'+
+        '<div class="td-bt"><button class="btn pri" type="submit">Dar acceso</button></div></form>';
+      h+='<form class="perm-f" id="permInv" novalidate><h3 class="perm-h">'+(deEmpresa.length?'O invitar por correo':'Invitar a alguien')+'</h3>'+
         '<div class="perm-3"><label class="campo-l"><span>Nombre (opcional)</span><input type="text" name="nombre" maxlength="60" autocomplete="off"></label>'+
         '<label class="campo-l"><span>Correo</span><input type="email" name="correo" id="permInvCorreo" maxlength="254" required autocomplete="off"></label>'+
         '<label class="campo-l"><span>Permiso</span><select name="rol">'+opciones('editor')+'</select></label></div>'+
