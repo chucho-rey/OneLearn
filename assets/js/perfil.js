@@ -11,7 +11,9 @@
      estudio y los módulos estudio y negocio: no pierde nada de lo que tenía.
    - Sin perfil, inicio.html manda a entrar.html («Crea tu espacio») antes de pintar, con lo que traiga la dirección;
      con perfil, entrar.html manda a inicio.html (salvo con ?editar, para cambiar el espacio).
-   - En <html> pone las clases con-<módulo> o sin-<módulo> (base.css oculta .m-estudio, .m-negocio y .m-sin-estudio).
+   - En <html> pone las clases con-<módulo> o sin-<módulo> (base.css oculta .m-estudio, .m-negocio, .m-rh y .m-sin-estudio).
+   - Módulos: negocio, estudio y rh (recursos humanos: tu equipo y las calculadoras de nómina; se enciende en un
+     negocio con «Tengo empleados» o al editar tu espacio).
      Sin perfil (alguien que llega directo a una lección) se ve todo, como antes.
    Se carga en el <head> de todas las páginas, después de ajustes.js. Expone AT.perfil. */
 (function(){
@@ -20,7 +22,8 @@ var AT=window.AT=window.AT||{};
 var CLAVE='aprende-tecnologia:perfil',PREF='aprende-tecnologia:';
 var MODULOS={
   negocio:{nombre:'Negocio y dinero',desc:'Corte de caja, fiado, gastos, notas de venta, precios y plan de pagos.'},
-  estudio:{nombre:'Estudio',desc:'Lecciones de tecnología, rutas, proyectos, libretas, apuntes de clase y tesis.'}
+  estudio:{nombre:'Estudio',desc:'Lecciones de tecnología, rutas, proyectos, libretas, apuntes de clase y tesis.'},
+  rh:{nombre:'Recursos humanos',desc:'Tu equipo, nómina, vacaciones, aguinaldo, finiquito y reparto de utilidades.'}
 };
 var PERFILES={
   negocio:{nombre:'Mi negocio',desc:'Corte de caja, fiado, gastos, notas de venta y surtido.',modulos:['negocio']},

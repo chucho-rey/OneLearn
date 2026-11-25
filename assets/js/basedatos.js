@@ -478,7 +478,7 @@ function montar(raiz,op){
         '<label class="campo-l" data-si="suma"><span>Las filas que se relacionan por</span><select name="srel"></select></label>'+
         '<label class="campo-l" data-si="suma"><span>Suma el campo</span><select name="scampo"></select></label>'+
         '<label class="campo-l" data-si="formula"><span>Fórmula</span><input type="text" name="expr" value="'+esc(c.expr||'')+'" placeholder="{Cantidad} * {Precio}" autocomplete="off" spellcheck="false"></label>'+
-        '<p class="hint" data-si="formula">Usa el nombre de otras columnas entre llaves, + − × ÷ y paréntesis. También compara y decide: SI({Existencias} &lt; {Mínimo}; "Bajo"; "Bien"), MAX, MIN, REDONDEAR y DIAS({Vence}) (días que faltan). <span class="bd-prev" aria-live="polite"></span></p>'+
+        '<p class="hint" data-si="formula">Usa el nombre de otras columnas entre llaves, + − × ÷ y paréntesis. También compara y decide: SI({Existencias} &lt; {Mínimo}; "Bajo"; "Bien"), MAX, MIN, ENTERO, REDONDEAR y DIAS({Vence}) (días que faltan). <span class="bd-prev" aria-live="polite"></span></p>'+
         '<label class="pl-op" data-si="formula suma"><input type="checkbox" name="moneda"'+(c.moneda?' checked':'')+'><span>Mostrar en pesos</span></label>'+
         '<label class="campo-l"><span>Total al pie</span><select name="pie">'+opciones(B.PIES,c.pie||'')+'</select></label>'+
         '<div class="bd-col-ops"><label class="pl-op"><input type="checkbox" name="negritas"'+(c.negritas?' checked':'')+'><span>Negritas</span></label>'+

@@ -162,14 +162,21 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-blanco" viewBox="0 0 24 24"><path d="M6 3.5h8.5l4 4v13H6z"/><path d="M14.5 3.5v4h4"/></symbol>'+
 '<symbol id="i-pestanas" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>'+
 '<symbol id="i-marcador" viewBox="0 0 24 24"><path d="M6 3.5h12V21l-6-4.2L6 21z"/></symbol>'+
+/* Recursos humanos y ayuda */
+'<symbol id="i-recibo" viewBox="0 0 24 24"><path d="M5.5 3h13v18l-2.2-1.5L14 21l-2-1.5L10 21l-2.3-1.5L5.5 21z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/></symbol>'+
+'<symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>'+
+'<symbol id="i-regalo" viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8.5h14V12M12 8v12.5M12 8C10.5 4 7 4 7 6s3 2 5 2c2 0 5 0 5-2s-3.5-2-5 2"/></symbol>'+
+'<symbol id="i-salida" viewBox="0 0 24 24"><path d="M13.5 4H6.5a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 6.5 20h7"/><path d="M10 12h10.5M17 8.5l3.5 3.5-3.5 3.5"/></symbol>'+
+'<symbol id="i-reparto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l6 6M12 12l-6 6"/></symbol>'+
+'<symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17.2v.1"/></symbol>'+
 '</svg>');
 
 /* ---------- Lección actual ---------- */
 var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
-/* Páginas: inicio, documento, acerca («Cómo está hecho») y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
+/* Páginas: inicio, documento, acerca («Cómo está hecho»), ayuda y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida'||PAGINA==='entrar'||PAGINA==='pestanas';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='ayuda'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida'||PAGINA==='entrar'||PAGINA==='pestanas';
 /* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
@@ -188,11 +195,12 @@ catalogo.forEach(function(g){
 });
 if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{id:'documento',titulo:'Documento'}:
   PAGINA==='acerca'?{id:'acerca',titulo:'Cómo está hecho'}:
+  PAGINA==='ayuda'?{id:'ayuda',titulo:'Ayuda'}:
   PAGINA==='rutas'?{id:'rutas',titulo:'Rutas'}:
   PAGINA==='proyectos'?{id:'proyectos',titulo:'Proyectos'}:
   PAGINA==='proyecto'?{id:'proyecto',titulo:document.body.getAttribute('data-titulo')||document.title}:{id:LID||'leccion',titulo:document.title};
 if(PAGINA==='documento')grupo=!AT.perfil||AT.perfil.tiene('estudio')?'Mis apuntes':'Tus páginas';
-if(PAGINA==='acerca')grupo='OneBook';
+if(PAGINA==='acerca'||PAGINA==='ayuda')grupo='OneBook';
 if(PAGINA==='proyecto')grupo='Proyectos';
 AT.leccion=actual;
 /* La ruta de aprendizaje (AT.caminos) y el módulo donde está una lección o un proyecto, o null */

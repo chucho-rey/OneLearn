@@ -9,7 +9,7 @@
      Definición: {etiqueta, def, filas:{lista: () => fila nueva (sin datos al azar: también completa lo guardado)}, editar(x, uid), resultado(x, uid), leer(x, uid, op),
        refrescar(x, dom), acciones:{nombre(x, datos, boton) → ruta a enfocar}, texto(x), md(x), clases(x),
        alCambiar(x, ruta, campo, raiz) (al escribir o elegir, antes de guardar: puede completar otros campos),
-       insertar:{t, d, i, p, attrs()}, foco}.
+       insertar:{t, d, i, p, attrs()}, foco, modulo (del perfil, para «/»; si no, negocio)}.
      Los campos se enlazan con data-k="ruta" (por ejemplo filas.2.monto); las casillas con data-fecha guardan la
      fecha del día en lugar de true; los botones con data-acc="acción" (agregar y quitar ya existen: data-lista y
      data-i). Al escribir solo se repinta el resultado; al elegir o al usar un botón se repinta todo y el foco vuelve
@@ -285,7 +285,7 @@ function editor(nombre,d){
   AT.editorExtensiones=(AT.editorExtensiones||[]).concat([Nodo]);
   if(AT.editorConId)AT.editorConId.push(nombre);
   var ins=d.insertar;
-  if(ins&&AT.editorInsertar)AT.editorInsertar.push({k:nombre,modulo:'negocio',t:ins.t,d:ins.d,i:ins.i,p:ins.p,f:function(c){
+  if(ins&&AT.editorInsertar)AT.editorInsertar.push({k:nombre,modulo:d.modulo||'negocio',t:ins.t,d:ins.d,i:ins.i,p:ins.p,f:function(c){
     abrirNuevo=nombre;
     return c.insertContent({type:nombre,attrs:Object.assign(clonar(d.def),ins.attrs?ins.attrs():{})});
   }});

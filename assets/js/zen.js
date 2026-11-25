@@ -11,7 +11,7 @@
 var AT=window.AT,$=AT.$,$$=AT.$$,ico=AT.ico,aj=AT.ajustes,root=document.documentElement;
 var page=$('.page');
 var conNota=!!document.body.getAttribute('data-leccion');
-if(!page||!(conNota||AT.rutas.pagina==='documento'||AT.rutas.pagina==='acerca'||AT.rutas.pagina==='proyecto'))return;
+if(!page||!(conNota||AT.rutas.pagina==='documento'||AT.rutas.pagina==='acerca'||AT.rutas.pagina==='ayuda'||AT.rutas.pagina==='proyecto'))return;
 
 /* Avisos para lectores de pantalla */
 var aviso=document.createElement('div');

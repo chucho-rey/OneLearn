@@ -104,7 +104,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await p.click('#enSig');await p.waitForTimeout(150);
   const ed=await p.evaluate(function(){return {mods:[].map.call(document.querySelectorAll('input[name="modulo"]'),function(x){return x.value+(x.checked?'+':'-')}).join(' '),
     pls:document.querySelectorAll('input[name="plantilla"]:checked').length,boton:document.getElementById('enSig').textContent}});
-  r.cumple(ed.mods==='negocio+ estudio-'&&ed.pls===0&&ed.boton==='Guardar cambios','al editar, se encienden o apagan módulos y las páginas vienen sin marcar',ed);
+  r.cumple(ed.mods==='negocio+ estudio- rh-'&&ed.pls===0&&ed.boton==='Guardar cambios','al editar, se encienden o apagan módulos y las páginas vienen sin marcar',ed);
   await revisar(p,r,'Tu espacio al editar, en celular');
   await p.check('input[name="modulo"][value="estudio"]');
   await Promise.all([p.waitForURL(/inicio\.html$/),p.click('#enSig')]);await listo(p,400);

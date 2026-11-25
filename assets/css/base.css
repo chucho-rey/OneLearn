@@ -562,7 +562,7 @@ a.next:hover{background:var(--hover)}
 
 /* Texto solo para lectores de pantalla */
 /* Módulos del espacio (perfil.js pone con-<módulo> o sin-<módulo> en <html>): lo de un módulo apagado no se muestra */
-.sin-estudio .m-estudio,.sin-negocio .m-negocio,.con-estudio .m-sin-estudio{display:none!important}
+.sin-estudio .m-estudio,.sin-negocio .m-negocio,.sin-rh .m-rh,.con-estudio .m-sin-estudio{display:none!important}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---------- Avance en la barra lateral: porcentaje y una barra fina bajo el título ---------- */

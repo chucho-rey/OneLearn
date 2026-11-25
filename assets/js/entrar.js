@@ -31,6 +31,8 @@ function elegirPerfil(k){var r=$('input[name="perfil"][value="'+k+'"]',form);if(
 /* Lo que ya tienes, al editar */
 if(EDITAR&&actual){
   elegirPerfil(actual.perfil);
+  /* Al editar, los módulos (también recursos humanos) se eligen en el paso 3 */
+  $('.en-rh').hidden=true;
   if(actual.negocio){$('#enNegocio').value=actual.negocio.nombre;$('#enGiro').value=actual.negocio.giro;$('#enTel').value=actual.negocio.telefono}
   $('#enNombre').value=actual.nombre;
   document.title='Tu espacio · OneBook';
@@ -41,10 +43,10 @@ if(EDITAR&&actual){
 /* ---------- Paso 3: páginas para empezar y, al editar, los módulos ---------- */
 var pintado3='';
 function pintarPaso3(){
-  var k=perfilElegido(),giro=$('#enGiro').value,clave=k+'|'+giro;
+  var k=perfilElegido(),giro=$('#enGiro').value,rh=k==='negocio'&&!EDITAR&&$('#enRh').checked,clave=k+'|'+giro+'|'+rh;
   if(clave===pintado3)return;
   pintado3=clave;
-  var sug=AT.crear.sugeridas(k,giro);
+  var sug=AT.crear.sugeridas(k,giro,rh);
   $$('.en-op',$('#enPlantillas')).forEach(function(x){x.remove()});
   $('#enPlantillas').insertAdjacentHTML('beforeend',sug.map(function(s){
     var t=AT.tiposDoc[s.tipo];
@@ -101,7 +103,8 @@ form.addEventListener('change',function(e){if(e.target.name==='perfil'){mensaje(
 /* ---------- Crear (o guardar) el espacio ---------- */
 function terminar(){
   var k=perfilElegido(),boton=$('#enSig');
-  var modulos=EDITAR?$$('input[name="modulo"]:checked',form).map(function(x){return x.value}):P.PERFILES[k].modulos;
+  var modulos=EDITAR?$$('input[name="modulo"]:checked',form).map(function(x){return x.value}):
+    P.PERFILES[k].modulos.concat(k==='negocio'&&$('#enRh').checked?['rh']:[]);
   var p=P.guardar({perfil:k,modulos:modulos,nombre:$('#enNombre').value,creado:actual&&actual.creado,
     negocio:k==='negocio'?{nombre:$('#enNegocio').value,giro:$('#enGiro').value,telefono:$('#enTel').value}:null});
   if(!p){mensaje('No se pudo guardar tu espacio en este navegador. Revisa que no esté en modo privado o sin espacio.',true);return}
