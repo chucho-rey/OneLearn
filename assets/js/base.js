@@ -168,6 +168,7 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-regalo" viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8.5h14V12M12 8v12.5M12 8C10.5 4 7 4 7 6s3 2 5 2c2 0 5 0 5-2s-3.5-2-5 2"/></symbol>'+
 '<symbol id="i-salida" viewBox="0 0 24 24"><path d="M13.5 4H6.5a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 6.5 20h7"/><path d="M10 12h10.5M17 8.5l3.5 3.5-3.5 3.5"/></symbol>'+
 '<symbol id="i-reparto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l6 6M12 12l-6 6"/></symbol>'+
+'<symbol id="i-historial" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 3.5V8H8M12 7.5V12l3 2"/></symbol>'+
 '<symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17.2v.1"/></symbol>'+
 '</svg>');
 

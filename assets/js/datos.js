@@ -17,13 +17,15 @@
    - Bases de datos (fase F6): almacén «bases» ({id, nombre, doc, columnas, vistas}) y «filas» ({id, base, v,
      orden}), aparte de las páginas, para que las relaciones y los reportes las lean sin abrirlas. Las filas
      tienen un índice por base (AT.datos.filas.deBase). Entran en el respaldo.
+   - Historial de versiones de las páginas: almacenes «versiones» (índice por página) y «trozos» (los bloques,
+     una sola vez cada uno); ver «Historial de versiones» más abajo. AT.datos.versiones.
    Expone AT.datos. Se carga después de base.js. */
 (function(){
 'use strict';
 var AT=window.AT;
 /* Versión 2 (fase F5): almacenes de plantillas y de la papelera. Versión 3 (fase F6): bases y filas (con índice
-   por base). Lo demás no cambia */
-var NOMBRE='onelearn',VERSION_DB=3,ALMACENES=['documentos','notas','marcadores','plantillas','papelera','bases','filas'];
+   por base). Versión 4: historial de versiones (versiones con índice por página, y trozos). Lo demás no cambia */
+var NOMBRE='onelearn',VERSION_DB=4,ALMACENES=['documentos','notas','marcadores','plantillas','papelera','bases','filas','versiones','trozos'];
 var DIAS_PAPELERA=30;
 var PREF='aprende-tecnologia:',CLAVE_NOTA=PREF+'apuntes:',CLAVE_RESPALDO=PREF+'ultimo-respaldo';
 
@@ -52,6 +54,8 @@ function abrirIDB(){
       ALMACENES.forEach(function(a){if(!db.objectStoreNames.contains(a))db.createObjectStore(a,{keyPath:'id'})});
       var f=r.transaction.objectStore('filas');
       if(!f.indexNames.contains('base'))f.createIndex('base','base',{unique:false});
+      var v=r.transaction.objectStore('versiones');
+      if(!v.indexNames.contains('doc'))v.createIndex('doc','doc',{unique:false});
     };
     r.onsuccess=function(){
       var db=r.result;
@@ -82,7 +86,43 @@ function motorIDB(db){
     /* Los registros con ese valor en un índice (las filas de una base) */
     porIndice:function(a,ind,v){return tx(a,'readonly',function(s){return s.index(ind).getAll(v)})},
     poner:function(a,lista){return tx(a,'readwrite',function(s){lista.forEach(function(o){s.put(o)})})},
-    borrar:function(a,id){return tx(a,'readwrite',function(s){return s.delete(id)})}
+    borrar:function(a,id){return tx(a,'readwrite',function(s){return s.delete(id)})},
+    borrarVarios:function(a,ids){return tx(a,'readwrite',function(s){ids.forEach(function(id){s.delete(id)})})},
+    claves:function(a){return tx(a,'readonly',function(s){return s.getAllKeys()})},
+    /* Varios registros por id en una lectura (los que no existen salen undefined) */
+    leerVarios:function(a,ids){
+      return new Promise(function(ok,no){
+        var t,out=new Array(ids.length);
+        try{t=db.transaction(a,'readonly')}catch(e){return no(e)}
+        var s=t.objectStore(a);
+        ids.forEach(function(id,i){var r=s.get(id);r.onsuccess=function(){out[i]=r.result}});
+        t.oncomplete=function(){ok(out)};t.onerror=function(){no(t.error)};
+      });
+    },
+    /* Escribe en varios almacenes en una sola transacción ({almacén: [registros]}): todo o nada */
+    ponerVarios:function(mapa){
+      return new Promise(function(ok,no){
+        var t,ns=Object.keys(mapa);
+        try{t=db.transaction(ns,'readwrite')}catch(e){return no(e)}
+        ns.forEach(function(a){var s=t.objectStore(a);mapa[a].forEach(function(o){s.put(o)})});
+        t.oncomplete=function(){ok()};t.onerror=function(){no(t.error)};t.onabort=function(){no(t.error||new Error('Se canceló la escritura'))};
+      });
+    },
+    /* Borra los trozos que ninguna versión usa; revisa y borra en la misma transacción */
+    limpiarTrozos:function(){
+      return new Promise(function(ok,no){
+        var t,n=0;
+        try{t=db.transaction(['versiones','trozos'],'readwrite')}catch(e){return no(e)}
+        var ts=t.objectStore('trozos'),rv=t.objectStore('versiones').getAll();
+        rv.onsuccess=function(){
+          var usados=new Set();
+          rv.result.forEach(function(v){usados.add(v.meta);(v.bloques||[]).forEach(function(h){usados.add(h)})});
+          var rk=ts.getAllKeys();
+          rk.onsuccess=function(){rk.result.forEach(function(k){if(!usados.has(k)){ts.delete(k);n++}})};
+        };
+        t.oncomplete=function(){ok(n)};t.onerror=function(){no(t.error)};
+      });
+    }
   };
 }
 function motorLocal(){
@@ -97,7 +137,10 @@ function motorLocal(){
     todos:function(a){var m=mapa(a);return Promise.resolve(Object.keys(m).map(function(k){return m[k]}))},
     porIndice:function(a,ind,v){var m=mapa(a);return Promise.resolve(Object.keys(m).map(function(k){return m[k]}).filter(function(o){return o[ind]===v}))},
     poner:function(a,lista){var m=mapa(a);lista.forEach(function(o){m[o.id]=o});return escribir(a,m)},
-    borrar:function(a,id){var m=mapa(a);delete m[id];return escribir(a,m)}
+    borrar:function(a,id){var m=mapa(a);delete m[id];return escribir(a,m)},
+    borrarVarios:function(a,ids){var m=mapa(a);ids.forEach(function(id){delete m[id]});return escribir(a,m)},
+    claves:function(a){return Promise.resolve(Object.keys(mapa(a)))}
+    /* Sin IndexedDB no hay historial de versiones (no cabría en localStorage) */
   };
 }
 
@@ -348,7 +391,9 @@ function importar(datos){
       var porId={};actuales.forEach(function(a){porId[a.id]=a});
       var poner=entrantes.filter(function(e){var a=porId[e.id];return !a||(e.editado||'')>(a.editado||'')});
       res[clave]=poner.length;
-      return poner.length?motor.poner(almacen,poner):null;
+      /* Una página que el respaldo reemplaza guarda antes su versión (se recupera desde su historial) */
+      var antes=almacen==='documentos'?poner.filter(function(e){return porId[e.id]}).map(function(e){return versiones.tomar(porId[e.id],{motivo:'importar'})}):[];
+      return Promise.all(antes).then(function(){return poner.length?motor.poner(almacen,poner):null});
     });
   }
   return combinar('documentos',docs,'documentos')
@@ -442,6 +487,219 @@ function espacio(){
   return almacenamiento.estimate().then(function(e){return {usado:e.usage||0,cuota:e.quota||0}}).catch(function(){return null});
 }
 
+/* ---------- Historial de versiones de las páginas ----------
+   Una versión guarda la lista de sus bloques como huellas (un hash de su JSON) y cada bloque va aparte, una sola
+   vez, en el almacén «trozos» ({id: huella, t: JSON del bloque}): dos versiones, o dos páginas duplicadas,
+   comparten lo que tienen igual, así que una versión nueva solo agrega lo que cambió. Cada versión se lee directo,
+   sin cadena de cambios: si faltara un trozo, solo ese bloque sale con un aviso.
+   Versión: {id, doc, fecha, motivo, nombre, titulo, meta (huella de lo que no es contenido: título, ícono,
+   propiedades, fuentes), bloques:[huellas], ids:[id de cada bloque], letras, cambios:{nuevos, quitados,
+   cambiados, titulo} contra la anterior}. Motivos: auto, borrado (lo de antes de un borrado grande), restaurar
+   (lo de antes de restaurar otra), importar (lo de antes de que un respaldo la reemplace) y nombre.
+   Cuándo se guarda: al abrir una página que no tiene ninguna; mientras escribes, a lo más una cada 5 minutos;
+   antes de un borrado grande (3 bloques o 300 letras); al salir de la página; al restaurar; antes de importar; y
+   cuando le pones nombre (esas no se borran solas).
+   Depuración: todas las de las últimas 24 horas; luego la última de cada día hasta 30 días y de cada semana hasta
+   6 meses; a lo más 100 automáticas por página. Los trozos que ya nadie usa se borran en la misma transacción que
+   los revisa. Solo con IndexedDB; el respaldo no las lleva. */
+var VER={ventana:5*60e3,grandeBloques:3,grandeLetras:300,max:100};
+var FUERA_META=['id','contenido','editado','creado','favorito','anchoCompleto','autoria','eliminado'];
+/* Huella de un texto: dos hashes de 32 bits (cyrb53) y su largo */
+function huella(s){
+  var h1=0xdeadbeef^s.length,h2=0x41c6ce57^s.length;
+  for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
+  h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return 't'+(h1>>>0).toString(36)+'-'+(h2>>>0).toString(36)+'-'+s.length.toString(36);
+}
+function letrasDe(n){
+  if(!n||typeof n!=='object')return 0;
+  var k=typeof n.text==='string'?n.text.length:0;
+  if(Array.isArray(n.content))n.content.forEach(function(c){k+=letrasDe(c)});
+  return k;
+}
+/* El estado de una página, listo para compararse o guardarse */
+function foto(doc){
+  var m={},bl=(doc.contenido&&Array.isArray(doc.contenido.content))?doc.contenido.content:[];
+  Object.keys(doc).forEach(function(k){if(FUERA_META.indexOf(k)<0)m[k]=doc[k]});
+  var meta=JSON.stringify(m),ss=bl.map(function(b){return JSON.stringify(b)});
+  return {titulo:String(doc.titulo||''),meta:meta,hm:huella(meta),ss:ss,h:ss.map(huella),
+    ids:bl.map(function(b){return b&&b.attrs&&typeof b.attrs.id==='string'?b.attrs.id:''}),l:bl.map(letrasDe),
+    /* Los párrafos vacíos (el que deja un Enter) no cuentan como bloques nuevos ni quitados */
+    vacios:bl.map(function(b,i){return b&&b.type==='paragraph'&&!(b.content&&b.content.length)?i:-1}).filter(function(i){return i>=0})};
+}
+function igual(v,f){return !!v&&v.meta===f.hm&&v.bloques.length===f.h.length&&v.bloques.every(function(h,i){return h===f.h[i]})}
+/* Qué cambió de a (versión o foto) a b (foto) */
+function cambiosEntre(a,b){
+  var r={nuevos:0,quitados:0,cambiados:0,titulo:false,letrasQuitadas:0};
+  if(!a)return r;
+  var ah=a.bloques||a.h,al=a.l||[],porId={},usadas={},av=a.vacios||[],bv=b.vacios||[];
+  a.ids.forEach(function(id,i){if(id)porId[id]=i});
+  b.ids.forEach(function(id,i){
+    var j=id&&porId.hasOwnProperty(id)?porId[id]:-1;
+    if(j<0){if(ah.indexOf(b.h[i])<0&&bv.indexOf(i)<0)r.nuevos++;return}
+    usadas[j]=1;
+    if(ah[j]!==b.h[i]){r.cambiados++;r.letrasQuitadas+=Math.max(0,(al[j]||0)-(b.l[i]||0))}
+  });
+  a.ids.forEach(function(id,j){if(!usadas[j]&&b.h.indexOf(ah[j])<0&&av.indexOf(j)<0){r.quitados++;r.letrasQuitadas+=al[j]||0}});
+  r.titulo=(a.titulo||'')!==(b.titulo||'');
+  return r;
+}
+function versionesOk(){return !!motor&&motor.tipo==='indexeddb'}
+var VCACHE={},VCOLA={},SOMBRA={};
+/* Las versiones de una página (lo más nuevo primero), una sola lectura por página */
+function versionesDe(id){
+  if(!VCACHE[id])VCACHE[id]=conMotor(function(m){return m.porIndice('versiones','doc',id)}).then(function(l){
+    return (l||[]).sort(function(a,b){return a.fecha<b.fecha?1:-1});
+  },function(){return []});
+  return VCACHE[id];
+}
+/* Una cosa a la vez por página */
+function enCola(id,fn){var p=(VCOLA[id]||Promise.resolve()).then(fn,fn);VCOLA[id]=p.catch(function(){});return p}
+function guardarVersion(id,f,op,lista){
+  var t=op.fecha||ahora(),ant=lista[0]||null;
+  var v={id:'v-'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),doc:id,fecha:t,motivo:op.motivo||'auto',nombre:String(op.nombre||'').slice(0,80),
+    titulo:f.titulo,meta:f.hm,bloques:f.h,ids:f.ids,l:f.l,vacios:f.vacios,letras:f.l.reduce(function(s,x){return s+x},0),cambios:cambiosEntre(ant,f)};
+  delete v.cambios.letrasQuitadas;
+  /* Los trozos y la versión van en la misma transacción: nunca hay una versión sin sus bloques */
+  var trozos=[{id:f.hm,t:f.meta}],vistos={};vistos[f.hm]=1;
+  f.h.forEach(function(h,i){if(!vistos[h]){vistos[h]=1;trozos.push({id:h,t:f.ss[i]})}});
+  return motor.ponerVarios({trozos:trozos,versiones:[v]}).then(function(){
+    lista.unshift(v);
+    avisar({almacen:'versiones',doc:id});
+    return depurar(id,lista).then(function(){return v});
+  });
+}
+function semana(t){var d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.toISOString().slice(0,10)}
+/* Deja las que valen la pena y borra los trozos que ya nadie usa */
+function depurar(id,lista,ahoraMs){
+  var t0=ahoraMs||Date.now(),dia={},sem={},auto=0,fuera=[];
+  var quedan=lista.filter(function(v){
+    if(v.nombre)return true;
+    var edad=t0-Date.parse(v.fecha),k,si;
+    if(edad<864e5)si=true;
+    else if(edad<30*864e5){k=v.fecha.slice(0,10);si=!dia[k];dia[k]=1}
+    else if(edad<183*864e5){k=semana(v.fecha);si=!sem[k];sem[k]=1}
+    else si=false;
+    if(si&&++auto>VER.max)si=false;
+    if(!si)fuera.push(v.id);
+    return si;
+  });
+  if(!fuera.length)return Promise.resolve(0);
+  lista.length=0;quedan.forEach(function(v){lista.push(v)});
+  return motor.borrarVarios('versiones',fuera).then(function(){return motor.limpiarTrozos()}).then(function(){avisar({almacen:'versiones',doc:id});return fuera.length});
+}
+var versiones={
+  config:VER,huella:huella,
+  disponible:function(){return listo.then(versionesOk)},
+  /* Al abrir una página: la recuerda y, si no tiene versiones, guarda la primera */
+  abrir:function(doc){
+    return listo.then(function(){
+      if(!versionesOk()||!doc||!doc.id)return null;
+      var f=foto(doc);SOMBRA[doc.id]=f;
+      return enCola(doc.id,function(){return versionesDe(doc.id).then(function(l){return l.length?null:guardarVersion(doc.id,f,{motivo:'auto'},l)})});
+    }).catch(function(){return null});
+  },
+  /* Después de cada guardado: una versión cada 5 minutos y la de antes de un borrado grande */
+  observar:function(doc){
+    return listo.then(function(){
+      if(!versionesOk()||!doc||!doc.id)return null;
+      var f=foto(doc),prev=SOMBRA[doc.id];SOMBRA[doc.id]=f;
+      return enCola(doc.id,function(){
+        return versionesDe(doc.id).then(function(l){
+          var ult=l[0];
+          if(!ult)return guardarVersion(doc.id,f,{motivo:'auto'},l);
+          var c=prev&&cambiosEntre(prev,f);
+          var paso=Promise.resolve(null);
+          if(c&&(c.quitados>=VER.grandeBloques||c.letrasQuitadas>=VER.grandeLetras)&&!igual(ult,prev))
+            paso=guardarVersion(doc.id,prev,{motivo:'borrado'},l);
+          return paso.then(function(v){
+            if(v)return v;
+            if(Date.now()-Date.parse(l[0].fecha)>=VER.ventana&&!igual(l[0],f))return guardarVersion(doc.id,f,{motivo:'auto'},l);
+            return null;
+          });
+        });
+      });
+    }).catch(function(){return null});
+  },
+  /* Ahora mismo (al salir, antes de restaurar o de importar, o con nombre). Si nada cambió desde la última, no
+     se repite: se le pone el nombre o el motivo a la última */
+  tomar:function(doc,op){
+    op=op||{};
+    return listo.then(function(){
+      if(!versionesOk()||!doc||!doc.id)return null;
+      var f=foto(doc);
+      if(op.motivo!=='importar')SOMBRA[doc.id]=f;
+      return enCola(doc.id,function(){
+        return versionesDe(doc.id).then(function(l){
+          var ult=l[0];
+          if(igual(ult,f)){
+            /* Igual a la última: con nombre, se lo pone; antes de restaurar o importar, se dice así (es más claro) */
+            if(op.nombre){ult.nombre=String(op.nombre).slice(0,80);ult.motivo='nombre'}
+            else if(/^(restaurar|importar|borrado)$/.test(op.motivo||'')&&ult.motivo==='auto')ult.motivo=op.motivo;
+            else return ult;
+            return motor.poner('versiones',[ult]).then(function(){avisar({almacen:'versiones',doc:doc.id});return ult});
+          }
+          return guardarVersion(doc.id,f,{motivo:op.nombre?'nombre':op.motivo||'auto',nombre:op.nombre,fecha:op.fecha},l);
+        });
+      });
+    }).catch(function(){return null});
+  },
+  /* Las versiones de una página, lo más nuevo primero (copias: cambiarlas no cambia las guardadas) */
+  listar:function(id){
+    return listo.then(function(){return versionesOk()?versionesDe(id):[]}).then(function(l){return JSON.parse(JSON.stringify(l))});
+  },
+  /* La página como estaba: {doc, incompleta} */
+  leer:function(v){
+    return conMotor(function(m){return m.leerVarios('trozos',[v.meta].concat(v.bloques))}).then(function(ts){
+      var falta=false,meta={};
+      try{meta=ts[0]?JSON.parse(ts[0].t):{}}catch(e){meta={}}
+      if(!ts[0]){falta=true;meta={titulo:v.titulo}}
+      var bl=v.bloques.map(function(h,i){
+        var t=ts[i+1];
+        if(t)try{return JSON.parse(t.t)}catch(e){}
+        falta=true;
+        return {type:'callout',attrs:{id:v.ids[i]||'b-falta'+i,variante:'aviso'},content:[{type:'paragraph',content:[{type:'text',text:'Este bloque no se pudo recuperar de esta versión.'}]}]};
+      });
+      var d=Object.assign({},meta,{id:v.doc,contenido:{type:'doc',content:bl}});
+      return {doc:d,incompleta:falta};
+    });
+  },
+  /* Le pone (o le quita, con '') un nombre a una versión: con nombre no se borra sola */
+  nombrar:function(vid,docId,nombre){
+    return versionesDe(docId).then(function(l){
+      var v=l.filter(function(x){return x.id===vid})[0];if(!v)throw new Error('Esa versión ya no existe');
+      v.nombre=String(nombre||'').replace(/\s+/g,' ').trim().slice(0,80);
+      if(v.nombre)v.motivo='nombre';else if(v.motivo==='nombre')v.motivo='auto';
+      return motor.poner('versiones',[v]).then(function(){avisar({almacen:'versiones',doc:docId});return v});
+    });
+  },
+  /* Qué cambió de una versión a la página como está ahora */
+  cambios:function(v,doc){var r=cambiosEntre(v,foto(doc));delete r.letrasQuitadas;return r},
+  igualQue:function(v,doc){return igual(v,foto(doc))},
+  /* Al borrar una página para siempre */
+  borrarDe:function(id){
+    return listo.then(function(){
+      if(!versionesOk())return 0;
+      return versionesDe(id).then(function(l){
+        delete VCACHE[id];delete SOMBRA[id];
+        return l.length?motor.borrarVarios('versiones',l.map(function(v){return v.id})).then(function(){return motor.limpiarTrozos()}):0;
+      });
+    });
+  },
+  depurar:function(id,ahoraMs){return versionesDe(id).then(function(l){return depurar(id,l,ahoraMs)})},
+  limpiar:function(){return listo.then(function(){return versionesOk()?motor.limpiarTrozos():0})},
+  /* Cuántas versiones y trozos hay (para «Tus datos» y las pruebas) */
+  cuenta:function(){
+    return listo.then(function(){
+      if(!versionesOk())return {versiones:0,trozos:0};
+      return Promise.all([motor.claves('versiones'),motor.claves('trozos')]).then(function(r){return {versiones:r[0].length,trozos:r[1].length}});
+    });
+  }
+};
+/* Otra pestaña guardó o borró versiones: se vuelven a leer */
+oyentes.push(function(c,deOtra){if(deOtra&&c.almacen==='versiones'&&c.doc)delete VCACHE[c.doc];if(deOtra&&c.almacen==='*')VCACHE={}});
+
 /* ---------- Bases de datos ---------- */
 var basesCol=coleccion('bases'),filasCol=coleccion('filas');
 filasCol.deBase=function(id){return conMotor(function(m){return m.porIndice('filas','base',id)})};
@@ -464,7 +722,7 @@ var docsCol=coleccion('documentos'),papCol=coleccion('papelera');
 function borrarDeVerdad(id){
   return papCol.borrar(id).then(function(){return basesCol.todos()}).then(function(bs){
     return Promise.all(bs.filter(function(b){return b.doc===id}).map(function(b){return borrarBase(b.id)}));
-  });
+  }).then(function(){return versiones.borrarDe(id).catch(function(){})});
 }
 var papelera={
   /* Lo que hay en la papelera, lo más reciente primero (lo que lleva más de 30 días se borra solo) */
@@ -503,6 +761,7 @@ AT.datos={
   papelera:papelera,
   bases:basesCol,
   filas:filasCol,
+  versiones:versiones,
   notas:notas,
   exportar:exportar,
   descargar:descargar,
