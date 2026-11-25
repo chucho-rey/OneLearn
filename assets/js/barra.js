@@ -1,7 +1,7 @@
 /* OneBook: barra lateral, barra superior y navegación.
    Arma la barra lateral (Inicio, pestañas Temas / Mis apuntes / Comunidad, Lectura y Modo zen),
    la barra superior y el enlace a la siguiente lección a partir de AT.catalogo; maneja el menú en celular
-   (panel modal con trampa de foco), la barra contraída en escritorio y las pestañas.
+   (panel modal con trampa de foco), la barra compacta en escritorio (solo iconos, con su nombre en un globo) y las pestañas.
    Los grupos del temario se pliegan; se recuerda cuáles dejaste abiertos (aprende-tecnologia:grupos).
    Sin el módulo de estudio (perfil.js), la barra deja solo Inicio, Crear, Buscar y «Tus páginas», sin pestañas,
    temario, rutas ni proyectos.
@@ -136,8 +136,10 @@ function syncMenu(){
   var desk=isDesk();
   var exp=desk?!collapsed():navOpen();
   var lab=desk?(collapsed()?'Expandir barra lateral':'Contraer barra lateral'):'Abrir '+MENU;
-  var sideLab=desk?'Contraer barra lateral':'Cerrar '+MENU;
+  var sideLab=desk?(collapsed()?'Expandir barra lateral':'Contraer barra lateral'):'Cerrar '+MENU;
   menuBtn.setAttribute('aria-expanded',exp?'true':'false');
+  if(desk)sideBtn.setAttribute('aria-expanded',exp?'true':'false');else sideBtn.removeAttribute('aria-expanded');
+  if(!desk||!collapsed())quitarGlobo();
   menuBtn.setAttribute('aria-label',lab);
   menuBtn.setAttribute('title',lab);
   sideBtn.setAttribute('aria-label',sideLab);
@@ -185,9 +187,33 @@ menuBtn.addEventListener('click',function(){
   else setNav(!navOpen());
 });
 sideBtn.addEventListener('click',function(){
-  if(isDesk())setSide(false);
+  if(isDesk())setSide(collapsed());
   else setNav(false);
 });
+/* Barra compacta: el nombre de cada icono sale en un globo al pasar el puntero o al llegar con Tab */
+var globo=null;
+function quitarGlobo(){if(globo){globo.remove();globo=null}}
+function ponerGlobo(el){
+  quitarGlobo();
+  var t=el.querySelector('span:not(.ico-txt)');
+  var txt=t?t.textContent.trim():(el.getAttribute('aria-label')||'');
+  if(!txt)return;
+  globo=document.createElement('div');globo.className='side-tip';globo.setAttribute('aria-hidden','true');globo.textContent=txt;
+  document.body.appendChild(globo);
+  var r=el.getBoundingClientRect(),g=globo.getBoundingClientRect();
+  globo.style.left=(r.right+8)+'px';
+  globo.style.top=Math.max(4,Math.min(window.innerHeight-g.height-4,r.top+(r.height-g.height)/2))+'px';
+}
+function enCompacta(e){
+  if(!isDesk()||!collapsed())return null;
+  return e.target.closest&&e.target.closest('.nv');
+}
+sideEl.addEventListener('mouseover',function(e){var n=enCompacta(e);if(n)ponerGlobo(n)});
+sideEl.addEventListener('mouseout',function(e){if(globo&&!(e.relatedTarget&&e.target.closest('.nv')&&e.target.closest('.nv').contains(e.relatedTarget)))quitarGlobo()});
+sideEl.addEventListener('focusin',function(e){var n=enCompacta(e);if(n&&n.matches(':focus-visible'))ponerGlobo(n)});
+sideEl.addEventListener('focusout',quitarGlobo);
+sideEl.addEventListener('scroll',quitarGlobo,{passive:true});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')quitarGlobo()});
 $('#scrim').addEventListener('click',function(){setNav(false)});
 sideEl.addEventListener('click',function(e){
   var g=e.target.closest('.grp-btn');

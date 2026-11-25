@@ -31,7 +31,8 @@ proyectos/red-oficina.*     Proyecto «La red de una oficina»: 8 fases y sus di
 manifest.webmanifest        Datos para instalar OneBook como app
 sw.js                       Service worker: guarda el sitio para usarlo sin conexión
 assets/
-  css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral, página, bloques, laboratorios, repaso y apuntes
+  css/base.css              Estilos compartidos: identidad (4 variantes de color), barra lateral (contraída en escritorio
+                            queda compacta, solo iconos), página, bloques, laboratorios, repaso y apuntes
   css/editor.css            Estilos del editor (solo documento.html): barra de herramientas, asa de bloque, menús y formularios
   css/negocio.css           Bloques de negocio: el plan de pagos al leer y los bloques de la tienda (al leer y su formulario,
                             .nb-f), en documento.html y en la bienvenida
