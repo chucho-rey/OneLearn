@@ -1,0 +1,3675 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ayuda · OneBook</title>
+<meta name="description" content="Cada herramienta de OneBook explicada paso a paso: páginas y bloques, tu negocio, inventario y reportes, bases de datos, recursos humanos y estudio.">
+<link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icono-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#fbfcfc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111716" media="(prefers-color-scheme: dark)">
+<link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="assets/js/ajustes.js"></script>
+<script src="assets/js/perfil.js"></script>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/ayuda.css">
+</head>
+<body data-pagina="ayuda">
+
+<div class="app">
+  <aside class="side" id="side" aria-label="Lecciones"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <main class="page">
+      <noscript><p>Esta página necesita JavaScript para mostrarse.</p></noscript>
+    </main>
+  </div>
+</div>
+
+<!-- La guía, en el formato de bloques (la dibuja assets/js/bloques.js; ayuda.js agrega el buscador y el filtro por módulo).
+     Cada herramienta es un título de nivel 2 con id ay-<módulo>-<nombre>. -->
+<script type="application/json" id="documento">
+{
+ "formato": 1,
+ "tipo": "pagina",
+ "id": "ayuda",
+ "titulo": "Ayuda: cómo usar OneBook",
+ "icono": "ayuda",
+ "props": [
+  {
+   "nombre": "Categoría",
+   "valor": "Ayuda",
+   "estilo": "etiqueta"
+  },
+  {
+   "nombre": "Para",
+   "valor": "Todos",
+   "estilo": "texto"
+  }
+ ],
+ "contenido": {
+  "type": "doc",
+  "content": [
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b001"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Aquí está cada herramienta de OneBook: para qué sirve y cómo se usa, paso a paso. Usa el índice, el buscador de esta página o "
+     },
+     {
+      "type": "text",
+      "text": "Ctrl K",
+      "marks": [
+       {
+        "type": "bold"
+       }
+      ]
+     },
+     {
+      "type": "text",
+      "text": " desde cualquier lugar. Ves las herramientas de tu espacio; con «Ver todas» aparecen también las de los módulos que tienes apagados."
+     }
+    ]
+   },
+   {
+    "type": "indice",
+    "attrs": {
+     "id": "ay-b002"
+    }
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-espacio",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tu espacio y sus módulos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b003"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Al entrar por primera vez eliges para qué usas OneBook: tu negocio, tus finanzas y notas o estudiar. Eso decide qué herramientas ves."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b004"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En «Crea tu espacio» elige el uso, escribe el nombre de tu negocio (o el tuyo) y su giro."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si tienes empleados, marca "
+         },
+         {
+          "type": "text",
+          "text": "Tengo empleados",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": se enciende Recursos humanos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Elige las páginas con las que quieres empezar y pulsa «Crear mi espacio»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para cambiarlo después: "
+         },
+         {
+          "type": "text",
+          "text": "Tus datos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (barra lateral) → «Cambiar tu espacio». Ahí enciendes o apagas los módulos: Negocio y dinero, Estudio y Recursos humanos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b005",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Apagar un módulo no borra nada: solo deja de mostrar sus herramientas."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-inicio",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "El Inicio"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b006"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Es lo primero que ves al abrir OneBook: tus atajos y lo importante del día."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b007"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Acciones rápidas",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": corte de hoy, nueva venta, anotar fiado o un gasto (y, con Recursos humanos, anotar una falta o la nómina de la quincena)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Mi negocio",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " y "
+         },
+         {
+          "type": "text",
+          "text": "Tu equipo",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": páginas de bloques que se ven vivas en el Inicio. «Editar esta sección» las abre para agregar o quitar bloques."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Prepara tu negocio",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": una lista de primeros pasos que se marca sola."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tus páginas",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": las últimas que abriste y tus favoritas."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-crear",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Crear una página"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b008"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada página nace de una plantilla con los bloques que necesitas, o en blanco."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b009"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pulsa "
+         },
+         {
+          "type": "text",
+          "text": "Crear",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " en la barra lateral (o «+ Crear» en el Inicio)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Elige una plantilla por categoría o búscala por nombre. Cada una dice qué trae."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los "
+         },
+         {
+          "type": "text",
+          "text": "paquetes por giro",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " crean varias páginas de una vez (por ejemplo, tienda: corte, inventario, reporte, fiado y proveedores)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para reutilizar una página tuya: en la página, «⋯» → «Guardar como plantilla». Aparece en "
+         },
+         {
+          "type": "text",
+          "text": "Mis plantillas",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-escribir",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Escribir y bloques"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b010"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Una página es una lista de bloques: texto, títulos, listas, tablas y bloques especiales como el corte de caja o una base de datos."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b011"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe directo. Para insertar un bloque, escribe "
+         },
+         {
+          "type": "text",
+          "text": "/",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " al empezar una línea y elige (también con «+ Insertar» en la barra de herramientas)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Atajos de escritura: «# » título, «- » lista, «1. » lista numerada, «[ ] » casilla y «> » cita."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Arrastra un bloque desde el asa que aparece a su izquierda para moverlo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Todo se guarda solo mientras escribes; arriba dice «Guardado»."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b012",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Ctrl Z deshace y Ctrl Shift Z rehace, también dentro de las tablas y bases de datos."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-leer",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Leer, imprimir y compartir"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b013"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cada página se puede leer sin distracciones, imprimir o guardar en PDF y descargar."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b014"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Leer",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (arriba a la derecha) muestra la página sin la barra de edición; ahí puedes marcar pagos o abonos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«⋯» → "
+         },
+         {
+          "type": "text",
+          "text": "Imprimir o guardar PDF",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": carta vertical u horizontal, con los bloques como hojas de papel."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«⋯» → "
+         },
+         {
+          "type": "text",
+          "text": "Descargar",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": en Markdown o como copia de la página para importarla en otro navegador."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«⋯» → "
+         },
+         {
+          "type": "text",
+          "text": "Ancho completo",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " usa todo el ancho de la pantalla; la estrella la marca como "
+         },
+         {
+          "type": "text",
+          "text": "favorita",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-papelera",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Papelera"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b015"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lo que borras va a la papelera y se puede recuperar durante 30 días."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b016"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En una página: «⋯» → «Mover a la papelera»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para recuperarla: "
+         },
+         {
+          "type": "text",
+          "text": "Tus datos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " → «Papelera» → «Restaurar»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pasados 30 días, o con «Vaciar papelera», se borra para siempre."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-buscar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Buscar"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b017"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Encuentra cualquier página, sección, nota o herramienta de la ayuda."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b018"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pulsa "
+         },
+         {
+          "type": "text",
+          "text": "Ctrl K",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (Cmd K en Mac) o «Buscar» en la barra lateral."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe unas letras: busca en títulos y en el texto, sin importar acentos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Usa las flechas y Enter para abrir el resultado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-barra",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La barra lateral y las pestañas"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b019"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La barra lateral te lleva a todo; en escritorio se puede hacer compacta."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b020"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El botón de la barra (junto al logo) la "
+         },
+         {
+          "type": "text",
+          "text": "contrae",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": quedan solo los iconos y su nombre sale al pasar el puntero. El mismo botón la vuelve a expandir."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En celular, el botón de menú (arriba a la izquierda) la abre."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Abrir en pestañas",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " trabaja con varias páginas abiertas a la vez, como en un navegador. Con clic central o Ctrl + clic, un enlace se abre en otra pestaña."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-lectura",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lectura y accesibilidad"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b021"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Ajusta OneBook a tus ojos y a tu forma de leer."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b022"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pulsa "
+         },
+         {
+          "type": "text",
+          "text": "Aa",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (arriba a la derecha)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Elige tamaño de letra, tema claro u oscuro, alto contraste, la letra OpenDyslexic, el espacio entre líneas y el ancho de la columna."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El "
+         },
+         {
+          "type": "text",
+          "text": "modo zen",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (tecla Z en una lección o página) esconde todo menos el texto."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "La tecla "
+         },
+         {
+          "type": "text",
+          "text": "?",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " muestra los atajos de teclado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b023",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Todo se puede usar solo con teclado y con lector de pantalla."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-datos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tus datos y respaldos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b024"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Todo lo que haces se guarda en este navegador, en este dispositivo. Nada se sube a internet."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b025"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tus datos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " → «Descargar respaldo» guarda un archivo con todo: páginas, bases, notas y ajustes."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En otro dispositivo o navegador: «Importar respaldo» con ese archivo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El Inicio te recuerda descargar un respaldo cada dos semanas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para usar OneBook sin internet, instálalo como app desde el menú del navegador («Instalar» o «Agregar a la pantalla de inicio»)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b026",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Si borras los datos del navegador se borra lo que no esté respaldado. Guarda tus respaldos en otro lugar."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-corte",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Corte de caja"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b027"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Al cerrar el día: fondo, ventas, retiros y efectivo contado. Te dice si la caja cuadra."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b028"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Corte de caja» (o usa la acción rápida «Corte de hoy»)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe el fondo con el que abriste y las ventas del día (efectivo, tarjeta, transferencia)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota las entradas y salidas de efectivo (retiros, pagos a proveedores)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cuenta el efectivo por billete y moneda: el corte dice si sobra o falta."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b029",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Un corte por día. Para el de mañana, la acción rápida agrega uno nuevo en la misma página."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-fiado",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Fiado"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b030"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Quién te debe, lo que se lleva, sus abonos y su saldo."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b031"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Fiado» o usa «Anotar fiado» en el Inicio."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Agrega a cada cliente con su teléfono."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota lo que se lleva (cargo) o lo que te paga (abono) y pulsa Enter."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Al leer la página también puedes anotar abonos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-gastos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Gastos del mes"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b032"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lo que sale, por categoría, con el total del mes."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b033"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Gastos del mes» o usa «Anotar un gasto»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota cada gasto con su fecha, concepto, categoría y monto."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Los "
+         },
+         {
+          "type": "text",
+          "text": "gastos fijos",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (renta, luz, internet) se anotan una vez; «Generar mes» los agrega cada mes."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-venta",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Nota de venta"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b034"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Un recibo con folio, conceptos, IVA, total y cambio, para imprimir o mandar."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b035"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Usa «Nueva venta» en el Inicio: crea la nota con el folio siguiente y la fecha de hoy."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe los conceptos: si tienes Inventario, elige el producto y toma su precio (y te dice cuántos quedan)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Indica si cobras IVA y cuánto te pagaron: calcula el cambio."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Imprímela o guárdala en PDF. Al guardarse, descuenta del inventario lo vendido."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-precio",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Precio de venta"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b036"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Calcula a cuánto vender con la ganancia que quieres, el IVA y la comisión de la tarjeta, o cuánto ganas con un precio que ya tienes."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b037"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta «Precio de venta» con «/» (o crea la página «Precios de venta»)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe lo que te cuesta y cuánto quieres ganar (o el precio que ya tienes)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Marca si cobras IVA y la comisión de tu terminal o plataforma."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Puedes redondear el precio a $0.50, $1, $5 o $10."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-porpagar",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuentas por pagar"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b038"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lo que les debes a tus proveedores y cuándo vence."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b039"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Proveedores» o inserta «Cuentas por pagar»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota a quién le debes, cuánto y cuándo vence; marca lo pagado."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Lo que vence pronto sale en «Próximos vencimientos»."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-pagos",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Plan de pagos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b040"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Una deuda o una venta a plazos: cuánto es cada pago, cuándo y cuánto falta."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b041"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta «Plan de pagos» con «/» o crea «Préstamo o crédito»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe el monto y el número de pagos (o la cuota) y la frecuencia."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Al leer la página, marca cada pago al hacerlo."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-inventario",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Inventario"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b042"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tus productos con su costo, precio y existencias, que se calculan solas: lo que tenías, más lo que entra, menos lo que vendes."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b043"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Inventario». Trae Productos, Entradas y salidas, Compras y el resumen."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota cada producto con su costo, precio, cuántos tenías al empezar y el mínimo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cuando llega mercancía, usa «Registrar entrada» (o «Importar factura XML»). Las notas de venta restan lo vendido."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "El resumen dice el valor del inventario, lo que está bajo el mínimo o agotado, y con «Hacer pedido» arma la página del pedido para cada proveedor."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b044",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Las tablas del inventario son las mismas en todas tus páginas: si las muestras en otra página, ves los mismos datos."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-factura",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Importar la factura XML del proveedor"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b045"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Con el XML de la factura (CFDI 4.0 o 3.3), OneBook anota la compra, las entradas y el costo nuevo de cada producto."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b046"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En el resumen del inventario, pulsa «Importar factura XML» y elige el archivo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Revisa cada concepto: OneBook propone el producto por código o nombre; puedes crear uno nuevo o decir que no es de inventario."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Confirma: la compra queda pagada (PUE) o por pagar con su vencimiento (PPD). La misma factura no se importa dos veces."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-reporte",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Reportes"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b047"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tus ventas, compras o gastos por mes, producto o proveedor, comparados con el periodo anterior y con gráfica."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b048"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea «Reporte del mes» o inserta «Reporte» con «/» en cualquier página con una base de datos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En «Ajustar reporte» elige la base, cómo agrupar (por un campo o dos), qué sumar o contar y el periodo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Activa «Comparar con el periodo anterior» o un presupuesto."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«Presentar» lo muestra en pantalla completa, como diapositivas."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-indicadores",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Indicadores y próximos vencimientos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b049"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tus cifras clave con su flecha de cambio, y lo que vence en los próximos días."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b050"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta «Indicadores» con «/»: ventas del mes, valor del inventario, compras por pagar y más; «Ajustar» cambia cuáles."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta «Próximos vencimientos»: junta lo que vence de tus bases, planes de pago y cuentas por pagar, lo vencido primero."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-presupuesto",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Presupuesto del mes"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b051"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuánto quieres gastar por categoría y cuánto llevas: lo disponible sale en rojo si te pasas."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b052"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea «Presupuesto del mes»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En «Presupuesto» escribe cuánto quieres gastar al mes en cada categoría."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En «Gastos» anota lo que gastas: el reporte compara lo real contra lo presupuestado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-negocio-finanzas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tus finanzas personales"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b053"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Para tus cuentas de la casa: gastos del mes, a quién le prestaste y tus deudas."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b054"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«Finanzas del mes»: gastos, deudas y metas de ahorro en una página."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«Me deben»: a quién le prestaste, sus abonos y cuánto falta."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«Préstamo o crédito»: una deuda en pagos."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-bases",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Bases de datos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b055"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Una tabla con columnas de distintos tipos, cálculos y varias vistas: clientes, productos, pedidos, lo que necesites."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b056"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta «Base de datos» con «/» o crea la página «Clientes»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Agrega columnas con «+»: texto, número, moneda, fecha, selección, casilla, teléfono, relación con otra base, fórmula o suma de otra base."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Cambia de vista: tabla, tablero (por grupos), galería (tarjetas) o calendario. Cada vista guarda su filtro, orden y columnas ocultas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Toca el cuadrito de la izquierda de una fila para ver su ficha completa."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Importa o descarga en CSV (por ejemplo, desde Excel) en «⋯» de la base."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b057",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Fórmulas: usa el nombre de otras columnas entre llaves, por ejemplo {Precio} * {Cantidad}, o SI({Existencias} < {Mínimo}; \"Bajo\"; \"Bien\"). También MAX, MIN, ENTERO, REDONDEAR y DIAS({Vence})."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-nucleo-colores",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Color según el valor"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b058"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Pinta las celdas de una columna según lo que dicen: en rojo lo vencido, en verde lo pagado."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b059"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En el encabezado de la columna, abre su menú y elige «Color según el valor»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Agrega hasta tres reglas: es, no es, contiene, mayor, menor o vacío, cada una con su color (verde, amarillo, rojo o azul)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-equipo",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Mi equipo"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b061"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tus empleados en un lugar: su antigüedad y vacaciones se calculan solas, y ves quién falta hoy, los cumpleaños y lo que te cuesta tu equipo."
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b060",
+     "variante": "info"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Recursos humanos",
+        "marks": [
+         {
+          "type": "bold"
+         }
+        ]
+       },
+       {
+        "type": "text",
+        "text": " se enciende con «Tengo empleados» al crear tu espacio, o en Tus datos → «Cambiar tu espacio». Los cálculos usan las cifras de 2026 (UMA $117.31, salario mínimo $315.04 y $440.87 en la frontera norte, tarifa del ISR del SAT y cuotas del IMSS). Son estimaciones para planear: tu contador timbra los recibos oficiales."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b062"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Mi equipo» (Crear → Recursos humanos)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pulsa "
+         },
+         {
+          "type": "text",
+          "text": "Agregar persona",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": ": nombre, puesto, fecha de ingreso, salario diario y cada cuándo cobra (semanal, catorcenal, quincenal o mensual)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota faltas, vacaciones, incapacidades, permisos y horas extra con "
+         },
+         {
+          "type": "text",
+          "text": "Anotar falta o vacaciones",
+          "marks": [
+           {
+            "type": "bold"
+           }
+          ]
+         },
+         {
+          "type": "text",
+          "text": " (también desde el Inicio)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Quien se va: en la tabla «Empleados», cambia su Estado a «Baja» y escribe su fecha de baja."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b063",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El Inicio muestra «Tu equipo»: quién falta o está de vacaciones hoy, cumpleaños y aniversarios del mes, y el aguinaldo cuando se acerca diciembre."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-nomina",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Nómina del periodo"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b064"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "La nómina de todo tu equipo para una quincena, semana o mes: descuenta las faltas, paga las horas extra anotadas y calcula ISR, IMSS, neto y lo que le cuesta al negocio."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b065"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Usa «Nómina de la quincena» en el Inicio o crea la página «Nómina del periodo»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En el bloque elige el periodo (semanal, catorcenal, quincenal o mensual) y cuándo empieza."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sale una fila por persona que cobra en ese periodo, con sus faltas y horas extra, y el total."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Imprímela con «⋯» → «Imprimir o guardar PDF»."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b066",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Las primeras 9 horas extra de la semana se pagan dobles y las demás triples. Las faltas e incapacidades no se pagan."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-recibo",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Recibo de nómina"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b067"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "El detalle de una persona en un periodo: sueldo, horas extra, descansos o festivos trabajados, prima dominical y bonos; ISR con subsidio, IMSS y neto."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b068"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta «Recibo de nómina» con «/»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe el salario (diario o mensual), el periodo, la fecha de ingreso y la zona del salario mínimo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Anota lo del periodo: faltas, horas extra, descansos trabajados, domingos y bonos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Marca «Ver lo que le cuesta al negocio» para ver las cuotas del IMSS del patrón, el INFONAVIT y, si lo escribes, el impuesto estatal sobre nómina."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b069",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Con salario mínimo no se retiene ISR del sueldo y el patrón paga también la cuota del IMSS del trabajador."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-vacaciones",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Vacaciones"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b070"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Cuántos días le tocan a cada quien por ley, cuántos ha tomado y su prima vacacional."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b071"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Vacaciones»: la tabla de todo tu equipo sale de «Mi equipo»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para una persona, inserta «Vacaciones» y escribe su fecha de ingreso y su salario."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe los días ya tomados: te dice los disponibles, el pago y la prima vacacional (al menos 25 %)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b072",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Por ley (vacaciones dignas): 12 días el primer año, 14, 16, 18 y 20 el quinto; luego 2 más cada cinco años."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-aguinaldo",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Aguinaldo"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b073"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Al menos 15 días de salario antes del 20 de diciembre, o la parte proporcional si entró este año."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b074"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Aguinaldo»: sale el de todo tu equipo, con ISR y neto."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Para una persona, inserta «Aguinaldo» con su salario y fecha de ingreso."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Si das más de 15 días, cámbialo en «Días de aguinaldo»."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b075",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "Está exento de ISR hasta 30 UMA ($3,519.30 en 2026); lo demás paga ISR."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-finiquito",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Finiquito o liquidación"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b076"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lo que le corresponde a quien se va: por renuncia, despido justificado o despido injustificado."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b077"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Finiquito» o inserta el bloque."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe el salario, la fecha de ingreso, la de salida y el motivo."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Agrega los días de sueldo sin pagar y las vacaciones pendientes o ya tomadas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Te da el desglose: sueldo, aguinaldo y vacaciones proporcionales, prima vacacional y, según el motivo, prima de antigüedad e indemnización, con ISR estimado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b078",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "En un despido injustificado se pagan tres meses de salario integrado; los 20 días por año aplican si el patrón no reinstala al trabajador o si este termina la relación por culpa del patrón. Revísalo con tu contador o abogado."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-rh-ptu",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Reparto de utilidades (PTU)"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b079"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "El 10 % de la utilidad fiscal del año se reparte entre tu equipo a más tardar el 30 de mayo."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b080"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea la página «Reparto de utilidades»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Escribe la utilidad fiscal (o el monto a repartir)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Pulsa «Traer a tu equipo»: llena los días trabajados y el salario de cada quien desde «Mi equipo»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Te dice cuánto le toca a cada persona: la mitad por días trabajados y la mitad por salario, con el tope de tres meses de salario."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-estudio-lecciones",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lecciones y laboratorios"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b081"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Lecciones de tecnología con laboratorios para practicar: terminal de Linux, simuladores de red y más."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b082"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Elige una lección en la barra lateral («Temas») o en una ruta."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Lee y practica en cada laboratorio; las preguntas de repaso marcan tu avance."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Toma notas en la hoja de apuntes de abajo y guarda bloques con el marcador (tecla M)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-estudio-rutas",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Rutas y proyectos"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b083"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Las rutas ordenan lecciones por módulos; los proyectos son casos prácticos por fases."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b084"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Abre «Rutas» en la barra lateral y elige una (por ejemplo, Redes y sistemas)."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Sigue sus módulos en orden; tu avance se guarda."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "En «Proyectos», marca las tareas de cada fase y entrega su resultado."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-estudio-apuntes",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Libretas y apuntes de clase"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b085"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Para estudiar: libretas por materia con índice y repaso, y apuntes de cada clase."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b086"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea una «Libreta» o «Apuntes de clase»."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Usa «/» para insertar ecuaciones, figuras, tablas numeradas, preguntas de repaso o un resumen."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Tus notas y marcadores de las lecciones están en «Mis apuntes» (barra lateral)."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "heading",
+    "attrs": {
+     "id": "ay-estudio-tesis",
+     "level": 2
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Tesis"
+     }
+    ]
+   },
+   {
+    "type": "paragraph",
+    "attrs": {
+     "id": "ay-b087"
+    },
+    "content": [
+     {
+      "type": "text",
+      "text": "Escribe tu tesis con fuentes y citas en APA 7 o IEEE, piezas académicas y un registro de autoría."
+     }
+    ]
+   },
+   {
+    "type": "orderedList",
+    "attrs": {
+     "id": "ay-b088"
+    },
+    "content": [
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Crea «Tesis» desde Crear: trae portada, índices y capítulos."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Agrega tus fuentes y cítalas con «@»: la bibliografía se arma sola."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "Inserta figuras, tablas, ecuaciones y notas al pie; se numeran solas."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "listItem",
+      "content": [
+       {
+        "type": "paragraph",
+        "content": [
+         {
+          "type": "text",
+          "text": "«Entregar» revisa lo que falta y la exporta en PDF o Word."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "type": "callout",
+    "attrs": {
+     "id": "ay-b089",
+     "variante": "idea"
+    },
+    "content": [
+     {
+      "type": "paragraph",
+      "content": [
+       {
+        "type": "text",
+        "text": "El registro de autoría anota cuánto escribiste tú (sin guardar tu texto) y la declaración de uso de IA."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
+</script>
+
+<script src="assets/js/catalogo.js"></script>
+<script src="assets/js/base.js"></script>
+<script src="assets/js/datos.js"></script>
+<script src="assets/js/barra.js"></script>
+<script src="assets/js/lectura.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/respaldo.js"></script>
+<script src="assets/js/crear.js"></script>
+<script src="assets/js/buscar.js"></script>
+<script src="assets/js/bloques.js"></script>
+<script src="assets/js/zen.js"></script>
+<script src="assets/js/ayuda.js"></script>
+</body>
+</html>

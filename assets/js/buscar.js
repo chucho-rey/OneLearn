@@ -14,7 +14,10 @@ function recorte(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length
 /* ---------- Índice ---------- */
 var lecciones=null;
 /* Páginas del sitio que también se buscan, además de las lecciones del catálogo */
-var PAGINAS=[{id:'acerca',titulo:'Cómo está hecho OneBook',ruta:'acerca.html',icono:'codigo',sub:'Sobre OneBook'}];
+/* Páginas del sitio que se buscan como una lección. La ayuda va en todos los espacios (cada herramienta es una
+   sección); «Cómo está hecho», con las lecciones (módulo de estudio) */
+var PAGINAS=[{id:'ayuda',titulo:'Ayuda: cómo usar OneBook',ruta:'ayuda.html',icono:'ayuda',sub:'Ayuda',siempre:true},
+  {id:'acerca',titulo:'Cómo está hecho OneBook',ruta:'acerca.html',icono:'codigo',sub:'Sobre OneBook'}];
 /* Entradas de una lección (o página): la lección, cada sección (con su texto) y cada bloque */
 function entradasDeLeccion(l,doc){
   var url=l.ruta,out=[{tipo:'leccion',titulo:doc.titulo||l.titulo,texto:'',href:url,sub:l.sub,icono:l.icono||'page',doc:l.id}];
@@ -33,15 +36,15 @@ function entradasDeLeccion(l,doc){
 }
 function cargarLecciones(){
   if(lecciones)return lecciones;
-  var lista=[];
-  AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){
+  var lista=[],est=conEstudio();
+  if(est)AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){
     if(l.archivo)lista.push({id:l.id,titulo:l.titulo,icono:l.icono,ruta:'lecciones/'+l.archivo,sub:'Lección'});
   })});
-  lista=lista.concat(PAGINAS);
+  lista=lista.concat(PAGINAS.filter(function(p){return est||p.siempre}));
   /* Proyectos: se buscan por su título y descripción (sin abrir su archivo) */
-  var proy=(AT.proyectos||[]).map(function(p){return {tipo:'leccion',titulo:p.titulo,texto:p.descripcion||'',href:'proyectos/'+p.archivo,sub:'Proyecto',icono:p.icono||'proyecto',doc:'proyecto-'+p.id}});
+  var proy=(est?AT.proyectos||[]:[]).map(function(p){return {tipo:'leccion',titulo:p.titulo,texto:p.descripcion||'',href:'proyectos/'+p.archivo,sub:'Proyecto',icono:p.icono||'proyecto',doc:'proyecto-'+p.id}});
   /* Rutas de aprendizaje: por su título, su descripción y los nombres de sus módulos */
-  proy=proy.concat((AT.caminos||[]).map(function(c){return {tipo:'leccion',titulo:'Ruta: '+c.titulo,texto:c.descripcion+' '+c.modulos.map(function(m){return m.titulo}).join(', '),href:'rutas.html#'+c.id,sub:'Ruta',icono:c.icono||'ruta',doc:'ruta-'+c.id}}));
+  proy=proy.concat((est?AT.caminos||[]:[]).map(function(c){return {tipo:'leccion',titulo:'Ruta: '+c.titulo,texto:c.descripcion+' '+c.modulos.map(function(m){return m.titulo}).join(', '),href:'rutas.html#'+c.id,sub:'Ruta',icono:c.icono||'ruta',doc:'ruta-'+c.id}}));
   lecciones=Promise.all(lista.map(function(l){
     /* La lección abierta ya está en memoria */
     if(AT.documento&&AT.documento.id===l.id)return Promise.resolve(entradasDeLeccion(l,AT.documento));
@@ -81,10 +84,10 @@ function cargarTuyo(){
     return out;
   });
 }
-/* Sin el módulo de estudio (perfil.js) solo se busca en tus páginas: ni lecciones, ni notas de lección, ni marcadores */
+/* Sin el módulo de estudio (perfil.js) se busca en tus páginas y en la ayuda: ni lecciones, ni notas de lección, ni marcadores */
 function conEstudio(){return !AT.perfil||AT.perfil.tiene('estudio')}
 function cargar(){
-  return Promise.all([conEstudio()?cargarLecciones():[],cargarTuyo()]).then(function(r){
+  return Promise.all([cargarLecciones(),cargarTuyo()]).then(function(r){
     var tuyo=conEstudio()?r[1]:r[1].filter(function(e){return e.tipo!=='nota'&&e.tipo!=='marcador'});
     return tuyo.concat(r[0]);
   });

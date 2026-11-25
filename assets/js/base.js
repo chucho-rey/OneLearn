@@ -174,9 +174,9 @@ document.body.insertAdjacentHTML('afterbegin',
 /* ---------- Lección actual ---------- */
 var catalogo=AT.catalogo||[];
 var LID=document.body.getAttribute('data-leccion')||'';
-/* Páginas: inicio, documento, acerca («Cómo está hecho») y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
+/* Páginas: inicio, documento, acerca («Cómo está hecho»), ayuda y rutas viven en la raíz del sitio; las lecciones, en lecciones/ */
 var PAGINA=document.body.getAttribute('data-pagina')||(LID?'leccion':'');
-var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida'||PAGINA==='entrar'||PAGINA==='pestanas';
+var ES_INICIO=PAGINA==='inicio',EN_RAIZ=ES_INICIO||PAGINA==='documento'||PAGINA==='acerca'||PAGINA==='ayuda'||PAGINA==='rutas'||PAGINA==='imprimir'||PAGINA==='bienvenida'||PAGINA==='entrar'||PAGINA==='pestanas';
 /* Los proyectos viven en proyectos/: un nivel abajo de la raíz, como las lecciones */
 var EN_PROYECTOS=PAGINA==='proyecto'||PAGINA==='proyectos';
 var RAIZ=EN_RAIZ?'':'../',LECC=EN_RAIZ?'lecciones/':EN_PROYECTOS?'../lecciones/':'';
@@ -195,11 +195,12 @@ catalogo.forEach(function(g){
 });
 if(!actual)actual=ES_INICIO?{id:'inicio',titulo:'Inicio'}:PAGINA==='documento'?{id:'documento',titulo:'Documento'}:
   PAGINA==='acerca'?{id:'acerca',titulo:'Cómo está hecho'}:
+  PAGINA==='ayuda'?{id:'ayuda',titulo:'Ayuda'}:
   PAGINA==='rutas'?{id:'rutas',titulo:'Rutas'}:
   PAGINA==='proyectos'?{id:'proyectos',titulo:'Proyectos'}:
   PAGINA==='proyecto'?{id:'proyecto',titulo:document.body.getAttribute('data-titulo')||document.title}:{id:LID||'leccion',titulo:document.title};
 if(PAGINA==='documento')grupo=!AT.perfil||AT.perfil.tiene('estudio')?'Mis apuntes':'Tus páginas';
-if(PAGINA==='acerca')grupo='OneBook';
+if(PAGINA==='acerca'||PAGINA==='ayuda')grupo='OneBook';
 if(PAGINA==='proyecto')grupo='Proyectos';
 AT.leccion=actual;
 /* La ruta de aprendizaje (AT.caminos) y el módulo donde está una lección o un proyecto, o null */
