@@ -141,7 +141,7 @@ function semillaDe(id,conFilas){
 
 /* ---------- Fórmulas (sin eval) ----------
    {Columna}, números, "texto", + − * / y paréntesis, menos unario, & (une textos), comparaciones (= <> < > <= >=) y
-   funciones: SI(condición; sí; no), Y(…), O(…), NO(x), MIN(…), MAX(…), ABS(x), REDONDEAR(x; decimales), DIAS(fecha)
+   funciones: SI(condición; sí; no), Y(…), O(…), NO(x), MIN(…), MAX(…), ABS(x), ENTERO(x) (hacia abajo), REDONDEAR(x; decimales), DIAS(fecha)
    (días de hoy a esa fecha; negativos si ya pasó) y HOY(). Los argumentos se separan con ; o con ,. Se compila una
    vez a una función; fn.tipo dice qué da: 'numero', 'texto' o 'logico' (para alinear y totalizar). */
 var COMPILADAS={};
@@ -169,6 +169,7 @@ var FUNCIONES={
   min:[1,99,'numero',function(a){var n=a.map(aNum);return n.length?Math.min.apply(null,n):0}],
   max:[1,99,'numero',function(a){var n=a.map(aNum);return n.length?Math.max.apply(null,n):0}],
   abs:[1,1,'numero',function(a){return Math.abs(aNum(a[0]))}],
+  entero:[1,1,'numero',function(a){return Math.floor(aNum(a[0])+1e-9)}],
   redondear:[1,2,'numero',function(a){var d=a.length>1?Math.max(0,Math.min(6,Math.round(aNum(a[1])))):0,k=Math.pow(10,d);return Math.round(aNum(a[0])*k)/k}],
   dias:[1,1,'numero',function(a){return diasA(a[0])}],
   hoy:[0,0,'texto',function(){return hoyISO()}],

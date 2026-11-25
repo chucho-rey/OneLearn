@@ -49,15 +49,32 @@ var TIPOS=AT.tiposDoc={
   /* Tus finanzas (también del módulo de negocio y dinero) */
   finanzas:{nombre:'Finanzas del mes',icono:'gastos',desc:'Tus gastos, tus deudas y tus metas de ahorro en una página.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Gastos del mes','Plan de pagos','Lista de tareas']},
   medeben:{nombre:'Me deben',icono:'fiado',desc:'A quién le prestaste, lo que te ha abonado y cuánto falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Fiado']},
-  prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Plan de pagos']}
+  prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Plan de pagos']},
+  /* Recursos humanos (módulo rh): tu equipo y las calculadoras de nómina (rh.js y equipo.js) */
+  equipo:{nombre:'Mi equipo',icono:'users',desc:'Tus empleados, sus faltas y vacaciones; quién falta hoy, cumpleaños y lo que te cuestan al mes.',listo:true,modulo:'rh',cat:'rh',trae:['Resumen de tu equipo','Empleados','Incidencias']},
+  nominas:{nombre:'Nómina del periodo',icono:'recibo',desc:'La nómina de todo tu equipo (con faltas y horas extra) y un recibo por persona.',listo:true,modulo:'rh',cat:'rh',trae:['Nómina de tu equipo','Recibo de nómina']},
+  vacaciones:{nombre:'Vacaciones',icono:'sol',desc:'Cuántos días le tocan a cada quien por ley, cuántos ha tomado y su prima vacacional.',listo:true,modulo:'rh',cat:'rh',trae:['Nómina de tu equipo','Vacaciones']},
+  aguinaldos:{nombre:'Aguinaldo',icono:'regalo',desc:'El aguinaldo de cada persona y de todo tu equipo, con ISR y la fecha límite.',listo:true,modulo:'rh',cat:'rh',trae:['Nómina de tu equipo','Aguinaldo']},
+  finiquito:{nombre:'Finiquito o liquidación',icono:'salida',desc:'Lo que le corresponde a quien se va, por renuncia o despido, con ISR estimado.',listo:true,modulo:'rh',cat:'rh',trae:['Finiquito o liquidación']},
+  ptu:{nombre:'Reparto de utilidades (PTU)',icono:'reparto',desc:'El 10 % de la utilidad entre tu equipo: por días y por salario, con sus topes.',listo:true,modulo:'rh',cat:'rh',trae:['Reparto de utilidades']},
+  calculadoras:{nombre:'Calculadoras de nómina',icono:'recibo',desc:'Recibo de nómina, vacaciones, aguinaldo y finiquito en una página, para hacer cuentas rápidas.',listo:true,modulo:'rh',cat:'rh',trae:['Recibo de nómina','Vacaciones','Aguinaldo','Finiquito']}
 };
 var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','clientes','lista','plan',
+  'equipo','nominas','vacaciones','aguinaldos','finiquito','ptu','calculadoras',
   'finanzas','medeben','prestamo','cotizacion','libro','investigacion','guia','bitacora','presentacion','blanco'];
-var CATS={negocio:'Para tu negocio',finanzas:'Tus finanzas',paquetes:'Paquetes por giro',estudio:'Estudio',mis:'Mis plantillas'};
-var CAT_MOD={negocio:'negocio',finanzas:'negocio',paquetes:'negocio',estudio:'estudio',mis:'nucleo'};
+var CATS={negocio:'Para tu negocio',rh:'Recursos humanos',finanzas:'Tus finanzas',paquetes:'Paquetes por giro',estudio:'Estudio',mis:'Mis plantillas'};
+var CAT_MOD={negocio:'negocio',rh:'rh',finanzas:'negocio',paquetes:'negocio',estudio:'estudio',mis:'nucleo'};
 var PER=AT.perfil;
 function tiene(m){return !PER||PER.tiene(m)}
 function hoyISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+/* El día en que empieza la quincena de hoy (1 o 16) y el de un periodo de pago */
+function inicioQuincena(){var d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate()<=15?1:16)}
+function inicioPeriodo(tipo){
+  var d=new Date();
+  if(tipo==='Mensual')return new Date(d.getFullYear(),d.getMonth(),1);
+  if(tipo==='Semanal'||tipo==='Catorcenal')return new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7));
+  return inicioQuincena();
+}
 function isoDe(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 function sinAcentos(t){return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
 function clonar(o){return JSON.parse(JSON.stringify(o))}
@@ -209,6 +226,50 @@ var PLANTILLAS={
   medeben:function(){return {titulo:'Me deben',props:[],contenido:[
     {type:'fiado',attrs:{id:id(),titulo:'Me deben',clientes:[]}},P()
   ]}},
+  /* Recursos humanos */
+  equipo:function(){return {titulo:'Mi equipo',props:[],contenido:[
+    P('Tu equipo de un vistazo. Agrega a cada persona con su fecha de ingreso y su salario diario; anota sus faltas, vacaciones, incapacidades y horas extra en «Incidencias». La antigüedad y los días de vacaciones se calculan solos.'),
+    {type:'equipo',attrs:{id:id(),titulo:''}},
+    H('Empleados'),
+    baseDatos({rol:'empleados',nombre:'Empleados'}),
+    H('Faltas, vacaciones e incidencias'),
+    baseDatos({rol:'incidencias',nombre:'Incidencias'}),P()
+  ]}},
+  nominas:function(){
+    var p=inicioQuincena(),txt=p.toLocaleDateString('es-MX',{day:'numeric',month:'long'});
+    return {titulo:'Nómina de la quincena del '+txt,props:[],contenido:[
+      P('La nómina de tu equipo para este periodo: descuenta las faltas y paga las horas extra que anotes en «Mi equipo». Cambia el periodo en el bloque si pagas por semana o por mes.'),
+      {type:'planilla',attrs:{id:id(),titulo:'',que:'nomina',periodo:'Quincenal',desde:isoDe(p)}},
+      H('Recibo de una persona'),
+      P('Para el detalle de una persona (horas extra, domingos, bonos, lo que le cuesta al negocio), usa el recibo. Para otro, escribe / y elige «Recibo de nómina».'),
+      {type:'nomina',attrs:{id:id(),periodo:'quincenal'}},P()
+    ]};
+  },
+  vacaciones:function(){return {titulo:'Vacaciones',props:[],contenido:[
+    {type:'planilla',attrs:{id:id(),titulo:'',que:'vacaciones',periodo:'Quincenal',desde:''}},
+    H('Calcular las de una persona'),
+    {type:'vacaciones',attrs:{id:id(),tabla:true}},P()
+  ]}},
+  aguinaldos:function(){return {titulo:'Aguinaldo '+new Date().getFullYear(),props:[],contenido:[
+    P('Se paga a más tardar el 20 de diciembre: al menos 15 días de salario, o la parte proporcional si la persona entró este año.'),
+    {type:'planilla',attrs:{id:id(),titulo:'',que:'aguinaldo',periodo:'Quincenal',desde:''}},
+    H('Calcular el de una persona'),
+    {type:'aguinaldo',attrs:{id:id()}},P()
+  ]}},
+  finiquito:function(){return {titulo:'Finiquito',props:[],contenido:[
+    P('Escribe el salario, la fecha de ingreso, la de salida y el motivo. Revisa el resultado con tu contador antes de pagar.'),
+    {type:'finiquito',attrs:{id:id(),salida:hoyISO()}},P()
+  ]}},
+  ptu:function(){return {titulo:'Reparto de utilidades '+new Date().getFullYear(),props:[],contenido:[
+    P('Se reparte el 10 % de la utilidad fiscal del año anterior entre tu equipo, a más tardar el 30 de mayo. «Traer a tu equipo» llena los días y salarios desde «Mi equipo».'),
+    {type:'ptu',attrs:{id:id()}},P()
+  ]}},
+  calculadoras:function(){return {titulo:'Calculadoras de nómina',props:[],contenido:[
+    H('Recibo de nómina'),{type:'nomina',attrs:{id:id()}},
+    H('Vacaciones'),{type:'vacaciones',attrs:{id:id()}},
+    H('Aguinaldo'),{type:'aguinaldo',attrs:{id:id()}},
+    H('Finiquito o liquidación'),{type:'finiquito',attrs:{id:id(),salida:hoyISO()}},P()
+  ]}},
   clase:function(){return {titulo:'Clase del '+hoy(),props:[
       {nombre:'Materia',valor:'',estilo:'etiqueta'},{nombre:'Profesor',valor:'',estilo:'texto'},{nombre:'Fecha',valor:hoy(),estilo:'texto'}],contenido:[
     H(''),P(),
@@ -280,13 +341,17 @@ var VACIAR={
   gastos:function(a){a.filas=[];a.mes=''},
   venta:function(a){a.folio='';a.fecha='';a.cliente='';a.recibido=''},
   porpagar:function(a){a.cuentas=[]},
-  pagos:function(a){a.pagados={}}
+  pagos:function(a){a.pagados={}},
+  nomina:function(a){a.faltas='';a.horasDobles='';a.horasTriples='';a.descansos='';a.domingos='';a.otras=''},
+  finiquito:function(a){a.salida='';a.pendientes='';a.vacPendientes='';a.vacTomadas=''}
 };
 /* Lo que cada bloque necesita al usarse: la fecha de hoy, un folio nuevo, el mes actual */
 var AL_CREAR={
   corte:function(a){a.fecha=hoyISO()},
   venta:function(a){a.folio=AT.folio('V');a.fecha=hoyISO()},
   gastos:function(a){a.mes=hoyISO().slice(0,7)},
+  /* La nómina de tu equipo pasa al periodo en curso */
+  planilla:function(a){if(a.que==='nomina'&&a.desde)a.desde=isoDe(inicioPeriodo(a.periodo))},
   /* Un reporte de un mes completo pasa al mes en curso */
   reporte:function(a){
     var c=a.cfg;if(!c||c.periodo!=='rango'||!/^\d{4}-\d{2}-01$/.test(c.desde||''))return;
@@ -347,25 +412,26 @@ function modulosVisibles(){
 }
 /* Las categorías de la galería, en el orden del perfil; las notas van en la primera */
 function categorias(){
-  var tipo=PER&&PER.tipo(),orden=tipo==='personal'?['finanzas','negocio','paquetes','estudio']:tipo==='negocio'?['negocio','paquetes','finanzas','estudio']:
-    modulosVisibles()[0]==='negocio'?['negocio','paquetes','finanzas','estudio']:['estudio','negocio','paquetes','finanzas'];
+  var tipo=PER&&PER.tipo(),orden=tipo==='personal'?['finanzas','negocio','rh','paquetes','estudio']:tipo==='negocio'?['negocio','rh','paquetes','finanzas','estudio']:
+    modulosVisibles()[0]==='negocio'?['negocio','rh','paquetes','finanzas','estudio']:['estudio','negocio','rh','paquetes','finanzas'];
   return orden.filter(function(c){return tiene(CAT_MOD[c])});
 }
 function tiposDe(cat,primera){
   return ORDEN.filter(function(k){var t=TIPOS[k];return t.listo&&tiene(t.modulo)&&(t.cat===cat||(primera&&t.cat==='general'))});
 }
 /* Las páginas listas para usar del Inicio (sin el módulo de estudio), según el perfil */
-var INICIO={negocio:['pendientes','corte','fiado','gastos','venta','precio','surtir','proveedores','clientes'],personal:['finanzas','gastos','prestamo','medeben','notas']};
+var INICIO={negocio:['pendientes','corte','fiado','gastos','venta','precio','surtir','proveedores','clientes','equipo','nominas'],personal:['finanzas','gastos','prestamo','medeben','notas']};
 function plantillasInicio(){
   var l=INICIO[PER&&PER.tipo()]||INICIO.negocio;
   return l.filter(function(k){return TIPOS[k]&&TIPOS[k].listo&&tiene(TIPOS[k].modulo)});
 }
 /* Lo que «Crea tu espacio» sugiere al empezar: [{tipo, marcado}] según el perfil y el giro */
-function sugeridas(perfil,giro){
+function sugeridas(perfil,giro,rh){
   if(perfil==='negocio'){
     var tienda=giro==='tienda',mercancia=['tienda','comida','catalogo'].indexOf(giro)>=0;
-    return [['corte',mercancia],['fiado',tienda],['gastos',true],['surtir',mercancia],['venta',!mercancia],['pendientes',!mercancia],
-      ['proveedores',false],['precio',false],['prestamo',false],['notas',false]]
+    /* Con «Tengo empleados», primero tu equipo y su nómina */
+    return (rh?[['equipo',true],['nominas',true]]:[]).concat([['corte',mercancia],['fiado',tienda],['gastos',true],['surtir',mercancia],['venta',!mercancia],['pendientes',!mercancia],
+      ['proveedores',false],['precio',false],['prestamo',false],['notas',false]])
       .map(function(x){return {tipo:x[0],marcado:x[1]}});
   }
   if(perfil==='personal')return [{tipo:'finanzas',marcado:true},{tipo:'prestamo',marcado:false},{tipo:'medeben',marcado:false},{tipo:'notas',marcado:false}];

@@ -8,6 +8,8 @@
    - Compras (rol compras): las facturas de los proveedores (la llena la importación del XML, fase F7b).
    - Gastos (rol gastos) y Presupuesto (rol presupuesto, cuánto quieres gastar al mes por categoría): los usa la
      plantilla «Presupuesto del mes», con un reporte de lo gastado contra lo presupuestado (fase F7d).
+   - Empleados (rol empleados) e Incidencias (rol incidencias: faltas, vacaciones, incapacidades, permisos y horas
+     extra de cada persona): las usa el módulo de recursos humanos (equipo.js); ids de columna em-* e in-*.
    Las páginas las muestran con un bloque «Base de datos» cuya semilla lleva el rol ({rol:'productos'}): al abrir la
    página, AT.inventario.base(rol) la busca o la crea, así que la plantilla Inventario, sus duplicados y tus
    plantillas hablan de la misma base. Las notas de venta (venta.js) eligen el producto y, al guardarse la página,
@@ -20,8 +22,11 @@
 'use strict';
 var AT=window.AT,B=AT.bases,$=AT.$,esc=AT.esc;
 if(!B||!AT.datos)return;
-var ROLES=['productos','movimientos','compras','gastos','presupuesto'];
-var NOMBRES={productos:'Productos',movimientos:'Entradas y salidas',compras:'Compras',gastos:'Gastos',presupuesto:'Presupuesto'};
+var ROLES=['productos','movimientos','compras','gastos','presupuesto','empleados','incidencias'];
+var NOMBRES={productos:'Productos',movimientos:'Entradas y salidas',compras:'Compras',gastos:'Gastos',presupuesto:'Presupuesto',
+  empleados:'Empleados',incidencias:'Incidencias'};
+var TIPOS_INC=['Falta','Vacaciones','Incapacidad','Permiso','Horas extra','Retardo'];
+var PERIODOS_PAGO=['Semanal','Catorcenal','Quincenal','Mensual'];
 var CATS_GASTO=['Renta','Luz','Agua','Internet y teléfono','Sueldos','Mercancía','Transporte','Impuestos','Mantenimiento','Publicidad','Otros'];
 var CATS=['Abarrotes','Bebidas','Botanas','Lácteos','Limpieza','Higiene','Otros'];
 var TIPOS_MOV=['Entrada','Salida','Venta','Ajuste'];
@@ -99,6 +104,38 @@ function semilla(rol,ids){
     {id:'r-nota',nombre:'Nota',tipo:'texto'}],
     vistas:[vista('v-pres','Presupuesto','tabla')],
     filas:CATS_GASTO.map(function(c){return {v:{'r-cat':c}}})};
+  /* Recursos humanos: la antigüedad y los días de vacaciones (art. 76 LFT) se calculan solos */
+  if(rol==='empleados')return {nombre:NOMBRES.empleados,rol:rol,columnas:[
+    {id:'em-nombre',nombre:'Nombre',tipo:'texto'},
+    {id:'em-puesto',nombre:'Puesto',tipo:'texto'},
+    {id:'em-tel',nombre:'Teléfono',tipo:'telefono'},
+    {id:'em-ingreso',nombre:'Fecha de ingreso',tipo:'fecha'},
+    {id:'em-nac',nombre:'Cumpleaños',tipo:'fecha'},
+    {id:'em-salario',nombre:'Salario diario',tipo:'moneda'},
+    {id:'em-periodo',nombre:'Pago',tipo:'seleccion',opciones:PERIODOS_PAGO.slice()},
+    {id:'em-estado',nombre:'Estado',tipo:'seleccion',opciones:['Activo','Baja'],colores:[{op:'igual',val:'Baja',tono:'mal'}]},
+    {id:'em-anios',nombre:'Antigüedad (años)',tipo:'formula',expr:'SI({Fecha de ingreso} = ""; ""; ENTERO(-DIAS({Fecha de ingreso}) / 365.25))'},
+    {id:'em-vac',nombre:'Vacaciones al año',tipo:'formula',expr:'SI({Antigüedad (años)} = ""; ""; SI({Antigüedad (años)} < 1; 0; SI({Antigüedad (años)} <= 5; 10 + 2 * {Antigüedad (años)}; 22 + 2 * ENTERO(({Antigüedad (años)} - 6) / 5))))'},
+    {id:'em-baja',nombre:'Fecha de baja',tipo:'fecha'},
+    {id:'em-rfc',nombre:'RFC',tipo:'texto'},
+    {id:'em-nss',nombre:'NSS',tipo:'texto'},
+    {id:'em-nota',nombre:'Notas',tipo:'texto'}],
+    vistas:[vista('v-equipo','Equipo','tabla',{f:{col:'em-estado',op:'distinto',val:'Baja'},s:{col:'em-nombre',dir:1},ocultas:['em-baja','em-rfc','em-nss']}),
+      vista('v-todos','Todos','tabla',{s:{col:'em-nombre',dir:1}}),
+      vista('v-tarjetas','Tarjetas','galeria'),
+      vista('v-cumple','Cumpleaños','calendario',{fecha:'em-nac'})],filas:[]};
+  if(rol==='incidencias')return {nombre:NOMBRES.incidencias,rol:rol,columnas:[
+    {id:'in-con',nombre:'Concepto',tipo:'texto'},
+    {id:'in-emp',nombre:'Persona',tipo:'relacion',base:ids.empleados||''},
+    {id:'in-tipo',nombre:'Tipo',tipo:'seleccion',opciones:TIPOS_INC.slice(),
+      colores:[{op:'igual',val:'Falta',tono:'mal'},{op:'igual',val:'Vacaciones',tono:'bien'},{op:'igual',val:'Incapacidad',tono:'aviso'}]},
+    {id:'in-desde',nombre:'Desde',tipo:'fecha'},
+    {id:'in-dias',nombre:'Días',tipo:'numero',pie:'suma'},
+    {id:'in-horas',nombre:'Horas',tipo:'numero',pie:'suma'},
+    {id:'in-nota',nombre:'Nota',tipo:'texto'}],
+    vistas:[vista('v-inc','Incidencias','tabla',{s:{col:'in-desde',dir:-1}}),
+      vista('v-tipo','Por tipo','tablero',{agrupar:'in-tipo'}),
+      vista('v-cal','Calendario','calendario',{fecha:'in-desde'})],filas:[]};
   return null;
 }
 
@@ -117,10 +154,12 @@ function buscar(){
 function asegurar(doc,roles){
   roles=roles||['productos','movimientos'];
   if(roles.indexOf('productos')>=0||roles.indexOf('movimientos')>=0)roles=roles.concat(['productos','movimientos']);
+  /* Las incidencias se relacionan con los empleados: van juntas */
+  if(roles.indexOf('incidencias')>=0)roles=roles.concat(['empleados']);
   return enCola(function(){
     return buscar().then(function(ids){
       var p=Promise.resolve();
-      /* En el orden de ROLES: productos antes que movimientos (la relación necesita su id) */
+      /* En el orden de ROLES: productos antes que movimientos y empleados antes que incidencias (la relación necesita su id) */
       ROLES.forEach(function(rol){
         if(roles.indexOf(rol)<0||ids[rol])return;
         p=p.then(function(){return B.crear(semilla(rol,ids),doc)}).then(function(b){ids[rol]=b.id});

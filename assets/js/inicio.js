@@ -8,7 +8,8 @@
      sola al revisar tus páginas; se puede ocultar) y, en tus páginas, las favoritas primero y después las recientes.
    - Fase F7e: en un espacio de negocio, «Mi negocio» arriba: una página de bloques (d-minegocio) que se crea sola
      con indicadores, próximos vencimientos y el resumen del inventario, y que se edita como cualquier página
-     («Editar esta sección»); no sale entre tus páginas recientes.
+     («Editar esta sección»); no sale entre tus páginas recientes. Con recursos humanos, igual «Tu equipo»
+     (d-miequipo, con el resumen de tu equipo) y dos acciones rápidas más: anotar falta o vacaciones y la nómina.
    Las secciones de un módulo apagado llevan .m-estudio y base.css las oculta.
    Usa AT.avance (avance.js) y AT.datos (datos.js). */
 (function(){
@@ -85,7 +86,7 @@ var docsListos=false;
 function cargarDocs(){return AT.datos.documentos.todos().then(function(l){docsCache=l;docsListos=true})}
 
 /* ---------- Mi negocio (fase F7e): una página de bloques arriba del Inicio ---------- */
-var MI='d-minegocio',miPintado='',creandoMi=false;
+var MI='d-minegocio';
 function esNegocio(){return !!(PER&&PER.tipo()==='negocio'&&PER.tiene('negocio')&&AT.bloques&&AT.bloques.dibujar)}
 function miNegocioNuevo(){
   var n=function(){return AT.bloques.nuevoId()},ahora=new Date().toISOString();
@@ -98,24 +99,40 @@ function miNegocioNuevo(){
     H('Inventario'),{type:'inventario',attrs:{id:n(),titulo:''}}
   ]}};
 }
-function pintarMiNegocio(){
-  var sec=$('#iniNegocio');if(!sec)return;
-  var ver=esNegocio();sec.hidden=!ver;if(!ver)return;
-  var d=docsCache.filter(function(x){return x.id===MI})[0];
+/* Tu equipo (módulo de recursos humanos): otra página de bloques (d-miequipo), igual que «Mi negocio» */
+var EQ='d-miequipo';
+function esEquipo(){return !!(esNegocio()&&PER.tiene('rh')&&AT.equipo)}
+function miEquipoNuevo(){
+  var n=function(){return AT.bloques.nuevoId()},ahora=new Date().toISOString();
+  return {formato:1,tipo:'notas',id:EQ,titulo:'Tu equipo',props:[],creado:ahora,editado:ahora,contenido:{type:'doc',content:[
+    {type:'paragraph',attrs:{id:n()},content:[{type:'text',text:'Quién falta hoy, cumpleaños, aniversarios, vacaciones y lo que te cuesta tu equipo. Agrega a tu equipo y anota sus faltas o vacaciones desde «Mi equipo» (Crear → Recursos humanos).'}]},
+    {type:'equipo',attrs:{id:n(),titulo:''}}
+  ]}};
+}
+/* Una página de bloques arriba del Inicio: se crea una sola vez y se dibuja viva */
+var PAGINAS_INI=[
+  {id:MI,sec:'#iniNegocio',caja:'#iniNegocioC',ver:esNegocio,nueva:miNegocioNuevo,pintado:'',creando:false},
+  {id:EQ,sec:'#iniEquipo',caja:'#iniEquipoC',ver:esEquipo,nueva:miEquipoNuevo,pintado:'',creando:false}
+];
+function pintarPaginaIni(P){
+  var sec=$(P.sec);if(!sec)return;
+  var ver=P.ver();sec.hidden=!ver;if(!ver)return;
+  var d=docsCache.filter(function(x){return x.id===P.id})[0];
   if(!d){
     /* Solo si de verdad no existe (todavía no se leen tus páginas, o se creó en otra pestaña): nunca la pisa */
-    if(creandoMi||!docsListos)return;creandoMi=true;
-    AT.datos.documentos.leer(MI).then(function(ya){return ya||AT.datos.documentos.guardar(miNegocioNuevo(),{conservarFecha:true})})
-      .then(function(){creandoMi=false;recargar()},function(){creandoMi=false});
+    if(P.creando||!docsListos)return;P.creando=true;
+    AT.datos.documentos.leer(P.id).then(function(ya){return ya||AT.datos.documentos.guardar(P.nueva(),{conservarFecha:true})})
+      .then(function(){P.creando=false;recargar()},function(){P.creando=false});
     return;
   }
   /* Se vuelve a dibujar solo si la página cambió (sus bloques se actualizan solos) */
   var clave=d.editado+'|'+JSON.stringify(d.contenido).length;
-  if(clave===miPintado)return;
-  miPintado=clave;
-  var c=$('#iniNegocioC');c.innerHTML='';
+  if(clave===P.pintado)return;
+  P.pintado=clave;
+  var c=$(P.caja);c.innerHTML='';
   AT.bloques.dibujar(d,c,{encabezado:false});
 }
+function pintarMiNegocio(){PAGINAS_INI.forEach(pintarPaginaIni)}
 function cuando(iso){
   if(!iso)return '';
   var d=new Date(iso),min=(Date.now()-d.getTime())/6e4;
@@ -157,7 +174,7 @@ function tarjeta(d){
 function pintarDocs(){
   var ul=$('#iniDocs');
   if(!ul)return;
-  var orden=docsCache.filter(function(d){return d.id!==MI||!esNegocio()}).sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
+  var orden=docsCache.filter(function(d){return (d.id!==MI||!esNegocio())&&(d.id!==EQ||!esEquipo())}).sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
   var favs=orden.filter(function(d){return d.favorito}),docs=orden.filter(function(d){return !d.favorito}).slice(0,6);
   $('#iniFavs').hidden=$('#iniFavsT').hidden=$('#iniRecT').hidden=!favs.length;
   $('#iniFavs').innerHTML=favs.map(tarjeta).join('');
@@ -190,13 +207,22 @@ var ACCIONES={
     {k:'venta',t:'Nueva venta',i:'venta',f:function(){return AT.crear.nuevo('venta')}},
     {k:'fiado',t:'Anotar fiado',i:'fiado',f:function(){return irA('fiado')}},
     {k:'gasto',t:'Anotar un gasto',i:'gastos',f:function(){return irA('gastos')}}],
+  /* Con recursos humanos (se agregan a las de negocio) */
+  rh:[
+    {k:'incidencia',t:'Anotar falta o vacaciones',i:'users',f:function(){return AT.equipo.anotar()}},
+    {k:'nomina',t:'Nómina de la quincena',i:'recibo',f:function(){return AT.crear.nuevo('nominas')}}],
   personal:[
     {k:'gasto',t:'Anotar un gasto',i:'gastos',f:function(){return irA('gastos','finanzas')}},
     {k:'medeben',t:'Me deben',i:'fiado',f:function(){return irA('fiado','medeben')}},
     {k:'deuda',t:'Una deuda',i:'pagos',f:function(){return AT.crear.nuevo('prestamo')}}]
 };
-function pintarAcciones(){
+function acciones(){
   var l=ACCIONES[PER&&PER.tipo()];
+  if(l&&PER.tipo()==='negocio'&&PER.tiene('rh')&&AT.equipo)l=l.concat(ACCIONES.rh);
+  return l;
+}
+function pintarAcciones(){
+  var l=acciones();
   $('#iniRapidas').hidden=!l||!AT.crear||!PER.tiene('negocio');
   if($('#iniRapidas').hidden)return;
   $('#iniAcciones').innerHTML=l.map(function(a){
@@ -205,9 +231,11 @@ function pintarAcciones(){
 }
 $('#iniAcciones').addEventListener('click',function(e){
   var b=e.target.closest('[data-accion]');if(!b||b.getAttribute('aria-disabled')==='true')return;
-  var a=(ACCIONES[PER.tipo()]||[]).filter(function(x){return x.k===b.getAttribute('data-accion')})[0];if(!a)return;
+  var a=(acciones()||[]).filter(function(x){return x.k===b.getAttribute('data-accion')})[0];if(!a)return;
   b.setAttribute('aria-disabled','true');
-  a.f().catch(function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo abrir. Inténtalo otra vez.')});
+  /* Las que abren una ventana aquí mismo vuelven a quedar listas al cerrarla */
+  Promise.resolve(a.f()).then(function(){if(a.k==='incidencia')b.removeAttribute('aria-disabled')},
+    function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo abrir. Inténtalo otra vez.')});
 });
 function cent(v){var n=parseFloat(String(v==null?'':v).replace(/[$,\s]/g,''));return isFinite(n)&&n>0?Math.round(n*100):0}
 var CLAVE_PREPARA='aprende-tecnologia:prepara';
