@@ -42,6 +42,17 @@ AT.salaActual=ID==='privado'||E.sala(ID)?ID:'';
 
 /* ---------- La sala ---------- */
 var paginas=[];
+/* La portada (tablero.js): la arma quien administra la sala; se monta una vez y se mueve a su lugar al repintar */
+var portada=null,tabB=null;
+function ponerPortada(s){
+  if(!AT.tablero||s.tipo==='privado')return;
+  if(!portada){
+    portada=document.createElement('section');portada.className='tab sala-tab';portada.setAttribute('aria-labelledby','tabSalaT');
+    tabB=AT.tablero.montar(portada,{capa:'sala',sala:ID,id:'tabSala',titulo:'Portada',ocultarVacio:true,
+      vacio:'Arma la portada de la sala: avisos, indicadores, una página o una gráfica. Usa «Agregar».'});
+  }
+  var cab=$('.emp-cab',raiz);if(cab)cab.insertAdjacentElement('afterend',portada);
+}
 function sala(){return ID==='privado'?{id:'privado',tipo:'privado',nombre:'Privado',color:'gris'}:E.sala(ID)}
 function quienEntra(s){
   var h=[],todas=E.personas();
@@ -92,6 +103,7 @@ function pintar(){
         '<small>'+esc(t?t.nombre:'Documento')+' · '+esc(fecha(d.editado||d.creado))+(por?' · por '+esc(por):'')+'</small></li>';
     }).join('')+'</ul>':'<p class="emp-vacio">Todavía no hay páginas en esta sala.'+(editar?' Crea la primera con «Nueva página aquí».':'')+'</p>')+'</section>';
   raiz.innerHTML=h;
+  ponerPortada(s);
 }
 function cargar(){
   return D.documentos.todos().then(function(l){

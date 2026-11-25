@@ -334,7 +334,7 @@ if(AT.bloques&&AT.bloques.registrar){
       var a=h.attrs(n),s=document.createElement('section');
       s.setAttribute('aria-label','Reporte');
       var pag=document.body.getAttribute('data-pagina');
-      if(pag!=='documento'&&pag!=='inicio'){s.className='rep rep-papel';s.innerHTML=html(a.cfg,{sinGrafica:!(a.cfg&&a.cfg.grafica)});return s}
+      if(pag!=='documento'&&pag!=='inicio'&&pag!=='sala'){s.className='rep rep-papel';s.innerHTML=html(a.cfg,{sinGrafica:!(a.cfg&&a.cfg.grafica)});return s}
       montar(s,{cfg:a.cfg,editable:true});
       return s;
     },

@@ -26,7 +26,7 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
 
   /* ---------- Inicio de negocio, recién creado ---------- */
   const ini=await p.evaluate(function(){
-    return {acciones:[].map.call(document.querySelectorAll('#iniAcciones [data-accion]'),function(b){return b.textContent}).join(' | '),rapidas:!document.getElementById('iniRapidas').hidden,
+    return {acciones:[].map.call(document.querySelectorAll('[data-acciones] [data-accion]'),function(b){return b.textContent}).join(' | '),rapidas:!!document.querySelector('[data-acciones]'),
       prepara:!document.getElementById('iniPrepara').hidden,pasos:document.querySelectorAll('#iniPrepLista li').length,n:document.getElementById('iniPrepN').textContent,
       listas:document.querySelectorAll('#iniPlantillas .ini-pl').length,mas:!!document.querySelector('#iniEmpezar [data-crear]')};
   });
@@ -208,7 +208,7 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   /* Un espacio de «Mis finanzas» (de antes) ya es de negocio: sus acciones y su galería son las del negocio */
   const s=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'personal',modulos:['negocio'],nombre:'Ana',negocio:null,creado:'2026-01-01'},ajustes:{contraste:'high'}});
   await s.goto(base+'inicio.html');await listo(s);
-  r.igual(await s.evaluate(function(){return [].map.call(document.querySelectorAll('#iniAcciones [data-accion]'),function(b){return b.textContent}).join(' | ')}),'Corte de hoy | Nueva venta | Anotar fiado | Anotar un gasto','un espacio de «Mis finanzas» de antes tiene las acciones del negocio');
+  r.igual(await s.evaluate(function(){return [].map.call(document.querySelectorAll('[data-acciones] [data-accion]'),function(b){return b.textContent}).join(' | ')}),'Corte de hoy | Nueva venta | Anotar fiado | Anotar un gasto','un espacio de «Mis finanzas» de antes tiene las acciones del negocio');
   await abrirCrear(s);
   r.igual(await s.$$eval('dialog.crear-dlg .crear-chip',function(e){return e.map(function(x){return x.textContent}).join(' | ')}),'Todas | Para tu negocio | Paquetes por giro','y la galería del negocio');
   await revisar(s,r,'galería en escritorio (alto contraste)');
