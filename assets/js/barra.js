@@ -1,5 +1,6 @@
 /* OneBook: barra lateral, barra superior y navegación.
-   Arma la barra lateral (Inicio, Crear, Buscar, «Tus páginas» y el pie: Lectura, Tus datos, pestañas, Ayuda y modo zen)
+   Arma la barra lateral (Inicio, Crear, Buscar, Tu empresa, «Tus páginas» y el pie: quién usa OneBook ahora, con
+   «Cambiar de persona» (persona.js), Lectura, Tus datos, pestañas, Ayuda y modo zen)
    y la barra superior; maneja el menú en celular (panel modal con trampa de foco), la barra compacta en escritorio
    (solo iconos, con su nombre en un globo) y la lista de tus páginas (favoritas primero; sin «Mi negocio», «Tu
    equipo» ni las páginas de estudio, que se separaron de OneBook).
@@ -12,16 +13,25 @@ var actual=AT.paginaActual,grupo=AT.grupoActual;
 var MENU='menú';
 
 /* ---------- Estructura: barra lateral y barra superior ---------- */
+var EMP=!!(AT.empresa&&AT.empresa.existe());
+/* Quién usa OneBook ahora: su avatar y su nombre; abre «Cambiar de persona» (persona.js) */
+function botonPersona(){
+  var p=AT.empresa.activa(),n=p?p.nombre||'Sin nombre':'¿Quién eres?';
+  return '<button class="nv nv-yo" type="button" id="sidePersona" aria-haspopup="dialog" data-globo="'+esc(p?n+': cambiar de persona':'Elige quién eres')+'">'+
+    (p?AT.avatar(p):'<i class="av t4" aria-hidden="true">?</i>')+
+    '<span><b>'+esc(n)+'</b><small>'+(p?'Cambiar de persona':'Elige quién eres')+'</small></span></button>';
+}
 (function(){
   var h='<div class="side-in"><div class="ws"><a class="brand" href="'+RAIZ+'inicio.html"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M18.5 22.5 27.5 16v32M27.5 16h8a7.5 7.5 0 0 1 0 15h-8M27.5 31h9.5a8.5 8.5 0 0 1 0 17h-9.5"/></svg><span>One<b>Book</b></span></a>'+
     '<button class="side-btn" id="sideBtn" type="button" aria-label="Contraer barra lateral" title="Contraer barra lateral">'+ico('chev-l','side-ic-c')+ico('close','side-ic-x')+'</button></div>'+
     '<a class="nv'+(ES_INICIO?' on" aria-current="page':'')+'" href="'+RAIZ+'inicio.html">'+ico('home')+'<span>Inicio</span></a>'+
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
-    '';
+    (EMP?'<a class="nv'+(R.pagina==='empresa'?' on" aria-current="page':'')+'" href="'+RAIZ+'empresa.html" id="sideEmpresa">'+ico('empresa')+'<span>Tu empresa</span></a>':'');
   h+='<div class="tabp" id="pn-apuntes"><div class="grp">Tus páginas</div><ul class="docs" id="docsLista"></ul>'+
       '<p class="side-txt">Todo se guarda en este dispositivo.</p></div>';
   h+='<div class="side-foot">'+
+      (EMP?botonPersona():'')+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
       '<button class="nv" type="button" id="sideDatos">'+ico('datos')+'<span>Tus datos</span></button>'+
       /* Fuera de las pestañas de la app: entrar a ellas con esta página abierta */
@@ -113,7 +123,7 @@ function quitarGlobo(){if(globo){globo.remove();globo=null}}
 function ponerGlobo(el){
   quitarGlobo();
   var t=el.querySelector('span:not(.ico-txt)');
-  var txt=t?t.textContent.trim():(el.getAttribute('aria-label')||'');
+  var txt=el.getAttribute('data-globo')||(t?t.textContent.trim():(el.getAttribute('aria-label')||''));
   if(!txt)return;
   globo=document.createElement('div');globo.className='side-tip';globo.setAttribute('aria-hidden','true');globo.textContent=txt;
   document.body.appendChild(globo);
@@ -191,6 +201,19 @@ document.addEventListener('click',function(e){
   AT.datos.on(function(c){if(c.almacen==='documentos'||c.almacen==='papelera'||c.almacen==='*')AT.refrescarPaginas()});
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
+  /* Quién usa OneBook: «Cambiar de persona» (persona.js); el botón se vuelve a pintar si cambia tu nombre */
+  function enlazarPersona(b){b.addEventListener('click',function(){setNav(false);if(AT.persona)AT.persona.abrir(b)})}
+  if($('#sidePersona')){
+    enlazarPersona($('#sidePersona'));
+    AT.empresa.on(function(){
+      var n=$('#sidePersona');if(!n)return;
+      var t=document.createElement('div');t.innerHTML=botonPersona();
+      if(t.firstChild.outerHTML===n.outerHTML)return;
+      var foco=document.activeElement===n;
+      n.replaceWith(t.firstChild);enlazarPersona($('#sidePersona'));
+      if(foco)$('#sidePersona').focus();
+    });
+  }
   pintarDocs();
 })();
 })();

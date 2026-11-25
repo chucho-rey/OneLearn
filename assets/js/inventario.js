@@ -108,6 +108,7 @@ function semilla(rol,ids){
   if(rol==='empleados')return {nombre:NOMBRES.empleados,rol:rol,columnas:[
     {id:'em-nombre',nombre:'Nombre',tipo:'texto'},
     {id:'em-puesto',nombre:'Puesto',tipo:'texto'},
+    {id:'em-depto',nombre:'Departamento',tipo:'seleccion',origen:'departamentos'},
     {id:'em-tel',nombre:'Teléfono',tipo:'telefono'},
     {id:'em-ingreso',nombre:'Fecha de ingreso',tipo:'fecha'},
     {id:'em-nac',nombre:'Cumpleaños',tipo:'fecha'},
@@ -170,6 +171,15 @@ function asegurar(doc,roles){
         return B.cargar(ids.productos).then(function(pb){
           var c=pb&&B.col(pb,'p-mov');
           if(c&&ids.movimientos&&c.base!==ids.movimientos){c.base=ids.movimientos;return B.guardarBase(pb)}
+        });
+      }).then(function(){
+        /* Etapa Empresas: los empleados de antes reciben la columna Departamento (si no tienen ya una con ese nombre) */
+        if(!ids.empleados||roles.indexOf('empleados')<0)return;
+        return B.cargar(ids.empleados).then(function(eb){
+          if(!eb||B.col(eb,'em-depto')||eb.columnas.some(function(k){return B.sinAcentos(k.nombre)==='departamento'}))return;
+          var i=eb.columnas.map(function(k){return k.id}).indexOf('em-puesto');
+          eb.columnas.splice(i>=0?i+1:1,0,{id:'em-depto',nombre:'Departamento',tipo:'seleccion',origen:'departamentos'});
+          return B.guardarBase(eb);
         });
       }).then(function(){IDS=ids;return ids});
     });

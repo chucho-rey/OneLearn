@@ -198,6 +198,19 @@ button.nv{font:inherit;font-size:0.875rem}
 .nv.doc span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nv-crear{color:var(--accent-ink);font-weight:600}
 .nv-crear .ico{color:var(--accent-ink)}
+/* Avatares (AT.avatar): las iniciales de cada persona con un color del sitio, siempre el mismo para la misma persona */
+.av{display:inline-grid;place-items:center;flex:none;width:1.75rem;height:1.75rem;border-radius:50%;font-style:normal;font-size:0.6875rem;font-weight:700;letter-spacing:0;line-height:1}
+.av.t0{background:var(--accent-bg);color:var(--accent-ink)}
+.av.t1{background:var(--good-bg);color:var(--good-ink)}
+.av.t2{background:var(--warn-bg);color:var(--warn-ink)}
+.av.t3{background:var(--bad-bg);color:var(--bad-ink)}
+.av.t4{background:var(--bg-soft);color:var(--fg)}
+[data-contrast="high"] .av{box-shadow:inset 0 0 0 1px currentColor}
+/* Quién usa OneBook ahora, en el pie de la barra lateral («Cambiar de persona») */
+.nv-yo{min-height:2.75rem;margin-bottom:0.25rem}
+.nv-yo>span{display:flex;flex-direction:column;line-height:1.25}
+.nv-yo b{font-weight:600;color:var(--fg);overflow-wrap:anywhere}
+.nv-yo small{font-size:0.75rem;color:var(--fg-2)}
 .nota{display:flex;flex-direction:column;gap:0.125rem;padding:0.5rem;border-radius:0.375rem;color:var(--fg);text-decoration:none}
 .nota:hover{background:var(--hover)}
 .nota.on{background:var(--accent-bg)}
@@ -599,6 +612,23 @@ dialog.tus-datos{width:min(31rem,calc(100vw - 2rem))}
 .td-msg{margin:0.75rem 0 0;font-size:0.9375rem}
 .td-msg:empty{display:none}
 .td-msg.err{color:var(--bad-ink)}
+/* «¿Quién usa OneBook?» (persona.js) */
+dialog.pe-dlg{width:min(28rem,calc(100vw - 2rem))}
+.pe-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.25rem}
+.pe-p{display:flex;align-items:center;gap:0.75rem;width:100%;min-height:3rem;padding:0.375rem 0.625rem;border:1px solid var(--line);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.pe-p:hover{background:var(--hover);border-color:var(--line-strong)}
+.pe-p[aria-disabled="true"]{cursor:default;background:var(--accent-bg);border-color:transparent}
+.pe-q{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
+.pe-q b{font-weight:600;overflow-wrap:anywhere}
+.pe-q em{font-style:normal;font-weight:400;color:var(--fg-2)}
+.pe-p[aria-disabled="true"] .pe-q em,.pe-p[aria-disabled="true"] .pe-q small{color:var(--accent-ink)}
+.pe-q small{font-size:0.8125rem;color:var(--fg-2);overflow-wrap:anywhere}
+.pe-pin{flex:none;color:var(--fg-2)}
+.pe-f .td-p{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.pe-f .campo-l{margin-bottom:0.75rem}
+.pe-f .btn{display:inline-flex;align-items:center;gap:0.375rem}
+.pe-nota{margin:0.75rem 0 0;font-size:0.8125rem;color:var(--fg-2);max-width:none}
+.pe-nota a{color:var(--accent-ink);text-underline-offset:0.1875rem}
 
 /* ---------- Aviso (por ejemplo, «OneBook se actualizó») ---------- */
 .aviso-app{position:fixed;z-index:60;left:50%;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:0.75rem;width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}

@@ -33,6 +33,11 @@
       <h1 id="saludo">Hola</h1>
       <p class="ini-sub" id="iniSub"></p>
 
+      <div class="ini-resp ini-aviso" id="iniQuien" role="region" aria-labelledby="iniQuienT" hidden>
+        <p><b id="iniQuienT">¿Quién eres?</b> <span>Esta computadora no sabe quién la está usando. Elige tu nombre para seguir con tus permisos.</span></p>
+        <div class="ini-resp-b"><button class="btn pri" type="button" id="iniQuienB">Elegir quién soy</button></div>
+      </div>
+
       <div class="ini-resp ini-aviso" id="iniAviso" role="region" aria-labelledby="iniAvisoT" hidden>
         <p><b id="iniAvisoT">OneBook ahora es para empresas.</b> <span id="iniAvisoTxt"></span></p>
         <div class="ini-resp-b"><button class="btn pri" type="button" id="iniAvisoResp">Descargar respaldo</button><button class="btn" type="button" id="iniAvisoOk">Entendido</button></div>
@@ -88,7 +93,9 @@
 
 <script src="assets/js/base.js"></script>
 <script src="assets/js/datos.js"></script>
+<script src="assets/js/empresa.js"></script>
 <script src="assets/js/barra.js"></script>
+<script src="assets/js/persona.js"></script>
 <script src="assets/js/lectura.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/respaldo.js"></script>

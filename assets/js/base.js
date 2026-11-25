@@ -24,6 +24,13 @@ AT.folio=function(pref){
   try{localStorage.setItem('aprende-tecnologia:folios',JSON.stringify(o))}catch(e){}
   return pref+'-'+(n<1000?('00'+n).slice(-3):String(n));
 };
+/* Avatares de las personas: sus iniciales con un color del sitio (siempre el mismo para la misma persona) */
+AT.iniciales=function(p){
+  var t=String(p&&(p.nombre||p.correo)||'?').replace(/@.*/,'').trim().split(/[\s._-]+/).filter(Boolean);
+  return ((t[0]||'?').charAt(0)+(t[1]?t[1].charAt(0):'')).toUpperCase();
+};
+AT.tonoPersona=function(p){var s=String(p&&(p.id||p.correo)||''),h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h%5};
+AT.avatar=function(p,clase){return '<i class="av t'+AT.tonoPersona(p)+(clase?' '+clase:'')+'" aria-hidden="true">'+esc(AT.iniciales(p))+'</i>'};
 AT.setPressed=function(group,test){$$('button',group).forEach(function(b){b.setAttribute('aria-pressed',test(b)?'true':'false')})};
 var ico=AT.ico=function(id,cls,useId){
   return '<svg class="ico'+(cls?' '+cls:'')+'" aria-hidden="true" focusable="false"><use'+(useId?' id="'+useId+'"':'')+' href="#i-'+id+'"/></svg>';
@@ -109,6 +116,11 @@ document.body.insertAdjacentHTML('afterbegin',
 '<symbol id="i-reparto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l6 6M12 12l-6 6"/></symbol>'+
 '<symbol id="i-historial" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 3.5V8H8M12 7.5V12l3 2"/></symbol>'+
 '<symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17.2v.1"/></symbol>'+
+/* Empresa: la empresa, sus departamentos, el PIN y cambiar de persona */
+'<symbol id="i-empresa" viewBox="0 0 24 24"><path d="M3.5 20.5h17M6 20.5V5a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v15.5M14.5 9.5H17a1 1 0 0 1 1 1v10M8.5 7.5h3M8.5 11h3M8.5 14.5h3M10 20.5v-2.5"/></symbol>'+
+'<symbol id="i-deptos" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></symbol>'+
+'<symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="1.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2.5"/></symbol>'+
+'<symbol id="i-cambiar" viewBox="0 0 24 24"><path d="M4 8.5h14.5M15 5l3.5 3.5L15 12M20 15.5H5.5M9 12l-3.5 3.5L9 19"/></symbol>'+
 '</svg>');
 
 /* ---------- Página actual ---------- */
@@ -119,10 +131,10 @@ var ES_INICIO=PAGINA==='inicio',RAIZ='';
 AT.rutas={raiz:RAIZ,esInicio:ES_INICIO,pagina:PAGINA};
 /* Marca que este navegador ya usa OneBook: la página de bienvenida (index.html) lo manda directo a su Inicio.
    La bienvenida también carga base.js (para dibujar bloques de ejemplo), pero verla no cuenta como usar la app;
-   tampoco «Crea tu espacio» (entrar.html) hasta que el espacio existe: si lo dejas a medias, vuelve a preguntar.
+   tampoco «Crea tu empresa» (entrar.html) hasta que el espacio existe: si lo dejas a medias, vuelve a preguntar.
    El contenedor de pestañas (app.html) tampoco: la página que abre dentro ya lo marca. */
 if(PAGINA!=='bienvenida'&&PAGINA!=='entrar'&&PAGINA!=='pestanas'){try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}}
-var TITULOS={inicio:'Inicio',documento:'Documento',ayuda:'Ayuda'};
+var TITULOS={inicio:'Inicio',documento:'Documento',ayuda:'Ayuda',empresa:'Tu empresa'};
 /* {id, titulo} de la página y el grupo que va antes en la barra superior («Tus páginas / …») */
 AT.paginaActual={id:PAGINA||'pagina',titulo:TITULOS[PAGINA]||document.title};
 AT.grupoActual=PAGINA==='documento'?'Tus páginas':PAGINA==='ayuda'?'OneBook':'';

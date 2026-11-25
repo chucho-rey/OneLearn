@@ -1,4 +1,4 @@
-/* OneBook: «Crea tu espacio» (entrar.html). Una columna centrada, sin barra lateral; en pantallas anchas, el aviso
+/* OneBook: «Crea tu empresa» (entrar.html). Una columna centrada, sin barra lateral; en pantallas anchas, el aviso
    de tus datos va a un lado. Tokens de base.css y tamaños en rem. */
 
 .en{min-height:100vh;min-height:100dvh;background:var(--bg-side)}
@@ -33,6 +33,13 @@
 .en-pronto:hover{border-color:var(--line-strong)}
 .en-mods{margin-top:1.25rem}
 @media (min-width:600px){.en-pls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Departamentos: casillas más compactas, en dos columnas, y el campo para agregar otro */
+.en-dep{align-items:center;padding:0.625rem 0.875rem}
+.en-dep>.ico{font-size:1.25rem}
+@media (min-width:600px){.en-deps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.en-dep-nuevo{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0.5rem 0.625rem;margin-top:1rem}
+.en-dep-nuevo .en-campo{flex:1 1 14rem}
+.en-dep-nuevo .btn{min-height:2.75rem;padding:0.5rem 1.25rem;font-size:1rem}
 
 /* Campos */
 .en-negocio,.en-persona{display:grid;gap:0.875rem}

@@ -310,7 +310,7 @@ function exportar(){
       app:'OneBook',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],plantillas:r[3],bases:r[4],filas:r[5],
       avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
-      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios'),yo:leerJSON(CLAVE_YO)
+      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios'),yo:leerJSON(CLAVE_YO),empresa:leerJSON(PREF+'empresa')
     };
   });
 }
@@ -449,6 +449,7 @@ function importar(datos){
   /* Quién eres: si en este navegador todavía no le pusiste nombre ni correo, ni eres propietario o persona con
      acceso de ninguna página, se adopta el del respaldo (así, al restaurar el tuyo en otro dispositivo, tus páginas
      siguen siendo tuyas; si importas las de otra persona después de poner tu nombre, sigues siendo tú) */
+  var yoAntes=yo().id;
   return conMotor(function(m){return m.todos('documentos')}).then(function(locales){
     var r=datos.yo,y=yo();
     if(!esObjeto(r)||!/^u-[\w-]{4,40}$/.test(String(r.id))||r.id===y.id||y.nombre||y.correo)return;
@@ -510,9 +511,12 @@ function importar(datos){
         });
         lsSet(PREF+'terminal',JSON.stringify(ta));
       }
-      /* El perfil del espacio: solo si aquí todavía no hay uno (por ejemplo, al restaurar en «Crea tu espacio»).
+      /* El perfil del espacio: solo si aquí todavía no hay uno (por ejemplo, al restaurar en «Crea tu empresa»).
          AT.perfil.guardar lo limpia: solo entran campos conocidos */
       if(esObjeto(datos.perfil)&&AT.perfil&&!AT.perfil.actual())res.perfil=!!AT.perfil.guardar(datos.perfil);
+      /* La empresa: entra si aquí no hay (o solo la automática y tú estás en la del respaldo); si es la misma, se
+         junta persona por persona y departamento por departamento; la de otra empresa no se junta (empresa.js) */
+      if(AT.empresa)res.empresa=AT.empresa.combinar(datos.empresa,{yoAntes:yoAntes});
       /* Folios de notas de venta y cotizaciones: se queda el número más alto de cada prefijo, para no repetir folios */
       if(esObjeto(datos.folios)){
         var fo=leerJSON(PREF+'folios');if(!esObjeto(fo))fo={};
@@ -760,10 +764,12 @@ var versiones={
 oyentes.push(function(c,deOtra){if(deOtra&&c.almacen==='versiones'&&c.doc)delete VCACHE[c.doc];if(deOtra&&c.almacen==='*')VCACHE={}});
 
 /* ---------- Quién eres, permisos de cada página y quién la tiene abierta ----------
-   Mientras OneBook vive en este navegador hay una sola persona: tú. Aun así, cada página ya lleva su lista de
-   personas con acceso, para compartirla cuando lleguen las cuentas y la nube (F9):
+   Quien usa este navegador es una persona de la empresa (empresa.js); «Cambiar de persona» la cambia. Cada página
+   lleva su lista de personas con acceso, para compartirla entre personas y, con las cuentas y la nube (F9), entre
+   dispositivos:
    - AT.datos.yo(): {id, nombre, correo}; se crea una vez (aprende-tecnologia:yo) y entra en el respaldo (al
-     restaurar en otro navegador, se adopta si aquí todavía no se usó).
+     restaurar en otro navegador, se adopta si aquí todavía no se usó). El nombre y el correo salen de tu ficha en
+     la empresa; AT.datos.ponerYo cambia de persona (lo usa AT.empresa.entrarComo) y AT.datos.yoId da solo el id.
    - doc.acceso = {dueno:{id, nombre, correo}, personas:[{id, nombre, correo, rol, estado, desde, por}],
      solicitudes:[{id, de:{id, nombre, correo}, rol, mensaje, fecha, estado, resuelta, por}], cambio}. Una página sin
      acceso es tuya. Roles: dueno (Propietario), admin (Administrador: edita y cambia permisos), editor (Puede
@@ -782,18 +788,29 @@ function yo(){
   if(!esObjeto(y)||!/^u-[\w-]{4,40}$/.test(String(y.id))){y={id:idNuevo('u'),nombre:'',correo:'',creado:ahora()};lsSet(CLAVE_YO,JSON.stringify(y))}
   return y;
 }
-/* Tu nombre: el que pusiste aquí o el de tu espacio */
+/* Tu nombre: el de tu ficha en la empresa, el que pusiste aquí o el de tu espacio */
 function quienSoy(){
-  var y=yo(),p=AT.perfil&&AT.perfil.actual&&AT.perfil.actual();
-  return {id:y.id,nombre:limpio(y.nombre,60)||limpio(p&&p.nombre,60),correo:limpio(y.correo,254)};
+  var y=yo(),p=AT.perfil&&AT.perfil.actual&&AT.perfil.actual(),e=AT.empresa&&AT.empresa.persona(y.id);
+  return {id:y.id,nombre:limpio(e&&e.nombre,60)||limpio(y.nombre,60)||limpio(p&&p.nombre,60),correo:(e&&e.correo)||limpio(y.correo,254)};
 }
+/* Tu nombre y tu correo: aquí y en tu ficha de la empresa */
 function cambiarYo(c){
   var y=yo();
   if(c&&c.nombre!=null)y.nombre=limpio(String(c.nombre),60);
   if(c&&c.correo!=null){var k=limpio(String(c.correo),254).toLowerCase();if(k&&!correoValido(k))throw new Error('Ese correo no parece válido.');y.correo=k}
+  if(AT.empresa&&AT.empresa.persona(y.id)){
+    var ce={};if(c&&c.nombre!=null&&y.nombre)ce.nombre=y.nombre;if(c&&c.correo!=null)ce.correo=y.correo;
+    if(ce.nombre!=null||ce.correo!=null)AT.empresa.cambiarPersona(y.id,ce);
+  }
   lsSet(CLAVE_YO,JSON.stringify(y));
   avisar({almacen:'yo'});
   return quienSoy();
+}
+/* «Cambiar de persona» (empresa.js): quien usa este navegador pasa a ser p */
+function ponerYo(p){
+  var y=yo();
+  lsSet(CLAVE_YO,JSON.stringify({id:p.id,nombre:limpio(p.nombre,60),correo:limpio(p.correo,254),creado:y.creado||ahora()}));
+  avisar({almacen:'yo'});
 }
 var ROLES_ACC={dueno:{n:4,nombre:'Propietario',desc:'Hace todo y no se le puede quitar el acceso.'},
   admin:{n:3,nombre:'Administrador',desc:'Edita y decide quién más entra y con qué permiso.'},
@@ -846,6 +863,20 @@ var acceso={
   },
   pendientes:function(doc){var a=doc&&doc.acceso;return a&&Array.isArray(a.solicitudes)?a.solicitudes.filter(function(s){return s.estado==='pendiente'}):[]},
   tuSolicitud:function(doc){var y=quienSoy();return acceso.pendientes(doc).filter(function(s){return mismaPersona(s.de,y)})[0]||null},
+  /* Alguien de tu empresa (empresa.js) entra directo, sin invitación: usa este mismo navegador */
+  dar:function(id,p,rol){
+    return cambiarAcceso(id,function(a){
+      exigir(a,'compartir');
+      if(!p||!/^u-[\w-]{4,40}$/.test(String(p.id)))throw new Error('Elige a una persona de tu empresa.');
+      if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige un permiso.');
+      if(mismaPersona(a.dueno,p))throw new Error('Esa persona es la propietaria de la página.');
+      var ya=a.personas.filter(function(x){return mismaPersona(x,p)})[0];
+      if(ya){ya.rol=rol;ya.id=p.id;ya.estado='aceptado';if(p.nombre)ya.nombre=limpio(p.nombre,60);return ya}
+      var n={id:p.id,nombre:limpio(p.nombre,60),correo:limpio(String(p.correo||''),254).toLowerCase(),rol:rol,estado:'aceptado',desde:ahora(),por:quienSoy().id};
+      a.personas.push(n);
+      return n;
+    });
+  },
   invitar:function(id,p){
     return cambiarAcceso(id,function(a){
       exigir(a,'compartir');
@@ -1037,7 +1068,9 @@ AT.datos={
   filas:filasCol,
   versiones:versiones,
   yo:quienSoy,
+  yoId:function(){return yo().id},
   cambiarYo:cambiarYo,
+  ponerYo:ponerYo,
   acceso:acceso,
   presencia:presencia,
   notas:notas,

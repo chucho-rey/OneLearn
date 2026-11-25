@@ -33,13 +33,36 @@ c.append(P('Aquí está cada herramienta de OneBook: para qué sirve y cómo se 
 c.append({'type':'indice','attrs':{'id':nid()}})
 
 # ---------------- Empezar ----------------
-c+=herramienta('nucleo','espacio','Tu espacio y sus módulos',
- 'Al entrar por primera vez creas el espacio de tu negocio: su nombre, su giro y si tienes empleados. Eso decide qué herramientas ves.',
- ['En «Crea tu espacio» escribe el nombre de tu negocio, su giro y, si quieres, su teléfono.',
+c+=herramienta('nucleo','espacio','Crea tu empresa y sus módulos',
+ 'Al entrar por primera vez creas tu empresa: su nombre, su giro, tu nombre, sus departamentos y si tienes empleados. Eso decide qué herramientas ves.',
+ ['En «Crea tu empresa» escribe el nombre de la empresa, su giro, su teléfono (si quieres) y **tu nombre**: quedas como propietario.',
   'Si tienes empleados, marca **Tengo empleados**: se enciende Recursos humanos.',
-  'Elige las páginas con las que quieres empezar y pulsa «Crear mi espacio».',
-  'Para cambiarlo después: **Tus datos** (barra lateral) → «Cambiar tu espacio». Ahí enciendes o apagas los módulos: Negocio y dinero y Recursos humanos.'],
+  'Revisa los **departamentos** que te sugerimos según el giro: quita los que no quieras y agrega otros.',
+  'Elige las páginas con las que quieres empezar y pulsa «Crear mi empresa».',
+  'Para cambiarlo después: **Tus datos** (barra lateral) → «Cambiar tu espacio» (solo quien administra la empresa). Ahí enciendes o apagas los módulos: Negocio y dinero y Recursos humanos.'],
  'Apagar un módulo no borra nada: solo deja de mostrar sus herramientas.')
+c+=herramienta('nucleo','empresa','Tu empresa: personas y roles',
+ 'En «Tu empresa» (barra lateral) está la gente que usa OneBook en tu empresa, el rol de cada quien y sus departamentos.',
+ ['Pulsa **Agregar persona**: su nombre, su correo (si quieres), su rol y sus departamentos. Puedes ponerle un PIN.',
+  'Los roles de la empresa: **Propietario** (hace todo; es quien la creó), **Administrador** (agrega personas y departamentos y les da permisos) y **Miembro** (usa OneBook con los permisos de sus departamentos).',
+  'Con **Editar** cambias su nombre, su rol, sus departamentos o su PIN, o la quitas de la empresa (pide confirmar).',
+  'El propietario puede pasarle la empresa a otra persona con «Hacerla propietaria»: él queda como administrador.',
+  '«Editar datos» cambia el nombre, el giro, el teléfono y el RFC de la empresa.'],
+ 'Si no administras la empresa, ves a todos y cambias solo tus datos: tu nombre, tu correo y tu PIN.')
+c+=herramienta('nucleo','departamentos','Departamentos',
+ 'Los departamentos agrupan a tu gente: Ventas, Almacén, Administración… Una persona puede estar en varios. Pronto, cada departamento tendrá su sala con sus páginas, y solo entrará su gente.',
+ ['En «Tu empresa», pulsa **Agregar departamento**: su nombre, su color y quién está.',
+  'Cada persona tiene un rol en el departamento: **Responsable** (lo administra y decide quién está), **Miembro** (entra y edita) o **Consulta** (solo ve).',
+  '«Administrar» cambia el nombre, el color y la gente del departamento. Quitar un departamento no quita a las personas de la empresa.',
+  'Con Recursos humanos, la base **Empleados** tiene la columna **Departamento** (y «Agregar persona» la pregunta): sus opciones son los departamentos de tu empresa, con su color, y si cambias el nombre de uno, se cambia también ahí.'],
+ 'Los departamentos los agrega y los quita quien administra la empresa; su responsable puede cambiar su nombre, su color y su gente.')
+c+=herramienta('nucleo','persona','Cambiar de persona y tu PIN',
+ 'Si varias personas usan OneBook en la misma computadora, cada quien entra como sí misma: así sus páginas, sus permisos y «Modificado por» son suyos.',
+ ['Abajo en la barra lateral está tu nombre. Tócalo para abrir **¿Quién usa OneBook?**',
+  'Elige a la persona. Si tiene PIN, escríbelo y pulsa «Entrar». La página se vuelve a abrir como esa persona (antes se guarda lo pendiente).',
+  'Para ponerte un PIN: en «Tu empresa», pulsa «Editar» en tu nombre y escribe un PIN de 4 a 8 números (dos veces).',
+  'Si la computadora no sabe quién eres, el Inicio te pide que elijas tu nombre.'],
+ 'El PIN ordena quién entra como quién, pero no es una contraseña: quien tiene el navegador tiene los datos. Con la nube, cada persona entrará con su propia cuenta.')
 c+=herramienta('nucleo','inicio','El Inicio',
  'Es lo primero que ves al abrir OneBook: tus atajos y lo importante del día.',
  ['**Acciones rápidas**: corte de hoy, nueva venta, anotar fiado o un gasto (y, con Recursos humanos, anotar una falta o la nómina de la quincena).',
@@ -91,7 +114,7 @@ c+=herramienta('nucleo','permisos','Personas y permisos',
  'Cada página tiene su lista de personas con acceso y lo que cada una puede hacer. Hoy OneBook vive en tu navegador; con las cuentas en la nube, esta lista será la que decida quién entra.',
  ['Ábrela con la columna **Permisos** del explorador, con «⋯» → «Personas y permisos» en la página, o con «Pedir permiso para editar» si solo puedes verla.',
   'Los permisos: **Propietario** (todo), **Administrador** (edita y decide quién más entra), **Puede editar** y **Solo puede ver**.',
-  'Si administras la página: invita a alguien con su correo y su permiso, cambia el permiso de cada quien, quítale el acceso y **aprueba o rechaza** las solicitudes.',
+  'Si administras la página: dale acceso a **alguien de tu empresa** (entra directo, en esta misma computadora) o invita a alguien con su correo; cambia el permiso de cada quien, quítale el acceso y **aprueba o rechaza** las solicitudes.',
   'Si no la administras: verás tu permiso y podrás **pedir más** (con un mensaje). Las solicitudes llegan a «Solicitudes» en el explorador de quien la administra.',
   '«Pon tu nombre» (o «Cambiar tu nombre») es como te verán los demás.'],
  'Por ahora, las invitaciones y solicitudes quedan anotadas en la página y viajan con tus respaldos; llegarán solas cuando OneBook tenga cuentas en la nube, y los avisos (notificaciones) después. Una página que solo puedes ver se abre para leer.')
@@ -305,7 +328,9 @@ html='''<!doctype html>
 
 <script src="assets/js/base.js"></script>
 <script src="assets/js/datos.js"></script>
+<script src="assets/js/empresa.js"></script>
 <script src="assets/js/barra.js"></script>
+<script src="assets/js/persona.js"></script>
 <script src="assets/js/lectura.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/respaldo.js"></script>

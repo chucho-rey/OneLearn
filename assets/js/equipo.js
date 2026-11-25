@@ -248,9 +248,13 @@ function ventana(id,titulo,cuerpo,alGuardar){
   return d;
 }
 function agregarPersona(){
+  /* El departamento: los de la empresa (empresa.js) */
+  var deps=AT.empresa?AT.empresa.departamentos():[];
   return new Promise(function(listo){
     ventana('eqPerT','Agregar persona',
       '<label class="campo-l"><span>Nombre</span><input name="nombre" type="text" required autocomplete="off"></label>'+
+      (deps.length?'<label class="campo-l"><span>Departamento</span><select name="depto"><option value="">Sin departamento</option>'+
+        deps.map(function(d){return '<option>'+esc(d.nombre)+'</option>'}).join('')+'</select></label>':'')+
       '<div class="inv-2"><label class="campo-l"><span>Puesto</span><input name="puesto" type="text" autocomplete="off" placeholder="Ej. cajera"></label>'+
       '<label class="campo-l"><span>Fecha de ingreso</span><input name="ingreso" type="date" value="'+hoy()+'"></label></div>'+
       '<div class="inv-2"><label class="campo-l"><span>Salario diario</span><input name="salario" type="text" inputmode="decimal" autocomplete="off" placeholder="$'+M.T.sm.general.toFixed(2)+'"></label>'+
@@ -266,6 +270,7 @@ function agregarPersona(){
           if(f.elements.ingreso.value)w['em-ingreso']=f.elements.ingreso.value;
           if(f.elements.nac.value)w['em-nac']=f.elements.nac.value;
           if(f.elements.tel.value.trim())w['em-tel']=f.elements.tel.value.trim();
+          if(f.elements.depto&&f.elements.depto.value)w['em-depto']=f.elements.depto.value;
           if(sal>0)w['em-salario']=Math.round(sal*100)/100;
           return B.guardarFila(B.nuevaFila(o.empleados,w));
         }).then(function(){cerrar();pintarTodos();AT.aviso(nom+' ya está en tu equipo.');listo(true)},function(){decir('No se pudo guardar. Inténtalo otra vez.')});

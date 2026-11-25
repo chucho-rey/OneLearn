@@ -12,7 +12,7 @@
      'personal'): el Inicio explica una vez que lo de estudio se separó y que sus datos siguen en este navegador.
    - Quien ya usaba OneLearn (hay datos con el prefijo aprende-tecnologia: y no hay perfil) queda igual, con el
      aviso 'estudio': no pierde nada de lo que tenía.
-   - Sin perfil, inicio.html manda a entrar.html («Crea tu espacio») antes de pintar, con lo que traiga la dirección;
+   - Sin perfil, inicio.html manda a entrar.html («Crea tu empresa») antes de pintar, con lo que traiga la dirección;
      con perfil, entrar.html manda a inicio.html (salvo con ?editar, para cambiar el espacio).
    - En <html> pone las clases con-<módulo> o sin-<módulo> (base.css oculta .m-negocio y .m-rh).
    Se carga en el <head> de todas las páginas, después de ajustes.js. Expone AT.perfil. */
@@ -30,7 +30,7 @@ var PERFILES={
 /* Perfiles que ya no existen: se convierten en negocio y el Inicio lo explica una vez */
 var ANTES={estudio:1,personal:1};
 var GIROS=[['tienda','Tienda o comercio'],['comida','Comida'],['servicios','Servicios'],['catalogo','Ventas por catálogo o redes'],
-  ['freelance','Freelance o profesional independiente'],['otro','Otro']];
+  ['distribucion','Distribución o mayoreo'],['otro','Otro']];
 
 function texto(v,max){return typeof v==='string'?v.replace(/\s+/g,' ').trim().slice(0,max):''}
 function hoy(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
@@ -105,11 +105,11 @@ AT.perfil={
   }
 };
 
-/* Inicio sin perfil: primero «Crea tu espacio» (lo que traiga la dirección sigue en entrar.html) */
+/* Inicio sin perfil: primero «Crea tu empresa» (lo que traiga la dirección sigue en entrar.html) */
 if(!perfil&&/\/inicio\.html$/.test(location.pathname)){
   location.replace('entrar.html'+location.search+location.hash);
 }
-/* «Crea tu espacio» con un espacio ya creado: al Inicio, salvo para cambiarlo (?editar) */
+/* «Crea tu empresa» con un espacio ya creado: al Inicio, salvo para cambiarlo (?editar) */
 else if(perfil&&/\/entrar\.html$/.test(location.pathname)&&!/[?&]editar\b/.test(location.search)){
   location.replace('inicio.html'+location.hash);
 }
