@@ -176,7 +176,7 @@ function terminar(){
   /* Se pide aquí, durante el clic: algunos navegadores solo lo permiten así */
   AT.datos.pedirPersistencia();
   tipos.reduce(function(pr,t){
-    return pr.then(function(){var d=AT.crear.armar(t);return d?AT.datos.documentos.guardar(d,{conservarFecha:true}):null});
+    return pr.then(function(){var d=AT.crear.armar(t,{sala:AT.empresa&&AT.empresa.GENERAL});return d?AT.datos.documentos.guardar(d,{conservarFecha:true}):null});
   },Promise.resolve()).then(function(){
     location.href='inicio.html'+location.hash;
   },function(err){

@@ -246,17 +246,27 @@ function idDoc(){
   for(var i=0;i<8;i++)s+='abcdefghijklmnopqrstuvwxyz0123456789'.charAt(a[i]%36);
   return 'd-'+s;
 }
-/* Arma el documento de un tipo (sin guardarlo). extra ({titulo, contenido}) reemplaza lo de la plantilla. */
+/* Salas (E3): una página nueva nace en la sala elegida en «¿Dónde?», en la sala donde estás (AT.salaActual: la
+   página de una sala o esa ubicación del explorador) o en la General; quien la crea es su propietario */
+var donde='';
+function salaNueva(){return donde||AT.salaActual||(AT.empresa&&AT.empresa.GENERAL)||''}
+function conAcceso(doc,sala){
+  if(doc&&!doc.acceso&&AT.datos.acceso&&AT.datos.acceso.nueva){var a=AT.datos.acceso.nueva(sala||salaNueva());if(a)doc.acceso=a}
+  return doc;
+}
+/* Arma el documento de un tipo (sin guardarlo). extra ({titulo, contenido}) reemplaza lo de la plantilla; extra.sala
+   dice en qué sala nace */
 function armar(tipo,extra){
   var t=TIPOS[tipo],pl=PLANTILLAS[tipo];
   if(!t||!pl)return null;
   var base=Object.assign(pl(),extra||{}),ahora=new Date().toISOString();
   var doc={formato:1,tipo:tipo,id:idDoc(),titulo:base.titulo,props:base.props,creado:ahora,editado:ahora,
     contenido:{type:'doc',content:base.contenido}};
-  return doc;
+  return conAcceso(doc,extra&&extra.sala);
 }
 /* Guarda un documento nuevo y lo abre */
 function guardarYAbrir(doc){
+  conAcceso(doc);
   /* Se pide aquí, durante el clic: algunos navegadores solo lo permiten así */
   AT.datos.pedirPersistencia();
   return AT.datos.documentos.guardar(doc,{conservarFecha:true}).then(function(d){
@@ -448,6 +458,7 @@ function crearVentana(){
   dlg.innerHTML='<div class="at-h"><h2 id="crT">¿Qué quieres crear?</h2>'+
     '<button class="lec-x" type="button" data-cr="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
     '<p class="td-p">Elige una plantilla: empieza con su estructura y sus bloques, y después la cambias a tu gusto. Se guarda solo en este dispositivo.</p>'+
+    (AT.empresa&&AT.empresa.existe()?'<label class="crear-donde"><span>¿Dónde?</span><select id="crDonde"></select></label>':'')+
     '<div class="crear-filtros"><label class="vh" for="crBuscar">Buscar plantilla</label><input type="search" id="crBuscar" class="crear-buscar" placeholder="Buscar plantilla" autocomplete="off">'+
     '<div class="crear-chips" id="crChips" role="group" aria-label="Categorías"></div></div>'+
     '<div id="crSecs"></div><p class="hint" id="crNada" hidden>Ninguna plantilla coincide. Prueba con otra palabra.</p>'+
@@ -459,6 +470,7 @@ function crearVentana(){
     '<p class="td-msg" id="crMsg" role="status"></p>';
   document.body.appendChild(dlg);
   $('#crBuscar',dlg).addEventListener('input',filtrar);
+  if($('#crDonde',dlg))$('#crDonde',dlg).addEventListener('change',function(){donde=this.value});
   dlg.addEventListener('click',function(e){
     if(e.target===dlg||e.target.closest('[data-cr="cerrar"]')){cerrar();return}
     var ch=e.target.closest('[data-filtro]');
@@ -490,9 +502,22 @@ function quitarMia(pid){
     });
   });
 }
-function abrir(cat){
+/* «¿Dónde?»: las salas donde puedes crear páginas y Privado (solo tú) */
+function pintarDonde(sala){
+  var sel=$('#crDonde',dlg);if(!sel)return;
+  var ls=AT.empresa.salas().filter(function(x){return AT.empresa.puedeSala(x.id,'editar')});
+  donde=sala&&(sala==='privado'||ls.some(function(x){return x.id===sala}))?sala:'';
+  var actual=donde||salaNueva();
+  if(actual!=='privado'&&!ls.some(function(x){return x.id===actual}))actual=ls.length?ls[0].id:'privado';
+  donde=actual;
+  sel.innerHTML=ls.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===actual?' selected':'')+'>'+esc(x.tipo==='general'?'General (toda la empresa)':x.nombre)+'</option>'}).join('')+
+    '<option value="privado"'+(actual==='privado'?' selected':'')+'>Privado (solo tú)</option>';
+}
+/* op.sala: la sala en la que se crea (la página de una sala) */
+function abrir(cat,op){
   if(!dlg)crearVentana();
   abridor=document.activeElement;
+  pintarDonde(op&&op.sala);
   filtro=cat&&CATS[cat]?cat:'todas';
   $('#crBuscar',dlg).value='';
   ocupado(false);
@@ -509,6 +534,8 @@ AT.crear={abrir:abrir,cerrar:cerrar,nuevo:nuevo,armar:armar,tipos:TIPOS,plantill
 document.addEventListener('click',function(e){
   if(e.target.closest('#sideCrear,[data-crear]'))abrir();
 });
+/* Al cerrar la ventana, la próxima vez vuelve a empezar en la sala donde estás */
+document.addEventListener('close',function(e){if(e.target===dlg)donde=''},true);
 /* inicio.html#crear (desde la página de bienvenida) abre la ventana al llegar */
 if(AT.rutas&&AT.rutas.esInicio&&location.hash==='#crear'){
   try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}

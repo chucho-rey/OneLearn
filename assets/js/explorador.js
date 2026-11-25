@@ -18,7 +18,7 @@
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,D=AT.datos,A=D&&D.acceso;
 var raiz=$('#xp');if(!raiz||!D)return;
 var CLAVE='aprende-tecnologia:explorador';
-var COLS=[{k:'mod',t:'Modificado',orden:'modificado'},{k:'tipo',t:'Tipo',orden:'tipo'},{k:'ahora',t:'Trabajando ahora'},
+var COLS=[{k:'mod',t:'Modificado',orden:'modificado'},{k:'sala',t:'Sala',orden:'sala'},{k:'tipo',t:'Tipo',orden:'tipo'},{k:'ahora',t:'Trabajando ahora'},
   {k:'perm',t:'Permisos',orden:'permisos'},{k:'tam',t:'Tamaño',orden:'tamano'}];
 var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['general','Otras','notas'],['estudio','De estudio (solo lectura)','libreta']];
 var DIA=864e5;
@@ -37,9 +37,12 @@ function info(d){
   var deEstudio=!!(D.deEstudio&&D.deEstudio(d));
   var t=deEstudio?{nombre:'Página de estudio',icono:'libreta',cat:'estudio'}:AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
   var tam=0;try{tam=JSON.stringify(d).length}catch(e){}
-  var admin=A?A.puede(d,'compartir'):true;
+  var admin=A?A.puede(d,'compartir'):true,gente=A?A.personas(d):[];
+  /* Salas (E3): la sala de la página ('sa-…' o 'privado') y su nombre */
+  var sala=A&&A.sala?A.sala(d):'',so=sala&&sala!=='privado'&&AT.empresa?AT.empresa.sala(sala):null;
   return {d:d,id:d.id,titulo:d.titulo||'Sin título',tipo:t,cat:CATS.some(function(c){return c[0]===t.cat})?t.cat:'general',
-    rol:A?A.rol(d):'dueno',gente:A?A.personas(d):[],pend:admin&&A?A.pendientes(d):[],admin:admin,editar:A?A.puede(d,'editar'):true,
+    rol:A?A.rol(d):'dueno',gente:gente,pend:admin&&A?A.pendientes(d):[],admin:admin,editar:A?A.puede(d,'editar'):true,
+    contigo:gente.some(function(p){return p.tu&&p.rol!=='dueno'}),sala:sala,salaNombre:sala==='privado'?'Privado':so?(so.tipo==='general'?'General':so.nombre):'',
     tam:tam,editado:d.editado||d.creado||''};
 }
 /* Las páginas de estudio solo salen en «De estudio» */
@@ -48,12 +51,16 @@ var UBIC=[
   {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return x.cat!=='estudio'&&!!x.d.favorito}},
   {k:'recientes',t:'Recientes',i:'historial',f:function(x){return x.cat!=='estudio'&&Date.now()-Date.parse(x.editado)<7*DIA}},
   {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.cat!=='estudio'&&x.gente.length>1}},
-  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.cat!=='estudio'&&x.rol!=='dueno'},siHay:true},
+  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.cat!=='estudio'&&x.contigo},siHay:true},
   {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.cat!=='estudio'&&x.pend.length>0},siHay:true}
 ];
 function ubicDe(k){
   var u=UBIC.filter(function(x){return x.k===k})[0];
   if(u)return u;
+  /* Una sala o Privado */
+  var sm=/^sala:(sa-[\w-]+|privado)$/.exec(k);
+  if(sm){var so=sm[1]==='privado'?{nombre:'Privado'}:AT.empresa&&AT.empresa.sala(sm[1]);
+    if(so)return {k:k,t:sm[1]==='privado'?'Privado':so.tipo==='general'?'General':so.nombre,i:sm[1]==='privado'?'candado':'deptos',sala:sm[1],f:function(x){return x.cat!=='estudio'&&x.sala===sm[1]}}}
   var c=/^cat:(\w+)$/.exec(k),cc=c&&CATS.filter(function(x){return x[0]===c[1]})[0];
   return cc?{k:k,t:cc[1],i:cc[2],f:function(x){return x.cat===cc[0]}}:UBIC[0];
 }
@@ -81,6 +88,7 @@ var ORDEN={
   nombre:function(a,b){return a.titulo.localeCompare(b.titulo,'es',{numeric:true,sensitivity:'base'})},
   modificado:function(a,b){return a.editado<b.editado?-1:a.editado>b.editado?1:0},
   tipo:function(a,b){return a.tipo.nombre.localeCompare(b.tipo.nombre,'es')||ORDEN.nombre(a,b)},
+  sala:function(a,b){return (a.salaNombre||'').localeCompare(b.salaNombre||'','es')||ORDEN.nombre(a,b)},
   permisos:function(a,b){return (a.gente.length-b.gente.length)||(A?A.ROLES[a.rol==='ninguno'?'lector':a.rol].n-A.ROLES[b.rol==='ninguno'?'lector':b.rol].n:0)||ORDEN.nombre(a,b)},
   tamano:function(a,b){return a.tam-b.tam}
 };
@@ -129,6 +137,12 @@ function pintarNav(){
     if(u.siHay&&!n&&est.ubic!==u.k)return '';
     return '<li><button type="button" class="xp-u'+(u.k==='solicitudes'&&n?' xp-u-aviso':'')+'" data-ubic="'+u.k+'"'+(est.ubic===u.k?' aria-current="true"':'')+'>'+ico(u.i)+'<span>'+esc(u.t)+'</span><em>'+n+'</em></button></li>';
   }).join('')+'</ul>';
+  /* Las salas que ves y Privado */
+  var salas=AT.empresa&&AT.empresa.existe()?AT.empresa.salas():[];
+  if(salas.length)h+='<p class="xp-nav-h">Salas</p><ul class="xp-ul">'+salas.map(function(s){
+    var k='sala:'+s.id;
+    return '<li><button type="button" class="xp-u" data-ubic="'+esc(k)+'"'+(est.ubic===k?' aria-current="true"':'')+'><i class="xp-dot emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i><span>'+esc(s.tipo==='general'?'General':s.nombre)+'</span><em>'+cuenta(function(x){return x.sala===s.id})+'</em></button></li>';
+  }).join('')+'<li><button type="button" class="xp-u" data-ubic="sala:privado"'+(est.ubic==='sala:privado'?' aria-current="true"':'')+'>'+ico('candado')+'<span>Privado</span><em>'+cuenta(function(x){return x.sala==='privado'})+'</em></button></li></ul>';
   var cats=CATS.filter(function(c){return cuenta(function(x){return x.cat===c[0]})||est.ubic==='cat:'+c[0]});
   if(cats.length>1)h+='<p class="xp-nav-h">Por tipo</p><ul class="xp-ul">'+cats.map(function(c){
     var k='cat:'+c[0];
@@ -201,6 +215,7 @@ function pintarLista(){
         var f=fecha(x.editado),pq=porQuien(x.d);
         var celdas={
           mod:'<td class="xp-c-mod"><time datetime="'+esc(x.editado)+'" title="'+esc(f.largo)+'">'+esc(f.corto)+'</time>'+(pq?'<small>por '+esc(pq)+'</small>':'')+'</td>',
+          sala:'<td class="xp-c-sala">'+esc(x.salaNombre||'—')+'</td>',
           tipo:'<td class="xp-c-tipo">'+esc(x.tipo.nombre)+'</td>',
           ahora:'<td class="xp-c-ahora" data-ahora="'+esc(x.id)+'">'+ahoraHTML(x.id)+'</td>',
           perm:'<td class="xp-c-perm">'+permHTML(x)+'</td>',
@@ -377,8 +392,10 @@ function duplicar(x){
   })).then(function(){
     c.id='d-'+AT.bloques.nuevoId().slice(2)+AT.bloques.nuevoId().slice(4);
     c.titulo='Copia de '+(x.d.titulo||'Sin título');
-    /* La copia es tuya: sin la lista de personas ni favorita */
+    /* La copia es tuya: sin la lista de personas ni favorita, en la misma sala (si puedes crear páginas ahí) */
+    var na=D.acceso.nueva&&D.acceso.nueva(D.acceso.sala(x.d));
     delete c.creado;delete c.favorito;delete c.acceso;delete c.editadoPor;
+    if(na)c.acceso=na;
     return D.documentos.guardar(c);
   }).then(function(c){
     activo=c.id;
@@ -421,7 +438,7 @@ function papelera(l){
 raiz.addEventListener('click',function(e){
   var t=e.target;
   var u=t.closest('[data-ubic]');
-  if(u){est.ubic=u.getAttribute('data-ubic');guardarEst();sel={};activo='';pintar();var b=$('[data-ubic="'+u.getAttribute('data-ubic')+'"]',raiz);if(b)b.focus();return}
+  if(u){est.ubic=u.getAttribute('data-ubic');guardarEst();sel={};activo='';salaActual();pintar();var b=$('[data-ubic="'+u.getAttribute('data-ubic')+'"]',raiz);if(b)b.focus();return}
   var o=t.closest('[data-orden]');
   if(o){var c=o.getAttribute('data-orden');est.orden=est.orden.col===c?{col:c,dir:-est.orden.dir}:{col:c,dir:c==='modificado'||c==='tamano'?-1:1};guardarEst();pintarLista();return}
   var v=t.closest('[data-vista]');
@@ -503,10 +520,14 @@ D.on(function(c){
 /* La presencia se vence sola: se revisa cada 20 segundos */
 setInterval(pintarAhora,20e3);
 
+/* En una sala (o en Privado), «Nuevo» crea la página ahí (crear.js lee AT.salaActual) */
+function salaActual(){var u=ubicDe(est.ubic);AT.salaActual=u.sala||''}
+salaActual();
 AT.explorador={
   /* inicio.js le pasa tus páginas (sin las de «Mi negocio» y «Tu equipo») y el texto para cuando no hay ninguna */
   datos:function(l,op){
-    docs=(l||[]).map(info);vacio=op&&op.vacio||'Todavía no tienes páginas.';
+    /* Solo las páginas que puedes ver (con salas, las de las salas donde estás, las tuyas y las compartidas contigo) */
+    docs=(l||[]).filter(function(d){return !A||A.puede(d,'ver')}).map(info);vacio=op&&op.vacio||'Todavía no tienes páginas.';
     var ids={};docs.forEach(function(x){ids[x.id]=1});
     Object.keys(sel).forEach(function(id){if(!ids[id])delete sel[id]});
     pintar();contarPapelera();

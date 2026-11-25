@@ -211,6 +211,23 @@ button.nv{font:inherit;font-size:0.875rem}
 .nv-yo>span{display:flex;flex-direction:column;line-height:1.25}
 .nv-yo b{font-weight:600;color:var(--fg);overflow-wrap:anywhere}
 .nv-yo small{font-size:0.75rem;color:var(--fg-2)}
+/* Las salas en la barra lateral: su punto de color en lugar de un ícono */
+.sala-nv>.emp-dot{width:0.625rem;height:0.625rem;margin:0 0.1875rem}
+.sala-nv.on>.emp-dot{box-shadow:0 0 0 2px var(--bg)}
+/* Colores de los departamentos y de las salas: etiqueta (fondo y tinta) y punto (empresa.js, COLORES) */
+.c-acento{background:var(--accent-bg);color:var(--accent-ink)}
+.c-verde{background:var(--good-bg);color:var(--good-ink)}
+.c-morado{background:var(--pur-bg);color:var(--pur-ink)}
+.c-ambar{background:var(--warn-bg);color:var(--warn-ink)}
+.c-rojo{background:var(--bad-bg);color:var(--bad-ink)}
+.c-gris{background:var(--bg-soft);color:var(--fg)}
+.emp-dot{display:inline-block;flex:none;width:0.75rem;height:0.75rem;border-radius:50%;vertical-align:baseline}
+.emp-dot.c-acento{background:var(--accent)}
+.emp-dot.c-verde{background:var(--good)}
+.emp-dot.c-morado{background:var(--c5)}
+.emp-dot.c-ambar{background:var(--warn)}
+.emp-dot.c-rojo{background:var(--bad)}
+.emp-dot.c-gris{background:var(--c1)}
 .nota{display:flex;flex-direction:column;gap:0.125rem;padding:0.5rem;border-radius:0.375rem;color:var(--fg);text-decoration:none}
 .nota:hover{background:var(--hover)}
 .nota.on{background:var(--accent-bg)}
@@ -232,7 +249,9 @@ button.nv{font:inherit;font-size:0.875rem}
 .crumbs{display:flex;gap:0.375rem;font-size:0.875rem;color:var(--fg-2);min-width:0;white-space:nowrap;overflow:hidden}
 .crumbs .cur{color:var(--fg);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .crumbs .sep{color:var(--fg-3)}
-.crumbs>span:not(.cur):not(.sep){font-family:var(--font-mono);font-size:0.75rem;letter-spacing:.06em;text-transform:uppercase;align-self:center}
+.crumbs>span:not(.cur):not(.sep),.crumbs>a{font-family:var(--font-mono);font-size:0.75rem;letter-spacing:.06em;text-transform:uppercase;align-self:center}
+.crumbs>a{color:var(--fg-2);text-decoration:none}
+.crumbs>a:hover{color:var(--fg);text-decoration:underline;text-underline-offset:0.1875rem}
 @media (min-width:900px){
   .topbar{padding-left:max(3rem,env(safe-area-inset-left,0px));padding-right:max(3rem,env(safe-area-inset-right,0px))}
 }
@@ -537,6 +556,11 @@ dialog.crear-dlg{width:min(50rem,calc(100vw - 2rem))}
 .crear-p .ico{font-size:1rem}
 /* Galería de plantillas (crear.js, fase F5) */
 .crear-filtros{display:flex;flex-direction:column;gap:0.5rem;margin:0 0 1rem}
+/* «¿Dónde?»: la sala en la que nace la página */
+.crear-donde{display:flex;flex-wrap:wrap;align-items:center;gap:0.25rem 0.75rem;margin:0 0 0.75rem;font-size:0.9375rem}
+.crear-donde span{font-weight:600}
+.crear-donde select{flex:1 1 12rem;min-width:0;max-width:100%;min-height:2.5rem;padding:0.25rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit}
+.crear-donde select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .crear-buscar{width:100%;min-width:0;min-height:2.5rem;padding:0.375rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
 .crear-buscar:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .crear-chips{display:flex;flex-wrap:wrap;gap:0.375rem}

@@ -28,6 +28,8 @@ function botonPersona(){
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
     (EMP?'<a class="nv'+(R.pagina==='empresa'?' on" aria-current="page':'')+'" href="'+RAIZ+'empresa.html" id="sideEmpresa">'+ico('empresa')+'<span>Tu empresa</span></a>':'');
+  /* Las salas que ves (E3) y Privado */
+  if(EMP)h+='<div class="tabp" id="pn-salas"><div class="grp">Salas</div><ul class="docs" id="salasLista"></ul></div>';
   h+='<div class="tabp" id="pn-apuntes"><div class="grp">Tus páginas</div><ul class="docs" id="docsLista"></ul>'+
       '<p class="side-txt">Todo se guarda en este dispositivo.</p></div>';
   h+='<div class="side-foot">'+
@@ -184,7 +186,9 @@ document.addEventListener('click',function(e){
     var abierto=AT.documentoAbierto||'';
     /* «Mi negocio» (fase F7e) es el Inicio de un negocio: no se repite entre tus páginas (salvo si estás en ella) */
     /* Las páginas de estudio (que se separaron de OneBook) tampoco: se abren solo desde una dirección guardada */
-    docs=docs.filter(function(d){return ((d.id!=='d-minegocio'&&d.id!=='d-miequipo')||abierto===d.id)&&!(AT.datos.deEstudio&&AT.datos.deEstudio(d)&&abierto!==d.id)}).sort(function(a,b){return (!!b.favorito-!!a.favorito)||((b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0)});
+    /* Con salas, solo las páginas que puedes ver */
+    docs=docs.filter(function(d){return ((d.id!=='d-minegocio'&&d.id!=='d-miequipo')||abierto===d.id)&&!(AT.datos.deEstudio&&AT.datos.deEstudio(d)&&abierto!==d.id)&&
+      (!AT.datos.acceso||AT.datos.acceso.puede(d,'ver'))}).sort(function(a,b){return (!!b.favorito-!!a.favorito)||((b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0)});
     var h=docs.map(function(d){
       var aqui=d.id===abierto,tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo];
       var u='documento.html?id='+encodeURIComponent(d.id);
@@ -202,6 +206,18 @@ document.addEventListener('click',function(e){
 
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
   /* Quién usa OneBook: «Cambiar de persona» (persona.js); el botón se vuelve a pintar si cambia tu nombre */
+  /* Salas: General, las de los departamentos y las demás que ves; Privado al final */
+  function pintarSalas(){
+    var ul=$('#salasLista');if(!ul)return;
+    var actual=R.pagina==='sala'?new URLSearchParams(location.search).get('id'):'';
+    if(!actual&&AT.datos.acceso&&AT.docActual)actual=AT.datos.acceso.sala(AT.docActual)||'';
+    var enlace=function(id,adentro,nombre){var on=id===actual;
+      return '<li><a class="nv sala-nv'+(on?' on':'')+'" href="'+RAIZ+'sala.html?id='+encodeURIComponent(id)+'"'+(on&&R.pagina==='sala'?' aria-current="page"':'')+'>'+adentro+'<span>'+esc(nombre)+'</span></a></li>'};
+    ul.innerHTML=AT.empresa.salas().map(function(s){return enlace(s.id,'<i class="emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i>',s.tipo==='general'?'General':s.nombre)}).join('')+
+      enlace('privado',ico('candado'),'Privado');
+  }
+  if(EMP){pintarSalas();AT.empresa.on(pintarSalas);AT.datos.on(function(c){if(c.almacen==='documentos'&&c.id===AT.documentoAbierto)setTimeout(pintarSalas,0)})}
+  AT.pintarSalas=pintarSalas;
   function enlazarPersona(b){b.addEventListener('click',function(){setNav(false);if(AT.persona)AT.persona.abrir(b)})}
   if($('#sidePersona')){
     enlazarPersona($('#sidePersona'));

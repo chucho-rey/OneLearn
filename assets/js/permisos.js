@@ -33,6 +33,15 @@ function opcionesPedir(rol,sel){
   return l.map(function(r){return opcion(r,sel)}).join('');
 }
 
+/* Salas (E3): dónde vive la página y quién la ve por eso, además de su lista */
+function salaLinea(doc){
+  var sa=A.sala?A.sala(doc):'';if(!sa)return '';
+  if(sa==='privado')return '<p class="perm-nota perm-sala">'+ico('candado')+'<span><b>Privada:</b> solo la ven su propietario y quienes están en esta lista.</span></p>';
+  var s=AT.empresa&&AT.empresa.sala(sa);
+  if(!s)return '<p class="perm-nota perm-sala"><span>Su sala ya no existe: solo la ven quienes están en esta lista.</span></p>';
+  return '<p class="perm-nota perm-sala"><i class="emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i><span>Está en la sala <a href="sala.html?id='+encodeURIComponent(sa)+'">'+esc(s.tipo==='general'?'General':s.nombre)+'</a>: '+
+    (s.tipo==='general'?'la ve y la edita toda la empresa.':'la ven quienes entran a la sala.')+' Esta lista agrega a otras personas.</span></p>';
+}
 var dlg=null,docId='',abridor=null,editandoYo=false;
 function crear(){
   dlg=document.createElement('dialog');
@@ -87,7 +96,7 @@ function pintar(foco){
     if(!doc){dlg.close();AT.aviso('Esa página ya no existe.');return}
     var gente=A.personas(doc),rol=A.rol(doc),admin=A.puede(doc,'compartir'),pend=A.pendientes(doc),mia=A.tuSolicitud(doc),y=D.yo();
     var h='<div class="at-h"><h2 id="permT">'+ico('users')+'Personas y permisos</h2><button class="lec-x" type="button" data-perm="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
-      '<p class="perm-doc">«'+esc(doc.titulo||'Sin título')+'» · tu permiso: <b>'+esc(A.nombreRol(rol))+'</b></p>'+
+      '<p class="perm-doc">«'+esc(doc.titulo||'Sin título')+'» · tu permiso: <b>'+esc(A.nombreRol(rol))+'</b></p>'+salaLinea(doc)+
       '<h3 class="perm-h">Con acceso <small>'+gente.length+(gente.length===1?' persona':' personas')+'</small></h3>'+
       '<ul class="perm-l">'+gente.map(function(p){
         var puedeCambiar=admin&&p.rol!=='dueno'&&!p.tu;

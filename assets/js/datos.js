@@ -453,7 +453,8 @@ function importar(datos){
   return conMotor(function(m){return m.todos('documentos')}).then(function(locales){
     var r=datos.yo,y=yo();
     if(!esObjeto(r)||!/^u-[\w-]{4,40}$/.test(String(r.id))||r.id===y.id||y.nombre||y.correo)return;
-    var usado=locales.some(function(d){var a=d.acceso;return esObjeto(a)&&(mismaPersona(a.dueno,y)||(a.personas||[]).some(function(p){return mismaPersona(p,y)}))});
+    /* Las páginas que el Inicio crea solo («Mi negocio», «Tu equipo») no cuentan como usar este navegador */
+    var usado=locales.some(function(d){var a=d.acceso;return d.id!=='d-minegocio'&&d.id!=='d-miequipo'&&esObjeto(a)&&(mismaPersona(a.dueno,y)||(a.personas||[]).some(function(p){return mismaPersona(p,y)}))});
     if(usado)return;
     lsSet(CLAVE_YO,JSON.stringify({id:r.id,nombre:limpio(r.nombre,60)||y.nombre,correo:correoValido(String(r.correo||''))?String(r.correo).toLowerCase():y.correo,creado:y.creado}));
     res.yo=true;
@@ -828,8 +829,37 @@ function rolAcceso(a,p){
   return m&&m.rol!=='dueno'&&ROLES_ACC[m.rol]?m.rol:'ninguno';
 }
 function nivelDe(rol){return ROLES_ACC[rol]?ROLES_ACC[rol].n:0}
-function puedeEn(a,que,p){var n=nivelDe(rolAcceso(a,p||quienSoy()));return que==='compartir'?n>=3:que==='editar'?n>=2:n>=1}
-function accesoNuevo(){return {dueno:quienSoy(),personas:[],solicitudes:[]}}
+/* Salas (E3, empresa.js): cada página vive en una sala (doc.acceso.sala) o en Privado. Las de antes sin lista de
+   acceso están en la General; las que ya tenían lista, sin sala, en Privado (como estaban: solo su lista) */
+var GENERAL='sa-general';
+function conSalas(){return !!(AT.empresa&&AT.empresa.existe()&&AT.empresa.rolEnSala)}
+function salaDe(d){
+  var a=d&&d.acceso;
+  if(!esObjeto(a)||!a.dueno)return GENERAL;
+  return typeof a.sala==='string'&&/^(sa-[\w-]{4,40}|privado)$/.test(a.sala)?a.sala:'privado';
+}
+/* El rol en una página: el mayor entre su lista (propietario, admin, editor, lector) y su sala (admin, editor,
+   lector). La sala solo cuenta si la página es de esta empresa (acceso.empresa; una página que llega del respaldo
+   de otra empresa solo tiene su lista). Sin empresa, solo la lista (una página sin lista es de quien la abre) */
+function rolPagina(d,p){
+  var a=d&&d.acceso;
+  if(!conSalas())return rolAcceso(a,p);
+  var r=esObjeto(a)&&a.dueno?rolAcceso(a,p):'ninguno',sa=salaDe(d);
+  var deAqui=!esObjeto(a)||!a.empresa||a.empresa===AT.empresa.id();
+  if(sa!=='privado'&&deAqui){var rs=AT.empresa.rolEnSala(sa,p&&p.id);if(rs&&nivelDe(rs)>nivelDe(r))r=rs}
+  return r;
+}
+function puedeDoc(d,que,p){var n=nivelDe(rolPagina(d,p||quienSoy()));return que==='compartir'?n>=3:que==='editar'?n>=2:n>=1}
+/* El acceso de una página que recién tiene lista (una de antes): sigue en su sala y su propietario es quien la
+   cambia si la administra; si no (por ejemplo, alguien que pide permiso), el propietario de la empresa */
+function accesoNuevo(d){
+  var dueno=quienSoy();
+  if(conSalas()&&!puedeDoc(d,'compartir')){
+    var pr=AT.empresa.personas().filter(function(x){return x.rol==='propietario'})[0];
+    if(pr)dueno={id:pr.id,nombre:pr.nombre,correo:pr.correo};
+  }
+  var a={dueno:dueno,personas:[],solicitudes:[]};if(conSalas()){a.sala=salaDe(d);a.empresa=AT.empresa.id()}return a;
+}
 /* Cambia el acceso de una página sobre lo último guardado, leyendo y escribiendo en la misma transacción (así no
    pisa lo que el autoguardado escriba al mismo tiempo) y sin cambiar la fecha de edición */
 function cambiarAcceso(id,fn){
@@ -837,7 +867,7 @@ function cambiarAcceso(id,fn){
   return conMotor(function(m){
     return m.actualizar('documentos',id,function(d){
       if(!d)throw new Error('Esa página ya no existe.');
-      a=esObjeto(d.acceso)&&d.acceso.dueno?JSON.parse(JSON.stringify(d.acceso)):accesoNuevo();
+      a=esObjeto(d.acceso)&&d.acceso.dueno?JSON.parse(JSON.stringify(d.acceso)):accesoNuevo(d);
       if(!Array.isArray(a.personas))a.personas=[];
       if(!Array.isArray(a.solicitudes))a.solicitudes=[];
       r=fn(a,d);
@@ -847,26 +877,49 @@ function cambiarAcceso(id,fn){
     });
   }).then(function(){avisar({almacen:'documentos',id:id,acceso:true});return r===undefined?a:r});
 }
-function exigir(a,que){if(!puedeEn(a,que))throw new Error(que==='compartir'?'Solo quien administra la página puede cambiar los permisos.':'No tienes permiso para eso.')}
+/* Los permisos se revisan contra la página guardada (d), con su lista y su sala de antes del cambio */
+function exigir(d,que){if(!puedeDoc(d,que))throw new Error(que==='compartir'?'Solo quien administra la página puede cambiar los permisos.':'No tienes permiso para eso.')}
 var acceso={
   ROLES:ROLES_ACC,
-  rol:function(doc,p){return rolAcceso(doc&&doc.acceso,p||quienSoy())},
+  rol:function(doc,p){return rolPagina(doc,p||quienSoy())},
   nombreRol:function(r){return r==='ninguno'?'Sin acceso':(ROLES_ACC[r]||{}).nombre||''},
-  puede:function(doc,que){return puedeEn(doc&&doc.acceso,que)},
-  /* Quién tiene acceso, el propietario primero: [{id, nombre, correo, rol, estado, tu}] */
+  puede:function(doc,que){return puedeDoc(doc,que)},
+  /* La sala de la página ('sa-…' o 'privado'); sin empresa, '' */
+  sala:function(doc){return conSalas()?salaDe(doc):''},
+  /* El acceso de una página nueva: quien la crea es su propietario, en la sala que elige (o la General) */
+  nueva:function(sala){
+    if(!conSalas())return null;
+    var s=sala==='privado'||(typeof sala==='string'&&AT.empresa.puedeSala(sala,'editar'))?sala:GENERAL;
+    if(s!=='privado'&&!AT.empresa.puedeSala(s,'editar'))s='privado';
+    return {dueno:quienSoy(),personas:[],solicitudes:[],sala:s,empresa:AT.empresa.id(),cambio:ahora()};
+  },
+  /* Mover una página a otra sala (o a Privado): quien la administra, si puede crear páginas en esa sala */
+  mover:function(id,sala){
+    return cambiarAcceso(id,function(a,d){
+      exigir(d,'compartir');
+      if(sala!=='privado'&&!(conSalas()&&AT.empresa.sala(sala)))throw new Error('Esa sala ya no existe.');
+      if(sala!=='privado'&&!AT.empresa.puedeSala(sala,'editar'))throw new Error('No puedes poner páginas en esa sala.');
+      a.sala=sala;a.empresa=AT.empresa.id();
+      return a;
+    });
+  },
+  /* Quién tiene acceso por la lista de la página, el propietario primero: [{id, nombre, correo, rol, estado, tu}]
+     (con salas, una página sin lista no tiene a nadie: la sala decide) */
   personas:function(doc){
     var a=doc&&doc.acceso,y=quienSoy();
-    if(!a||!a.dueno)return [{id:y.id,nombre:y.nombre,correo:y.correo,rol:'dueno',estado:'activo',tu:true}];
-    var l=[{id:a.dueno.id,nombre:a.dueno.nombre||'',correo:a.dueno.correo||'',rol:'dueno',estado:'activo',tu:mismaPersona(a.dueno,y)}];
-    (a.personas||[]).forEach(function(p){if(ROLES_ACC[p.rol]&&p.rol!=='dueno')l.push({id:p.id,nombre:p.nombre||'',correo:p.correo||'',rol:p.rol,estado:p.estado||'activo',desde:p.desde,tu:mismaPersona(p,y)})});
+    if(!a||!a.dueno)return conSalas()?[]:[{id:y.id,nombre:y.nombre,correo:y.correo,rol:'dueno',estado:'activo',tu:true}];
+    /* El nombre y el correo de hoy si la persona es de la empresa (la lista guarda los de cuando entró) */
+    function vivo(x){var e=AT.empresa&&x&&x.id?AT.empresa.persona(x.id):null;return e?{nombre:e.nombre||x.nombre||'',correo:e.correo||x.correo||''}:{nombre:x.nombre||'',correo:x.correo||''}}
+    var vd=vivo(a.dueno),l=[{id:a.dueno.id,nombre:vd.nombre,correo:vd.correo,rol:'dueno',estado:'activo',tu:mismaPersona(a.dueno,y)}];
+    (a.personas||[]).forEach(function(p){if(ROLES_ACC[p.rol]&&p.rol!=='dueno'){var v=vivo(p);l.push({id:p.id,nombre:v.nombre,correo:v.correo,rol:p.rol,estado:p.estado||'activo',desde:p.desde,tu:mismaPersona(p,y)})}});
     return l;
   },
   pendientes:function(doc){var a=doc&&doc.acceso;return a&&Array.isArray(a.solicitudes)?a.solicitudes.filter(function(s){return s.estado==='pendiente'}):[]},
   tuSolicitud:function(doc){var y=quienSoy();return acceso.pendientes(doc).filter(function(s){return mismaPersona(s.de,y)})[0]||null},
   /* Alguien de tu empresa (empresa.js) entra directo, sin invitación: usa este mismo navegador */
   dar:function(id,p,rol){
-    return cambiarAcceso(id,function(a){
-      exigir(a,'compartir');
+    return cambiarAcceso(id,function(a,d){
+      exigir(d,'compartir');
       if(!p||!/^u-[\w-]{4,40}$/.test(String(p.id)))throw new Error('Elige a una persona de tu empresa.');
       if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige un permiso.');
       if(mismaPersona(a.dueno,p))throw new Error('Esa persona es la propietaria de la página.');
@@ -878,8 +931,8 @@ var acceso={
     });
   },
   invitar:function(id,p){
-    return cambiarAcceso(id,function(a){
-      exigir(a,'compartir');
+    return cambiarAcceso(id,function(a,d){
+      exigir(d,'compartir');
       var correo=limpio(String(p&&p.correo||''),254).toLowerCase(),nombre=limpio(String(p&&p.nombre||''),60),rol=p&&p.rol;
       if(!correoValido(correo))throw new Error('Escribe un correo válido.');
       if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige un permiso.');
@@ -892,16 +945,16 @@ var acceso={
     });
   },
   cambiarRol:function(id,pid,rol){
-    return cambiarAcceso(id,function(a){
-      exigir(a,'compartir');
+    return cambiarAcceso(id,function(a,d){
+      exigir(d,'compartir');
       if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige un permiso.');
       var p=a.personas.filter(function(x){return x.id===pid})[0];if(!p)throw new Error('Esa persona ya no tiene acceso.');
       p.rol=rol;return p;
     });
   },
   quitar:function(id,pid){
-    return cambiarAcceso(id,function(a){
-      exigir(a,'compartir');
+    return cambiarAcceso(id,function(a,d){
+      exigir(d,'compartir');
       var n=a.personas.length;a.personas=a.personas.filter(function(x){return x.id!==pid});
       if(a.personas.length===n)throw new Error('Esa persona ya no tiene acceso.');
     });
@@ -920,10 +973,10 @@ var acceso={
   },
   /* Pedir un permiso (quien no administra la página): queda pendiente para los administradores */
   solicitar:function(id,p){
-    return cambiarAcceso(id,function(a){
+    return cambiarAcceso(id,function(a,d){
       var y=quienSoy(),rol=p&&p.rol;
       if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige qué permiso pides.');
-      if(nivelDe(rolAcceso(a,y))>=nivelDe(rol))throw new Error('Ya tienes ese permiso.');
+      if(nivelDe(rolPagina(d,y))>=nivelDe(rol))throw new Error('Ya tienes ese permiso.');
       var s=a.solicitudes.filter(function(x){return x.estado==='pendiente'&&mismaPersona(x.de,y)})[0];
       if(!s){s={id:idNuevo('s'),de:{id:y.id,nombre:y.nombre,correo:y.correo},estado:'pendiente'};a.solicitudes.push(s)}
       s.rol=rol;s.mensaje=limpio(String(p&&p.mensaje||''),300);s.fecha=ahora();
@@ -931,8 +984,8 @@ var acceso={
     });
   },
   responder:function(id,sid,aprobar){
-    return cambiarAcceso(id,function(a){
-      exigir(a,'compartir');
+    return cambiarAcceso(id,function(a,d){
+      exigir(d,'compartir');
       var s=a.solicitudes.filter(function(x){return x.id===sid})[0];
       if(!s||s.estado!=='pendiente')throw new Error('Esa solicitud ya se respondió.');
       s.estado=aprobar?'aprobada':'rechazada';s.resuelta=ahora();s.por=quienSoy().id;

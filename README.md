@@ -1,6 +1,6 @@
 # OneBook
 
-OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico y empresa, personas y departamentos, hechas; siguen las salas, el Inicio armable y la bienvenida para empresas).
+OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico; empresa, personas y departamentos, y salas, hechas; siguen el Inicio armable y la bienvenida para empresas).
 
 Lo académico de OneLearn (lecciones, rutas, proyectos, terminal simulada, libretas, apuntes y la tesis) se separó de OneBook el 25 de noviembre de 2026 (etapa E1). Queda completo en la historia de git: el último commit con todo es `b0e99c5` (y la etiqueta `onelearn-final`, `b4b9f6f`, es la versión de antes del cambio de nombre). Nadie pierde datos: ver «Lo de estudio que se separó» más abajo.
 
@@ -17,7 +17,8 @@ app.html                    Pestañas dentro de la app, como en un navegador: ca
                             La app instalada abre aquí; «Abrir en pestañas» (barra lateral) entra con la página actual
 entrar.html                 «Crea tu empresa»: tu empresa (nombre, giro, teléfono, tu nombre, «Tengo empleados»), sus
                             departamentos y las páginas para empezar; con ?editar cambia los módulos; también restaura un respaldo
-empresa.html                «Tu empresa»: las personas (rol, departamentos, PIN) y los departamentos (tuempresa.js, empresa.css)
+empresa.html                «Tu empresa»: las personas (rol, departamentos, PIN), los departamentos y las salas (tuempresa.js, empresa.css)
+sala.html                   Una sala (?id=sa-… o ?id=privado; ?nueva crea una): quién entra, sus páginas y sus herramientas (sala.js)
 inicio.html                 Inicio de la empresa: el nombre del negocio y la fecha, acciones rápidas, «Mi negocio» y «Tu equipo»,
                             tus páginas (explorador) y páginas listas para usar
 documento.html              Una página tuya (?id=...): editarla con el editor de bloques o leerla
@@ -45,7 +46,9 @@ assets/
                             (responsable, miembro, consulta), PIN, «Cambiar de persona», respaldo y la empresa automática
                             de los espacios de antes; en localStorage (AT.empresa, sin interfaz)
   js/persona.js             La ventana «¿Quién usa OneBook?» (cambiar de persona, con PIN) desde la barra lateral (AT.persona)
-  js/tuempresa.js           La página «Tu empresa»: datos, personas, departamentos y sus ventanas
+  js/tuempresa.js           La página «Tu empresa»: datos, personas, departamentos, salas y sus ventanas
+  js/sala.js                La página de una sala: quién entra, herramientas sugeridas, «Nueva página aquí», sus páginas y
+                            «Administrar sala» (departamentos que editan o solo ven, personas sueltas)
   css/empresa.css           Estilos de «Tu empresa» y los colores de los departamentos
   js/datos.js               Tus datos en IndexedDB: páginas, tus plantillas, la papelera, las bases de datos (bases y filas),
                             el historial de versiones, quién eres, permisos y presencia; respaldo e importación, también de
@@ -154,11 +157,22 @@ Etapa Empresas, E2. La empresa vive en `localStorage` (`aprende-tecnologia:empre
 - **Personas**: `{id:'u-…', nombre, correo, rol, deptos:{'dp-…': rol}, pin}`. Roles de la empresa: **propietario** (uno; puede pasar la empresa a otra persona), **administrador** (agrega y quita personas y departamentos) y **miembro**. En cada departamento: **responsable** (administra el departamento y su gente), **miembro** y **consulta**. El PIN (4 a 8 números) se guarda como huella (cyrb53 con el id), no a la vista.
 - **Quién eres**: la persona activa es la de `AT.datos.yo` (`aprende-tecnologia:yo`). «Cambiar de persona» (`persona.js`, desde el pie de la barra lateral) pide el PIN si la persona tiene uno, guarda lo pendiente de la página y la vuelve a cargar como la persona nueva (`AT.empresa.entrarComo` → `AT.datos.ponerYo`); las otras pestañas también se recargan. Así los permisos de cada página, la presencia y «Modificado por» ya son de esa persona. Si la computadora no sabe quién eres, el Inicio lo pregunta.
 - **«Tu empresa»** (`empresa.html`): quien administra agrega, cambia y quita personas y departamentos (pide confirmar lo que quita); el responsable de un departamento cambia su nombre, su color y su gente; un miembro ve todo y cambia solo su nombre, su correo y su PIN. El modelo revisa los mismos permisos (lanza un error con el motivo).
-- **Páginas**: en «Personas y permisos», quien administra una página le da acceso directo a **alguien de tu empresa** (`AT.datos.acceso.dar`, sin invitación). Una página sin lista de acceso la puede editar cualquiera; las salas (E3) ordenarán eso por departamento.
+- **Páginas**: en «Personas y permisos», quien administra una página le da acceso directo a **alguien de tu empresa** (`AT.datos.acceso.dar`, sin invitación).
 - **Recursos humanos**: la base Empleados tiene la columna **Departamento** (`em-depto`, selección con `origen:'departamentos'`): sus opciones son los departamentos (`AT.bases.opciones`), con su color, y renombrar un departamento cambia sus filas. Las bases de empleados de antes la reciben al usarse.
 - **Respaldo**: la empresa entra si aquí no hay (o solo la automática y tú estás en la del respaldo); la misma empresa se junta persona por persona y departamento por departamento (gana el cambio más reciente; lo quitado queda marcado y no revive); la de otra empresa no se junta.
 
 No es seguridad: sin servidor, quien tiene el navegador tiene los datos. Con la nube (F9), las cuentas y los permisos por fila harán cumplir este mismo modelo.
+
+## Salas
+
+Etapa Empresas, E3. Una sala es un espacio de trabajo con sus páginas; viven en la empresa (`empresa.salas`) y la sala de cada página en su acceso (`doc.acceso.sala`, con `doc.acceso.empresa`):
+
+- **General** (`sa-general`): toda la empresa la ve y la edita. **Una por departamento** (`sa-d…`, id sacado del departamento, igual en cualquier navegador; su nombre y su color son los del departamento): su responsable la administra, sus miembros editan y los de consulta ven. **Entre departamentos** (`sa-l…`): las crean quien administra la empresa y los responsables (quien la crea la administra). Cualquier sala agrega departamentos que editan o solo ven y personas sueltas (administra, edita o ve). Quien administra la empresa administra todas. Las salas se crean solas (`asegurarSalas`) con la empresa, con cada departamento y, en una empresa de antes, al cargar.
+- **El permiso de una página** (`datos.js`, `rolPagina`) es el mayor entre su lista (propietario, administrador, editor, lector) y su sala; la sala solo cuenta si la página es de esta empresa (una que llega del respaldo de otra empresa solo tiene su lista). En **Privado** solo entran su propietario y su lista. Las páginas de antes sin lista están en la General; las que ya tenían lista, en Privado.
+- **Lo que no ves no está**: la barra lateral, el explorador (con una ubicación por sala, Privado y la columna «Sala»), la búsqueda, «@» y los próximos vencimientos solo usan páginas que puedes ver; abrir una por su dirección dice «No tienes acceso» y deja pedirlo (`AT.permisos.abrir` con `pedir`).
+- **Crear**: «¿Dónde?» elige la sala (la de la página de sala o la ubicación del explorador, `AT.salaActual`, o la General; también Privado). Cada página nueva es de quien la crea (`AT.datos.acceso.nueva`); duplicar deja la copia en la misma sala. «⋯ › Mover a otra sala» (`AT.datos.acceso.mover`) la cambia, si puedes crear páginas en la sala de destino.
+- **La página de una sala** (`sala.html`): quién entra, herramientas sugeridas según el nombre del departamento (Ventas: nota de venta, corte de caja…), «Nueva página aquí» y sus páginas; «Administrar sala» para quien la administra. Una sala con páginas no se quita; quitar un departamento deja su sala (con sus páginas) como sala entre departamentos, con la misma gente.
+- **«Tu equipo»** (sueldos) nace en la sala de Recursos humanos si hay un departamento con ese nombre, o en Privado del propietario; la de antes pasa ahí una vez.
 
 ## Pestañas, bloques de la tienda y perfiles
 

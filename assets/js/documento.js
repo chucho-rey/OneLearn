@@ -227,6 +227,59 @@ function titulo(){
   document.title=t+' · OneBook';
   var c=$('.crumbs .cur');if(c)c.textContent=t;
 }
+/* ---------- Salas (E3): la sala de la página en la barra superior y «Mover a otra sala» ---------- */
+function salaInfo(){
+  var A=AT.datos.acceso,sa=A&&A.sala?A.sala(doc):'';
+  if(!sa)return null;
+  if(sa==='privado')return {id:'privado',nombre:'Privado'};
+  var s=AT.empresa&&AT.empresa.sala(sa);
+  return s?{id:sa,nombre:s.tipo==='general'?'General':s.nombre}:{id:sa,nombre:'Sala que ya no existe'};
+}
+function salaTexto(){var s=salaInfo();return s?'Ahora: '+s.nombre:''}
+function pintarSala(){
+  var s=salaInfo(),g=$('.crumbs>:first-child');
+  if(!s||!g||g.classList.contains('cur'))return;
+  var a=document.createElement('a');a.className='crumb-sala';a.href='sala.html?id='+encodeURIComponent(s.id);a.textContent=s.nombre;
+  g.replaceWith(a);
+  if(AT.pintarSalas)AT.pintarSalas();
+}
+function moverSala(){
+  var E=AT.empresa,A=AT.datos.acceso,actual=A.sala(doc);
+  var ls=E.salas().filter(function(x){return E.puedeSala(x.id,'editar')});
+  var d=document.createElement('dialog');
+  d.className='atajos doc-mover';d.setAttribute('aria-labelledby','docMovT');
+  d.innerHTML='<div class="at-h"><h2 id="docMovT">Mover a otra sala</h2><button class="lec-x" type="button" data-cerrar aria-label="Cerrar">'+ico('close')+'</button></div>'+
+    '<form novalidate><p class="td-p">La página la ven y la editan las personas de la sala. En Privado, solo tú y quien esté en su lista.</p>'+
+    '<label class="campo-l"><span>Sala</span><select name="sala">'+ls.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===actual?' selected':'')+'>'+esc(x.tipo==='general'?'General (toda la empresa)':x.nombre)+'</option>'}).join('')+
+    '<option value="privado"'+(actual==='privado'?' selected':'')+'>Privado (solo tú y su lista)</option></select></label>'+
+    '<div class="td-bt"><button class="btn pri" type="submit">Mover</button><button class="btn" type="button" data-cerrar>Cancelar</button></div>'+
+    '<p class="td-msg" role="status"></p></form>';
+  document.body.appendChild(d);
+  d.addEventListener('click',function(e){if(e.target===d||e.target.closest('[data-cerrar]'))d.close()});
+  d.addEventListener('close',function(){d.remove();masBtn.focus({preventScroll:true})});
+  $('form',d).addEventListener('submit',function(e){
+    e.preventDefault();var sa=e.target.elements.sala.value,m=$('.td-msg',d);
+    if(sa===actual){d.close();return}
+    A.mover(ID,sa).then(function(a){
+      doc.acceso=a;d.close();pintarSala();
+      var s=salaInfo();AT.aviso('La página está ahora en '+(s.id==='privado'?'Privado':'la sala «'+s.nombre+'»')+'.');
+    },function(err){m.textContent=err&&err.message||'No se pudo mover.';m.classList.add('err')});
+  });
+  d.showModal();$('select',d).focus();
+}
+/* Quien no tiene acceso (una página de una sala donde no estás, o privada) no la ve: solo puede pedir acceso */
+function sinAccesoVista(){
+  var A=AT.datos.acceso,s=salaInfo(),pend=A.tuSolicitud(doc);
+  modoBtn.hidden=favBtn.hidden=masBtn.hidden=true;
+  page.innerHTML='<div class="page-icon">'+ico('candado')+'</div><h1>No tienes acceso a esta página</h1>'+
+    '<p>'+(s&&s.id!=='privado'?'Está en la sala «'+esc(s.nombre)+'»: la ven las personas que la sala deja entrar.':'Es una página privada: solo la ven las personas de su lista.')+
+    (pend?' Ya pediste «'+esc(A.nombreRol(pend.rol))+'»: está pendiente.':' Puedes pedirle acceso a quien la administra.')+'</p>'+
+    '<p><button class="btn pri" type="button" id="docPedirAcceso">'+(pend?'Ver tu solicitud':'Pedir acceso')+'</button> <a class="btn" href="inicio.html">Ir al inicio</a></p>';
+  document.title='Sin acceso · OneBook';
+  var c=$('.crumbs .cur');if(c)c.textContent='Sin acceso';
+  $('#docPedirAcceso').addEventListener('click',function(){if(AT.permisos)AT.permisos.abrir(ID,this,{pedir:'lector'})});
+  ponerEstado('Sin acceso','');
+}
 
 /* ---------- Más opciones ---------- */
 masBtn.addEventListener('click',function(){
@@ -242,6 +295,10 @@ masBtn.addEventListener('click',function(){
     {t:doc&&doc.favorito?'Quitar de favoritas':'Agregar a favoritas',i:'estrella',f:favorita},
     {t:doc&&doc.anchoCompleto?'Ancho normal':'Ancho completo',i:'ancho',d:doc&&doc.anchoCompleto?'Vuelve a la columna de siempre':'Usa todo el ancho de la pantalla',f:anchoCompleto},
     {t:'Personas y permisos',i:'users',d:permisoTexto(),f:function(){if(AT.permisos)AT.permisos.abrir(ID,masBtn)}},
+  ],AT.datos.acceso&&AT.datos.acceso.sala&&AT.datos.acceso.sala(doc)&&AT.datos.acceso.puede(doc,'compartir')?[
+    {t:'Mover a otra sala',i:'cambiar',d:salaTexto(),f:function(){setTimeout(moverSala,0)}}
+  ]:[],[
+
     {t:'Historial de versiones',i:'historial',d:'Ver, comparar y recuperar lo de antes',f:function(){if(AT.versionesUI)AT.versionesUI.abrir(masBtn)}},
     {t:'Guardar como plantilla',i:'crear',d:'Para crear páginas iguales desde «Crear»',f:comoPlantilla},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
@@ -274,6 +331,9 @@ function duplicar(){
     c.id='d-'+AT.bloques.nuevoId().slice(2)+AT.bloques.nuevoId().slice(4);
     c.titulo='Copia de '+(doc.titulo||'Sin título');
     delete c.creado;delete c.favorito;
+    /* Con salas, la copia es de quien la hace, en la misma sala (si puede crear páginas ahí) */
+    var na=AT.datos.acceso.nueva&&AT.datos.acceso.nueva(AT.datos.acceso.sala(doc));
+    if(na){c.acceso=na;delete c.editadoPor}
     return AT.datos.documentos.guardar(c);
   }).then(function(c){location.href='documento.html?id='+encodeURIComponent(c.id)});
 }
@@ -417,8 +477,9 @@ AT.datos.documentos.leer(ID).then(function(d){
   if(!d||!d.contenido){noEncontrado();return}
   doc=d;
   if(!doc.props)doc.props=[];
+  if(AT.datos.acceso&&!(AT.datos.deEstudio&&AT.datos.deEstudio(doc))&&!AT.datos.acceso.puede(doc,'ver')){sinAccesoVista();return}
   AT.docActual=doc;AT.docCambio=cambio;
-  titulo();
+  titulo();pintarSala();
   /* Una página de estudio (lo que se separó de OneBook) solo se lee */
   deEstudio=!!(AT.datos.deEstudio&&AT.datos.deEstudio(doc));
   sinPermiso=deEstudio||!!(AT.datos.acceso&&!AT.datos.acceso.puede(doc,'editar'));
