@@ -1,7 +1,8 @@
 /* OneBook: página de un documento tuyo (documento.html?id=...).
    Dos modos: «Editar» (título, propiedades y el editor de bloques, con autoguardado) y «Leer» (el documento
    dibujado igual que una lección, con su índice, repaso interactivo y modo zen). Desde «⋯» se puede
-   descargar como Markdown, duplicar o eliminar (con «Deshacer»).
+   descargar como Markdown, duplicar o eliminar (con «Deshacer») y abrir el historial de versiones
+   (versiones.js; cada guardado se lo cuenta a AT.datos.versiones, y AT.docVersiones restaura o recupera).
    Usa AT.datos (datos.js), AT.bloques (bloques.js) y AT.editor (editor.js). */
 (function(){
 'use strict';
@@ -78,6 +79,8 @@ function guardar(){
   return AT.datos.documentos.guardar(doc).then(function(d){
     doc.editado=d.editado;doc.creado=d.creado;
     if(n===guardando&&!pendiente)ponerEstado('Guardado','ok');
+    /* El historial decide si este guardado merece una versión (cada 5 minutos o antes de un borrado grande) */
+    if(AT.datos.versiones&&!bloqueado)AT.datos.versiones.observar(doc);
     if(AT.proteger&&academico())AT.proteger.guardado(doc);
   },function(){
     ponerEstado('No se pudo guardar','err');
@@ -88,10 +91,16 @@ function cambio(){
   ponerEstado('Sin guardar');
   clearTimeout(timer);timer=setTimeout(guardar,600);
 }
-addEventListener('pagehide',function(){if(pendiente||timer){if(ed)doc.contenido=ed.json();guardar()}});
+/* Al salir (o al cambiar de pestaña) se guarda lo pendiente y, si cambió algo desde la última versión, una nueva */
+function alSalir(){
+  if(!doc||bloqueado)return;
+  if(pendiente||timer){if(ed)doc.contenido=ed.json();guardar()}
+  if(AT.datos.versiones)AT.datos.versiones.tomar(doc);
+}
+addEventListener('pagehide',alSalir);
 /* Para el contenedor de pestañas: guarda ya lo pendiente (antes de cerrar o descargar la pestaña) */
 AT.docGuardarYa=function(){return (pendiente||timer)?guardar():Promise.resolve()};
-document.addEventListener('visibilitychange',function(){if(document.hidden&&(pendiente||timer))guardar()});
+document.addEventListener('visibilitychange',function(){if(document.hidden)alSalir()});
 
 /* ---------- Modo «Editar» ---------- */
 function autoAlto(t){t.style.height='auto';t.style.height=t.scrollHeight+'px'}
@@ -277,6 +286,7 @@ masBtn.addEventListener('click',function(){
   ],academico()||!AT.entrega?[]:[{t:'Imprimir o guardar como PDF',i:'page',d:'Con números de página',f:abrirEntregar}],[
     {t:doc&&doc.favorito?'Quitar de favoritas':'Agregar a favoritas',i:'estrella',f:favorita},
     {t:doc&&doc.anchoCompleto?'Ancho normal':'Ancho completo',i:'ancho',d:doc&&doc.anchoCompleto?'Vuelve a la columna de siempre':'Usa todo el ancho de la pantalla',f:anchoCompleto},
+    {t:'Historial de versiones',i:'historial',d:'Ver, comparar y recuperar lo de antes',f:function(){if(AT.versionesUI)AT.versionesUI.abrir(masBtn)}},
     {t:'Guardar como plantilla',i:'crear',d:'Para crear páginas iguales desde «Crear»',f:comoPlantilla},
     {t:'Duplicar documento',i:'copiar',f:duplicar},
     {sep:true},
@@ -459,6 +469,7 @@ AT.datos.documentos.leer(ID).then(function(d){
   if(tipo().academico&&!Array.isArray(doc.fuentes))doc.fuentes=[];
   AT.docActual=doc;AT.docCambio=cambio;
   titulo();
+  if(AT.datos.versiones)AT.datos.versiones.abrir(doc);
   modoBtn.hidden=masBtn.hidden=favBtn.hidden=false;
   pintarFav();pintarAncho();
   var nuevo=false;
@@ -478,6 +489,60 @@ AT.datos.documentos.leer(ID).then(function(d){
     if(b)b.scrollIntoView({block:'start'});
   }
 },function(){noEncontrado()});
+
+/* ---------- Historial de versiones: restaurar una versión o recuperar un bloque (versiones.js) ---------- */
+/* Lo que una versión no cambia de la página: su id, su fecha de creación, si es favorita y el registro de autoría */
+var CONSERVAR=['id','creado','favorito','anchoCompleto','autoria'];
+function contenidoAhora(){if(ed)doc.contenido=ed.json();return doc}
+/* Vuelve a pintar la página con lo que tiene doc (sin pasar el editor viejo encima) */
+function repintar(){
+  if(ed){if(registro){registro.desactivar();registro=null}ed.destruir();ed=null}
+  AT.docActual=doc;pintarFav();pintarAncho();titulo();
+  ponerModo(modo,false,true);
+}
+AT.docVersiones={
+  doc:function(){return doc?contenidoAhora():null},
+  puede:function(){return !!doc&&!bloqueado},
+  /* Restaura una versión completa; antes guarda la página como está (versión «Antes de restaurar») */
+  restaurar:function(vdoc){
+    if(!doc||bloqueado)return Promise.reject(new Error('Esta página está abierta en otra pestaña'));
+    contenidoAhora();clearTimeout(timer);timer=null;pendiente=false;
+    return AT.datos.versiones.tomar(doc,{motivo:'restaurar'}).then(function(antes){
+      var nuevo={};
+      CONSERVAR.forEach(function(k){if(doc[k]!==undefined)nuevo[k]=doc[k]});
+      Object.keys(vdoc).forEach(function(k){if(CONSERVAR.indexOf(k)<0&&k!=='editado')nuevo[k]=JSON.parse(JSON.stringify(vdoc[k]))});
+      if(!nuevo.props)nuevo.props=[];
+      if(tipo().academico&&!Array.isArray(nuevo.fuentes))nuevo.fuentes=[];
+      Object.keys(doc).forEach(function(k){delete doc[k]});
+      Object.keys(nuevo).forEach(function(k){doc[k]=nuevo[k]});
+      repintar();
+      return guardar().then(function(){return antes});
+    });
+  },
+  /* Recupera un bloque de una versión: si la página todavía lo tiene (reemplazar), vuelve a como estaba; si no,
+     entra después del bloque que lo precedía (o al principio) */
+  recuperarBloque:function(b,op){
+    op=op||{};
+    if(!doc||bloqueado)return Promise.reject(new Error('Esta página está abierta en otra pestaña'));
+    contenidoAhora();
+    var c=doc.contenido.content||(doc.contenido.content=[]),blk=JSON.parse(JSON.stringify(b));
+    var id=blk.attrs&&blk.attrs.id,i=-1;
+    c.forEach(function(x,k){if(id&&x.attrs&&x.attrs.id===id)i=k});
+    if(i>=0&&op.reemplazar)c[i]=blk;
+    else{
+      if(i>=0&&blk.attrs)blk.attrs.id=AT.bloques.nuevoId();
+      var j=-1;
+      if(op.despuesDe)c.forEach(function(x,k){if(x.attrs&&x.attrs.id===op.despuesDe)j=k});
+      c.splice(j>=0?j+1:(op.despuesDe?c.length:0),0,blk);
+    }
+    repintar();
+    return guardar().then(function(){
+      var el=document.getElementById(blk.attrs&&blk.attrs.id)||document.querySelector('[data-id="'+(blk.attrs&&blk.attrs.id)+'"]');
+      if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'});
+      return blk;
+    });
+  }
+};
 
 /* ---------- La misma página en dos pestañas (de la app o del navegador) ----------
    Al abrir un documento se avisa a las demás. La que ya lo tenía guarda lo pendiente y queda solo para leer,
