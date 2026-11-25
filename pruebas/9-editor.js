@@ -1,6 +1,6 @@
-/* Hito 2.3: «Crear» y el editor. Creas una libreta con secciones, callouts, una tabla y preguntas de repaso,
-   y se ve como una lección oficial. También: autoguardado, deshacer, mover y duplicar bloques, menú «/»,
-   asa «+», barra con teclado, Markdown, duplicar, eliminar con «Deshacer», notas, apuntes de clase y zen. */
+/* Hito 2.3: «Crear» y el editor. Creas una página con secciones, un callout, una tabla, un resumen y el índice, y al
+   leerla se ve igual. También: autoguardado, deshacer, mover y duplicar bloques, menú «/», asa «+», barra con
+   teclado, Markdown, duplicar, eliminar con «Deshacer», propiedades, pendientes del día y zen. */
 'use strict';
 const fs=require('fs');
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
@@ -14,32 +14,35 @@ async function esperarGuardado(p){await p.waitForFunction(function(){return docu
 prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   const p=await pagina(browser,{ancho:1280,alto:900});
   await p.goto(base+'inicio.html');await listo(p);
-  r.cumple(/Crea una libreta/.test(await p.textContent('#xp')),'el inicio invita a crear el primer documento');
+  r.cumple(/Todavía no tienes páginas/.test(await p.textContent('#xp')),'el inicio invita a crear la primera página');
 
   /* ---------- La ventana «¿Qué quieres crear?» ---------- */
   await p.click('.xp-nuevo');await p.waitForTimeout(300);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.crear-dlg').open}),'«+ Crear» del inicio abre la pregunta');
-  const opciones=await p.$$eval('.crear-g[data-modulo="estudio"] .crear-o b',function(e){return e.map(function(x){return x.textContent})});
-  r.igual(opciones.join(' | '),'Libreta de estudio | Notas | Apuntes de clase | Tesis','se ofrecen libreta, notas, apuntes de clase y tesis');
-  r.cumple(await p.evaluate(function(){var g=[].slice.call(document.querySelectorAll('.crear-g'));return g.map(function(x){return x.getAttribute('data-modulo')}).join()==='estudio,negocio,paquetes,finanzas'&&
-    /Corte de caja/.test(g[1].textContent)&&/Préstamo o crédito/.test(g[3].textContent)}),
-    'quien usaba OneLearn también tiene las plantillas de negocio, de finanzas y los paquetes, en sus grupos');
-  r.cumple(/Libro/.test(await p.textContent('.crear-p'))&&!/Tesis/.test(await p.textContent('.crear-p')),'libro, investigación y los demás se anuncian para después; la tesis ya no')
-  r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'libreta','el foco empieza en la primera opción');
+  const grupos=await p.evaluate(function(){return [].slice.call(document.querySelectorAll('.crear-g')).map(function(x){return x.getAttribute('data-modulo')}).join()});
+  r.igual(grupos,'negocio,paquetes','la galería tiene las plantillas del negocio y los paquetes por giro');
+  const todo=await p.textContent('dialog.crear-dlg');
+  r.cumple(/Notas/.test(todo)&&/Corte de caja/.test(todo)&&/Préstamo o crédito/.test(todo)&&/Presupuesto del mes/.test(todo),'las notas, los bloques de la tienda, el préstamo y el presupuesto están en «Para tu negocio»');
+  r.cumple(!/Libreta|Tesis|Apuntes de clase|Finanzas del mes|Me deben|Libro|Freelance/.test(todo),'ya no hay plantillas de estudio, de finanzas personales ni el paquete freelance');
+  r.cumple(/Cotización/.test(await p.textContent('.crear-p'))&&/Presentación/.test(await p.textContent('.crear-p')),'la cotización y la presentación se anuncian para después');
+  r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'notas','el foco empieza en la primera opción');
   await revisar(p,r,'ventana Crear en escritorio');
   await p.keyboard.press('Escape');await p.waitForTimeout(200);
   r.cumple(await p.evaluate(function(){return !document.querySelector('dialog.crear-dlg').open&&document.activeElement.hasAttribute('data-crear')}),'Esc cierra y el foco vuelve a «Nuevo»');
 
-  /* ---------- Crear una libreta ---------- */
+  /* ---------- Crear una página ---------- */
   await p.click('#sideCrear');await p.waitForTimeout(200);
-  await Promise.all([p.waitForURL(/documento\.html\?id=d-/),p.click('[data-tipo="libreta"]')]);await listo(p,500);
-  r.cumple(await p.evaluate(function(){var t=document.activeElement;return t.id==='docTitulo'&&t.selectionStart===0&&t.selectionEnd===t.value.length}),'la libreta nueva abre con el título seleccionado para escribirlo');
-  await p.keyboard.type('Fotosíntesis');
+  await Promise.all([p.waitForURL(/documento\.html\?id=d-/),p.click('[data-tipo="notas"]')]);await listo(p,500);
+  r.cumple(await p.evaluate(function(){var t=document.activeElement;return t.id==='docTitulo'&&t.selectionStart===0&&t.selectionEnd===t.value.length}),'la página nueva abre con el título seleccionado para escribirlo');
+  await p.keyboard.type('Plan de ventas');
   await p.keyboard.press('Enter');
-  await p.keyboard.type('Luz y clorofila');
-  r.igual(await p.evaluate(function(){var s=window.getSelection();return s.anchorNode&&s.anchorNode.parentElement.closest('h2')?'h2':'otro'}),'h2','Enter en el título lleva a la primera sección');
+  r.igual(await p.evaluate(function(){var s=window.getSelection();return s.anchorNode&&(s.anchorNode.nodeType===1?s.anchorNode:s.anchorNode.parentElement).closest('.ed-cuerpo p')?'p':'otro'}),'p','Enter en el título lleva al texto');
+  /* Un título de sección con «/» */
+  await p.keyboard.type('/seccion');await p.waitForTimeout(250);await p.keyboard.press('Enter');await p.waitForTimeout(150);
+  await p.keyboard.type('Metas del trimestre');
+  r.igual(await p.evaluate(function(){var s=window.getSelection();return s.anchorNode&&s.anchorNode.parentElement.closest('h2')?'h2':'otro'}),'h2','«/» convierte el renglón en título de sección');
   await p.keyboard.press('Enter');
-  await p.keyboard.type('La planta convierte la luz en energía química.');
+  await p.keyboard.type('Queremos vender más en diciembre con la nueva línea.');
   /* Negrita con el teclado y la barra lo refleja */
   await p.keyboard.down('Shift');for(let i=0;i<8;i++)await p.keyboard.press('ArrowLeft');await p.keyboard.up('Shift');
   await p.waitForTimeout(250);
@@ -53,34 +56,32 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.igual(menu.join(','),'Callout de aviso','«/» abre el menú y filtra mientras escribes');
   r.cumple(await p.evaluate(function(){var d=document.querySelector('.ed-cuerpo');return !!d.getAttribute('aria-activedescendant')}),'el menú «/» indica la opción activa a los lectores de pantalla');
   await p.keyboard.press('Enter');await p.waitForTimeout(150);
-  await p.keyboard.type('No olvides la clorofila.');
+  await p.keyboard.type('Revisa el inventario antes de prometer entregas.');
   r.cumple(!/\/avi/.test(await p.textContent('.ed-cuerpo')),'elegir en el menú borra lo que escribiste después de «/»');
   await p.keyboard.press('ArrowDown');await p.waitForTimeout(60);
   await p.keyboard.type('/tabla');await p.waitForTimeout(250);await p.keyboard.press('Enter');await p.waitForTimeout(150);
-  await p.keyboard.type('Fase');await p.keyboard.press('Tab');await p.keyboard.type('Dónde ocurre');
-  await p.keyboard.press('Tab');await p.keyboard.type('Producto');await p.keyboard.press('Tab');
-  await p.keyboard.type('Luminosa');await p.keyboard.press('Tab');await p.keyboard.type('Tilacoides');
+  await p.keyboard.type('Producto');await p.keyboard.press('Tab');await p.keyboard.type('Meta');
+  await p.keyboard.press('Tab');await p.keyboard.type('Responsable');await p.keyboard.press('Tab');
+  await p.keyboard.type('Café de olla');await p.keyboard.press('Tab');await p.keyboard.type('300');
   r.cumple(await p.isVisible('.tb-btn[data-k="tabla"]'),'dentro de una tabla, la barra muestra sus opciones');
-  /* Preguntas de repaso con su formulario */
-  const rep='.ed-repaso';
-  await p.fill(rep+' textarea[data-c="q"]','¿Dónde ocurre la fase luminosa?');
-  await p.fill(rep+' input[data-c="o"][data-j="0"]','En las mitocondrias');
-  await p.fill(rep+' input[data-c="o"][data-j="1"]','En los tilacoides');
-  await p.check(rep+' input[data-c="a"][data-j="1"]');
-  await p.click(rep+' [data-acc="op"]');
-  r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-j')==='2'}),'«+ Opción» agrega una opción y la enfoca');
-  await p.keyboard.type('En el núcleo');
-  await p.fill(rep+' input[data-c="e"]','Los tilacoides tienen la clorofila.');
-  /* Resumen */
-  await p.click('.ed-cuerpo .resumen li');await p.keyboard.type('La luz se vuelve energía química.');
+  /* Lo de estudio ya no se ofrece en «/» */
+  await p.click('.ed-cuerpo h2');await p.keyboard.press('End');await p.keyboard.press('Enter');await p.waitForTimeout(60);
+  await p.keyboard.type('/repaso');await p.waitForTimeout(250);
+  r.cumple(!/Preguntas de repaso/.test(await p.textContent('.menu-barra')),'«/» ya no ofrece preguntas de repaso',await p.textContent('.menu-barra'));
+  await p.keyboard.press('Escape');for(let i=0;i<7;i++)await p.keyboard.press('Backspace');
+  /* Resumen e índice, al final */
+  await p.click('.ed-cuerpo .callout p');await p.keyboard.press('End');
+  await p.keyboard.press('ArrowDown');await p.keyboard.press('ArrowDown');await p.keyboard.press('ArrowDown');await p.waitForTimeout(60);
+  await p.evaluate(function(){var ed=AT.editorActual.tiptap;ed.commands.focus('end')});
+  await p.keyboard.type('/resumen');await p.waitForTimeout(250);await p.keyboard.press('Enter');await p.waitForTimeout(150);
+  await p.keyboard.type('Más ventas con buen inventario.');
+  await p.evaluate(function(){var ed=AT.editorActual.tiptap;ed.chain().focus('end').insertContent({type:'indice'}).run()});
   await esperarGuardado(p);
   let d=await docGuardado(p);
   const t=tipos(d);
-  r.cumple(d.titulo==='Fotosíntesis'&&['indice','heading','paragraph','callout','table','repaso','resumen'].every(function(x){return t.indexOf(x)>=0}),'se guarda solo: título, secciones, callout, tabla, repaso y resumen',t);
+  r.cumple(d.titulo==='Plan de ventas'&&['indice','heading','paragraph','callout','table','resumen'].every(function(x){return t.indexOf(x)>=0}),'se guarda solo: título, secciones, callout, tabla, resumen e índice',t);
   const cal=d.contenido.content.filter(function(b){return b.type==='callout'})[0];
   r.igual(cal&&cal.attrs.variante,'aviso','el callout guarda su variante');
-  const q=d.contenido.content.filter(function(b){return b.type==='repaso'})[0].attrs.preguntas[0];
-  r.cumple(q.q==='¿Dónde ocurre la fase luminosa?'&&q.o.length===3&&q.a===1&&q.e,'la pregunta guarda texto, opciones, respuesta y explicación',q);
   const ids=d.contenido.content.map(function(b){return b.attrs&&b.attrs.id});
   r.cumple(ids.every(Boolean)&&new Set(ids).size===ids.length,'cada bloque tiene un identificador propio');
   const negrita=JSON.stringify(d.contenido.content).indexOf('"type":"bold"')>=0;
@@ -135,24 +136,22 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   await p.keyboard.press('Tab');
   r.cumple(await p.evaluate(function(){return !!document.activeElement.closest('.ed-cuerpo')}),'un solo Tab sale de la barra al texto');
 
-  /* Mis apuntes muestra el documento */
-  await p.click('#tab-apuntes');await p.waitForTimeout(300);
-  r.cumple(/Fotosíntesis/.test(await p.textContent('#docsLista .nv.on')),'Mis apuntes lista el documento y marca el abierto');
+  /* La barra lateral lista la página y marca la abierta */
+  await p.waitForTimeout(500);
+  r.cumple(/Plan de ventas/.test(await p.textContent('#docsLista .nv.on')),'«Tus páginas» lista la página y marca la abierta');
 
-  /* ---------- Se ve como una lección ---------- */
+  /* ---------- Al leer se ve igual ---------- */
   await esperarGuardado(p);
   await p.click('#docModo');await p.waitForTimeout(400);
   const lec=await p.evaluate(function(){
     const pg=document.querySelector('#docPage');
     return {h1:pg.querySelector('h1').textContent,toc:pg.querySelectorAll('.toc li').length,aviso:!!pg.querySelector('.callout.aviso'),
-      tabla:pg.querySelectorAll('.tbl-wrap table thead th').length,preguntas:pg.querySelectorAll('#qz .q').length,resumen:!!pg.querySelector('.resumen .callout li'),
+      tabla:pg.querySelectorAll('.tbl-wrap table thead th').length,resumen:!!pg.querySelector('.resumen .callout li'),
       editor:!!pg.querySelector('.ProseMirror'),materia:!!pg.querySelector('.props')};
   });
-  r.cumple(lec.h1==='Fotosíntesis'&&lec.toc===2&&lec.aviso&&lec.tabla===3&&lec.preguntas===1&&lec.resumen&&!lec.editor,'«Leer» lo dibuja como una lección: índice, callout, tabla, repaso y resumen',lec);
+  r.cumple(lec.h1==='Plan de ventas'&&lec.toc===1&&lec.aviso&&lec.tabla===3&&lec.resumen&&!lec.editor,'«Leer» la dibuja: índice, callout, tabla y resumen',lec);
   r.cumple(!lec.materia,'las propiedades vacías no se muestran al leer');
-  await p.click('#qz .qo:nth-child(3)');
-  r.cumple(/Correcto/.test(await p.textContent('#qz .expl')),'el repaso se puede responder');
-  await revisar(p,r,'libreta en modo lectura');
+  await revisar(p,r,'página en modo lectura');
   await p.reload();await listo(p,400);
   r.cumple(await p.evaluate(function(){return !document.querySelector('.ProseMirror')&&!!document.querySelector('#docPage h1')}),'al volver, se abre en el último modo usado');
   await p.keyboard.press('e');await p.waitForTimeout(300);
@@ -167,45 +166,45 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.cumple(!await p.$('.zen-bar [data-z="nota"]'),'sin «nota rápida» en la barra zen de un documento');
   await p.keyboard.press('Escape');await p.waitForTimeout(200);
   r.cumple(await p.evaluate(function(){return !document.documentElement.classList.contains('zen')}),'Esc sale del modo zen');
-  await revisar(p,r,'libreta en modo edición');
+  await revisar(p,r,'página en modo edición');
 
   /* ---------- Markdown, duplicar y eliminar ---------- */
   await p.click('#docMas');await p.waitForTimeout(150);
   const [md]=await Promise.all([p.waitForEvent('download'),p.click('.menu-i:has-text("Markdown")')]);
   const ruta=await md.path();const texto=fs.readFileSync(ruta,'utf8');
-  r.cumple(md.suggestedFilename()==='fotosintesis.md'&&/^# Fotosíntesis/.test(texto)&&/## Luz y clorofila/.test(texto)&&/\*\*Aviso:\*\*/.test(texto)&&/\| Fase \| Dónde ocurre \| Producto \|/.test(texto)&&/\(correcta\)/.test(texto),
-    'se descarga como Markdown con secciones, callout, tabla y repaso',texto.slice(0,300));
+  r.cumple(md.suggestedFilename()==='plan-de-ventas.md'&&/^# Plan de ventas/.test(texto)&&/## Metas del trimestre/.test(texto)&&/\*\*Aviso:\*\*/.test(texto)&&/\| Producto \| Meta \| Responsable \|/.test(texto)&&/## Resumen/.test(texto),
+    'se descarga como Markdown con secciones, callout, tabla y resumen',texto.slice(0,300));
   await p.click('#docMas');await p.waitForTimeout(150);
   /* La copia se abre en otro documento.html: se espera una URL distinta de la actual */
   const original=p.url();
   await Promise.all([p.waitForURL(function(u){return u.href.indexOf(base)===0&&/documento/.test(u.href)&&u.href!==original}),p.click('.menu-i:has-text("Duplicar")')]);await listo(p,400);
-  r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Duplicar» crea una copia y la abre');
+  r.cumple(/^Copia de Plan de ventas/.test(await p.evaluate(function(){return document.title})),'«Duplicar» crea una copia y la abre');
   await p.click('#docMas');await p.click('.menu-i:has-text("Mover a la papelera")');await p.waitForTimeout(150);
   r.cumple(await p.evaluate(function(){return document.activeElement.getAttribute('data-el')==='no'}),'mover a la papelera pide confirmación con el foco en «Cancelar»');
   await Promise.all([p.waitForURL(/inicio\.html/),p.click('[data-el="si"]')]);await listo(p,300);
-  r.cumple(/«Copia de Fotosíntesis» se movió a la papelera/.test(await p.textContent('#avisoApp')),'al eliminar, el inicio avisa que está en la papelera y ofrece deshacer');
+  r.cumple(/«Copia de Plan de ventas» se movió a la papelera/.test(await p.textContent('#avisoApp')),'al eliminar, el inicio avisa que está en la papelera y ofrece deshacer');
   r.cumple((await p.$$('#xpLista [data-fila]')).length===1,'el inicio lista los documentos que quedan');
   await Promise.all([p.waitForURL(/documento\.html/),p.click('#avisoApp .btn')]);await listo(p,300);
-  r.cumple(/^Copia de Fotosíntesis/.test(await p.evaluate(function(){return document.title})),'«Deshacer» la saca de la papelera');
+  r.cumple(/^Copia de Plan de ventas/.test(await p.evaluate(function(){return document.title})),'«Deshacer» la saca de la papelera');
   r.cumple(p.errores.length===0,'sin errores en escritorio',p.errores);
   await cerrar(p);
 
-  /* ---------- Notas y apuntes de clase, en celular ---------- */
+  /* ---------- Pendientes del día y propiedades, en celular ---------- */
   const c=await pagina(browser,{ancho:390,alto:844,movil:true});
   await c.goto(base+'inicio.html');await listo(c);
   await c.tap('[data-crear]');await c.waitForTimeout(300);
   await revisar(c,r,'ventana Crear en celular');
-  await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="clase"]')]);await listo(c,500);
-  const clase=await c.evaluate(function(){return {props:Array.from(document.querySelectorAll('.dp-n')).map(function(x){return x.value}),tareas:!!document.querySelector('.ed-cuerpo ul.tareas'),h2:Array.from(document.querySelectorAll('.ed-cuerpo h2')).map(function(h){return h.textContent})}});
-  r.cumple(clase.props.join()==='Materia,Profesor,Fecha'&&clase.tareas&&clase.h2.indexOf('Tareas')>=0,'los apuntes de clase traen materia, profesor, fecha y tareas',clase);
-  await c.fill('.dp-fila:nth-child(1) .dp-v','Biología');
-  await c.tap('.ed-cuerpo ul.tareas li p');await c.keyboard.type('Leer el capítulo 3');
+  await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="pendientes"]')]);await listo(c,500);
+  const pend=await c.evaluate(function(){return {tareas:document.querySelectorAll('.ed-cuerpo ul.tareas').length,h2:Array.from(document.querySelectorAll('.ed-cuerpo h2')).map(function(h){return h.textContent})}});
+  r.cumple(pend.tareas===3&&pend.h2.join()==='Al abrir,Durante el día,Al cerrar','«Pendientes del día» trae sus tres listas de tareas',pend);
+  await c.tap('[data-dp="agregar"]');await c.waitForTimeout(100);
+  await c.keyboard.type('Sucursal');await c.fill('.dp-fila:nth-child(1) .dp-v','Centro');
   await c.tap('.ed-cuerpo ul.tareas li input');
   await esperarGuardado(c);
-  await revisar(c,r,'apuntes de clase en celular');
+  await revisar(c,r,'pendientes del día en celular');
   await c.tap('#docModo');await c.waitForTimeout(300);
-  r.cumple(/Biología/.test(await c.textContent('.props'))&&await c.$('li.tarea.hecha'),'al leer, la materia y la tarea hecha se muestran');
-  await revisar(c,r,'apuntes de clase al leer en celular');
+  r.cumple(/Centro/.test(await c.textContent('.props'))&&await c.$('li.tarea.hecha'),'al leer, la propiedad y la tarea hecha se muestran');
+  await revisar(c,r,'pendientes del día al leer en celular');
   await c.goto(base+'inicio.html');await listo(c);
   await c.tap('[data-crear]');await c.waitForTimeout(200);
   await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="notas"]')]);await listo(c,500);
@@ -230,8 +229,8 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
     const v=await pagina(browser,{ancho:ancho,ajustes:{escala:escala,fuente:fuente,tema:tema,contraste:contraste}});
     await v.goto(base+'inicio.html');await listo(v);
     /* nuevo() navega al documento: se espera la página, no la promesa (que se pierde al navegar) */
-    await Promise.all([v.waitForURL(/documento/),v.evaluate(function(){AT.crear.nuevo('libreta');return 1}).catch(function(){return 1})]);await listo(v,500);
-    await v.click('.ed-cuerpo h2');await v.keyboard.type('Sección de prueba con un título bastante largo para ver si cabe');
+    await Promise.all([v.waitForURL(/documento/),v.evaluate(function(){AT.crear.nuevo('pendientes');return 1}).catch(function(){return 1})]);await listo(v,500);
+    await v.click('.ed-cuerpo h2');await v.keyboard.press('End');await v.keyboard.type(' y una sección de prueba con un título bastante largo para ver si cabe');
     await v.keyboard.press('Enter');await v.keyboard.type('/');await v.waitForTimeout(200);
     await revisar(v,r,'editor '+ancho+'px ×'+escala+' '+fuente+' '+tema+'/'+contraste);
     await v.keyboard.press('Escape');

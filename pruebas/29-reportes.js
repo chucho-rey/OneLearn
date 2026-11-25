@@ -105,10 +105,10 @@ prueba('Reportes',async function({browser,base,r}){
   await p.goto(base+'documento.html?id='+docRep);await listo(p,900);
   await p.click('#docModo');await p.waitForTimeout(500);
   r.cumple((await p.$$('.rep .rep-t')).length===3&&!(await p.$('.rep [data-r="ajustar"]'))&&!!(await p.$('.rep [data-r="presentar"]')),'al leer se ven los reportes, con «Presentar» y sin «Ajustar»');
-  await p.click('#docMas');await p.click('.menu-i:has-text("Imprimir o guardar como PDF")');await p.waitForSelector('dialog.en-dlg[open]');
-  await p.check('dialog.en-dlg input[name="en-orientacion"][value="horizontal"]',{force:true});await p.waitForTimeout(700);
+  await p.click('#docMas');await p.click('.menu-i:has-text("Imprimir o exportar")');await p.waitForSelector('dialog.en-dlg[open]');
+  await p.check('dialog.en-dlg input[name="ex-orientacion"][value="horizontal"]',{force:true});await p.waitForTimeout(700);
   r.igual(await p.evaluate(function(){return AT.docActual.formato&&AT.docActual.formato.orientacion}),'horizontal','se puede elegir la hoja horizontal');
-  await Promise.all([p.waitForURL(/imprimir\.html/),p.click('dialog.en-dlg [data-en="pdf"]')]);
+  await Promise.all([p.waitForURL(/imprimir\.html/),p.click('dialog.en-dlg [data-ex="pdf"]')]);
   await p.waitForSelector('.pagedjs_page',{timeout:15000});await p.waitForTimeout(800);
   const imp=await p.evaluate(function(){return {reps:document.querySelectorAll('.rep-papel .rep-t').length,land:[].some.call(document.querySelectorAll('style'),function(s){return /size:letter landscape/.test(s.textContent)}),
     ancho:document.querySelector('.pagedjs_page').getBoundingClientRect().width,alto:document.querySelector('.pagedjs_page').getBoundingClientRect().height}});

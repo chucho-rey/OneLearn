@@ -38,12 +38,12 @@ prueba('Ayuda',async function({browser,base,r}){
   if(CAP)await p.screenshot({path:CAP+'/ayuda.png'});
   await Promise.all([p.waitForURL(/documento\.html/),p.click('[data-crear="corte"]')]);await listo(p,700);
   r.igual(await p.evaluate(function(){return AT.docActual&&AT.docActual.tipo}),'corte','«Crear «Corte de caja»» abre la página nueva');
-  /* Ctrl K encuentra la ayuda en un espacio sin estudio */
+  /* Ctrl K encuentra la ayuda (y ya no hay lecciones que buscar) */
   await p.keyboard.press('Control+k');await p.waitForTimeout(300);
   await p.keyboard.type('aguinaldo');await p.waitForTimeout(900);
   const res=await p.evaluate(function(){var d=document.querySelector('dialog[open]');return d?d.textContent:''});
   r.cumple(/Aguinaldo/.test(res)&&/Ayuda/.test(res),'Ctrl K encuentra las secciones de la ayuda',res.slice(0,200));
-  r.cumple(!/Memoria RAM/.test(res),'sin estudio, no salen lecciones');
+  r.cumple(!/Memoria RAM/.test(res),'no salen lecciones (lo de estudio se separó)');
   await p.keyboard.press('Escape');
   /* Un enlace directo a una herramienta apagada */
   await p.goto(base+'ayuda.html#ay-rh-ptu');await listo(p,500);
@@ -58,7 +58,7 @@ prueba('Ayuda',async function({browser,base,r}){
   /* Celular oscuro, con todos los módulos (sin perfil) */
   const c=await pagina(browser,{ancho:390,alto:844,reducir:true,perfil:false});
   await c.goto(base+'ayuda.html');await listo(c,500);
-  /* El tema se pone después de abrir: un ajuste guardado antes haría que el navegador cuente como de OneLearn (estudio) */
+  /* El tema se pone después de abrir: un ajuste guardado antes haría que el navegador cuente como de quien ya usaba OneLearn */
   await c.evaluate(function(){AT.ajustes.set('tema','dark')});await c.waitForTimeout(200);
   const todas=await c.evaluate(function(){return AT.ayuda.secciones().every(function(s){return s.visible})});
   r.cumple(todas&&!(await c.$('#ayTodas')),'con todos los módulos se ven todas, sin «Ver todas»');

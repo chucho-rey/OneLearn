@@ -40,7 +40,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
     if(ic.type==='image/png')r.igual(tamPng(await res.body()),ic.sizes,'el ícono '+ic.src+' mide lo que dice el manifiesto');
   }
   r.cumple(man.icons.some(function(i){return i.purpose==='maskable'}),'hay un ícono «maskable» para Android');
-  for(const pag of ['inicio.html','lecciones/ram.html','lecciones/cpu.html']){
+  for(const pag of ['inicio.html','ayuda.html','documento.html?id=d-no']){
     const q=await pagina(browser);
     await q.goto(base+pag);await listo(q);
     const h=await q.evaluate(function(){const m=document.querySelector('link[rel="manifest"]'),i=document.querySelector('link[rel="icon"]');return {m:m&&m.href,i:i&&i.href}});
@@ -62,17 +62,18 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   p.errores.length=0;
   await p.goto(base+'inicio.html');await listo(p);
   r.cumple(/Buen|Hola/.test(await p.textContent('#saludo')),'sin conexión abre el inicio');
-  for(const [pag,titulo] of [['lecciones/ram.html','Memoria RAM'],['lecciones/cpu.html','Procesador (CPU)']]){
-    await p.goto(base+pag);await listo(p);
-    r.igual(await p.textContent('h1'),titulo,'sin conexión abre '+titulo+', aunque no se haya visitado');
-    r.cumple(await p.evaluate(function(){return document.fonts.check('16px "IBM Plex Sans"')&&!!document.querySelector('.cell')||!!document.querySelector('#cpuMem')}),titulo+': sin conexión carga la letra y los laboratorios');
-  }
-  await p.goto(base+'lecciones/cpu.html#s-cache');await listo(p,500);
-  const top=await p.evaluate(function(){return Math.round(document.getElementById('s-cache').getBoundingClientRect().top)});
+  /* La Ayuda, aunque no se haya visitado, y un enlace a una de sus secciones */
+  await p.goto(base+'ayuda.html#ay-nucleo-buscar');await listo(p,500);
+  r.igual(await p.textContent('h1'),'Ayuda: cómo usar OneBook','sin conexión abre la Ayuda, aunque no se haya visitado');
+  r.cumple(await p.evaluate(function(){return document.fonts.check('16px "IBM Plex Sans"')}),'sin conexión carga la letra');
+  const top=await p.evaluate(function(){return Math.round(document.getElementById('ay-nucleo-buscar').getBoundingClientRect().top)});
   r.cumple(top>0&&top<120,'sin conexión, un enlace a una sección lleva a ella',top);
+  /* Una página tuya y la vista para imprimir */
+  await p.goto(base+'documento.html?id=d-no');await listo(p);
+  r.cumple(/No encontramos este documento/.test(await p.textContent('h1')),'sin conexión abre la página de un documento');
   await p.click('#aaBtn');await p.click('#lectura .seg[data-k="fuente"] button[data-v="opendyslexic"]');await p.waitForTimeout(400);
   r.cumple(await p.evaluate(function(){return document.fonts.check('16px "OpenDyslexic"')}),'sin conexión se puede cambiar a OpenDyslexic');
-  await p.goto(base+'lecciones/no-existe.html');await listo(p);
+  await p.goto(base+'no-existe.html');await listo(p);
   r.cumple(!!await p.$('#saludo'),'sin conexión, una página que no existe muestra el inicio');
   r.cumple(p.errores.length===0,'sin errores sin conexión',p.errores.slice(0,3));
   await p.context().setOffline(false);
@@ -103,7 +104,7 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   /* iPhone: se explica cómo instalar */
   const ctx=await browser.newContext({viewport:{width:390,height:844},userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',isMobile:true,hasTouch:true});
   /* Con un espacio ya creado (perfil.js), para que Inicio no mande a «Crea tu espacio» */
-  await ctx.addInitScript(function(){try{localStorage.setItem('aprende-tecnologia:perfil',JSON.stringify({perfil:'estudio',modulos:['estudio','negocio']}))}catch(e){}});
+  await ctx.addInitScript(function(){try{localStorage.setItem('aprende-tecnologia:perfil',JSON.stringify({perfil:'negocio',modulos:['negocio']}))}catch(e){}});
   const i=await ctx.newPage();
   await i.goto(base+'inicio.html');await i.waitForLoadState('load');
   r.cumple(await i.isVisible('#instalar')&&await i.isHidden('#instalarBtn')&&/Agregar a inicio/.test(await i.textContent('#instalarTxt')),'en iPhone se explica cómo agregarlo al inicio');

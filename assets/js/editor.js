@@ -1,10 +1,14 @@
 /* OneBook: el editor de documentos (Tiptap, en assets/vendor/tiptap.min.js como window.Tiptap).
    AT.editor.crear({host, barra, contenido, alCambiar}) monta un editor que escribe el mismo formato de
-   bloques que dibuja bloques.js, así que lo que escribes se ve como una lección oficial.
-   - Bloques propios: callout, columnas, desplegable, preguntas de repaso, resumen, índice y laboratorio.
-   - Cada bloque de primer nivel recibe un identificador fijo (ancla de marcadores y citas).
-   - Barra de herramientas (role=toolbar, con flechas), menú «/» para insertar, asa «+ ⋮⋮» para insertar,
-     arrastrar y abrir las opciones de un bloque, y atajos: Alt+↑/↓ mueven el bloque, Ctrl+Mayús+D lo duplica.
+   bloques que dibuja bloques.js, así que lo que escribes se ve igual al leerlo.
+   - Bloques propios: callout, columnas, desplegable, resumen e índice.
+   - Cada bloque de primer nivel recibe un identificador fijo (ancla de los enlaces y de la búsqueda).
+   - Barra de herramientas (role=toolbar, con flechas), menú «/» para insertar, «@» para enlazar otra página,
+     asa «+ ⋮⋮» para insertar, arrastrar y abrir las opciones de un bloque, y atajos: Alt+↑/↓ mueven el bloque,
+     Ctrl+Mayús+D lo duplica.
+   - Lo que el editor no conoce (los bloques de estudio que se separaron de OneBook u otros) no se pierde: entra
+     envuelto en «legado» (o «legadoLinea» dentro del texto) con su JSON original, se ve sin poder editarse y al
+     guardar vuelve tal cual (desenvolver).
    Se carga solo en documento.html, después de bloques.js. */
 (function(){
 'use strict';
@@ -17,8 +21,7 @@ function sinAcentos(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,
 
 /* ---------- Identificadores de bloque ---------- */
 var CON_ID=['paragraph','heading','bulletList','orderedList','taskList','blockquote','codeBlock','horizontalRule','table',
-  'callout','columnas','desplegable','laboratorio','repaso','indice','resumen','bibliografia','declaracion',
-  'figura','tablaNumerada','ecuacion','indicePiezas','pagos'];
+  'callout','columnas','desplegable','indice','resumen','figura','tablaNumerada','pagos','legado'];
 /* Los bloques que se registran después (negocio.js) agregan aquí su tipo: los ids se piden al crear el editor */
 AT.editorConId=CON_ID;
 var claveIds=new pm.PluginKey('idsDeBloque');
@@ -46,7 +49,7 @@ var Ids=T.Extension.create({
           if(h.attrs&&h.attrs.id){tr.setNodeAttribute(pos+1+p,'id',null);cambio=true}
         });
       });
-      /* Figuras, tablas y ecuaciones numeradas: una clave única en cualquier nivel (la usan las referencias cruzadas) */
+      /* Figuras y tablas numeradas: una clave única en cualquier nivel (la usan las referencias cruzadas) */
       var claves={};
       nuevo.doc.descendants(function(n,pos){
         if(!n.attrs||!('clave' in n.attrs))return;
@@ -128,88 +131,31 @@ var Indice=atomo('indice',function(p){
   indices.add(v);pintar();
   return v;
 });
-var Laboratorio=atomo('laboratorio',function(p){
-  var dom=el('div','demo ed-lab');dom.contentEditable='false';
-  dom.innerHTML='<div class="demo-h"><b></b><span class="tag lab">Laboratorio</span></div><div class="demo-b"><p class="hint">Los laboratorios funcionan dentro de su lección; aquí se muestra solo su lugar.</p></div>';
-  $('b',dom).textContent=p.node.attrs.titulo||'Laboratorio';
+/* Legado: un bloque que este editor no conoce (por ejemplo, los de estudio que se separaron de OneBook). Guarda el
+   JSON original en attrs.json; se ve con su nombre y su texto, no se edita y al guardar vuelve tal cual (desenvolver) */
+function originalDe(n){try{var o=JSON.parse(n.attrs.json||'null');return o&&typeof o==='object'?o:null}catch(e){return null}}
+function textoDeOriginal(o){return o&&o.type?AT.bloques.textoLegado(o).replace(/\s+/g,' ').trim():''}
+var Legado=atomo('legado',function(p){
+  var dom=el('div','ed-legado legado');dom.contentEditable='false';
+  var o=originalDe(p.node)||{},nom=(AT.bloques.LEGADO||{})[o.type],t=textoDeOriginal(o),b=el('p','legado-t');
+  b.textContent=(nom?nom+': ya no está en OneBook':p.editor.schema.nodes[o.type]?'Un bloque que no se pudo abrir':'Un bloque que esta versión de OneBook no conoce')+
+    '. Se conserva en la página tal como estaba.';
+  dom.appendChild(b);
+  if(t){var x=el('p');x.textContent=t.length>600?t.slice(0,600)+'…':t;dom.appendChild(x)}
   return {dom:dom,ignoreMutation:function(){return true}};
-},{addAttributes:function(){return {nombre:{default:''},titulo:{default:''}}}});
+},{addAttributes:function(){return {json:{default:'{}',parseHTML:function(e){return e.getAttribute('data-json')||'{}'},renderHTML:function(a){return {'data-json':a.json}}}}}});
+var LegadoLinea=T.Node.create({
+  name:'legadoLinea',group:'inline',inline:true,atom:true,selectable:true,
+  addAttributes:function(){return {json:{default:'{}',parseHTML:function(e){return e.getAttribute('data-json')||'{}'},renderHTML:function(a){return {'data-json':a.json}}}}},
+  parseHTML:function(){return [{tag:'span[data-legado]'}]},
+  renderHTML:function(o){
+    var x=originalDe(o.node)||{},nom=(AT.bloques.LEGADO||{})[x.type];
+    return ['span',T.mergeAttributes(o.HTMLAttributes,{'data-legado':'',class:'legado-l',title:(nom||'Contenido')+' (ya no está en OneBook)'}),textoDeOriginal(x)||nom||'…'];
+  },
+  renderText:function(o){return textoDeOriginal(originalDe(o.node))}
+});
 
-/* Preguntas de repaso: se editan con un formulario dentro del documento */
-function preguntaVacia(){return {q:'',o:['',''],a:0,e:''}}
-var Repaso=atomo('repaso',function(p){
-  var dom=el('div','ed-repaso');dom.contentEditable='false';
-  var datos=[],firma='';
-  function leer(n){datos=JSON.parse(JSON.stringify(n.attrs.preguntas||[]));if(!datos.length)datos=[preguntaVacia()];firma=JSON.stringify(n.attrs.preguntas||[])}
-  function guardar(){
-    var pos=typeof p.getPos==='function'?p.getPos():null;
-    if(pos==null)return;
-    firma=JSON.stringify(datos);
-    p.editor.view.dispatch(p.editor.state.tr.setNodeAttribute(pos,'preguntas',JSON.parse(firma)));
-  }
-  var uid=AT.bloques.nuevoId().slice(2);
-  function pintar(){
-    var h='<div class="ed-rep-h"><span class="ed-et">Preguntas de repaso</span><span class="ed-rep-n">'+datos.length+(datos.length===1?' pregunta':' preguntas')+'</span></div>';
-    datos.forEach(function(q,i){
-      h+='<fieldset class="ed-q" data-i="'+i+'"><legend>Pregunta '+(i+1)+'</legend>'+
-        '<label class="ed-campo"><span>Pregunta</span><textarea rows="2" data-c="q" placeholder="Escribe la pregunta">'+esc(q.q)+'</textarea></label>'+
-        '<div class="ed-ops" role="group" aria-label="Opciones de la pregunta '+(i+1)+'">'+
-        q.o.map(function(o,j){
-          return '<div class="ed-op"><input type="radio" name="c-'+uid+'-'+i+'" data-c="a" data-j="'+j+'"'+(q.a===j?' checked':'')+' aria-label="Opción '+(j+1)+' es la correcta">'+
-            '<input type="text" data-c="o" data-j="'+j+'" value="'+esc(o)+'" placeholder="Opción '+(j+1)+'" aria-label="Opción '+(j+1)+'">'+
-            (q.o.length>2?'<button type="button" class="ed-mini" data-acc="quitarOp" data-j="'+j+'" aria-label="Quitar la opción '+(j+1)+'">'+ico('close')+'</button>':'')+'</div>';
-        }).join('')+
-        (q.o.length<6?'<button type="button" class="ed-link" data-acc="op">+ Opción</button>':'')+
-        '</div><p class="ed-ayuda">Marca la opción correcta con el círculo.</p>'+
-        '<label class="ed-campo"><span>Explicación (se muestra al responder)</span><input type="text" data-c="e" value="'+esc(q.e)+'"></label>'+
-        (datos.length>1?'<button type="button" class="ed-link ed-quitar" data-acc="quitar">Quitar esta pregunta</button>':'')+
-        '</fieldset>';
-    });
-    h+='<button type="button" class="btn" data-acc="agregar">+ Agregar pregunta</button>';
-    dom.innerHTML=h;
-  }
-  dom.addEventListener('input',function(e){
-    var t=e.target,f=t.closest('.ed-q');
-    if(!f)return;
-    var q=datos[+f.getAttribute('data-i')],c=t.getAttribute('data-c');
-    if(c==='q')q.q=t.value;
-    else if(c==='e')q.e=t.value;
-    else if(c==='o')q.o[+t.getAttribute('data-j')]=t.value;
-    else if(c==='a')q.a=+t.getAttribute('data-j');
-    guardar();
-  });
-  dom.addEventListener('change',function(e){if(e.target.getAttribute('data-c')==='a'){dom.dispatchEvent(new Event('input',{bubbles:true}))}});
-  dom.addEventListener('click',function(e){
-    var b=e.target.closest('[data-acc]');
-    if(!b)return;
-    var f=b.closest('.ed-q'),i=f?+f.getAttribute('data-i'):-1,acc=b.getAttribute('data-acc'),foco=null;
-    if(acc==='agregar'){datos.push(preguntaVacia());foco='[data-i="'+(datos.length-1)+'"] textarea'}
-    else if(acc==='quitar'){datos.splice(i,1);foco='[data-acc="agregar"]'}
-    else if(acc==='op'){datos[i].o.push('');foco='[data-i="'+i+'"] [data-c="o"][data-j="'+(datos[i].o.length-1)+'"]'}
-    else if(acc==='quitarOp'){
-      var j=+b.getAttribute('data-j');datos[i].o.splice(j,1);
-      if(datos[i].a===j)datos[i].a=0;else if(datos[i].a>j)datos[i].a--;
-      foco='[data-i="'+i+'"] [data-c="o"]';
-    }
-    guardar();pintar();
-    if(foco){var x=$(foco,dom);if(x)x.focus()}
-  });
-  leer(p.node);pintar();
-  return {
-    dom:dom,
-    update:function(n){
-      if(n.type.name!=='repaso')return false;
-      if(JSON.stringify(n.attrs.preguntas||[])!==firma){leer(n);pintar()}
-      return true;
-    },
-    stopEvent:function(e){return !!(e.target&&e.target.closest&&e.target.closest('input,textarea,button,label,fieldset'))},
-    ignoreMutation:function(){return true}
-  };
-},{addAttributes:function(){return {preguntas:{default:[],
-  parseHTML:function(e){try{return JSON.parse(e.getAttribute('data-preguntas')||'[]')}catch(x){return []}},
-  renderHTML:function(a){return {'data-preguntas':JSON.stringify(a.preguntas||[])}}}}}});
-
-/* Cita a un marcador, una sección o un documento: un enlace que no se edita letra por letra */
+/* Enlace a otra página o a una de sus secciones («@»): no se edita letra por letra */
 var Cita=T.Node.create({
   name:'cita',group:'inline',inline:true,atom:true,selectable:true,
   addAttributes:function(){return {
@@ -217,10 +163,10 @@ var Cita=T.Node.create({
     texto:{default:'',parseHTML:function(e){return e.textContent.trim()},renderHTML:function(){return {}}}
   }},
   parseHTML:function(){return [{tag:'a[data-cita]'}]},
-  renderHTML:function(o){return ['a',T.mergeAttributes(o.HTMLAttributes,{'data-cita':'',class:'cita'}),svg('marcador'),['span',{},o.node.attrs.texto||'Cita']]},
+  renderHTML:function(o){return ['a',T.mergeAttributes(o.HTMLAttributes,{'data-cita':'',class:'cita'}),svg('enlace'),['span',{},o.node.attrs.texto||'Cita']]},
   renderText:function(o){return o.node.attrs.texto||''}
 });
-/* Tocar una cita en el editor ofrece abrirla o quitarla */
+/* Tocar un enlace «@» en el editor ofrece abrirlo o quitarlo */
 var claveClicCita=new pm.PluginKey('clicCita');
 var ClicCita=T.Extension.create({
   name:'clicCita',
@@ -230,186 +176,28 @@ var ClicCita=T.Extension.create({
     /* La cita no es editable por dentro, así que el navegador la seguiría como enlace: se evita */
     handleDOMEvents:{click:function(view,e){if(e.target.closest&&e.target.closest('a.cita'))e.preventDefault();return false}},
     handleClickOn:function(view,pos,node,nodePos,event){
-      if(node.type.name==='referencia'){
-        var ar=event.target.closest('span.ref')||view.nodeDOM(nodePos);
-        setTimeout(function(){menuReferencia(editor,view,node,nodePos,ar)},0);
-        return true;
-      }
       if(node.type.name!=='cita')return false;
       var a=event.target.closest('a.cita')||view.nodeDOM(nodePos);
       if(event.ctrlKey||event.metaKey){window.open(node.attrs.href,'_blank');return true}
       setTimeout(function(){
         abrirMenu(a,[
-          {t:'Ir a «'+(node.attrs.texto.length>40?node.attrs.texto.slice(0,40)+'…':node.attrs.texto)+'»',i:'enlace',d:'Abre lo citado',f:function(){if(AT.editorActual)AT.editorActual.guardarYa();location.href=AT.bloques.hrefSeguro(node.attrs.href)||'#'}},
-          {t:'Quitar la cita',i:'close',peligro:true,f:function(){
+          {t:'Ir a «'+(node.attrs.texto.length>40?node.attrs.texto.slice(0,40)+'…':node.attrs.texto)+'»',i:'enlace',d:'Abre la página',f:function(){if(AT.editorActual)AT.editorActual.guardarYa();location.href=AT.bloques.hrefSeguro(node.attrs.href)||'#'}},
+          {t:'Quitar el enlace',i:'close',peligro:true,f:function(){
             var p=nodePos,n=editor.state.doc.nodeAt(p);
             if(n&&n.type.name==='cita')editor.chain().focus().deleteRange({from:p,to:p+n.nodeSize}).run();
           }}
-        ],{etiqueta:'Cita',devolver:view.dom,alElegir:function(it){it.f()}});
+        ],{etiqueta:'Enlace',devolver:view.dom,alElegir:function(it){it.f()}});
       },0);
       return true;
     }}})];
   }
 });
 
-/* ---------- Tesis: citas a fuentes, bibliografía y declaración de autoría (fuentes.js) ---------- */
-function docActual(){return AT.docActual||{fuentes:[],props:[]}}
-function textoRef(a){var d=docActual();return AT.fuentes?AT.fuentes.cita(a,d.fuentes,d):'(cita)'}
-/* Cita a una fuente del documento: (Pérez, 2020, p. 15) o Pérez (2020) */
-var Referencia=T.Node.create({
-  name:'referencia',group:'inline',inline:true,atom:true,selectable:true,
-  addAttributes:function(){return {
-    fuente:{default:'',parseHTML:function(e){return e.getAttribute('data-fuente')||''},renderHTML:function(a){return {'data-fuente':a.fuente}}},
-    pagina:{default:'',parseHTML:function(e){return e.getAttribute('data-pagina')||''},renderHTML:function(a){return a.pagina?{'data-pagina':a.pagina}:{}}},
-    narrativa:{default:false,parseHTML:function(e){return e.hasAttribute('data-narrativa')},renderHTML:function(a){return a.narrativa?{'data-narrativa':''}:{}}}
-  }},
-  parseHTML:function(){return [{tag:'span[data-referencia]'}]},
-  renderHTML:function(o){return ['span',T.mergeAttributes(o.HTMLAttributes,{'data-referencia':'',class:'ref'}),textoRef(o.node.attrs)]},
-  renderText:function(o){return textoRef(o.node.attrs)},
-  addNodeView:function(){return function(p){
-    var node=p.node,dom=el('span','ref');dom.contentEditable='false';dom.setAttribute('data-referencia','');
-    function pintar(){dom.textContent=textoRef(node.attrs)}
-    var soltar=AT.fuentes?AT.fuentes.vigilar(pintar):function(){};
-    pintar();
-    return {dom:dom,update:function(n){if(n.type.name!=='referencia')return false;node=n;pintar();return true},destroy:soltar,ignoreMutation:function(){return true}};
-  }}
-});
-/* Fuentes citadas en el documento del editor (sin pasar por JSON) */
-function citadasEn(estado){
-  var out={};
-  estado.doc.descendants(function(n){if(n.type.name==='referencia'&&n.attrs.fuente)out[n.attrs.fuente]=(out[n.attrs.fuente]||0)+1});
-  return out;
-}
-var biblios=new Set();
-var Bibliografia=atomo('bibliografia',function(p){
-  var dom=el('div','ed-biblio');dom.contentEditable='false';
-  var node=p.node;
-  function pintar(){
-    var d=docActual(),l=AT.fuentes?AT.fuentes.bibliografia(d,node.attrs.todas,citadasEn(p.editor.state)):[];
-    dom.innerHTML='<div class="ed-rep-h"><span class="ed-et">Bibliografía · '+esc(AT.fuentes?AT.fuentes.nombreEstilo(d):'APA 7')+'</span><label class="chk"><input type="checkbox" data-todas'+(node.attrs.todas?' checked':'')+'>Incluir las que no citaste</label></div>';
-    if(!l.length){var h=el('p','hint');h.textContent=(d.fuentes||[]).length?'Aquí aparecerán las fuentes que cites en el texto.':'Agrega tus fuentes en «Fuentes» y cítalas: la bibliografía se arma sola, en orden.';dom.appendChild(h);return}
-    var ul=el('ul','biblio');
-    l.forEach(function(r){ul.appendChild(AT.fuentes.pintarTrozos(r.trozos,el('li')))});
-    dom.appendChild(ul);
-  }
-  dom.addEventListener('change',function(e){
-    if(!e.target.hasAttribute('data-todas'))return;
-    var pos=typeof p.getPos==='function'?p.getPos():null;
-    if(pos!=null)p.editor.view.dispatch(p.editor.state.tr.setNodeAttribute(pos,'todas',e.target.checked));
-  });
-  var soltar=AT.fuentes?AT.fuentes.vigilar(pintar):function(){};
-  var v={dom:dom,pintar:pintar,update:function(n){if(n.type.name!=='bibliografia')return false;node=n;pintar();return true},
-    destroy:function(){biblios.delete(v);soltar()},stopEvent:function(e){return !!(e.target&&e.target.closest&&e.target.closest('input,label'))},ignoreMutation:function(){return true}};
-  biblios.add(v);pintar();
-  return v;
-},{addAttributes:function(){return {todas:{default:false,parseHTML:function(e){return e.hasAttribute('data-todas')},renderHTML:function(a){return a.todas?{'data-todas':''}:{}}}}}});
-/* Declaración de autoría y de uso de IA: un formulario que se lee como declaración formal */
-var Declaracion=atomo('declaracion',function(p){
-  var dom=el('div','ed-repaso ed-decl');dom.contentEditable='false';
-  var datos={ia:'no',usos:[]},firma='',uid=AT.bloques.nuevoId().slice(2);
-  function leer(n){datos={ia:n.attrs.ia==='si'?'si':'no',usos:JSON.parse(JSON.stringify(n.attrs.usos||[]))};firma=JSON.stringify(datos)}
-  function guardar(){
-    var pos=typeof p.getPos==='function'?p.getPos():null;if(pos==null)return;
-    firma=JSON.stringify(datos);
-    var tr=p.editor.state.tr.setNodeAttribute(pos,'ia',datos.ia).setNodeAttribute(pos,'usos',JSON.parse(JSON.stringify(datos.usos)));
-    p.editor.view.dispatch(tr);
-  }
-  function texto(){
-    var d=docActual(),par=AT.fuentes?AT.fuentes.declaracion(datos,AT.fuentes.autorDe(d)):[];
-    return par.map(function(x){return Array.isArray(x)?'<ul>'+x.map(function(y){return '<li>'+esc(y)+'</li>'}).join('')+'</ul>':'<p>'+esc(x)+'</p>'}).join('');
-  }
-  function pintar(){
-    var h='<div class="ed-rep-h"><span class="ed-et">Declaración de autoría</span></div><div class="ed-decl-t">'+texto()+'</div>'+
-      '<fieldset class="ed-q"><legend>¿Usaste inteligencia artificial generativa?</legend>'+
-      '<label class="chk"><input type="radio" name="ia-'+uid+'" value="no"'+(datos.ia!=='si'?' checked':'')+'>No la usé</label>'+
-      '<label class="chk"><input type="radio" name="ia-'+uid+'" value="si"'+(datos.ia==='si'?' checked':'')+'>Sí, la usé</label>';
-    if(datos.ia==='si'){
-      if(!datos.usos.length)datos.usos.push({herramienta:'',uso:''});
-      h+=datos.usos.map(function(u,i){
-        return '<div class="ed-uso" data-i="'+i+'"><input type="text" data-c="herramienta" value="'+esc(u.herramienta)+'" placeholder="Herramienta (ej. ChatGPT)" aria-label="Herramienta '+(i+1)+'">'+
-          '<input type="text" data-c="uso" value="'+esc(u.uso)+'" placeholder="Para qué (ej. revisar la ortografía del capítulo 2)" aria-label="Para qué usaste la herramienta '+(i+1)+'">'+
-          (datos.usos.length>1?'<button type="button" class="ed-mini" data-acc="quitar" aria-label="Quitar la herramienta '+(i+1)+'">'+ico('close')+'</button>':'')+'</div>';
-      }).join('')+'<button type="button" class="ed-link" data-acc="agregar">+ Otra herramienta</button>';
-    }
-    h+='</fieldset><p class="ed-ayuda">Si citas lo que respondió una IA, agrégala también en «Fuentes» como «Conversación con IA».</p>';
-    dom.innerHTML=h;
-  }
-  function refrescarTexto(){var t=$('.ed-decl-t',dom);if(t)t.innerHTML=texto()}
-  dom.addEventListener('input',function(e){
-    var t=e.target,f=t.closest('.ed-uso');
-    if(f){datos.usos[+f.getAttribute('data-i')][t.getAttribute('data-c')]=t.value;guardar();refrescarTexto()}
-  });
-  dom.addEventListener('change',function(e){
-    if(e.target.type==='radio'){datos.ia=e.target.value;if(datos.ia==='no')datos.usos=datos.usos.filter(function(u){return u.herramienta||u.uso});guardar();pintar();var r=$('input[value="'+datos.ia+'"]',dom);if(r)r.focus()}
-  });
-  dom.addEventListener('click',function(e){
-    var b=e.target.closest('[data-acc]');if(!b)return;
-    if(b.getAttribute('data-acc')==='agregar'){datos.usos.push({herramienta:'',uso:''});guardar();pintar();var l=$$('[data-c="herramienta"]',dom);l[l.length-1].focus()}
-    else{datos.usos.splice(+b.closest('.ed-uso').getAttribute('data-i'),1);guardar();pintar();$('[data-acc="agregar"]',dom).focus()}
-  });
-  var soltar=AT.fuentes?AT.fuentes.vigilar(refrescarTexto):function(){};
-  leer(p.node);pintar();
-  return {dom:dom,
-    update:function(n){if(n.type.name!=='declaracion')return false;if(JSON.stringify({ia:n.attrs.ia==='si'?'si':'no',usos:n.attrs.usos||[]})!==firma){leer(n);pintar()}return true},
-    destroy:soltar,
-    stopEvent:function(e){return !!(e.target&&e.target.closest&&e.target.closest('input,textarea,button,label,fieldset'))},
-    ignoreMutation:function(){return true}};
-},{addAttributes:function(){return {
-  ia:{default:'no',parseHTML:function(e){return e.getAttribute('data-ia')||'no'},renderHTML:function(a){return {'data-ia':a.ia}}},
-  usos:{default:[],parseHTML:function(e){try{return JSON.parse(e.getAttribute('data-usos')||'[]')}catch(x){return []}},renderHTML:function(a){return {'data-usos':JSON.stringify(a.usos||[])}}}
-}}});
-/* Elegir una fuente y citarla donde está el cursor */
-function citarFuente(editor){
-  if(!AT.fuentes||!AT.docActual)return;
-  AT.fuentes.dialogo({doc:AT.docActual,alCambiar:function(){if(AT.docCambio)AT.docCambio()},
-    alElegir:function(f,pagina,narrativa){
-      editor.chain().focus().insertContent([{type:'referencia',attrs:{fuente:f.id,pagina:pagina||'',narrativa:!!narrativa}},{type:'text',text:' '}]).run();
-    }});
-}
-/* Página de una cita: un formulario corto, como el del enlace */
-function pedirPagina(editor,pos,ancla){
-  cerrarMenu();
-  var n=editor.state.doc.nodeAt(pos);if(!n)return;
-  var f=el('form','menu menu-enlace');
-  f.setAttribute('role','dialog');f.setAttribute('aria-label','Página de la cita');
-  f.innerHTML='<label for="refPag">Página o páginas</label><input id="refPag" type="text" autocomplete="off" placeholder="ej. 45 o 45-47" value="'+esc(n.attrs.pagina||'')+'">'+
-    '<div class="menu-bt"><button class="btn pri" type="submit">Aplicar</button><button class="btn" type="button" data-x>Cancelar</button></div>';
-  document.body.appendChild(f);
-  var r=ancla.getBoundingClientRect();
-  f.style.left=Math.max(8,Math.min(r.left,innerWidth-f.offsetWidth-8))+'px';f.style.top=(r.bottom+6)+'px';
-  var inp=$('input',f);inp.focus();inp.select();
-  function cerrar(){f.remove();document.removeEventListener('pointerdown',afuera,true);editor.commands.focus()}
-  function afuera(e){if(!f.contains(e.target))cerrar()}
-  setTimeout(function(){document.addEventListener('pointerdown',afuera,true)},0);
-  f.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();e.stopPropagation();cerrar()}});
-  f.addEventListener('click',function(e){if(e.target.closest('[data-x]'))cerrar()});
-  f.addEventListener('submit',function(e){
-    e.preventDefault();
-    var m=editor.state.doc.nodeAt(pos);
-    if(m&&m.type.name==='referencia')editor.view.dispatch(editor.state.tr.setNodeAttribute(pos,'pagina',inp.value.trim()));
-    cerrar();
-  });
-}
-function menuReferencia(editor,view,node,nodePos,a){
-  abrirMenu(a,[
-    {t:node.attrs.pagina?'Cambiar la página ('+node.attrs.pagina+')':'Agregar la página',i:'note',f:function(){pedirPagina(editor,nodePos,a)}},
-    {t:node.attrs.narrativa?'Cita entre paréntesis: (Autor, año)':'Cita narrativa: Autor (año)',i:'comillas',f:function(){
-      editor.view.dispatch(editor.state.tr.setNodeAttribute(nodePos,'narrativa',!node.attrs.narrativa));editor.view.focus();
-    }},
-    {t:'Ver las fuentes',i:'libro',f:function(){AT.fuentes.dialogo({doc:AT.docActual,alCambiar:function(){if(AT.docCambio)AT.docCambio()}})}},
-    {sep:true},
-    {t:'Quitar la cita',i:'close',peligro:true,f:function(){
-      var n=editor.state.doc.nodeAt(nodePos);
-      if(n&&n.type.name==='referencia')editor.chain().focus().deleteRange({from:nodePos,to:nodePos+n.nodeSize}).run();
-    }}
-  ],{etiqueta:'Cita bibliográfica',devolver:view.dom,alElegir:function(it){it.f()}});
-}
-
 /* ---------- Bloques que se pueden insertar ---------- */
 function P(texto){return texto?{type:'paragraph',content:[{type:'text',text:texto}]}:{type:'paragraph'}}
 var INSERTAR=[
   {k:'texto',t:'Texto',d:'Un párrafo normal',i:'texto',p:'parrafo',f:function(c){return c.setParagraph()}},
-  {k:'seccion',t:'Título de sección',d:'Aparece en el índice y en el mapa',i:'titulo',p:'titulo seccion h2',f:function(c){return c.setHeading({level:2})}},
+  {k:'seccion',t:'Título de sección',d:'Aparece en el índice',i:'titulo',p:'titulo seccion h2',f:function(c){return c.setHeading({level:2})}},
   {k:'subtitulo',t:'Subtítulo',d:'Un título dentro de una sección',i:'subtitulo',p:'h3',f:function(c){return c.setHeading({level:3})}},
   {k:'lista',t:'Lista con viñetas',d:'Escribe «- » al empezar una línea',i:'lista',p:'vinetas',f:function(c){return c.toggleBulletList()}},
   {k:'numerada',t:'Lista numerada',d:'Escribe «1. » al empezar una línea',i:'lista-num',p:'numeros',f:function(c){return c.toggleOrderedList()}},
@@ -422,18 +210,14 @@ var INSERTAR=[
     f:function(c){return c.insertContent({type:'desplegable',content:[{type:'desplegableTitulo'},{type:'desplegableCuerpo',content:[P()]}]})}},
   {k:'columnas',t:'Dos columnas',d:'La primera línea de cada una es su título',i:'columnas',p:'columnas tarjetas',
     f:function(c){return c.insertContent({type:'columnas',content:[{type:'columna',content:[P()]},{type:'columna',content:[P()]}]})}},
-  {k:'columnas3',t:'Tres columnas',d:'Como las tarjetas de una lección',i:'columnas',p:'columnas tarjetas',
+  {k:'columnas3',t:'Tres columnas',d:'Como tres tarjetas',i:'columnas',p:'columnas tarjetas',
     f:function(c){return c.insertContent({type:'columnas',content:[{type:'columna',content:[P()]},{type:'columna',content:[P()]},{type:'columna',content:[P()]}]})}},
-  {k:'repaso',modulo:'estudio',t:'Preguntas de repaso',d:'Opción múltiple, con explicación',i:'repaso',p:'quiz examen preguntas',f:function(c){return c.insertContent({type:'repaso',attrs:{preguntas:[preguntaVacia()]}})}},
-  {k:'resumen',modulo:'estudio',t:'Resumen',d:'Las ideas clave, al final',i:'resumen',p:'conclusion ideas clave',f:function(c){return c.insertContent({type:'resumen',content:[{type:'bulletList',content:[{type:'listItem',content:[P()]}]}]})}},
+  {k:'resumen',t:'Resumen',d:'Lo más importante, en un recuadro',i:'resumen',p:'conclusion ideas clave resumen ejecutivo',f:function(c){return c.insertContent({type:'resumen',content:[{type:'bulletList',content:[{type:'listItem',content:[P()]}]}]})}},
   {k:'indice',t:'Índice',d:'La lista de secciones, al día',i:'indice',p:'contenido toc',f:function(c){return c.insertContent({type:'indice'})}},
   {k:'cita',t:'Cita textual',d:'Palabras de otra persona',i:'comillas',p:'blockquote',f:function(c){return c.toggleBlockquote()}},
   {k:'codigo',t:'Bloque de código',d:'Texto con letra de ancho fijo',i:'codigo',p:'programa code',f:function(c){return c.toggleCodeBlock()}},
   {k:'separador',t:'Separador',d:'Una línea horizontal',i:'separador',p:'linea hr',f:function(c){return c.setHorizontalRule()}},
-  {k:'citar',t:'Citar una lección o un marcador',d:'También escribiendo «@»',i:'marcador',p:'arroba marcador referencia enlace interno',f:function(c){return c.insertContent('@')}},
-  {k:'referencia',t:'Cita bibliográfica',d:'Una fuente: (Autor, año, p. 12)',i:'comillas',p:'citar fuente apa autor bibliografia referencia',academico:true,f:function(c){var ed=c.editor||AT.editorActual&&AT.editorActual.tiptap;setTimeout(function(){citarFuente(ed)},0);return c}},
-  {k:'bibliografia',t:'Bibliografía',d:'Las fuentes citadas, en APA 7',i:'libro',p:'referencias fuentes apa lista',academico:true,f:function(c){return c.insertContent({type:'bibliografia'})}},
-  {k:'declaracion',t:'Declaración de autoría',d:'Tu autoría y el uso de IA',i:'tesis',p:'autoria ia originalidad etica',academico:true,f:function(c){return c.insertContent({type:'declaracion'})}}
+  {k:'citar',t:'Enlace a una página',d:'También escribiendo «@»',i:'enlace',p:'arroba enlace interno pagina seccion vincular',f:function(c){return c.insertContent('@')}}
 ];
 AT.editorInsertar=INSERTAR;
 
@@ -522,9 +306,8 @@ function cerrarMenu(sinDevolver){
 AT.menu={abrir:abrirMenu,cerrar:cerrarMenu,abierto:function(){return menuAbierto}};
 
 /* ---------- Menú «/» ---------- */
-/* Citas a fuentes, bibliografía y declaración: solo en documentos académicos (tesis) */
-/* Lo que ofrece «/»: lo académico solo en documentos académicos, y cada bloque de un módulo (it.modulo) solo si está encendido (perfil.js) */
-function insertables(){var t=AT.tiposDoc&&AT.docActual&&AT.tiposDoc[AT.docActual.tipo];return INSERTAR.filter(function(it){return (!it.academico||!!(t&&t.academico))&&(!it.modulo||!AT.perfil||AT.perfil.tiene(it.modulo))})}
+/* Lo que ofrece «/»: cada bloque de un módulo (it.modulo) solo si está encendido (perfil.js) */
+function insertables(){return INSERTAR.filter(function(it){return !it.modulo||!AT.perfil||AT.perfil.tiene(it.modulo)})}
 function filtrarInsertar(q){
   q=sinAcentos(q);
   if(!q)return insertables();
@@ -583,17 +366,14 @@ var MenuBarra=T.Extension.create({
   }
 });
 
-/* ---------- Menú «@»: citar marcadores, secciones de las lecciones y tus documentos ---------- */
+/* ---------- Menú «@»: enlazar otra de tus páginas o una de sus secciones ---------- */
 var claveArroba=new pm.PluginKey('menuCita');
-var CITABLES={marcador:1,seccion:1,leccion:1,documento:1,'seccion-doc':1};
+var CITABLES={documento:1,'seccion-doc':1};
 function opcionesDeCita(q){
   if(!AT.indice)return Promise.resolve([]);
   return AT.indice.cargar().then(function(todas){
     var propias=todas.filter(function(e){return CITABLES[e.tipo]&&e.docId!==AT.documentoAbierto});
-    /* Tus marcadores van primero: son lo que guardaste a propósito para citar */
-    function marcadoresPrimero(l){return l.filter(function(e){return e.tipo==='marcador'}).concat(l.filter(function(e){return e.tipo!=='marcador'}))}
-    var lista=q.trim()?marcadoresPrimero(AT.indice.buscar(q,propias,10)):
-      marcadoresPrimero(propias.filter(function(e){return e.tipo==='marcador'||e.tipo==='leccion'||e.tipo==='documento'})).slice(0,10);
+    var lista=q.trim()?AT.indice.buscar(q,propias,10):propias.filter(function(e){return e.tipo==='documento'}).slice(0,10);
     return lista.map(function(e){
       var tx=e.titulo.length>70?e.titulo.slice(0,70).replace(/\s+\S*$/,'')+'…':e.titulo;
       return {t:e.titulo,d:e.sub,i:e.icono,href:e.href,texto:tx};
@@ -617,13 +397,13 @@ var MenuCita=T.Extension.create({
         function aria(id){var d=editor.view.dom;if(id)d.setAttribute('aria-activedescendant',id);else d.removeAttribute('aria-activedescendant')}
         function lista(props){
           if(props.items.length)return props.items;
-          return [{t:props.query.trim()?'Nada coincide con «'+props.query.trim()+'»':'Todavía no hay nada que citar',d:'Guarda marcadores en las lecciones o crea documentos',i:'marcador',desactivado:true}];
+          return [{t:props.query.trim()?'Nada coincide con «'+props.query.trim()+'»':'Todavía no hay páginas que enlazar',d:'Crea más páginas o títulos de sección',i:'enlace',desactivado:true}];
         }
         return {
-          onStart:function(props){ultimas=props;menu=abrirMenu(rect(props),lista(props),{foco:false,etiqueta:'Citar',clase:'menu-barra menu-cita',alMarcar:aria,alElegir:elegir})},
+          onStart:function(props){ultimas=props;menu=abrirMenu(rect(props),lista(props),{foco:false,etiqueta:'Enlazar',clase:'menu-barra menu-cita',alMarcar:aria,alElegir:elegir})},
           onUpdate:function(props){
             ultimas=props;
-            if(!menu||menuAbierto!==menu)menu=abrirMenu(rect(props),lista(props),{foco:false,etiqueta:'Citar',clase:'menu-barra menu-cita',alMarcar:aria,alElegir:elegir});
+            if(!menu||menuAbierto!==menu)menu=abrirMenu(rect(props),lista(props),{foco:false,etiqueta:'Enlazar',clase:'menu-barra menu-cita',alMarcar:aria,alElegir:elegir});
             else{menu.ancla=rect(props);menu.filtrar(lista(props))}
           },
           onKeyDown:function(props){
@@ -947,9 +727,14 @@ function pedirEnlace(editor,ancla){
 /* ---------- Crear un editor ---------- */
 var PISTAS={heading:function(n){return n.attrs.level===2?'Título de sección':'Subtítulo'},desplegableTitulo:function(){return 'Escribe la pregunta o el título'},
   codeBlock:function(){return 'Código'}};
-/* Quita lo que el editor no conoce (tipos de bloque o de formato de otra versión, datos dañados)
-   en vez de negarse a abrir el documento */
-function limpiar(n,schema){
+/* Prepara el documento para el editor sin negarse a abrirlo: quita lo dañado (texto vacío, formatos desconocidos)
+   y envuelve en «legado» lo que no conoce, para no perderlo (enLin: dentro de un párrafo o un título) */
+function legadoDe(n,enLin){
+  var a={json:JSON.stringify(n)};
+  if(!enLin&&n.attrs&&typeof n.attrs.id==='string')a.id=n.attrs.id;
+  return {type:enLin?'legadoLinea':'legado',attrs:a};
+}
+function limpiar(n,schema,enLin){
   if(!n||typeof n!=='object')return null;
   if(n.type==='text'){
     if(typeof n.text!=='string'||!n.text)return null;
@@ -957,25 +742,46 @@ function limpiar(n,schema){
     if(ms.length)t.marks=ms;
     return t;
   }
-  if(!schema.nodes[n.type])return null;
+  if(typeof n.type!=='string'||!n.type)return null;
+  var tipo=schema.nodes[n.type];
+  if(!tipo)return legadoDe(n,enLin);
   var o={type:n.type};
   if(n.attrs&&typeof n.attrs==='object')o.attrs=n.attrs;
-  if(Array.isArray(n.content))o.content=n.content.map(function(c){return limpiar(c,schema)}).filter(Boolean);
+  if(Array.isArray(n.content))o.content=n.content.map(function(c){return limpiar(c,schema,tipo.inlineContent)}).filter(Boolean);
   return o;
 }
 function contenidoSeguro(json,schema){
-  var bloques=(json&&json.type==='doc'&&Array.isArray(json.content)?json.content:[]).map(function(b){return limpiar(b,schema)}).filter(Boolean);
-  bloques=bloques.filter(function(b){
-    try{schema.nodeFromJSON(b).check();return true}
-    catch(e){if(window.console)console.warn('OneBook: se omitió un bloque dañado',b.type);return false}
-  });
+  var originales=json&&json.type==='doc'&&Array.isArray(json.content)?json.content:[];
+  var bloques=originales.map(function(b){
+    var l=limpiar(b,schema,false);
+    if(!l)return null;
+    try{schema.nodeFromJSON(l).check();return l}
+    catch(e){
+      /* Un bloque que no cuadra con el esquema tampoco se pierde: entra entero como legado */
+      if(window.console)console.warn('OneBook: un bloque no se pudo abrir y se conserva tal cual',b&&b.type);
+      return b&&typeof b==='object'?legadoDe(b,false):null;
+    }
+  }).filter(Boolean);
   if(!bloques.length)bloques=[{type:'paragraph'}];
   return {type:'doc',content:bloques};
+}
+/* Lo que sale del editor: los bloques envueltos vuelven a ser los originales (con el id que tengan ahora) */
+function desenvolver(n){
+  if(!n||typeof n!=='object')return n;
+  if(n.type==='legado'||n.type==='legadoLinea'){
+    var o=null;
+    try{o=JSON.parse((n.attrs&&n.attrs.json)||'null')}catch(e){}
+    if(!o||typeof o!=='object')return null;
+    if(n.type==='legado'&&n.attrs.id)o=Object.assign({},o,{attrs:Object.assign({},o.attrs||{},{id:n.attrs.id})});
+    return o;
+  }
+  if(!Array.isArray(n.content))return n;
+  return Object.assign({},n,{content:n.content.map(desenvolver).filter(Boolean)});
 }
 function crear(o){
   var envoltura=el('div','editor');
   o.host.appendChild(envoltura);
-  var cambio=null,repBib=null;
+  var cambio=null;
   var editor=new T.Editor({
     element:envoltura,
     content:{type:'doc',content:[{type:'paragraph'}]},
@@ -999,15 +805,13 @@ function crear(o){
         return x.editor.state.doc.childCount===1?'Empieza a escribir, o pulsa / para insertar un bloque':'Escribe, o pulsa / para insertar un bloque';
       }}),
       T.CharacterCount,
-      Ids,Callout,Columnas,Columna,Desplegable,DesplegableTitulo,DesplegableCuerpo,Resumen,Indice,Laboratorio,Repaso,
-      Cita,ClicCita,Referencia,Bibliografia,Declaracion,MenuBarra,MenuCita,Atajos
+      Ids,Callout,Columnas,Columna,Desplegable,DesplegableTitulo,DesplegableCuerpo,Resumen,Indice,Legado,LegadoLinea,
+      Cita,ClicCita,MenuBarra,MenuCita,Atajos
     ].concat(AT.editorExtensiones||[],o.extensiones||[]),
     onUpdate:function(){
       indices.forEach(function(v){v.pintar()});
-      ordenCitasVivo();
-      if(biblios.size){clearTimeout(repBib);repBib=setTimeout(function(){biblios.forEach(function(v){v.pintar()})},250)}
       clearTimeout(cambio);
-      cambio=setTimeout(function(){if(o.alCambiar)o.alCambiar(editor.getJSON())},o.espera||500);
+      cambio=setTimeout(function(){if(o.alCambiar)o.alCambiar(desenvolver(editor.getJSON()))},o.espera||500);
       if(o.alEscribir)o.alEscribir();
     }
   });
@@ -1016,17 +820,11 @@ function crear(o){
   editor.view.dispatch(editor.state.tr.setMeta('addToHistory',false));
   /* Ids para lo que llegó sin ellos */
   editor.view.dispatch(editor.state.tr.setMeta(claveIds,true).setMeta('addToHistory',false));
-  /* IEEE numera las citas por orden de aparición: el orden se toma del editor mientras escribes */
-  function ordenCitasVivo(){
-    if(!AT.fuentes||!AT.fuentes.ordenVivo)return;
-    if(AT.fuentes.ordenVivo(Object.keys(citadasEn(editor.state)))&&AT.fuentes.estilo(docActual())==='ieee')AT.fuentes.refrescar();
-  }
-  ordenCitasVivo();
   var barra=o.barra?crearBarra(editor,o.barra):null;
   var asa=crearAsa(editor,envoltura);
   var api={
     tiptap:editor,
-    json:function(){return editor.getJSON()},
+    json:function(){return desenvolver(editor.getJSON())},
     palabras:function(){return editor.storage.characterCount.words()},
     /* Pone el cursor ya (sin esperar un cuadro): al principio, en el primer lugar donde se puede escribir */
     enfocar:function(donde){
@@ -1035,11 +833,10 @@ function crear(o){
       if(sel)v.dispatch(v.state.tr.setSelection(sel).scrollIntoView());
       v.focus();
     },
-    guardarYa:function(){clearTimeout(cambio);if(o.alCambiar)o.alCambiar(editor.getJSON())},
+    guardarYa:function(){clearTimeout(cambio);if(o.alCambiar)o.alCambiar(desenvolver(editor.getJSON()))},
     enlace:function(){if(barra)barra.enlace()},
     insertar:function(k){var it=INSERTAR.filter(function(x){return x.k===k})[0];if(it)it.f(editor.chain().focus()).run()},
-    citarFuente:function(){citarFuente(editor)},
-    destruir:function(){clearTimeout(cambio);cerrarMenu();if(AT.fuentes&&AT.fuentes.ordenVivo)AT.fuentes.ordenVivo(null);editor.destroy();envoltura.remove();if(barra)barra.el.remove()}
+    destruir:function(){clearTimeout(cambio);cerrarMenu();editor.destroy();envoltura.remove();if(barra)barra.el.remove()}
   };
   AT.editorActual=api;
   return api;

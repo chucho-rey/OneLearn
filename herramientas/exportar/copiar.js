@@ -11,7 +11,7 @@ esbuild.build({
   entryPoints:[path.join(__dirname,'entrada.js')],
   bundle:true,minify:true,format:'iife',target:['es2020','safari15'],
   legalComments:'none',
-  banner:{js:'/* docx '+pkg.devDependencies.docx+' empaquetado para OneLearn. Licencia MIT: ver exportar-LICENSE.txt */'},
+  banner:{js:'/* docx '+pkg.devDependencies.docx+' empaquetado para OneBook. Licencia MIT: ver exportar-LICENSE.txt */'},
   outfile:path.join(destino,'docx.min.js'),metafile:true
 }).then(function(r){
   fs.copyFileSync(path.join(__dirname,'node_modules/pagedjs/dist/paged.min.js'),path.join(destino,'paged.min.js'));

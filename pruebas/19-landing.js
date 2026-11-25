@@ -1,8 +1,8 @@
 /* Páginas de bienvenida. index.html (negocios): la ve quien llega por primera vez; quien ya usa OneBook va directo a
    su Inicio (inicio.html), salvo con ?conoce. Dibuja con bloques reales una página de ejemplo y un plan de pagos para
    probar; verla y usarla no guarda nada, y «Guárdalo en tu espacio» lo convierte en un documento (con los datos
-   revisados). Precios: local gratis y la nube con precio estimado. estudiantes.html: la bienvenida de antes, con las
-   cifras del temario y «Crear un documento». Contraste y desbordes en celular, escritorio y las variantes de lectura. */
+   revisados). Precios: local gratis y la nube con precio estimado. Ya no hay bienvenida para estudiantes (lo de estudio
+   se separó de OneBook). Contraste y desbordes en celular, escritorio y las variantes de lectura. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
@@ -78,7 +78,8 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
       nota:/estimados/.test(document.querySelector('#precios').textContent),
       faq:document.querySelectorAll('.lp-faq details').length,cfdi:/CFDI/.test(document.querySelector('.lp-faq').textContent)};
   });
-  r.igual(enl.nav,'Cómo funciona→#como, Precios→#precios, Estudiantes→estudiantes.html, Entrar→inicio.html','la cabecera lleva a cómo funciona, precios, estudiantes y la app');
+  r.igual(enl.nav,'Cómo funciona→#como, Precios→#precios, Entrar→inicio.html','la cabecera lleva a cómo funciona, precios y la app (ya no a estudiantes)');
+  r.cumple(await p.evaluate(function(){return !document.querySelector('a[href*="estudiantes"],a[href*="lecciones/"],a[href*="acerca"],#lpTambien')}),'ninguna parte de la bienvenida lleva a lo de estudio');
   r.cumple(enl.empieza,'«Empieza gratis» abre «Crea tu espacio» con el perfil de negocio');
   r.cumple(enl.planes==='Local Gratis / Nube $99 / Equipo $199'&&enl.nota,'precios: local gratis y la nube con precio estimado',enl);
   r.cumple(enl.faq>=5&&enl.cfdi,'preguntas frecuentes, incluida la factura (CFDI)');
@@ -87,7 +88,7 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
 
   /* ---------- Guárdalo en tu espacio ---------- */
   await Promise.all([p.waitForURL(/entrar\.html\?perfil=negocio#guardar-pagos$/),p.click('#lpGuardar')]);await listo(p);
-  r.cumple(/Paso 2 de 3/.test(await p.textContent('#enPaso')),'primero se crea el espacio, ya con el perfil de negocio');
+  r.cumple(/Paso 1 de 2/.test(await p.textContent('#enPaso'))&&await p.isVisible('#enNegocio'),'primero se crea el espacio: empieza en «Tu negocio»');
   await p.fill('#enNegocio','Mi tiendita');await p.click('#enSig');await p.waitForTimeout(150);
   await Promise.all([p.waitForURL(/documento\.html\?id=/,{timeout:10000}),p.click('#enSig')]);await listo(p,500);
   const g=await p.evaluate(function(){
@@ -115,30 +116,10 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
     'un plan alterado en sessionStorage se limpia antes de guardarse',m);
   await cerrar(p);
 
-  /* ---------- Estudiantes ---------- */
+  /* ---------- La página de estudiantes ya no existe ---------- */
   const e=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:false});
-  await e.goto(base+'estudiantes.html');await listo(e);
-  const est=await e.evaluate(function(){
-    var AT=window.AT,n=0,ruta=0;
-    AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){if(l.archivo)n++})});
-    AT.caminos[0].modulos.forEach(function(m){(m.lecciones||[]).forEach(function(){ruta++})});
-    return {h1:document.querySelector('h1').textContent,doc:document.title,
-      cifras:[document.getElementById('lpLecciones').textContent,document.getElementById('lpRuta').textContent,document.getElementById('lpProyectos').textContent].join('/'),
-      esperado:[n,ruta,AT.proyectos.length].join('/'),
-      hrefs:[].map.call(document.querySelectorAll('a.btn'),function(a){return a.textContent+'→'+a.getAttribute('href')}),
-      negocios:!!document.querySelector('.lp-nav a[href="./"]')};
-  });
-  r.cumple(/Aprende cómo funciona la tecnología/.test(est.h1)&&/^OneBook para estudiantes/.test(est.doc)&&est.negocios,'estudiantes.html es la bienvenida para estudiantes, con enlace a la de negocios',est);
-  r.igual(est.cifras,est.esperado,'las cifras salen del temario (lecciones, ruta y proyectos)');
-  r.cumple(est.hrefs.indexOf('Entrar→inicio.html')>=0&&est.hrefs.indexOf('Crear un documento→inicio.html#crear')>=0,'los botones llevan a la app',est.hrefs);
-  r.cumple(await nadaGuardado(e),'verla no guarda nada en el navegador');
-  await revisar(e,r,'bienvenida de estudiantes en escritorio');
-  await Promise.all([e.waitForURL(/entrar\.html#crear$/),e.click('a[href="inicio.html#crear"]')]);await listo(e);
-  await e.check('input[name="perfil"][value="estudio"]');await e.click('#enSig');await e.click('#enSig');await e.waitForTimeout(100);
-  await Promise.all([e.waitForURL(/inicio\.html/),e.click('#enSig')]);await listo(e,300);
-  r.cumple(await e.isVisible('dialog.crear-dlg[open]')&&!/#crear/.test(e.url()),'«Crear un documento» pasa por «Crea tu espacio» y abre la ventana de Crear en el Inicio');
-  await e.goto(base+'estudiantes.html');await e.waitForURL(/inicio\.html$/);
-  r.cumple(/inicio\.html$/.test(e.url()),'quien ya usa OneBook pasa de estudiantes.html a su Inicio');
+  const res=await e.goto(base+'estudiantes.html');
+  r.igual(res.status(),404,'estudiantes.html ya no se publica');
   await cerrar(e);
 
   /* ---------- Celular y variantes de lectura ---------- */
@@ -147,11 +128,9 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   await revisar(c,r,'bienvenida de negocios en celular');
   r.cumple(await c.evaluate(function(){var n=document.querySelector('.lp-nav'),b=n.querySelector('.btn');return getComputedStyle(n.querySelector('a:not(.btn)')).display==='none'&&b.getBoundingClientRect().height>=34}),'en celular la cabecera deja solo «Entrar», con buen tamaño para el dedo');
   r.cumple(await c.evaluate(function(){var k=document.querySelector('#lpHoja .pg-k');return getComputedStyle(k).gridTemplateColumns.split(' ').length===2}),'en celular el resumen del plan va en dos columnas');
-  await c.goto(base+'estudiantes.html');await listo(c);
-  await revisar(c,r,'bienvenida de estudiantes en celular');
   await cerrar(c);
   for(const [nombre,aj,ancho,ruta] of [['oscuro',{tema:'dark'},1280,'index.html'],['alto contraste ×1.5 y OpenDyslexic',{contraste:'high',escala:1.5,fuente:'opendyslexic'},390,'index.html'],
-    ['oscuro y alto contraste',{tema:'dark',contraste:'high'},900,'index.html'],['estudiantes en oscuro y alto contraste',{tema:'dark',contraste:'high'},390,'estudiantes.html']]){
+    ['oscuro y alto contraste',{tema:'dark',contraste:'high'},900,'index.html']]){
     const q=await pagina(browser,{ancho:ancho,ajustes:aj,reducir:true});
     /* Con ajustes guardados el navegador ya «usa» OneBook: se pide la bienvenida con ?conoce */
     await q.goto(base+ruta+'?conoce');await listo(q,300);

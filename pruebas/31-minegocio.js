@@ -1,7 +1,7 @@
 /* Fase F7e: el Inicio de un negocio es la página de bloques «Mi negocio»: se crea sola una vez (indicadores, próximos
    vencimientos y el resumen del inventario), sus bloques se ven vivos en el Inicio, se edita como cualquier página
-   («Editar esta sección») y lo que agregas sale en el Inicio; no sale entre tus páginas recientes; en un espacio de
-   estudio no aparece; el paquete de tienda trae el inventario y el reporte; contraste y desbordes. */
+   («Editar esta sección») y lo que agregas sale en el Inicio; no sale entre tus páginas recientes; sin el módulo de
+   negocio no aparece; el paquete de tienda trae el inventario y el reporte; contraste y desbordes. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 const NEGOCIO={perfil:'negocio',modulos:['negocio'],nombre:'Ana',negocio:{nombre:'Abarrotes Ana',giro:'tienda',telefono:''},creado:'2026-01-01'};
@@ -56,11 +56,11 @@ prueba('Mi negocio en el Inicio',async function({browser,base,r}){
   await revisar(p,r,'Mi negocio en celular (oscuro)');
   await cerrar(p);
 
-  /* En un espacio de estudio no aparece */
-  const q=await pagina(browser,{ancho:1280,alto:900,reducir:true});
+  /* Sin el módulo de negocio no aparece */
+  const q=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'negocio',modulos:[],nombre:'',negocio:{nombre:'',giro:'otro',telefono:''},creado:'2026-01-01'}});
   await q.goto(base+'inicio.html');await listo(q,600);
-  r.cumple(await q.isHidden('#iniNegocio')&&!(await q.evaluate(function(){return AT.datos.documentos.leer('d-minegocio')})),'en un espacio de estudio no hay «Mi negocio»');
-  r.cumple(q.errores.length===0,'el Inicio de estudio sin errores',q.errores);
+  r.cumple(await q.isHidden('#iniNegocio')&&!(await q.evaluate(function(){return AT.datos.documentos.leer('d-minegocio')})),'sin el módulo de negocio no hay «Mi negocio»');
+  r.cumple(q.errores.length===0,'ese Inicio, sin errores',q.errores);
   /* El paquete de tienda trae el inventario y el reporte */
   const paq=await q.evaluate(function(){return AT.crear.paquetes.tienda.tipos.join(',')});
   r.igual(paq,'corte,inventario,reporte,fiado,proveedores','el paquete de tienda trae el inventario y el reporte del mes');

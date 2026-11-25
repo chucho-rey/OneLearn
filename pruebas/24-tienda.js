@@ -265,7 +265,7 @@ prueba('Bloques de la tienda',async function({browser,base,r}){
   await cerrar(n);
 
   /* Sin el módulo de negocio, «/» no ofrece los bloques de la tienda */
-  const e=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'estudio',modulos:['estudio'],nombre:'',negocio:null,creado:'2026-01-01'}});
+  const e=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'negocio',modulos:[],nombre:'',negocio:{nombre:'',giro:'otro',telefono:''},creado:'2026-01-01'}});
   await nuevoDoc(e,base);
   await e.click('.ed-cuerpo');await e.keyboard.type('/corte');await e.waitForTimeout(200);
   r.cumple(!/Corte de caja/.test(await e.evaluate(function(){var m=document.querySelector('.menu-barra');return m?m.textContent:''})),'sin el módulo de negocio, «/corte» no ofrece el corte de caja');

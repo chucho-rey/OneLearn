@@ -1,5 +1,5 @@
 /* OneBook: estilos del editor de documentos (solo documento.html).
-   El contenido usa los mismos estilos que una lección (base.css); aquí va lo propio de editar:
+   El contenido usa los mismos estilos que al leer (base.css); aquí va lo propio de editar:
    barra de herramientas, asa de bloque, menús, formularios de repaso y propiedades. Solo tokens de color. */
 
 /* ---------- Barra superior del documento ---------- */
@@ -121,27 +121,16 @@ body[data-pagina="documento"] .icon-btn.zen-btn{margin-left:0}
 .ed-cuerpo pre{margin:1em 0;padding:0.75rem 1rem;overflow-x:auto;background:var(--bg-side);border:1px solid var(--line);border-radius:0.5rem;font-size:0.875rem;line-height:1.5}
 .ed-cuerpo pre code{padding:0;border:0;background:none;font-size:inherit}
 
-/* Índice, laboratorio y repaso: bloques que no se escriben directamente */
-.ed-indice,.ed-repaso{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
+/* Índice y bloques que no se escriben directamente (también el legado) */
+.ed-indice{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
 .ed-indice .toc{margin:0.375rem 0 0}
 .ed-indice .link{text-decoration:none;color:var(--fg-2);cursor:default}
 .ed-indice .hint{margin:0.375rem 0 0}
 .ed-et{font-family:var(--font-mono);font-size:0.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2)}
 .ed-rep-h{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:0.5rem}
-.ed-rep-n{font-size:0.8125rem;color:var(--fg-2)}
-.ed-q{margin:0 0 0.875rem;padding:0.625rem 0.75rem 0.75rem;border:1px solid var(--line);border-radius:0.5rem;min-width:0}
-.ed-q legend{padding:0 0.25rem;font-size:0.8125rem;font-weight:600;color:var(--fg-2)}
 .ed-campo{display:flex;flex-direction:column;gap:0.25rem;margin:0 0 0.5rem}
 .ed-campo>span{font-size:0.8125rem;color:var(--fg-2)}
-.ed-repaso textarea,.ed-repaso input[type="text"]{width:100%;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
-.ed-repaso textarea{resize:vertical}
-.ed-repaso textarea:focus,.ed-repaso input[type="text"]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.ed-ops{display:flex;flex-direction:column;gap:0.375rem}
-.ed-op{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:0.5rem;align-items:center}
-.ed-op input[type="radio"]{width:1.125rem;height:1.125rem;margin:0;accent-color:var(--accent-solid)}
 .ed-ayuda{margin:0.25rem 0 0.5rem;font-size:0.8125rem;color:var(--fg-2)}
-.ed-quitar{color:var(--bad-ink)}
-.ed-lab{opacity:.85}
 
 /* ---------- Asa de bloque ---------- */
 .asa{position:absolute;left:-3.25rem;display:flex;gap:1px;z-index:3}
@@ -174,82 +163,10 @@ body[data-pagina="documento"] .icon-btn.zen-btn{margin-left:0}
 .menu-enlace input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .menu-bt{display:flex;flex-wrap:wrap;gap:0.375rem}
 
-/* ---------- Tesis: barra, citas, bibliografía y declaración ---------- */
-.ts-barra{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem;margin:0 0 0.75rem}
-.ts-barra .btn{display:inline-flex;align-items:center;gap:0.375rem}
-.ts-barra .btn .ico{font-size:1rem;color:var(--fg-2)}
-.ts-n{min-width:1.25rem;padding:0 0.3125rem;border-radius:0.625rem;background:var(--bg-soft);font-family:var(--font-mono);font-size:0.75rem;text-align:center}
-.ts-n:empty{display:none}
-.ts-palabras{margin-left:auto;font-family:var(--font-mono);font-size:0.75rem;color:var(--fg-2);white-space:nowrap}
-
 .ed-cuerpo .ref{padding:0 0.125rem;border-radius:0.1875rem;background:var(--accent-bg);color:var(--accent-ink);cursor:pointer}
 .ed-cuerpo .ref.ProseMirror-selectednode{outline:2px solid var(--accent)}
-ul.biblio{list-style:none;margin:0.75rem 0;padding:0}
-ul.biblio li{margin:0 0 0.625rem;padding-left:2.25rem;text-indent:-2.25rem;overflow-wrap:anywhere}
-.ed-biblio{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
-.ed-biblio .ed-rep-h{flex-wrap:wrap}
-.ed-biblio .hint{margin:0.375rem 0 0}
-.ed-decl-t{margin:0 0 0.75rem;font-size:0.9375rem}
-.ed-decl-t p{margin:0 0 0.5rem;max-width:none}
-.ed-decl-t ul{margin:0 0 0.5rem}
-.ed-decl fieldset .chk{display:flex;margin:0 0 0.375rem}
-.ed-uso{display:grid;grid-template-columns:minmax(0,0.8fr) minmax(0,1.6fr) auto;gap:0.375rem;align-items:center;margin:0.375rem 0}
-@media (max-width:599px){.ed-uso{grid-template-columns:minmax(0,1fr) auto}.ed-uso [data-c="uso"]{grid-column:1}}
 .declaracion{margin:1.5em 0}
 .declaracion p{max-width:none}
-
-/* Ventanas «Fuentes» y «Autoría» */
-dialog.fu-dlg{width:min(40rem,calc(100vw - 2rem))}
-dialog.au-dlg{width:min(36rem,calc(100vw - 2rem))}
-.fu-acc{display:flex;flex-wrap:wrap;gap:0.375rem;margin:0 0 0.75rem}
-.fu-acc .btn{display:inline-flex;align-items:center;gap:0.25rem}
-.fu-cita{display:flex;flex-wrap:wrap;align-items:flex-end;gap:0.25rem 1rem;margin:0 0 0.75rem}
-.fu-cita .ed-campo{margin:0;flex:0 1 12rem}
-.fu-l{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-.fu-i{padding:0.625rem 0;border-bottom:1px solid var(--line)}
-.fu-ref{margin:0 0 0.375rem;font-size:0.9375rem;max-width:none;overflow-wrap:anywhere}
-.fu-pie{display:flex;flex-wrap:wrap;align-items:center;gap:0.25rem 0.5rem}
-.fu-meta{margin-right:auto;font-size:0.8125rem;color:var(--fg-2)}
-.fu-vacio{margin:0.5rem 0 0}
-.fu-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 0.75rem}
-.fu-prev{margin:0.25rem 0 0.75rem;padding:0.5rem 0.75rem;border-radius:0.375rem;background:var(--bg-side);font-size:0.875rem;max-width:none;overflow-wrap:anywhere}
-.fu-prev:empty{display:none}
-.fu-msg{margin:0 0 0.75rem;font-size:0.875rem;color:var(--fg-2)}
-.fu-msg:empty{display:none}
-.fu-dlg input[type="text"],.fu-dlg select,.fu-dlg textarea,.au-dlg select{width:100%;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
-.fu-dlg textarea{resize:vertical}
-.fu-dlg input[type="file"]{font-size:0.875rem;max-width:100%}
-.fu-dlg :is(input,select,textarea):focus,.au-dlg select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.au-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.5rem;margin:0 0 0.5rem}
-.au-k .kpi{border:1px solid var(--line);border-radius:0.375rem;padding:0.5rem 0.625rem;min-width:0}
-.au-k .kpi span{display:block;font-size:0.75rem;color:var(--fg-2)}
-.au-k .kpi b{display:block;margin-top:2px;font-family:var(--font-mono);font-size:0.875rem;overflow-wrap:anywhere}
-@media (max-width:599px){.au-k{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.au-h3{margin:1rem 0 0.25rem;font-size:0.9375rem}
-.au-dlg .barras{margin-top:0.25rem}
-.au-dlg .br{grid-template-columns:minmax(0,9rem) minmax(0,1fr) auto}
-.au-l{list-style:none;margin:0.25rem 0 0;padding:0}
-.au-i{display:grid;grid-template-columns:minmax(0,1fr) minmax(8rem,11rem);gap:0.5rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--line)}
-@media (max-width:599px){.au-i{grid-template-columns:minmax(0,1fr)}}
-.au-t{display:flex;flex-direction:column;min-width:0}
-.au-meta{font-size:0.75rem;color:var(--fg-2)}
-.au-m{font-size:0.875rem;overflow-wrap:anywhere}
-.au-decl{margin:1rem 0;padding:0.5rem 0.75rem;border-radius:0.375rem;background:var(--bg-side);font-size:0.875rem;max-width:none}
-.au-dlg .td-bt .btn,.fu-dlg .td-bt .btn{display:inline-flex;align-items:center;gap:0.375rem}
-
-/* «¿De dónde viene lo que pegaste?» */
-.au-bar{position:fixed;z-index:60;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 0.75rem;
-  width:max-content;max-width:calc(100vw - 2rem);padding:0.5rem 0.5rem 0.5rem 1rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg);color:var(--fg);font-size:0.9375rem;box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.18)}
-.au-bar p{margin:0;max-width:none}
-.au-ops{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem}
-
-/* «Respaldo» en la barra de la tesis y ventana «Proteger» */
-.ts-barra .ts-aviso{border-color:var(--warn);background:var(--warn-bg);color:var(--warn-ink)}
-.ts-barra .ts-aviso .ico{color:var(--warn-ink)}
-dialog.pr-dlg{width:min(32rem,calc(100vw - 2rem))}
-.pr-dlg .td-bt .btn{display:inline-flex;align-items:center;gap:0.375rem}
-.pr-ult{font-size:0.9375rem}
-.pr-rec{margin:0.75rem 0 0;font-size:0.875rem}
 
 /* ---------- Piezas académicas (piezas.js): figuras, tablas numeradas, ecuaciones, notas al pie ---------- */
 /* Al leer */
@@ -261,14 +178,9 @@ dialog.pr-dlg{width:min(32rem,calc(100vw - 2rem))}
 .fig img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:0.25rem}
 .fig-nota{margin:0.5rem 0 0;font-size:0.875rem;color:var(--fg-2);max-width:none}
 .tabla-num .tbl-wrap{margin:0.25rem 0 0}
-.ecu{position:relative;display:flex;align-items:center;gap:1rem;margin:1.25em 0;min-width:0}
-.ecu .ancla{position:absolute;top:0;scroll-margin-top:5rem}
-.ecu-f{flex:1 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;text-align:center}
-.ecu-f .katex-display{margin:0}
-.ecu-n{flex:none;font-family:var(--font-mono);font-size:0.875rem;color:var(--fg-2)}
 .formula{white-space:normal}
-.formula.err,.ecu-f.err{font-family:var(--font-mono);font-size:0.875em;color:var(--bad-ink);text-decoration:underline wavy var(--bad)}
-.formula.vacia,.ecu-f.vacia{font-size:0.875rem;color:var(--fg-2);font-style:italic}
+.formula.err{font-family:var(--font-mono);font-size:0.875em;color:var(--bad-ink);text-decoration:underline wavy var(--bad)}
+.formula.vacia{font-size:0.875rem;color:var(--fg-2);font-style:italic}
 .nota-ref{line-height:0;font-size:0.75em}
 .nota-ref a{padding:0 0.125rem;font-weight:600;text-decoration:none;color:var(--accent-ink)}
 .nota-ref a:hover{text-decoration:underline}
@@ -279,12 +191,10 @@ dialog.pr-dlg{width:min(32rem,calc(100vw - 2rem))}
 .nota-vuelta:hover{background:var(--hover)}
 .xref{color:var(--accent-ink)}
 .xref.rota{color:var(--bad-ink);font-style:italic}
-.indice-piezas{margin:1.5em 0}
-.indice-piezas h2{margin-top:0}
 
 /* En el editor */
-.ed-fig,.ed-ecu{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
-.ed-fig.ProseMirror-selectednode,.ed-ecu.ProseMirror-selectednode,.ed-tnum.ProseMirror-selectednode{outline:2px solid var(--accent);outline-offset:2px}
+.ed-fig{margin:1em 0;padding:0.75rem 1rem;border:1px dashed var(--line-strong);border-radius:0.5rem}
+.ed-fig.ProseMirror-selectednode,.ed-tnum.ProseMirror-selectednode{outline:2px solid var(--accent);outline-offset:2px}
 .ed-fig-h{display:flex;align-items:center;gap:0.5rem}
 .ed-fig-tit{width:100%;min-width:0;margin:0.25rem 0 0.5rem;padding:0.25rem 0.375rem;border:1px solid transparent;border-radius:0.375rem;background:transparent;color:var(--fg);font:inherit;font-style:italic}
 .ed-fig-tit:hover{border-color:var(--line)}
@@ -293,36 +203,28 @@ dialog.pr-dlg{width:min(32rem,calc(100vw - 2rem))}
 .ed-fig-img .btn{display:inline-flex;align-items:center;gap:0.375rem}
 .ed-fig-c{margin-top:0.625rem}
 .ed-fig-c .ed-campo{margin:0 0 0.375rem}
-.ed-fig input[type="text"]:not(.ed-fig-tit),.ed-tnum-p input,.ed-ecu textarea,.pz-form textarea{width:100%;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
-.ed-ecu textarea,.pz-form textarea[spellcheck="false"]{font-family:var(--font-mono);font-size:0.875rem;resize:vertical}
+.ed-fig input[type="text"]:not(.ed-fig-tit),.ed-tnum-p input,.pz-form textarea{width:100%;min-width:0;padding:0.375rem 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.pz-form textarea[spellcheck="false"]{font-family:var(--font-mono);font-size:0.875rem;resize:vertical}
 .pz-form textarea{resize:vertical}
-.ed-fig input:focus,.ed-tnum-p input:focus,.ed-ecu textarea:focus,.pz-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ed-fig input:focus,.ed-tnum-p input:focus,.pz-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .ed-fig-bt{display:flex;justify-content:flex-end}
 .ed-tnum{margin:1em 0}
 .ed-tnum-h{display:flex;flex-direction:column}
 .ed-tnum-h .ed-fig-tit{margin-bottom:0}
 .ed-tnum-c .tableWrapper,.ed-tnum-c table.ed-tabla{margin:0.25rem 0 0.5rem}
 .ed-tnum-p .ed-campo{margin:0}
-.ed-ecu-v{display:flex;align-items:center;gap:1rem;width:100%;padding:0.25rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg);font:inherit;text-align:center;cursor:pointer}
-.ed-ecu-v:hover{background:var(--hover)}
-.ed-ecu-v .ecu-f{flex:1 1 auto}
-.ed-ecu-e{margin-top:0.5rem}
-.ed-ecu-e .ed-campo{margin-bottom:0.25rem}
-.ed-cuerpo .ed-formula{padding:0 0.125rem;border-radius:0.1875rem;cursor:pointer}
-.ed-cuerpo .ed-formula:hover,.ed-cuerpo .xref:hover{background:var(--hover)}
-.ed-cuerpo .ed-formula.ProseMirror-selectednode,.ed-cuerpo .ed-nota.ProseMirror-selectednode,.ed-cuerpo .xref.ProseMirror-selectednode{outline:2px solid var(--accent)}
+.ed-cuerpo .xref:hover{background:var(--hover)}
+.ed-cuerpo .ed-nota.ProseMirror-selectednode,.ed-cuerpo .xref.ProseMirror-selectednode{outline:2px solid var(--accent)}
 .ed-cuerpo .ed-nota{padding:0 0.1875rem;border-radius:0.1875rem;background:var(--accent-bg);color:var(--accent-ink);font-weight:600;cursor:pointer}
 .ed-cuerpo .xref{padding:0 0.125rem;border-radius:0.1875rem;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:0.2em}
-.pz-vista{min-height:1.5rem;padding:0.375rem 0.5rem;border-radius:0.375rem;background:var(--bg-side);overflow-x:auto;max-width:min(26rem,calc(100vw - 3rem))}
 .pz-form .ed-ayuda{margin:0}
 .ed-notas{margin:2rem 0 0;padding-top:0.75rem;border-top:1px solid var(--line)}
 .ed-notas[hidden]{display:none}
 .ed-notas ol{margin:0.375rem 0 0;padding-left:1.5rem}
 .ed-nota-i{display:block;width:100%;padding:0.125rem 0.25rem;border:0;border-radius:0.25rem;background:transparent;color:var(--fg);font:inherit;font-size:0.9375rem;text-align:left;cursor:pointer;overflow-wrap:anywhere}
 .ed-nota-i:hover{background:var(--hover)}
-.au-fig{margin:0.75rem 0 0}
 
-/* Ventana «Entregar» (entrega.js) */
+/* Ventana «Imprimir o exportar» (exportar.js) */
 dialog.en-dlg{width:min(34rem,calc(100vw - 2rem))}
 .en-f{margin:0 0 1rem;padding:0;border:0;min-width:0}
 .en-f legend{margin:0 0 0.25rem;padding:0;font-size:1rem;font-weight:600}
@@ -332,13 +234,7 @@ dialog.en-dlg{width:min(34rem,calc(100vw - 2rem))}
 .en-o{display:inline-flex;align-items:center;gap:0.375rem;font-size:0.9375rem;cursor:pointer}
 .en-o input{margin:0;accent-color:var(--accent-solid)}
 @media (max-width:599px){.en-c{grid-template-columns:minmax(0,1fr)}}
-.en-rev{margin:0 0 1rem}
-.en-rev h3{margin:0 0 0.25rem;font-size:1rem}
-.en-av{margin:0;padding:0;list-style:none}
-.en-av li{display:flex;gap:0.5rem;align-items:flex-start;padding:0.3125rem 0;font-size:0.9375rem;color:var(--fg)}
-.en-av .ico{flex:none;margin-top:0.25rem;color:var(--warn-ink)}
 .en-bt .btn{display:inline-flex;align-items:center;gap:0.375rem}
-.en-nota{margin:0.75rem 0 0;font-size:0.8125rem}
 
 /* Plan de pagos (pagos.js) */
 .pg-ed{border-style:dashed}
@@ -362,10 +258,8 @@ dialog.en-dlg{width:min(34rem,calc(100vw - 2rem))}
 
 /* Alto contraste */
 [data-contrast="high"] .tb-btn[aria-pressed="true"]{outline:1px solid var(--accent)}
-[data-contrast="high"] .ed-indice,[data-contrast="high"] .ed-repaso,[data-contrast="high"] .ed-q,[data-contrast="high"] .ed-biblio{border-color:var(--line-strong)}
-[data-contrast="high"] .au-bar{border-width:2px}
-[data-contrast="high"] .ed-fig,[data-contrast="high"] .ed-ecu{border-color:var(--line-strong)}
-[data-contrast="high"] .ts-barra .ts-aviso{border-width:2px}
+[data-contrast="high"] .ed-indice{border-color:var(--line-strong)}
+[data-contrast="high"] .ed-fig{border-color:var(--line-strong)}
 [data-contrast="high"] .menu{border-width:2px}
 
 /* La misma página abierta en otra pestaña: aquí queda solo para leer (documento.js) */

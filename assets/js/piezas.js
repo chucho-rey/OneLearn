@@ -1,32 +1,29 @@
-/* OneBook: piezas académicas de un documento (fase de tesis, hito T3).
-   - figura: imagen comprimida en el dispositivo (WebP, máximo 1600 px) con número, título, texto alternativo y nota de origen.
-   - tablaNumerada: una tabla con «Tabla N», título y nota, como pide APA.
-   - ecuacion (bloque numerado) y formula (dentro del texto), escritas en LaTeX y dibujadas con KaTeX,
-     que se carga solo cuando hay alguna (assets/vendor/katex).
+/* OneBook: piezas de un documento (imágenes, tablas numeradas, notas al pie y referencias cruzadas).
+   - figura: imagen comprimida en el dispositivo (WebP, máximo 1600 px) con pie y texto alternativo.
+   - tablaNumerada: una tabla con «Tabla N», título y nota.
    - notaPie: nota al pie numerada; al leer, las notas van al final con enlaces de ida y vuelta.
-   - indicePiezas: índice de figuras o de tablas, al día.
-   - refCruzada: «Figura 3», «Tabla 2», «Ecuación (4)» o el título de una sección; el número se actualiza solo.
-   Figuras, tablas y ecuaciones llevan attrs.clave, única en todo el documento (la cuida el plugin de ids de
-   editor.js): es el destino de las referencias cruzadas y el ancla al leer.
+   - refCruzada: «Tabla 2» o el título de una sección; el número se actualiza solo (las imágenes no se numeran).
+   Figuras y tablas llevan attrs.clave, única en todo el documento (la cuida el plugin de ids de editor.js):
+   es el destino de las referencias cruzadas y el ancla al leer.
+   Las ecuaciones, las fórmulas y los índices de figuras o tablas se fueron con lo de estudio (bloques.js los
+   dibuja como legado y el editor los conserva tal cual).
    Agrega los nodos al editor (AT.editorExtensiones, AT.editorInsertar), su dibujo a bloques.js
    (AT.bloques.registrar) y su Markdown (AT.piezas.md). Se carga en documento.html después de editor.js. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico;
-var CLASES={figura:'figura',tablaNumerada:'tabla',ecuacion:'ecuacion'};
-var NOMBRES={figura:'Figura',tabla:'Tabla',ecuacion:'Ecuación'};
+var CLASES={figura:'figura',tablaNumerada:'tabla'};
+var NOMBRES={figura:'Figura',tabla:'Tabla'};
 var CLAVE_OK=/^[A-Za-z][\w-]{0,63}$/;
 
-function academico(doc){var t=AT.tiposDoc&&doc&&AT.tiposDoc[doc.tipo];return !!(t&&t.academico)}
-function academicoActual(){return academico(AT.docActual)}
 
 /* ---------- Numeración: sirve para el JSON y para el documento del editor ---------- */
 function numerar(raiz){
-  var r={lista:[],por:{},secciones:[],notas:[]},c={figura:0,tabla:0,ecuacion:0};
+  var r={lista:[],por:{},secciones:[],notas:[]},c={figura:0,tabla:0};
   function ver(tipo,a,texto,pos){
     var cl=CLASES[tipo];
     if(cl){
-      var x={clave:a.clave||'',clase:cl,n:++c[cl],titulo:cl==='ecuacion'?String(a.latex||'').trim():String(a.titulo||'').trim(),nota:String(a.nota||'').trim(),pos:pos};
+      var x={clave:a.clave||'',clase:cl,n:++c[cl],titulo:String(a.titulo||'').trim(),nota:String(a.nota||'').trim(),pos:pos};
       r.lista.push(x);
       if(x.clave&&!r.por[x.clave])r.por[x.clave]=x;
     }else if(tipo==='heading'&&a.id){
@@ -45,7 +42,6 @@ function numerar(raiz){
 function etiqueta(x){
   if(!x)return '(referencia rota)';
   if(x.clase==='seccion')return '«'+(x.titulo||'Sección sin título')+'»';
-  if(x.clase==='ecuacion')return 'Ecuación ('+x.n+')';
   return NOMBRES[x.clase]+' '+x.n;
 }
 /* Numeración de un documento en JSON, guardada mientras no cambie */
@@ -55,34 +51,6 @@ function deJSON(contenido){
   return cacheJSON.r;
 }
 function piezasDe(ctx){return ctx.piezas||(ctx.piezas=numerar(ctx.doc&&ctx.doc.contenido))}
-
-/* ---------- KaTeX, solo cuando hace falta ---------- */
-var katexProm=null;
-function katex(){
-  if(window.katex)return Promise.resolve(window.katex);
-  if(katexProm)return katexProm;
-  var base=((AT.rutas&&AT.rutas.raiz)||'')+'assets/vendor/katex/';
-  katexProm=new Promise(function(ok,mal){
-    var l=document.createElement('link');l.rel='stylesheet';l.href=base+'katex.min.css';document.head.appendChild(l);
-    var s=document.createElement('script');s.src=base+'katex.min.js';
-    s.onload=function(){if(window.katex)ok(window.katex);else mal(new Error('KaTeX'))};
-    s.onerror=function(){katexProm=null;s.remove();mal(new Error('No se pudo cargar KaTeX'))};
-    document.head.appendChild(s);
-  });
-  return katexProm;
-}
-/* Dibuja LaTeX en el elemento; si tiene un error, deja el código a la vista (con su motivo en title) */
-function pintarFormula(e,latex,bloque){
-  latex=String(latex||'').trim();
-  e.classList.remove('err');e.removeAttribute('title');
-  if(!latex){e.textContent=bloque?'Ecuación vacía: escribe en LaTeX':'fórmula';e.classList.add('vacia');return Promise.resolve(false)}
-  e.classList.remove('vacia');
-  if(!window.katex)e.textContent=latex;
-  return katex().then(function(k){
-    try{k.render(latex,e,{displayMode:!!bloque,throwOnError:true,strict:'ignore',trust:false,maxSize:20,maxExpand:500,output:'htmlAndMathml'});return true}
-    catch(x){e.textContent=latex;e.classList.add('err');e.title=String(x&&x.message||'Error').replace(/^KaTeX parse error: /,'');return false}
-  },function(){e.textContent=latex;return false});
-}
 
 /* ---------- Imágenes: se comprimen en el dispositivo antes de guardarse ---------- */
 var MAX_LADO=1600,MAX_BYTES=30*1024*1024;
@@ -137,9 +105,9 @@ function notaDe(h,nota){
 if(AT.bloques&&AT.bloques.registrar){
   AT.bloques.registrar('figura',{
     dibujar:function(n,c,h){
-      var a=h.attrs(n),info=piezasDe(c).por[a.clave],aca=academico(c.doc),fig=h.el('figure','fig');
+      var a=h.attrs(n),info=piezasDe(c).por[a.clave],fig=h.el('figure','fig');
       var an=ancla(h,a.clave);if(an)fig.appendChild(an);
-      if(aca||a.titulo)fig.appendChild(leyenda(h,'figura',info,a.titulo,aca));
+      if(a.titulo)fig.appendChild(leyenda(h,'figura',info,a.titulo,false));
       var src=srcSeguro(a.src);
       if(src)fig.appendChild(h.el('img',null,{src:src,alt:a.alt||a.titulo||'',loading:'lazy',decoding:'async'}));
       else{var v=h.el('p','hint');v.textContent='(Figura sin imagen)';fig.appendChild(v)}
@@ -158,21 +126,6 @@ if(AT.bloques&&AT.bloques.registrar){
       return fig;
     },
     texto:function(n,tp){var a=n.attrs||{};return [a.titulo].concat((n.content||[]).map(tp),[a.nota]).filter(Boolean).join('\n')+'\n'}
-  });
-  AT.bloques.registrar('ecuacion',{
-    dibujar:function(n,c,h){
-      var a=h.attrs(n),info=piezasDe(c).por[a.clave],d=h.el('div','ecu');
-      var an=ancla(h,a.clave);if(an)d.appendChild(an);
-      var f=h.el('div','ecu-f');pintarFormula(f,a.latex,true);
-      var num=h.el('span','ecu-n');num.textContent='('+(info?info.n:'')+')';
-      d.appendChild(f);d.appendChild(num);
-      return d;
-    },
-    texto:function(n){return String((n.attrs||{}).latex||'')+'\n'}
-  });
-  AT.bloques.registrar('formula',{
-    dibujar:function(n,c,h){var s=h.el('span','formula');pintarFormula(s,h.attrs(n).latex,false);return s},
-    texto:function(n){return String((n.attrs||{}).latex||'')}
   });
   AT.bloques.registrar('notaPie',{
     dibujar:function(n,c,h){
@@ -204,29 +157,12 @@ if(AT.bloques&&AT.bloques.registrar){
     },
     texto:function(n){var d=AT.docActual;return d?etiqueta(deJSON(d.contenido).por[(n.attrs||{}).destino]):''}
   });
-  AT.bloques.registrar('indicePiezas',{
-    dibujar:function(n,c,h){
-      var cl=h.attrs(n).clase==='tabla'?'tabla':'figura',l=piezasDe(c).lista.filter(function(x){return x.clase===cl});
-      if(!l.length)return null;
-      var d=h.el('div','indice-piezas'),t=h.el('h2');
-      t.textContent=cl==='tabla'?'Índice de tablas':'Índice de figuras';d.appendChild(t);
-      var ul=h.el('ul','toc',{'aria-label':t.textContent});
-      l.forEach(function(x){
-        var li=h.el('li'),b=h.el('button','link',{type:'button','data-go':CLAVE_OK.test(x.clave)?x.clave:null});
-        b.textContent=etiqueta(x)+(x.titulo?'. '+x.titulo:'');li.appendChild(b);ul.appendChild(li);
-      });
-      d.appendChild(ul);
-      return d;
-    },
-    texto:function(){return ''}
-  });
 }
 
 /* ---------- Markdown (documento.js) ---------- */
 var md={
   figura:function(n,m){
-    var a=n.attrs||{},x=m.piezas.por[a.clave],aca=academico(m.doc),out=[];
-    if(aca)out.push('**Figura '+(x?x.n:'')+'**');
+    var a=n.attrs||{},out=[];
     if(a.titulo)out.push('*'+a.titulo+'*');
     var src=srcSeguro(a.src);if(src)out.push('!['+(a.alt||a.titulo||'').replace(/[\[\]]/g,'')+']('+src+')');
     if(a.nota)out.push('*Nota.* '+a.nota);
@@ -236,32 +172,12 @@ var md={
     var a=n.attrs||{},x=m.piezas.por[a.clave];
     return ['**Tabla '+(x?x.n:'')+'**',a.titulo?'*'+a.titulo+'*':'',m.bloques(n.content),a.nota?'*Nota.* '+a.nota:''].filter(Boolean).join('\n\n');
   },
-  ecuacion:function(n,m){var a=n.attrs||{},x=m.piezas.por[a.clave];return '$$\n'+String(a.latex||'').trim()+(x?' \\tag{'+x.n+'}':'')+'\n$$'},
-  indicePiezas:function(n,m){
-    var cl=(n.attrs||{}).clase==='tabla'?'tabla':'figura',l=m.piezas.lista.filter(function(x){return x.clase===cl});
-    if(!l.length)return '';
-    return '## '+(cl==='tabla'?'Índice de tablas':'Índice de figuras')+'\n\n'+l.map(function(x){return '- '+etiqueta(x)+(x.titulo?'. '+x.titulo:'')}).join('\n');
-  },
   /* En línea */
-  formula:function(n){return '$'+String((n.attrs||{}).latex||'').trim()+'$'},
   refCruzada:function(n,m){return etiqueta(m.piezas.por[(n.attrs||{}).destino])},
   notaPie:function(n,m){m.notas.push(String((n.attrs||{}).texto||''));return '[^'+m.notas.length+']'}
 };
 
-/* Para la constancia de autoría: figuras y tablas con su nota de origen */
-function inventario(doc){
-  var r=numerar(doc&&doc.contenido);
-  return r.lista.filter(function(x){return x.clase!=='ecuacion'});
-}
-/* Las imágenes también entran en la huella de la constancia */
-function imagenes(doc){
-  var out=[];
-  (function rec(n){if(!n||typeof n!=='object')return;if(n.type==='figura'&&n.attrs&&n.attrs.src)out.push(String(n.attrs.src));(n.content||[]).forEach(rec)})(doc&&doc.contenido);
-  return out;
-}
-
-AT.piezas={numerar:numerar,etiqueta:etiqueta,katex:katex,pintarFormula:pintarFormula,comprimir:comprimir,srcSeguro:srcSeguro,
-  md:md,inventario:inventario,imagenes:imagenes,academico:academico};
+AT.piezas={numerar:numerar,etiqueta:etiqueta,comprimir:comprimir,srcSeguro:srcSeguro,md:md};
 
 /* =====================================================================================
    Editor: nodos de Tiptap. Solo si el editor está cargado (documento.html).
@@ -317,16 +233,15 @@ function teclasCampos(dom,p){
 /* Al insertar una pieza nueva, su vista abre el campo correspondiente */
 var abrirNueva=null;
 
-/* Formulario pequeño junto al texto (fórmula, nota al pie) */
+/* Formulario pequeño junto al texto (nota al pie) */
 function formulario(editor,ancla,o){
   AT.menu.cerrar();
   var f=el('form','menu menu-enlace pz-form');
   f.setAttribute('role','dialog');f.setAttribute('aria-label',o.titulo);
   var uid='pz'+AT.bloques.nuevoId().slice(2);
   f.innerHTML='<label for="'+uid+'">'+esc(o.titulo)+'</label>'+
-    (o.lineas?'<textarea id="'+uid+'" rows="'+o.lineas+'" spellcheck="'+(o.latex?'false':'true')+'"'+(o.latex?' autocapitalize="off" autocomplete="off"':'')+' placeholder="'+esc(o.pista||'')+'"></textarea>':
+    (o.lineas?'<textarea id="'+uid+'" rows="'+o.lineas+'" spellcheck="true" placeholder="'+esc(o.pista||'')+'"></textarea>':
       '<input id="'+uid+'" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="'+esc(o.pista||'')+'">')+
-    (o.vista?'<div class="pz-vista" aria-live="polite"></div>':'')+
     (o.ayuda?'<p class="ed-ayuda">'+o.ayuda+'</p>':'')+
     '<div class="menu-bt"><button class="btn pri" type="submit">'+esc(o.boton||'Aplicar')+'</button>'+
     (o.quitar?'<button class="btn" type="button" data-q>'+esc(o.quitar)+'</button>':'')+'<button class="btn" type="button" data-x>Cancelar</button></div>';
@@ -335,10 +250,8 @@ function formulario(editor,ancla,o){
   f.style.left=Math.max(8,Math.min(r.left,innerWidth-f.offsetWidth-8))+'px';
   var y=r.bottom+6;if(y+f.offsetHeight>innerHeight-8&&r.top-f.offsetHeight-6>8)y=r.top-f.offsetHeight-6;
   f.style.top=Math.max(8,y)+'px';
-  var inp=$('#'+uid,f),vista=$('.pz-vista',f),t=null;
+  var inp=$('#'+uid,f);
   inp.value=o.valor||'';
-  function previa(){if(vista)pintarFormula(vista,inp.value,false)}
-  if(vista){previa();inp.addEventListener('input',function(){clearTimeout(t);t=setTimeout(previa,150)})}
   inp.focus();if(inp.select)inp.select();
   function cerrar(){f.remove();document.removeEventListener('pointerdown',afuera,true);editor.commands.focus()}
   function afuera(e){if(!f.contains(e.target))cerrar()}
@@ -393,14 +306,12 @@ function insertarImagen(editor,archivo,pos){
 }
 function vistaFigura(p){
   var node=p.node,dom=el('div','ed-fig');dom.contentEditable='false';
-  var aca=academicoActual();
-  dom.innerHTML='<div class="ed-fig-h"><span class="ed-et ed-num">'+(aca?'Figura':'Imagen')+'</span></div>'+
-    '<input type="text" class="ed-fig-tit" data-c="titulo" placeholder="'+(aca?'Título de la figura':'Pie de la imagen (opcional)')+'">'+
+  dom.innerHTML='<div class="ed-fig-h"><span class="ed-et ed-num">Imagen</span></div>'+
+    '<input type="text" class="ed-fig-tit" data-c="titulo" placeholder="Pie de la imagen (opcional)" aria-label="Pie de la imagen">'+
     '<div class="ed-fig-img"></div>'+
     '<div class="ed-fig-c"><label class="ed-campo"><span>Texto alternativo: qué muestra, para quien no la ve</span><input type="text" data-c="alt"></label>'+
-    (aca?'<label class="ed-campo"><span>Nota: de dónde viene (ej. Elaboración propia, o Adaptado de Pérez, 2020)</span><input type="text" data-c="nota"></label>':'')+
     '</div><div class="ed-fig-bt"><button type="button" class="ed-link" data-acc="cambiar">Cambiar imagen</button></div>';
-  var imgCaja=$('.ed-fig-img',dom),lab=$('.ed-num',dom);
+  var imgCaja=$('.ed-fig-img',dom);
   function pintarImg(){
     var src=srcSeguro(node.attrs.src);
     imgCaja.innerHTML='';
@@ -413,12 +324,7 @@ function vistaFigura(p){
       if(c.value!==v&&document.activeElement!==c)c.value=v;
     });
   }
-  function numerarV(){
-    var x=infoEn(p);
-    lab.textContent=aca?'Figura '+(x?x.n:''):'Imagen';
-    var n=aca?'figura '+(x?x.n:''):'imagen';
-    $('[data-c="titulo"]',dom).setAttribute('aria-label',aca?'Título de la '+n:'Pie de la imagen');
-  }
+  function numerarV(){}
   dom.addEventListener('input',function(e){var c=e.target.getAttribute('data-c');if(c)poner(p,c,e.target.value)});
   teclasCampos(dom,p);
   dom.addEventListener('click',function(e){
@@ -514,7 +420,7 @@ AT.editorMenuTabla=function(editor,items){
       var n=editor.state.doc.nodeAt(env.pos);if(!n)return;
       editor.view.dispatch(editor.state.tr.replaceWith(env.pos,env.pos+n.nodeSize,n.firstChild));editor.view.focus();
     }});
-  }else if(academicoActual()){
+  }else{
     items.push({sep:true},{t:'Numerar como «Tabla N», con título',i:'tabla',f:function(){
       var t=editor.state.doc.nodeAt(tablaPos);if(!t)return;
       var clave=AT.bloques.nuevoId().replace(/^b-/,'p-');abrirNueva=clave;
@@ -523,74 +429,6 @@ AT.editorMenuTabla=function(editor,items){
   }
   return items;
 };
-
-/* ---------- Ecuación numerada ---------- */
-function vistaEcuacion(p){
-  var node=p.node,dom=el('div','ed-ecu');dom.contentEditable='false';
-  var uid='ecu'+AT.bloques.nuevoId().slice(2);
-  dom.innerHTML='<button type="button" class="ed-ecu-v" data-acc="editar"><span class="ecu-f"></span><span class="ecu-n"></span></button>'+
-    '<div class="ed-ecu-e" hidden><label class="ed-campo" for="'+uid+'"><span>Ecuación en LaTeX</span></label>'+
-    '<textarea id="'+uid+'" rows="2" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"></textarea>'+
-    '<p class="ed-ayuda">Ejemplos: <code>E = mc^2</code>, <code>\\frac{a}{b}</code>, <code>\\sum_{i=1}^{n} x_i</code>. Enter para terminar. <button type="button" class="ed-link" data-acc="listo">Listo</button></p></div>';
-  var f=$('.ecu-f',dom),num=$('.ecu-n',dom),caja=$('.ed-ecu-e',dom),ta=$('textarea',dom),btn=$('.ed-ecu-v',dom),t=null;
-  function pintar(){pintarFormula(f,node.attrs.latex,true)}
-  function numerarV(){var x=infoEn(p);num.textContent='('+(x?x.n:'')+')';btn.setAttribute('aria-label','Ecuación ('+(x?x.n:'')+'): '+(node.attrs.latex||'vacía')+'. Editar')}
-  function abrir(){caja.hidden=false;dom.classList.add('editando');ta.value=node.attrs.latex||'';ta.focus()}
-  function cerrar(){
-    caja.hidden=true;dom.classList.remove('editando');
-    salirDespues(p);
-  }
-  dom.addEventListener('click',function(e){
-    var b=e.target.closest('[data-acc]');if(!b)return;
-    if(b.getAttribute('data-acc')==='editar'){if(caja.hidden)abrir();else ta.focus()}
-    else cerrar();
-  });
-  ta.addEventListener('input',function(){clearTimeout(t);var v=ta.value;t=setTimeout(function(){poner(p,'latex',v)},120)});
-  ta.addEventListener('keydown',function(e){
-    if(e.key==='Escape'||(e.key==='Enter'&&!e.shiftKey)){e.preventDefault();e.stopPropagation();clearTimeout(t);poner(p,'latex',ta.value);cerrar()}
-  });
-  var v={dom:dom,numerar:numerarV,abrir:abrir,
-    update:function(n){if(n.type.name!=='ecuacion')return false;var otra=n.attrs.latex!==node.attrs.latex;node=n;if(otra)pintar();numerarV();return true},
-    stopEvent:function(e){return !!(e.target&&e.target.closest&&e.target.closest('textarea,button,label'))},
-    ignoreMutation:function(){return true},
-    destroy:function(){clearTimeout(t);vistas.delete(v)}};
-  vistas.add(v);pintar();numerarV();
-  if(abrirNueva&&abrirNueva===node.attrs.clave){abrirNueva=null;setTimeout(function(){if(dom.isConnected)abrir()},0)}
-  return v;
-}
-var Ecuacion=atomo('ecuacion',vistaEcuacion,{
-  addAttributes:function(){return {clave:attr('clave',''),latex:attr('latex','')}}
-});
-function nuevaEcuacion(c,latex){
-  var clave=AT.bloques.nuevoId().replace(/^b-/,'p-');abrirNueva=latex?null:clave;
-  return c.insertContent({type:'ecuacion',attrs:{clave:clave,latex:latex||''}});
-}
-
-/* ---------- Fórmula dentro del texto ---------- */
-function pedirFormula(editor,valor,ancla,alAplicar,alQuitar){
-  formulario(editor,ancla,{titulo:'Fórmula en LaTeX',valor:valor,latex:true,vista:true,pista:'x^2 + y^2 = r^2',
-    ayuda:'También puedes escribirla entre signos de dólar: <code>$x^2$</code>.',quitar:alQuitar?'Quitar fórmula':'',alAplicar:alAplicar,alQuitar:alQuitar});
-}
-var Formula=T.Node.create({
-  name:'formula',group:'inline',inline:true,atom:true,selectable:true,
-  addAttributes:function(){return {latex:attr('latex','')}},
-  parseHTML:function(){return [{tag:'span[data-formula]'}]},
-  renderHTML:function(o){return ['span',T.mergeAttributes(o.HTMLAttributes,{'data-formula':'',class:'formula'}),o.node.attrs.latex||'']},
-  renderText:function(o){return '$'+(o.node.attrs.latex||'')+'$'},
-  addNodeView:function(){return function(p){
-    var node=p.node,dom=el('span','formula ed-formula');dom.contentEditable='false';
-    pintarFormula(dom,node.attrs.latex,false);
-    return {dom:dom,update:function(n){if(n.type.name!=='formula')return false;if(n.attrs.latex!==node.attrs.latex){node=n;pintarFormula(dom,n.attrs.latex,false)}node=n;return true},ignoreMutation:function(){return true}};
-  }},
-  addInputRules:function(){
-    var tipo=this.type;
-    /* $x^2$ al escribir: sin espacios junto a los signos (así «$5 y $10» no se convierte) */
-    return [new T.InputRule({find:/(?:^|[\s(])\$([^$\s](?:[^$]*[^$\s\\])?)\$$/,handler:function(o){
-      var m=o.match,ini=o.range.from+m[0].indexOf('$');
-      o.state.tr.replaceWith(ini,o.range.to,tipo.create({latex:m[1]}));
-    }})];
-  }
-});
 
 /* ---------- Nota al pie ---------- */
 function pedirNota(editor,valor,ancla,alAplicar,alQuitar){
@@ -628,16 +466,17 @@ var NotaPie=T.Node.create({
 
 /* ---------- Referencia cruzada ---------- */
 function destinos(editor){
-  var r=numeros(editor),aca=academicoActual();
-  return r.lista.filter(function(x){return x.clave}).map(function(x){
-    return {t:etiqueta(x)+(x.titulo&&x.clase!=='ecuacion'?'. '+x.titulo:''),d:x.clase==='ecuacion'?x.titulo:'',i:x.clase==='figura'?'imagen':x.clase==='tabla'?'tabla':'ecuacion',clave:x.clave};
+  /* Las imágenes no llevan número (solo su pie): se puede remitir a las tablas numeradas y a las secciones */
+  var r=numeros(editor);
+  return r.lista.filter(function(x){return x.clave&&x.clase==='tabla'}).map(function(x){
+    return {t:etiqueta(x)+(x.titulo?'. '+x.titulo:''),d:'',i:'tabla',clave:x.clave};
   }).concat(r.secciones.filter(function(s){return s.titulo}).map(function(s){
     return {t:s.titulo,d:s.nivel===3?'Subtítulo':'Sección',i:s.nivel===3?'subtitulo':'titulo',clave:s.clave};
   }));
 }
 function elegirDestino(editor,ancla,alElegir){
   var l=destinos(editor);
-  if(!l.length)l=[{t:'Todavía no hay a qué referirse',d:'Agrega figuras, tablas, ecuaciones o títulos de sección',i:'enlace',desactivado:true}];
+  if(!l.length)l=[{t:'Todavía no hay a qué referirse',d:'Agrega tablas numeradas o títulos de sección',i:'enlace',desactivado:true}];
   AT.menu.abrir(ancla,l,{etiqueta:'Referencia cruzada a…',devolver:editor.view.dom,alElegir:function(it){alElegir(it.clave)}});
 }
 function irA(editor,clave){
@@ -673,21 +512,6 @@ var RefCruzada=T.Node.create({
     return v;
   }}
 });
-
-/* ---------- Índice de figuras o de tablas ---------- */
-var IndicePiezas=atomo('indicePiezas',function(p){
-  var node=p.node,dom=el('div','ed-indice');dom.contentEditable='false';
-  function pintar(){
-    var cl=node.attrs.clase==='tabla'?'tabla':'figura',l=numeros(p.editor).lista.filter(function(x){return x.clase===cl});
-    dom.innerHTML='<span class="ed-et">'+(cl==='tabla'?'Índice de tablas':'Índice de figuras')+'</span>'+(l.length?'<ul class="toc">'+l.map(function(x){
-      return '<li><span class="link">'+esc(etiqueta(x)+(x.titulo?'. '+x.titulo:''))+'</span></li>';
-    }).join('')+'</ul>':'<p class="hint">Aquí aparecerán tus '+(cl==='tabla'?'tablas numeradas':'figuras')+'. Si no hay, al leer no se muestra.</p>');
-  }
-  var v={dom:dom,numerar:pintar,update:function(n){if(n.type.name!=='indicePiezas')return false;node=n;pintar();return true},
-    ignoreMutation:function(){return true},destroy:function(){vistas.delete(v)}};
-  vistas.add(v);pintar();
-  return v;
-},{addAttributes:function(){return {clase:attr('clase','figura')}}});
 
 /* ---------- Extensión: repintar números, notas al pie, pegar imágenes, clics y atajos ---------- */
 var notasEd=null;
@@ -738,27 +562,8 @@ var Piezas=T.Extension.create({
   addKeyboardShortcuts:function(){
     var ed=this.editor;
     return {
-      'Mod-Alt-f':function(){nuevaNota(ed);return true},
-      /* Enter sobre una ecuación seleccionada la abre para editarla */
-      'Enter':function(){
-        var s=ed.state.selection;
-        if(!(s instanceof pm.NodeSelection)||s.node.type.name!=='ecuacion')return false;
-        var d=ed.view.nodeDOM(s.from),hecho=false;
-        vistas.forEach(function(v){if(!hecho&&v.dom===d&&v.abrir){v.abrir();hecho=true}});
-        return hecho;
-      }
+      'Mod-Alt-f':function(){nuevaNota(ed);return true}
     };
-  },
-  addInputRules:function(){
-    var ed=this.editor;
-    /* «$$» al empezar un párrafo vacío crea una ecuación numerada */
-    return [new T.InputRule({find:/^\$\$$/,handler:function(o){
-      var $f=o.state.doc.resolve(o.range.from);
-      var tx=$f.parent.textContent;if($f.parent.type.name!=='paragraph'||$f.depth!==1||(tx!=='$'&&tx!=='$$'))return null;
-      var ini=$f.before(1),fin=$f.after(1),clave=AT.bloques.nuevoId().replace(/^b-/,'p-');
-      abrirNueva=clave;
-      o.state.tr.replaceWith(ini,fin,ed.schema.nodes.ecuacion.create({clave:clave,latex:''}));
-    }})];
   },
   addProseMirrorPlugins:function(){
     var editor=this.editor;
@@ -781,16 +586,6 @@ var Piezas=T.Extension.create({
       handleClickOn:function(view,pos,node,nodePos,ev){
         var t=node.type.name,dom=view.nodeDOM(nodePos);
         if(t==='notaPie'){setTimeout(function(){menuNota(editor,nodePos,dom)},0);return true}
-        if(t==='formula'){
-          setTimeout(function(){
-            pedirFormula(editor,node.attrs.latex,dom,function(v){
-              var m=editor.state.doc.nodeAt(nodePos);if(!m||m.type.name!=='formula')return;
-              if(!v)editor.chain().focus().deleteRange({from:nodePos,to:nodePos+m.nodeSize}).run();
-              else editor.view.dispatch(editor.state.tr.setNodeAttribute(nodePos,'latex',v));
-            },function(){var m=editor.state.doc.nodeAt(nodePos);if(m&&m.type.name==='formula')editor.chain().focus().deleteRange({from:nodePos,to:nodePos+m.nodeSize}).run()});
-          },0);
-          return true;
-        }
         if(t==='refCruzada'){
           var x=numeros(editor).por[node.attrs.destino];
           setTimeout(function(){
@@ -811,23 +606,18 @@ var Piezas=T.Extension.create({
     }})];
   }
 });
-AT.editorExtensiones=(AT.editorExtensiones||[]).concat([Figura,TablaNumerada,Ecuacion,Formula,NotaPie,RefCruzada,IndicePiezas,Piezas]);
+AT.editorExtensiones=(AT.editorExtensiones||[]).concat([Figura,TablaNumerada,NotaPie,RefCruzada,Piezas]);
 
 /* ---------- Lo que se puede insertar con «/» o con «Insertar» ---------- */
 function edDe(c){return c.editor||AT.editorActual&&AT.editorActual.tiptap}
 var nuevos=[
-  {k:'imagen',t:'Imagen',d:'Con título y nota; se comprime sola',i:'imagen',p:'figura foto grafica dibujo png jpg captura',
+  {k:'imagen',t:'Imagen',d:'Con pie y texto alternativo; se comprime sola',i:'imagen',p:'figura foto grafica dibujo png jpg captura',
     f:function(c){var ed=edDe(c);setTimeout(function(){elegirArchivo().then(function(f){if(f)insertarImagen(ed,f)})},0);return c}},
-  {k:'tablaNumerada',modulo:'estudio',t:'Tabla numerada',d:'«Tabla N» con título y nota, como pide APA',i:'tabla',p:'cuadro apa titulo numero',academico:true,
+  {k:'tablaNumerada',t:'Tabla numerada',d:'«Tabla N» con título y nota',i:'tabla',p:'cuadro titulo numero',
     f:function(c){var clave=AT.bloques.nuevoId().replace(/^b-/,'p-');abrirNueva=clave;return c.insertContent({type:'tablaNumerada',attrs:{clave:clave},content:[tablaVacia()]})}},
-  {k:'ecuacion',modulo:'estudio',t:'Ecuación',d:'Numerada, en LaTeX; también con «$$»',i:'ecuacion',p:'formula matematicas latex katex numerada',f:function(c){return nuevaEcuacion(c)}},
-  {k:'formula',modulo:'estudio',t:'Fórmula en el texto',d:'Dentro del párrafo; también con $x^2$',i:'ecuacion',p:'matematicas latex katex inline',
-    f:function(c){var ed=edDe(c);setTimeout(function(){pedirFormula(ed,'',rectCursor(ed),function(v){if(v)ed.chain().focus().insertContent({type:'formula',attrs:{latex:v}}).run()})},0);return c}},
-  {k:'notaPie',modulo:'estudio',t:'Nota al pie',d:'Ctrl+Alt+F',i:'note',p:'pie footnote aclaracion',f:function(c){var ed=edDe(c);setTimeout(function(){nuevaNota(ed)},0);return c}},
-  {k:'refCruzada',modulo:'estudio',t:'Referencia cruzada',d:'«ver Figura 2»: el número se actualiza solo',i:'enlace',p:'ver figura tabla ecuacion seccion xref remitir',academico:true,
-    f:function(c){var ed=edDe(c);setTimeout(function(){elegirDestino(ed,rectCursor(ed),function(clave){ed.chain().focus().insertContent([{type:'refCruzada',attrs:{destino:clave}},{type:'text',text:' '}]).run()})},0);return c}},
-  {k:'indiceFiguras',t:'Índice de figuras',d:'La lista de figuras, al día',i:'indice',p:'lista figuras imagenes',academico:true,f:function(c){return c.insertContent({type:'indicePiezas',attrs:{clase:'figura'}})}},
-  {k:'indiceTablas',t:'Índice de tablas',d:'La lista de tablas numeradas, al día',i:'indice',p:'lista tablas cuadros',academico:true,f:function(c){return c.insertContent({type:'indicePiezas',attrs:{clase:'tabla'}})}}
+  {k:'notaPie',t:'Nota al pie',d:'Ctrl+Alt+F',i:'note',p:'pie footnote aclaracion',f:function(c){var ed=edDe(c);setTimeout(function(){nuevaNota(ed)},0);return c}},
+  {k:'refCruzada',t:'Referencia cruzada',d:'«ver Tabla 2»: el número se actualiza solo',i:'enlace',p:'ver figura imagen tabla seccion xref remitir',
+    f:function(c){var ed=edDe(c);setTimeout(function(){elegirDestino(ed,rectCursor(ed),function(clave){ed.chain().focus().insertContent([{type:'refCruzada',attrs:{destino:clave}},{type:'text',text:' '}]).run()})},0);return c}}
 ];
 var lista=AT.editorInsertar;
 if(lista){

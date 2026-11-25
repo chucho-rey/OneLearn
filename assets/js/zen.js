@@ -1,17 +1,16 @@
-/* Modo zen y atajos de teclado de OneBook (en las lecciones, en tus documentos y en «Cómo está hecho»).
-   Modo zen: oculta la barra lateral, la barra superior, el mapa y la barra de apuntes; deja el texto y una línea
-   fina de avance arriba, y usa la pantalla completa del navegador donde se puede. Una barra discreta (que aparece
-   al mover el ratón o con Tab) cambia el tamaño de letra y el ancho, abre la nota rápida y sale.
+/* Modo zen y atajos de teclado de OneBook (en tus páginas y en la Ayuda).
+   Modo zen: oculta la barra lateral y la barra superior; deja el texto y una línea fina de avance arriba, y usa la
+   pantalla completa del navegador donde se puede. Una barra discreta (que aparece al mover el ratón o con Tab)
+   cambia el tamaño de letra y el ancho, y sale.
    Atajos (ninguno se activa mientras escribes):
-     Z  modo zen        N  nota rápida        J / K  sección siguiente / anterior
+     Z  modo zen        J / K  sección siguiente / anterior        E  de leer a editar (en tus páginas)
      ?  lista de atajos  Esc  cierra lo que esté abierto; si no hay nada, sale del modo zen
-   Se carga después de los scripts comunes y de avance.js. */
+   Se carga después de los scripts comunes. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,ico=AT.ico,aj=AT.ajustes,root=document.documentElement;
 var page=$('.page');
-var conNota=!!document.body.getAttribute('data-leccion');
-if(!page||!(conNota||AT.rutas.pagina==='documento'||AT.rutas.pagina==='acerca'||AT.rutas.pagina==='ayuda'||AT.rutas.pagina==='proyecto'))return;
+if(!page||!(AT.rutas.pagina==='documento'||AT.rutas.pagina==='ayuda'))return;
 
 /* Avisos para lectores de pantalla */
 var aviso=document.createElement('div');
@@ -30,7 +29,6 @@ barra.innerHTML=
   '<button type="button" data-z="menos" aria-label="Texto más pequeño">A−</button>'+
   '<button type="button" data-z="mas" aria-label="Texto más grande">A+</button>'+
   '<button type="button" data-z="ancho" aria-label="Ancho de columna">'+ico('ancho')+'</button>'+
-  (conNota?'<button type="button" data-z="nota" aria-label="Nota rápida (N)">'+ico('note')+'</button>':'')+
   '<button type="button" data-z="salir">Salir <kbd>Esc</kbd></button>';
 /* Al principio de la página: con Tab es lo primero a lo que se llega en el modo zen */
 document.body.insertBefore(barra,document.body.firstChild);
@@ -58,8 +56,7 @@ barra.addEventListener('click',function(e){
   }else if(z==='ancho'){
     var a=ANCHOS[(ANCHOS.indexOf(aj.get('ancho'))+1)%ANCHOS.length];
     aj.set('ancho',a);anunciar('Columna '+NOMBRES[a]);
-  }else if(z==='nota'){if(AT.hoja)AT.hoja.abrir()}
-  else if(z==='salir')salir();
+  }else if(z==='salir')salir();
 });
 
 function progreso(){
@@ -118,7 +115,8 @@ if(sideZen)sideZen.addEventListener('click',entrar);
 
 /* ---------- Saltar entre secciones ---------- */
 function saltar(dir){
-  var hs=$$('h2[id]',page),off=activo()?24:64,dest=null;
+  /* Solo las secciones que se ven (la Ayuda esconde las de los módulos apagados) */
+  var hs=$$('h2[id]',page).filter(function(h){return h.getClientRects().length>0}),off=activo()?24:64,dest=null;
   if(dir>0){for(var i=0;i<hs.length;i++){if(hs[i].getBoundingClientRect().top>off+4){dest=hs[i];break}}}
   else{for(var j=hs.length-1;j>=0;j--){if(hs[j].getBoundingClientRect().top<off-4){dest=hs[j];break}}}
   if(!dest)return;
@@ -134,9 +132,8 @@ dlg.innerHTML='<div class="at-h"><h2 id="atajosT">Atajos de teclado</h2>'+
   '<button type="button" class="lec-x" data-cerrar aria-label="Cerrar">'+ico('close')+'</button></div>'+
   '<dl>'+
     '<div><dt><kbd>Z</kbd></dt><dd>Entrar o salir del modo zen</dd></div>'+
-    (conNota?'<div><dt><kbd>N</kbd></dt><dd>Abrir la nota rápida</dd></div>':'')+
     '<div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>Sección siguiente y anterior</dd></div>'+
-    (conNota?'<div><dt><kbd>M</kbd></dt><dd>Guardar la sección como marcador</dd></div>':'<div><dt><kbd>E</kbd></dt><dd>Pasar de leer a editar</dd></div>')+
+    (AT.rutas.pagina==='documento'?'<div><dt><kbd>E</kbd></dt><dd>Pasar de leer a editar</dd></div>':'')+
     '<div><dt><kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Buscar en todo OneBook</dd></div>'+
     '<div><dt><kbd>Esc</kbd></dt><dd>Cerrar lo que esté abierto, o salir del modo zen</dd></div>'+
     '<div><dt><kbd>?</kbd></dt><dd>Ver esta lista</dd></div>'+
@@ -159,7 +156,6 @@ document.addEventListener('keydown',function(e){
   if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||dlg.open||escribiendo(e.target))return;
   var k=e.key;
   if(k==='z'||k==='Z'){e.preventDefault();activo()?salir():entrar()}
-  else if(k==='n'||k==='N'){e.preventDefault();if(AT.hoja)AT.hoja.abrir()}
   else if(k==='j'||k==='J'){e.preventDefault();saltar(1)}
   else if(k==='k'||k==='K'){e.preventDefault();saltar(-1)}
   else if(k==='?'){e.preventDefault();ayuda()}

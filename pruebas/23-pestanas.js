@@ -117,11 +117,11 @@ prueba('Pestañas dentro de la app',async function({browser,base,r}){
   await a.goto(base+'inicio.html');await listo(a);
   const href=await a.getAttribute('#sidePestanas','href');
   r.igual(href,'app.html#abrir=inicio.html','fuera de las pestañas, la barra lateral ofrece «Abrir en pestañas» con la página actual');
-  await a.goto(base+'lecciones/ram.html');await listo(a);
-  r.igual(await a.getAttribute('#sidePestanas','href'),'../app.html#abrir=lecciones%2Fram.html','también desde una lección');
+  await a.goto(base+'ayuda.html');await listo(a);
+  r.igual(await a.getAttribute('#sidePestanas','href'),'app.html#abrir=ayuda.html','también desde la Ayuda');
   await Promise.all([a.waitForURL(/app\.html$/),a.click('#sidePestanas')]);await listo(a);
-  await titulo(a,/Memoria RAM/);
-  r.cumple((await lista(a)).length===1&&(await lista(a))[0].url==='lecciones/ram.html','y entra con esa página en una pestaña');
+  await titulo(a,/Ayuda/);
+  r.cumple((await lista(a)).length===1&&(await lista(a))[0].url==='ayuda.html','y entra con esa página en una pestaña');
   r.cumple(await a.evaluate(function(){return !document.querySelector('.doc-pt')&&!location.hash}),'sin dejar la dirección con #abrir');
   await cerrar(a);
 

@@ -1,7 +1,7 @@
 /* Barra compacta: al contraer la barra lateral en escritorio quedan los iconos (Inicio, Crear, Buscar y el pie);
    el nombre de cada uno sale en un globo al pasar el puntero o al llegar con Tab y sigue para lectores de pantalla;
    los iconos funcionan; el botón de la barra la vuelve a expandir; se recuerda; en celular no cambia nada;
-   la hoja de apuntes respeta el ancho de la barra; contraste y desbordes. */
+   la Ayuda respeta el ancho de la barra; contraste y desbordes. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 const NEGOCIO={perfil:'negocio',modulos:['negocio'],nombre:'Ana',negocio:{nombre:'Abarrotes Ana',giro:'tienda',telefono:''},creado:'2026-01-01'};
@@ -51,26 +51,17 @@ prueba('Barra lateral compacta',async function({browser,base,r}){
   await revisar(p,r,'Barra compacta (oscuro, alto contraste, letra grande)');
   if(CAP)await p.screenshot({path:CAP+'/compacta-oscuro.png'});
   await p.evaluate(function(){AT.ajustes.set('contraste','auto');AT.ajustes.set('escala',1);AT.ajustes.set('tema','light')});
-  /* Un documento y la hoja de apuntes de una lección respetan la barra */
-  await p.goto(base+'lecciones/ram.html');await listo(p,400);
-  const hoja=await p.evaluate(function(){var s=document.getElementById('sheet'),b=document.getElementById('side');return s?Math.round(s.getBoundingClientRect().left-b.getBoundingClientRect().right):0});
-  r.cumple(Math.abs(hoja)<=1,'la hoja de apuntes empieza donde termina la barra compacta',hoja);
-  r.cumple(await p.isVisible('#sideZen'),'en una lección, Modo zen sigue como icono');
-  await revisar(p,r,'Lección con la barra compacta');
+  /* La Ayuda respeta la barra */
+  await p.goto(base+'ayuda.html');await listo(p,400);
+  const hueco=await p.evaluate(function(){var m=document.querySelector('.main').getBoundingClientRect(),b=document.getElementById('side').getBoundingClientRect();return Math.round(m.left-b.right)});
+  r.cumple(Math.abs(hueco)<=1,'el contenido empieza donde termina la barra compacta',hueco);
+  r.cumple(await p.isVisible('#sideZen'),'en la Ayuda, Modo zen sigue como icono');
+  await revisar(p,r,'Ayuda con la barra compacta');
   /* Expandir */
   await p.click('#sideBtn');await p.waitForTimeout(250);
   r.cumple(await ancho()>200&&await p.isVisible('#docsLista'),'«Expandir» la deja como estaba');
   r.igual(await p.evaluate(function(){return AT.ajustes.get('barra')}),'abierta','se guarda abierta');
   await cerrar(p);
-
-  /* Con estudio: las pestañas y el temario se esconden; Rutas y Proyectos quedan como iconos */
-  const e=await pagina(browser,{ancho:1280,alto:860,reducir:true,ajustes:{barra:'cerrada'}});
-  await e.goto(base+'lecciones/ram.html');await listo(e,400);
-  r.cumple(await e.isHidden('.tabs')&&await e.isHidden('#pn-temas'),'las pestañas y el temario se esconden en la barra compacta');
-  r.cumple(await e.isVisible('#sideRutas')&&await e.isVisible('#sideProyectos'),'Rutas y Proyectos siguen como iconos');
-  await revisar(e,r,'Lección de estudio con la barra compacta');
-  if(CAP)await e.screenshot({path:CAP+'/compacta-leccion.png'});
-  await cerrar(e);
 
   /* En celular, el menú sigue igual */
   const c=await pagina(browser,{ancho:390,alto:844,reducir:true,perfil:NEGOCIO,local:{'aprende-tecnologia:ajustes':JSON.stringify({barra:'cerrada'})}});

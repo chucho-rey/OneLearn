@@ -1,18 +1,19 @@
 /* OneBook: formato de bloques y su dibujo.
-   Un documento (una lección oficial o un documento tuyo) es un objeto JSON:
-     {formato:1, tipo:'leccion'|'libreta'|'notas'|..., id, titulo, icono, props:[{nombre, valor, estilo}],
+   Un documento (una página tuya o una página de la app, como la Ayuda) es un objeto JSON:
+     {formato:1, tipo:'notas'|'blanco'|..., id, titulo, icono, props:[{nombre, valor, estilo}],
       creado, editado, contenido:{type:'doc', content:[bloques]}}
    `contenido` usa el mismo esquema que el editor (Tiptap/ProseMirror): cada bloque es
    {type, attrs, content} y el texto es {type:'text', text, marks:[{type, attrs}]}.
-   Los bloques de primer nivel llevan attrs.id, un identificador fijo: es el ancla de los marcadores.
+   Los bloques de primer nivel llevan attrs.id, un identificador fijo: el ancla de los enlaces y de la búsqueda.
    Este archivo dibuja ese JSON como HTML (sin usar innerHTML con datos del documento, así que un
-   documento importado no puede inyectar código) y lo hace igual para lecciones y documentos.
+   documento importado no puede inyectar código).
+   Los bloques de estudio que se separaron de OneBook (LEGADO: preguntas de repaso, bibliografía, ecuaciones…)
+   se dibujan como «legado», con su nombre y su texto, y nunca se borran de la página.
    Si la página trae <script type="application/json" id="documento">, lo dibuja al cargar dentro de .page.
-   Expone AT.bloques. Se carga después de los laboratorios de la lección (AT.labs). */
+   Expone AT.bloques. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,ico=AT.ico;
-AT.labs=AT.labs||{};
 
 /* ---------- Utilidades ---------- */
 function el(tag,cls,attrs){
@@ -65,37 +66,61 @@ function texto(n){
 }
 function enLinea(lista,padre,ctx){
   lista.forEach(function(n){
+    if(!n)return;
     if(n.type==='text')padre.appendChild(texto(n));
     else if(n.type==='hardBreak')padre.appendChild(el('br'));
-    else if(TIPOS[n.type])padre.appendChild(TIPOS[n.type](n,ctx));
+    else{var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):legado(n,true);if(e)padre.appendChild(e)}
   });
   return padre;
 }
 function bloques(lista,padre,ctx){
   lista.forEach(function(n){
-    var f=TIPOS[n.type];
-    if(!f)return;
-    var e=f(n,ctx);
+    if(!n)return;
+    var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):legado(n,false);
     if(e)padre.appendChild(e);
   });
   return padre;
 }
+/* ---------- Legado: los bloques de estudio que se separaron de OneBook ----------
+   No se pueden usar, pero se ven (su nombre y su texto) y se conservan en la página tal como estaban.
+   Otros tipos desconocidos (por ejemplo, de un módulo que esta página no carga) siguen sin dibujarse. */
+var LEGADO={repaso:'Preguntas de repaso',laboratorio:'Laboratorio',referencia:'Cita bibliográfica',bibliografia:'Bibliografía',
+  declaracion:'Declaración de autoría',ecuacion:'Ecuación',formula:'Fórmula',indicePiezas:'Índice de figuras o tablas'};
+function textoLegado(n){
+  var a=attrs(n);
+  if(n.type==='repaso')return (a.preguntas||[]).map(function(q){return q?[q.q].concat(q.o||[],[q.e||'']).join(' '):''}).join(' ');
+  if(typeof a.latex==='string'&&a.latex)return a.latex;
+  if(typeof a.texto==='string'&&a.texto)return a.texto;
+  if(typeof a.titulo==='string'&&a.titulo)return a.titulo;
+  return hijos(n).map(textoPlano).join(' ');
+}
+function legado(n,enLin){
+  if(!LEGADO[n.type])return null;
+  var t=textoLegado(n).replace(/\s+/g,' ').trim();
+  if(enLin){var s=el('span','legado-l',{title:LEGADO[n.type]+' (ya no está en OneBook)'});s.textContent=t||LEGADO[n.type];return s}
+  var d=el('div','legado'),b=el('p','legado-t');
+  b.textContent=LEGADO[n.type]+': ya no está en OneBook. Se conserva en la página tal como estaba.';
+  d.appendChild(b);
+  if(t){var x=el('p');x.textContent=t.length>600?t.slice(0,600)+'…':t;d.appendChild(x)}
+  return d;
+}
+/* Lo que el editor envolvió (legado y legadoLinea), por si llega aquí: se dibuja el original */
+function original(n){try{var o=JSON.parse(attrs(n).json||'null');return o&&typeof o==='object'?o:null}catch(e){return null}}
 /* Texto plano de un nodo (para índices, búsqueda y conteo de palabras) */
 function textoPlano(n){
   if(!n)return '';
   if(n.type==='text')return n.text||'';
   if(n.type==='hardBreak')return '\n';
-  if(n.type==='repaso')return (attrs(n).preguntas||[]).map(function(q){return [q.q].concat(q.o||[],[q.e||'']).join(' ')}).join(' ');
   if(n.type==='cita')return attrs(n).texto||'';
-  if(n.type==='referencia')return AT.fuentes&&AT.docActual?AT.fuentes.cita(attrs(n),AT.docActual.fuentes,AT.docActual):'';
-  if(n.type==='declaracion')return AT.fuentes?[].concat.apply([],AT.fuentes.declaracion(attrs(n),'')).join(' '):'';
+  if(n.type==='legado'||n.type==='legadoLinea'){var o=original(n);return o?textoPlano(o):''}
   if(TEXTO[n.type])return TEXTO[n.type](n,textoPlano);
+  if(LEGADO[n.type])return textoLegado(n);
   var sep=/^(paragraph|heading|listItem|taskItem|tableCell|tableHeader|codeBlock|desplegableTitulo)$/.test(n.type)?'\n':'';
   return hijos(n).map(textoPlano).join(n.type==='tableRow'?' ':'')+sep;
 }
 
 /* ---------- Bloques ---------- */
-/* Tipos que agregan otros archivos (piezas.js: figuras, ecuaciones, notas al pie…) con AT.bloques.registrar */
+/* Tipos que agregan otros archivos (piezas.js: figuras, tablas numeradas, notas al pie…) con AT.bloques.registrar */
 var TEXTO={};
 var CALLOUT={info:'info',aviso:'aviso',idea:'idea'};
 var TIPOS={
@@ -162,37 +187,6 @@ var TIPOS={
     d.appendChild(bloques(hijos(b),el('div','tg-b'),c));
     return d;
   },
-  laboratorio:function(n,c){
-    var a=attrs(n),d=el('div','demo'),h=el('div','demo-h'),b=el('div','demo-b');
-    var tit=el('b');tit.textContent=a.titulo||'Laboratorio';
-    var tag=el('span','tag lab');tag.textContent='Laboratorio';
-    h.appendChild(tit);h.appendChild(tag);
-    d.appendChild(h);d.appendChild(b);
-    var tpl=a.nombre&&document.querySelector('template[data-lab="'+String(a.nombre).replace(/["\\]/g,'')+'"]');
-    if(tpl&&typeof AT.labs[a.nombre]==='function'){
-      b.appendChild(tpl.content.cloneNode(true));
-      c.labs.push({nombre:a.nombre,raiz:b});
-    }else{
-      var p=el('p','hint');p.textContent='Este laboratorio solo funciona dentro de su lección.';
-      b.appendChild(p);
-    }
-    return d;
-  },
-  repaso:function(n,c){
-    var qs=(attrs(n).preguntas||[]).filter(function(q){return q&&q.q&&Array.isArray(q.o)&&q.o.length>1});
-    var primero=!c.hayRepaso;c.hayRepaso=true;
-    var d=el('div','repaso');
-    var host=el('div','repaso-q',primero?{id:'qz'}:null);
-    var ctl=el('div','ctl');
-    var score=el('span','lbl',{id:primero?'qzScore':null,'aria-live':'polite'});
-    var reset=el('button','btn',{type:'button',id:primero?'qzReset':null});
-    reset.textContent='Reiniciar';
-    ctl.appendChild(score);ctl.appendChild(reset);
-    d.appendChild(host);d.appendChild(ctl);
-    if(!qs.length){score.textContent='Este repaso todavía no tiene preguntas.';reset.hidden=true}
-    else c.repasos.push({host:host,score:score,reset:reset,preguntas:qs});
-    return d;
-  },
   indice:function(n,c){
     var ul=el('ul','toc',{'aria-label':'Contenido'});
     c.indices.push(ul);
@@ -207,36 +201,18 @@ var TIPOS={
     d.appendChild(h);d.appendChild(cal);
     return d;
   },
-  referencia:function(n,c){
-    var e=el('span','ref');
-    e.textContent=AT.fuentes?AT.fuentes.cita(attrs(n),(c.doc||{}).fuentes,c.doc):'';
-    return e;
-  },
-  bibliografia:function(n,c){
-    var l=AT.fuentes?AT.fuentes.bibliografia(c.doc||{},attrs(n).todas):[];
-    if(!l.length)return null;
-    var ul=el('ul','biblio');
-    l.forEach(function(r){ul.appendChild(AT.fuentes.pintarTrozos(r.trozos,el('li')))});
-    return ul;
-  },
-  declaracion:function(n,c){
-    if(!AT.fuentes)return null;
-    var d=el('div','declaracion'),h=el('h2');
-    h.textContent='Declaración de autoría';d.appendChild(h);
-    AT.fuentes.declaracion(attrs(n),AT.fuentes.autorDe(c.doc)).forEach(function(x){
-      if(Array.isArray(x)){var ul=el('ul');x.forEach(function(y){var li=el('li');li.textContent=y;ul.appendChild(li)});d.appendChild(ul)}
-      else{var p=el('p');p.textContent=x;d.appendChild(p)}
-    });
-    return d;
-  },
   cita:function(n){
     var a=attrs(n),h=hrefSeguro(a.href);
+    /* Las citas a lecciones, rutas o proyectos (de cuando OneBook tenía estudio) quedan como texto */
+    if(h&&/^(\.\.\/)?(lecciones|proyectos)\/|^(\.\.\/)?(rutas|acerca|estudiantes)\.html/.test(h))h=null;
     var e=el(h?'a':'span','cita',h?{href:h}:null);
-    e.appendChild(icono('marcador'));
+    e.appendChild(icono('enlace'));
     var t=el('span');t.textContent=a.texto||'Cita';
     e.appendChild(t);
     return e;
-  }
+  },
+  legado:function(n,c){var o=original(n);return o?(TIPOS[o.type]?TIPOS[o.type](o,c):legado(o,false)):null},
+  legadoLinea:function(n,c){var o=original(n);return o?(TIPOS[o.type]?TIPOS[o.type](o,c):legado(o,true)):null}
 };
 function celda(tag,n,c){
   var a=attrs(n),td=el(tag,null,{colspan:a.colspan>1?a.colspan:null,rowspan:a.rowspan>1?a.rowspan:null});
@@ -260,7 +236,7 @@ var ESTILOS={etiqueta:'tag',verde:'tag green',amarillo:'tag yellow',rojo:'tag re
               encabezado: false para omitir ícono, título y propiedades} */
 function dibujar(doc,cont,op){
   op=op||{};
-  var ctx={labs:[],repasos:[],indices:[],hayRepaso:false,doc:doc,alFinal:[]};
+  var ctx={indices:[],doc:doc,alFinal:[]};
   var frag=document.createDocumentFragment();
   if(op.encabezado!==false){
     if(doc.icono){
@@ -284,9 +260,8 @@ function dibujar(doc,cont,op){
     }
   }
   hijos(doc.contenido).forEach(function(n){
-    var f=TIPOS[n.type];
-    if(!f)return;
-    var e=f(n,ctx);
+    if(!n)return;
+    var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):legado(n,false);
     if(!e)return;
     var id=attrs(n).id;
     if(id&&/^[A-Za-z][\w-]{0,63}$/.test(id))e.id=id;
@@ -305,10 +280,6 @@ function dibujar(doc,cont,op){
     });
   });
   cont.insertBefore(frag,op.antes||cont.firstChild);
-  ctx.repasos.forEach(function(r){AT.repaso(r)});
-  ctx.labs.forEach(function(l){
-    try{AT.labs[l.nombre](l.raiz)}catch(e){if(window.console)console.error('Laboratorio '+l.nombre,e)}
-  });
   return ctx;
 }
 
@@ -332,6 +303,8 @@ AT.bloques={
   valido:valido,
   nuevoId:nuevoId,
   hrefSeguro:hrefSeguro,
+  LEGADO:LEGADO,
+  textoLegado:textoLegado,
   /* registrar(tipo, {dibujar(n, ctx, ayuda), texto(n, textoPlano)}): un tipo de bloque o de nodo en línea nuevo */
   registrar:function(tipo,o){
     if(o.dibujar)TIPOS[tipo]=function(n,c){return o.dibujar(n,c,{el:el,icono:icono,bloques:bloques,enLinea:enLinea,attrs:attrs,hijos:hijos})};
@@ -349,7 +322,7 @@ if(fuente&&fuente.type==='application/json'){
     if(page)dibujar(doc,page);
   }catch(e){
     if(window.console)console.error('No se pudo leer el documento de la página',e);
-    if(page){var p=el('p');p.textContent='No se pudo mostrar esta lección.';page.insertBefore(p,page.firstChild)}
+    if(page){var p=el('p');p.textContent='No se pudo mostrar esta página.';page.insertBefore(p,page.firstChild)}
   }
 }
 })();

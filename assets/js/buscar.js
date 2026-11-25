@@ -1,9 +1,9 @@
 /* OneBook: búsqueda (Ctrl K o «Buscar» en la barra lateral).
-   Busca en las lecciones (títulos, secciones y texto), en tus documentos, en las notas rápidas y en los
-   marcadores. Todo pasa en tu navegador: las lecciones se leen de sus propios archivos (que el service worker
-   guarda para usarlas sin conexión) y lo tuyo, de AT.datos.
+   Busca en tus páginas (títulos, secciones y texto) y en la Ayuda (cada herramienta es una sección). Todo pasa en
+   tu navegador: la Ayuda se lee de su propio archivo (que el service worker guarda para usarla sin conexión) y lo
+   tuyo, de AT.datos. Las páginas de estudio (que se separaron de OneBook) no salen.
    AT.indice.cargar() devuelve las entradas y AT.indice.buscar(texto) las ordena por relevancia;
-   el editor las usa también para citar con «@». */
+   el editor las usa también para enlazar otra página con «@». */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,RAIZ=AT.rutas.raiz;
@@ -12,15 +12,12 @@ function norma(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').t
 function recorte(t,n){t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n).replace(/\s+\S*$/,'')+'…':t}
 
 /* ---------- Índice ---------- */
-var lecciones=null;
-/* Páginas del sitio que también se buscan, además de las lecciones del catálogo */
-/* Páginas del sitio que se buscan como una lección. La ayuda va en todos los espacios (cada herramienta es una
-   sección); «Cómo está hecho», con las lecciones (módulo de estudio) */
-var PAGINAS=[{id:'ayuda',titulo:'Ayuda: cómo usar OneBook',ruta:'ayuda.html',icono:'ayuda',sub:'Ayuda',siempre:true},
-  {id:'acerca',titulo:'Cómo está hecho OneBook',ruta:'acerca.html',icono:'codigo',sub:'Sobre OneBook'}];
-/* Entradas de una lección (o página): la lección, cada sección (con su texto) y cada bloque */
-function entradasDeLeccion(l,doc){
-  var url=l.ruta,out=[{tipo:'leccion',titulo:doc.titulo||l.titulo,texto:'',href:url,sub:l.sub,icono:l.icono||'page',doc:l.id}];
+var paginas=null;
+/* Páginas del sitio que también se buscan: la Ayuda (cada herramienta es una sección) */
+var PAGINAS=[{id:'ayuda',titulo:'Ayuda: cómo usar OneBook',ruta:'ayuda.html',icono:'ayuda',sub:'Ayuda'}];
+/* Entradas de una página del sitio: la página, cada sección (con su texto) y cada bloque */
+function entradasDePagina(l,doc){
+  var url=l.ruta,out=[{tipo:'pagina',titulo:doc.titulo||l.titulo,texto:'',href:url,sub:l.sub,icono:l.icono||'page',doc:l.id}];
   var sec=null;
   (doc.contenido&&doc.contenido.content||[]).forEach(function(b){
     var id=b.attrs&&b.attrs.id,t=AT.bloques.textoDe(b).replace(/\s+/g,' ').trim();
@@ -34,34 +31,25 @@ function entradasDeLeccion(l,doc){
   });
   return out;
 }
-function cargarLecciones(){
-  if(lecciones)return lecciones;
-  var lista=[],est=conEstudio();
-  if(est)AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){
-    if(l.archivo)lista.push({id:l.id,titulo:l.titulo,icono:l.icono,ruta:'lecciones/'+l.archivo,sub:'Lección'});
-  })});
-  lista=lista.concat(PAGINAS.filter(function(p){return est||p.siempre}));
-  /* Proyectos: se buscan por su título y descripción (sin abrir su archivo) */
-  var proy=(est?AT.proyectos||[]:[]).map(function(p){return {tipo:'leccion',titulo:p.titulo,texto:p.descripcion||'',href:'proyectos/'+p.archivo,sub:'Proyecto',icono:p.icono||'proyecto',doc:'proyecto-'+p.id}});
-  /* Rutas de aprendizaje: por su título, su descripción y los nombres de sus módulos */
-  proy=proy.concat((est?AT.caminos||[]:[]).map(function(c){return {tipo:'leccion',titulo:'Ruta: '+c.titulo,texto:c.descripcion+' '+c.modulos.map(function(m){return m.titulo}).join(', '),href:'rutas.html#'+c.id,sub:'Ruta',icono:c.icono||'ruta',doc:'ruta-'+c.id}}));
-  lecciones=Promise.all(lista.map(function(l){
-    /* La lección abierta ya está en memoria */
-    if(AT.documento&&AT.documento.id===l.id)return Promise.resolve(entradasDeLeccion(l,AT.documento));
-    var sola=[{tipo:'leccion',titulo:l.titulo,texto:'',href:l.ruta,sub:l.sub,icono:l.icono||'page'}];
+function cargarPaginas(){
+  if(paginas)return paginas;
+  paginas=Promise.all(PAGINAS.map(function(l){
+    /* La página abierta ya está en memoria */
+    if(AT.documento&&AT.documento.id===l.id)return Promise.resolve(entradasDePagina(l,AT.documento));
+    var sola=[{tipo:'pagina',titulo:l.titulo,texto:'',href:l.ruta,sub:l.sub,icono:l.icono||'page'}];
     return fetch(RAIZ+l.ruta).then(function(r){return r.text()}).then(function(html){
       var d=new DOMParser().parseFromString(html,'text/html'),s=d.getElementById('documento');
       if(!s)return sola;
-      return entradasDeLeccion(l,JSON.parse(s.textContent));
+      return entradasDePagina(l,JSON.parse(s.textContent));
     }).catch(function(){return sola});
-  })).then(function(r){return [].concat.apply(proy,r)});
-  return lecciones;
+  })).then(function(r){return [].concat.apply([],r)});
+  return paginas;
 }
 function cargarTuyo(){
-  return Promise.all([AT.datos.documentos.todos(),AT.datos.notas.todas(),AT.datos.marcadores.todos()]).then(function(r){
-    var out=[],porId={};
-    AT.catalogo.forEach(function(g){g.lecciones.forEach(function(l){porId[l.id]=l})});
-    r[0].forEach(function(d){
+  return AT.datos.documentos.todos().then(function(docs){
+    var out=[];
+    docs.forEach(function(d){
+      if(AT.datos.deEstudio&&AT.datos.deEstudio(d))return;
       var tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo],href='documento.html?id='+encodeURIComponent(d.id);
       out.push({tipo:'documento',titulo:d.titulo||'Sin título',texto:AT.bloques.texto(d),href:href,sub:tipo?tipo.nombre:'Documento',icono:tipo?tipo.icono:'page',docId:d.id,editado:d.editado});
       var sec=null;
@@ -73,27 +61,14 @@ function cargarTuyo(){
         }else if(sec)sec.texto+=' '+AT.bloques.textoDe(b);
       });
     });
-    r[1].forEach(function(n){
-      var l=porId[n.id];
-      if(!l||!l.archivo||!n.texto||!n.texto.trim())return;
-      out.push({tipo:'nota',titulo:'Nota de '+l.titulo,texto:n.texto,href:'lecciones/'+l.archivo+'#apuntes',sub:'Nota rápida',icono:'note'});
-    });
-    r[2].forEach(function(m){
-      out.push({tipo:'marcador',titulo:m.texto,texto:m.seccion||'',href:m.url+'#'+m.bloque,sub:'Marcador · '+m.docTitulo,icono:'marcador',doc:m.doc,bloque:m.bloque});
-    });
     return out;
   });
 }
-/* Sin el módulo de estudio (perfil.js) se busca en tus páginas y en la ayuda: ni lecciones, ni notas de lección, ni marcadores */
-function conEstudio(){return !AT.perfil||AT.perfil.tiene('estudio')}
 function cargar(){
-  return Promise.all([cargarLecciones(),cargarTuyo()]).then(function(r){
-    var tuyo=conEstudio()?r[1]:r[1].filter(function(e){return e.tipo!=='nota'&&e.tipo!=='marcador'});
-    return tuyo.concat(r[0]);
-  });
+  return Promise.all([cargarPaginas(),cargarTuyo()]).then(function(r){return r[1].concat(r[0])});
 }
 /* Puntaje: todas las palabras deben aparecer; pesa más el título */
-var PESO={marcador:6,documento:5,leccion:5,seccion:4,'seccion-doc':4,nota:2,bloque:1};
+var PESO={documento:5,pagina:5,seccion:4,'seccion-doc':4,bloque:1};
 function buscar(q,entradas,max){
   var ps=norma(q).split(/\s+/).filter(Boolean);
   if(!ps.length)return [];
@@ -134,14 +109,14 @@ AT.indice={cargar:cargar,buscar:buscar,fragmento:fragmento,norma:norma,olvidarTu
 
 /* ---------- Ventana de búsqueda ---------- */
 var dlg=null,abridor=null,entradas=[],resultados=[],activo=0,ultimaQ='';
-var GRUPOS=[['leccion','Lecciones'],['documento',conEstudio()?'Tus documentos':'Tus páginas'],['marcador','Marcadores'],['nota','Notas rápidas']];
-function grupoDe(e){return e.tipo==='seccion'||e.tipo==='bloque'?'leccion':e.tipo==='seccion-doc'?'documento':e.tipo}
+var GRUPOS=[['documento','Tus páginas'],['pagina','Ayuda']];
+function grupoDe(e){return e.tipo==='seccion'||e.tipo==='bloque'?'pagina':e.tipo==='seccion-doc'?'documento':e.tipo}
 function crear(){
   dlg=document.createElement('dialog');
   dlg.className='atajos buscar-dlg';
   dlg.setAttribute('aria-label','Buscar en OneBook');
   dlg.innerHTML='<div class="bus-campo">'+ico('investigacion')+
-    '<input id="busQ" type="text" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="'+(conEstudio()?'Buscar en lecciones, documentos, notas y marcadores':'Buscar en tus páginas')+'" '+
+    '<input id="busQ" type="text" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Buscar en tus páginas y en la ayuda" '+
       'role="combobox" aria-expanded="false" aria-controls="busRes" aria-autocomplete="list" aria-label="Buscar">'+
     '<kbd class="bus-esc">Esc</kbd></div>'+
     '<div class="bus-res" id="busRes" role="listbox" aria-label="Resultados"></div>'+
@@ -178,7 +153,7 @@ function pintar(texto){
     if(!de.length)return;
     h+='<div class="bus-g" role="group" aria-label="'+g[1]+'"><div class="bus-gt" aria-hidden="true">'+g[1]+'</div>';
     de.forEach(function(e){
-      var i=resultados.length,frag=e.tipo==='marcador'||e.tipo==='leccion'?'':fragmento(e,texto);
+      var i=resultados.length,frag=e.tipo==='pagina'?'':fragmento(e,texto);
       resultados.push(e);
       h+='<a class="bus-o" role="option" id="bus-o-'+i+'" data-i="'+i+'" href="'+esc(RAIZ+e.href)+'" tabindex="-1" aria-selected="false">'+ico(e.icono)+
         '<span class="bus-t"><b>'+esc(e.titulo)+'</b><small>'+esc(e.sub)+'</small>'+(frag?'<span class="bus-f">'+esc(frag)+'</span>':'')+'</span></a>';
@@ -208,7 +183,6 @@ function ir(e){
     var idb=decodeURIComponent(destino.hash.slice(1));
     /* En el editor, los bloques llevan su id en data-id */
     var b=document.getElementById(idb)||document.querySelector('[data-id="'+(window.CSS&&CSS.escape?CSS.escape(idb):idb)+'"]');
-    if(destino.hash==='#apuntes'&&AT.hoja){AT.hoja.abrir();return}
     if(b){
       history.replaceState(null,'',destino.hash);
       if(b.tagName==='DETAILS')b.open=true;

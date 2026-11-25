@@ -30,7 +30,7 @@ function relativa(u){
   var r=x.pathname.slice(BASE.length);
   if(!/^[\w-]+(\/[\w-]+)*\.html$/.test(r))return null;
   /* El contenedor y las bienvenidas no van dentro de una pestaña */
-  if(r==='app.html'||r==='index.html'||r==='estudiantes.html')r='inicio.html';
+  if(r==='app.html'||r==='index.html')r='inicio.html';
   return r+x.search+x.hash;
 }
 function etiqueta(t){
