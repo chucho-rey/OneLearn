@@ -1,8 +1,9 @@
 /* OneBook: el explorador de tus páginas, en el Inicio (sección «Tus páginas»). Como un explorador de archivos, con
    el estilo de OneBook:
    - Ubicaciones a la izquierda: todas tus páginas, favoritas, recientes (7 días), compartidas, compartidas contigo y
-     solicitudes (las dos últimas solo si hay), por tipo (negocio, recursos humanos, finanzas, estudio y otras) y la
-     papelera. En una pantalla angosta van en una fila que se desliza.
+     solicitudes (las dos últimas solo si hay), por tipo (negocio, recursos humanos y otras) y la papelera. Las páginas
+     de estudio (que se separaron de OneBook) no salen en ninguna, solo en «De estudio», si quedan. En una pantalla
+     angosta van en una fila que se desliza.
    - Columnas: nombre, modificado (y por quién), tipo, trabajando ahora (quién la tiene abierta y si edita o lee),
      permisos (tu permiso, quiénes tienen acceso y las solicitudes; abre «Personas y permisos») y tamaño. Se ordenan
      con su encabezado y se esconden con «Columnas». Vista de detalles o de tarjetas.
@@ -19,7 +20,7 @@ var raiz=$('#xp');if(!raiz||!D)return;
 var CLAVE='aprende-tecnologia:explorador';
 var COLS=[{k:'mod',t:'Modificado',orden:'modificado'},{k:'tipo',t:'Tipo',orden:'tipo'},{k:'ahora',t:'Trabajando ahora'},
   {k:'perm',t:'Permisos',orden:'permisos'},{k:'tam',t:'Tamaño',orden:'tamano'}];
-var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['finanzas','Finanzas','gastos'],['estudio','Estudio','libreta'],['general','Otras','notas']];
+var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['general','Otras','notas'],['estudio','De estudio (solo lectura)','libreta']];
 var DIA=864e5;
 function sinAcentos(t){return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
 function leerEst(){
@@ -33,20 +34,22 @@ function visible(k){return est.ocultas.indexOf(k)<0}
 
 /* ---------- Lo que se sabe de cada página ---------- */
 function info(d){
-  var t=AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
+  var deEstudio=!!(D.deEstudio&&D.deEstudio(d));
+  var t=deEstudio?{nombre:'Página de estudio',icono:'libreta',cat:'estudio'}:AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
   var tam=0;try{tam=JSON.stringify(d).length}catch(e){}
   var admin=A?A.puede(d,'compartir'):true;
   return {d:d,id:d.id,titulo:d.titulo||'Sin título',tipo:t,cat:CATS.some(function(c){return c[0]===t.cat})?t.cat:'general',
     rol:A?A.rol(d):'dueno',gente:A?A.personas(d):[],pend:admin&&A?A.pendientes(d):[],admin:admin,editar:A?A.puede(d,'editar'):true,
     tam:tam,editado:d.editado||d.creado||''};
 }
+/* Las páginas de estudio solo salen en «De estudio» */
 var UBIC=[
-  {k:'todas',t:'Todas tus páginas',i:'notas',f:function(){return true}},
-  {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return !!x.d.favorito}},
-  {k:'recientes',t:'Recientes',i:'historial',f:function(x){return Date.now()-Date.parse(x.editado)<7*DIA}},
-  {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.gente.length>1}},
-  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.rol!=='dueno'},siHay:true},
-  {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.pend.length>0},siHay:true}
+  {k:'todas',t:'Todas tus páginas',i:'notas',f:function(x){return x.cat!=='estudio'}},
+  {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return x.cat!=='estudio'&&!!x.d.favorito}},
+  {k:'recientes',t:'Recientes',i:'historial',f:function(x){return x.cat!=='estudio'&&Date.now()-Date.parse(x.editado)<7*DIA}},
+  {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.cat!=='estudio'&&x.gente.length>1}},
+  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.cat!=='estudio'&&x.rol!=='dueno'},siHay:true},
+  {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.cat!=='estudio'&&x.pend.length>0},siHay:true}
 ];
 function ubicDe(k){
   var u=UBIC.filter(function(x){return x.k===k})[0];

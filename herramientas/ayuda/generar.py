@@ -1,5 +1,5 @@
 """Genera ayuda.html (guía de herramientas en el formato de bloques). Cada herramienta es un título de nivel 2 con
-id ay-<módulo>-<nombre> (núcleo, negocio, rh o estudio): ayuda.js lo usa para mostrar solo lo de tu espacio y la
+id ay-<módulo>-<nombre> (núcleo, negocio o rh): ayuda.js lo usa para mostrar solo lo de tu espacio y la
 búsqueda (Ctrl K) lo encuentra como sección."""
 import json,re,os
 # Se corre desde cualquier lugar: python3 herramientas/ayuda/generar.py (escribe ayuda.html en la raíz)
@@ -34,11 +34,11 @@ c.append({'type':'indice','attrs':{'id':nid()}})
 
 # ---------------- Empezar ----------------
 c+=herramienta('nucleo','espacio','Tu espacio y sus módulos',
- 'Al entrar por primera vez eliges para qué usas OneBook: tu negocio, tus finanzas y notas o estudiar. Eso decide qué herramientas ves.',
- ['En «Crea tu espacio» elige el uso, escribe el nombre de tu negocio (o el tuyo) y su giro.',
+ 'Al entrar por primera vez creas el espacio de tu negocio: su nombre, su giro y si tienes empleados. Eso decide qué herramientas ves.',
+ ['En «Crea tu espacio» escribe el nombre de tu negocio, su giro y, si quieres, su teléfono.',
   'Si tienes empleados, marca **Tengo empleados**: se enciende Recursos humanos.',
   'Elige las páginas con las que quieres empezar y pulsa «Crear mi espacio».',
-  'Para cambiarlo después: **Tus datos** (barra lateral) → «Cambiar tu espacio». Ahí enciendes o apagas los módulos: Negocio y dinero, Estudio y Recursos humanos.'],
+  'Para cambiarlo después: **Tus datos** (barra lateral) → «Cambiar tu espacio». Ahí enciendes o apagas los módulos: Negocio y dinero y Recursos humanos.'],
  'Apagar un módulo no borra nada: solo deja de mostrar sus herramientas.')
 c+=herramienta('nucleo','inicio','El Inicio',
  'Es lo primero que ves al abrir OneBook: tus atajos y lo importante del día.',
@@ -48,7 +48,7 @@ c+=herramienta('nucleo','inicio','El Inicio',
   '**Tus páginas**: el explorador con todas tus páginas (ver «Tus páginas: el explorador»).'])
 c+=herramienta('nucleo','explorador','Tus páginas: el explorador',
  'En el Inicio, «Tus páginas» funciona como un explorador de archivos: todas tus páginas en una tabla, con su información en columnas.',
- ['A la izquierda eliges dónde mirar: todas, **Favoritas**, **Recientes** (7 días), **Compartidas**, por tipo (negocio, recursos humanos, finanzas, estudio) o la **Papelera**. Si te comparten páginas o te piden permisos, aparecen «Compartidas contigo» y «Solicitudes».',
+ ['A la izquierda eliges dónde mirar: todas, **Favoritas**, **Recientes** (7 días), **Compartidas**, por tipo (negocio, recursos humanos y otras) o la **Papelera**. Si te comparten páginas o te piden permisos, aparecen «Compartidas contigo» y «Solicitudes».',
   'Columnas: **Nombre**, **Modificado** (cuándo y quién), **Tipo**, **Trabajando ahora** (quién la tiene abierta y si edita o lee), **Permisos** y **Tamaño**. Toca un encabezado para ordenar; con «Columnas» escondes las que no uses.',
   'Busca con el cuadro «Buscar en tus páginas» (sin importar mayúsculas ni acentos) y cambia entre **Detalles** y **Tarjetas**.',
   'Para abrir una página, toca su nombre (o doble clic en la fila). Para seleccionar, usa la casilla, un clic en la fila (Ctrl o Mayús + clic para varias) o la barra espaciadora; con algo seleccionado aparecen «Abrir», «Favorita» y «Papelera».',
@@ -70,7 +70,7 @@ c+=herramienta('nucleo','escribir','Escribir y bloques',
 c+=herramienta('nucleo','leer','Leer, imprimir y compartir',
  'Cada página se puede leer sin distracciones, imprimir o guardar en PDF y descargar.',
  ['**Leer** (arriba a la derecha) muestra la página sin la barra de edición; ahí puedes marcar pagos o abonos.',
-  '«⋯» → **Imprimir o guardar PDF**: carta vertical u horizontal, con los bloques como hojas de papel.',
+  '«⋯» → **Imprimir o exportar**: un **PDF** con números de página (carta o A4, vertical u horizontal, con los bloques como hojas de papel) o un archivo de **Word** para seguir editándolo.',
   '«⋯» → **Descargar**: en Markdown o como copia de la página para importarla en otro navegador.',
   '«⋯» → **Ancho completo** usa todo el ancho de la pantalla; la estrella la marca como **favorita**.'])
 c+=herramienta('nucleo','papelera','Papelera',
@@ -96,7 +96,7 @@ c+=herramienta('nucleo','permisos','Personas y permisos',
   '«Pon tu nombre» (o «Cambiar tu nombre») es como te verán los demás.'],
  'Por ahora, las invitaciones y solicitudes quedan anotadas en la página y viajan con tus respaldos; llegarán solas cuando OneBook tenga cuentas en la nube, y los avisos (notificaciones) después. Una página que solo puedes ver se abre para leer.')
 c+=herramienta('nucleo','buscar','Buscar',
- 'Encuentra cualquier página, sección, nota o herramienta de la ayuda.',
+ 'Encuentra cualquier página, sección o herramienta de la ayuda.',
  ['Pulsa **Ctrl K** (Cmd K en Mac) o «Buscar» en la barra lateral.',
   'Escribe unas letras: busca en títulos y en el texto, sin importar acentos.',
   'Usa las flechas y Enter para abrir el resultado.'])
@@ -109,16 +109,22 @@ c+=herramienta('nucleo','lectura','Lectura y accesibilidad',
  'Ajusta OneBook a tus ojos y a tu forma de leer.',
  ['Pulsa **Aa** (arriba a la derecha).',
   'Elige tamaño de letra, tema claro u oscuro, alto contraste, la letra OpenDyslexic, el espacio entre líneas y el ancho de la columna.',
-  'El **modo zen** (tecla Z en una lección o página) esconde todo menos el texto.',
+  'El **modo zen** (tecla Z en una página) esconde todo menos el texto.',
   'La tecla **?** muestra los atajos de teclado.'],
  'Todo se puede usar solo con teclado y con lector de pantalla.')
 c+=herramienta('nucleo','datos','Tus datos y respaldos',
  'Todo lo que haces se guarda en este navegador, en este dispositivo. Nada se sube a internet.',
- ['**Tus datos** → «Descargar respaldo» guarda un archivo con todo: páginas, bases, notas y ajustes.',
+ ['**Tus datos** → «Descargar respaldo» guarda un archivo con todo: páginas, bases de datos, plantillas y ajustes.',
   'En otro dispositivo o navegador: «Importar respaldo» con ese archivo.',
   'El Inicio te recuerda descargar un respaldo cada dos semanas.',
   'Para usar OneBook sin internet, instálalo como app desde el menú del navegador («Instalar» o «Agregar a la pantalla de inicio»).'],
  'Si borras los datos del navegador se borra lo que no esté respaldado. Guarda tus respaldos en otro lugar.','')
+c+=herramienta('nucleo','estudio','Lo de estudio que se separó',
+ 'OneBook ahora es para empresas. Si lo usabas para estudiar (lecciones, rutas, libretas, apuntes de clase o una tesis), nada de lo que guardaste se borró.',
+ ['Tus páginas de estudio están en el Inicio, en «Tus páginas» → **De estudio**. Se abren solo para leer; desde «⋯» se exportan en PDF o Word o se descargan.',
+  'Los bloques que ya no existen (preguntas de repaso, bibliografía, citas, ecuaciones…) se ven con su texto y se conservan en la página tal como estaban.',
+  'Tus notas y marcadores de las lecciones, tu avance y tus proyectos siguen en este navegador y entran en tus respaldos.'],
+ 'Descarga un respaldo («Tus datos» → «Descargar respaldo») para conservar todo en un archivo.')
 
 # ---------------- Negocio ----------------
 c+=herramienta('negocio','corte','Corte de caja',
@@ -188,11 +194,6 @@ c+=herramienta('negocio','presupuesto','Presupuesto del mes',
  ['Crea «Presupuesto del mes».',
   'En «Presupuesto» escribe cuánto quieres gastar al mes en cada categoría.',
   'En «Gastos» anota lo que gastas: el reporte compara lo real contra lo presupuestado.'])
-c+=herramienta('negocio','finanzas','Tus finanzas personales',
- 'Para tus cuentas de la casa: gastos del mes, a quién le prestaste y tus deudas.',
- ['«Finanzas del mes»: gastos, deudas y metas de ahorro en una página.',
-  '«Me deben»: a quién le prestaste, sus abonos y cuánto falta.',
-  '«Préstamo o crédito»: una deuda en pagos.'])
 
 # ---------------- Bases de datos (núcleo) ----------------
 c+=herramienta('nucleo','bases','Bases de datos',
@@ -259,30 +260,6 @@ c+=herramienta('rh','ptu','Reparto de utilidades (PTU)',
   'Pulsa «Traer a tu equipo»: llena los días trabajados y el salario de cada quien desde «Mi equipo».',
   'Te dice cuánto le toca a cada persona: la mitad por días trabajados y la mitad por salario, con el tope de tres meses de salario.'])
 
-# ---------------- Estudio ----------------
-c+=herramienta('estudio','lecciones','Lecciones y laboratorios',
- 'Lecciones de tecnología con laboratorios para practicar: terminal de Linux, simuladores de red y más.',
- ['Elige una lección en la barra lateral («Temas») o en una ruta.',
-  'Lee y practica en cada laboratorio; las preguntas de repaso marcan tu avance.',
-  'Toma notas en la hoja de apuntes de abajo y guarda bloques con el marcador (tecla M).'])
-c+=herramienta('estudio','rutas','Rutas y proyectos',
- 'Las rutas ordenan lecciones por módulos; los proyectos son casos prácticos por fases.',
- ['Abre «Rutas» en la barra lateral y elige una (por ejemplo, Redes y sistemas).',
-  'Sigue sus módulos en orden; tu avance se guarda.',
-  'En «Proyectos», marca las tareas de cada fase y entrega su resultado.'])
-c+=herramienta('estudio','apuntes','Libretas y apuntes de clase',
- 'Para estudiar: libretas por materia con índice y repaso, y apuntes de cada clase.',
- ['Crea una «Libreta» o «Apuntes de clase».',
-  'Usa «/» para insertar ecuaciones, figuras, tablas numeradas, preguntas de repaso o un resumen.',
-  'Tus notas y marcadores de las lecciones están en «Mis apuntes» (barra lateral).'])
-c+=herramienta('estudio','tesis','Tesis',
- 'Escribe tu tesis con fuentes y citas en APA 7 o IEEE, piezas académicas y un registro de autoría.',
- ['Crea «Tesis» desde Crear: trae portada, índices y capítulos.',
-  'Agrega tus fuentes y cítalas con «@»: la bibliografía se arma sola.',
-  'Inserta figuras, tablas, ecuaciones y notas al pie; se numeran solas.',
-  '«Entregar» revisa lo que falta y la exporta en PDF o Word.'],
- 'El registro de autoría anota cuánto escribiste tú (sin guardar tu texto) y la declaración de uso de IA.')
-
 doc={'formato':1,'tipo':'pagina','id':'ayuda','titulo':'Ayuda: cómo usar OneBook','icono':'ayuda',
  'props':[{'nombre':'Categoría','valor':'Ayuda','estilo':'etiqueta'},{'nombre':'Para','valor':'Todos','estilo':'texto'}],
  'contenido':{'type':'doc','content':c}}
@@ -293,7 +270,7 @@ html='''<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ayuda · OneBook</title>
-<meta name="description" content="Cada herramienta de OneBook explicada paso a paso: páginas y bloques, tu negocio, inventario y reportes, bases de datos, recursos humanos y estudio.">
+<meta name="description" content="Cada herramienta de OneBook explicada paso a paso: páginas y bloques, tu negocio, inventario y reportes, bases de datos y recursos humanos.">
 <link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
 <link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="assets/icons/icono-180.png">
@@ -309,7 +286,7 @@ html='''<!doctype html>
 <body data-pagina="ayuda">
 
 <div class="app">
-  <aside class="side" id="side" aria-label="Lecciones"></aside>
+  <aside class="side" id="side" aria-label="Navegación"></aside>
 
   <div class="main">
     <header class="topbar" id="topbar"></header>
@@ -326,7 +303,6 @@ html='''<!doctype html>
 '''+json.dumps(doc,indent=1,ensure_ascii=False)+'''
 </script>
 
-<script src="assets/js/catalogo.js"></script>
 <script src="assets/js/base.js"></script>
 <script src="assets/js/datos.js"></script>
 <script src="assets/js/barra.js"></script>

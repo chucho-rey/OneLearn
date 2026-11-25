@@ -1,5 +1,5 @@
-/* Ancho y detalles visuales: las páginas de trabajo (documentos e Inicio) usan más ancho en escritorio que las
-   lecciones; «Ancho completo» por documento y «Toda la pantalla» en Lectura; la pista del editor no se encima en las
+/* Ancho y detalles visuales: las páginas de trabajo (documentos e Inicio) usan más ancho en escritorio que la
+   Ayuda; «Ancho completo» por documento y «Toda la pantalla» en Lectura; la pista del editor no se encima en las
    celdas de una tabla; los enlaces con forma de botón no se ven como enlaces; las selecciones de una base son
    etiquetas de color (pagado en verde, pendiente en amarillo, vencido en rojo); contraste y desbordes. */
 'use strict';
@@ -27,10 +27,10 @@ prueba('Ancho y detalles visuales',async function({browser,base,r}){
   await p.goto(base+'inicio.html');await listo(p);
   await p.evaluate(function(d){return AT.datos.importar(d)},RESPALDO);
 
-  /* Lección: su columna de lectura no cambia; documento e Inicio: más ancho */
-  await p.goto(base+'lecciones/ram.html');await listo(p);
-  const wLec=await ancho(p,'.page');
-  r.cumple(wLec<=840,'la lección conserva su columna de lectura',wLec);
+  /* La Ayuda: su columna de lectura no cambia; documento e Inicio: más ancho */
+  await p.goto(base+'ayuda.html');await listo(p);
+  const wLec=await ancho(p,'.ay-sec p');
+  r.cumple(wLec>0&&wLec<=840,'la Ayuda conserva su columna de lectura: sus párrafos no se estiran',wLec);
   await p.goto(base+'inicio.html');await listo(p);
   const wIni=await ancho(p,'.page');
   r.cumple(wIni>1000,'el Inicio usa más ancho en escritorio',wIni);

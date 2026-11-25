@@ -38,16 +38,16 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   /* ---------- La galería ---------- */
   await abrirCrear(p);
   const chips=await p.$$eval('dialog.crear-dlg .crear-chip',function(e){return e.map(function(x){return x.textContent+(x.getAttribute('aria-pressed')==='true'?'*':'')}).join(' | ')});
-  r.igual(chips,'Todas* | Para tu negocio | Paquetes por giro | Tus finanzas','categorías de la galería (sin estudio), en el orden de sus secciones');
+  r.igual(chips,'Todas* | Para tu negocio | Paquetes por giro','categorías de la galería (sin estudio ni finanzas personales), en el orden de sus secciones');
   r.igual(await p.evaluate(function(){return document.activeElement.getAttribute('data-tipo')}),'notas','el foco empieza en la primera plantilla');
   r.cumple(await p.evaluate(function(){var o=document.querySelector('.crear-o[data-tipo="proveedores"] .crear-trae');return o&&o.textContent==='Trae: Tabla · Cuentas por pagar'}),'cada plantilla dice qué bloques trae');
   r.cumple(await p.evaluate(function(){var o=document.querySelector('.crear-o[data-paquete="tienda"]');return !!o&&/Tu giro/.test(o.textContent)&&/Crea 5 páginas/.test(o.textContent)}),'el paquete del giro del negocio se marca como «Tu giro»');
   await revisar(p,r,'galería de plantillas en celular');
-  await p.click('.crear-chip[data-filtro="finanzas"]');await p.waitForTimeout(100);
-  r.igual((await visibles(p)).join(' | '),'Presupuesto del mes | Finanzas del mes | Me deben | Préstamo o crédito','«Tus finanzas» filtra la galería');
+  await p.click('.crear-chip[data-filtro="paquetes"]');await p.waitForTimeout(100);
+  r.igual((await visibles(p)).join(' | '),'Tienda o abarrotes | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes','«Paquetes por giro» filtra la galería (ya sin freelance)');
   await p.click('.crear-chip[data-filtro="todas"]');
   await p.fill('#crBuscar','fiádo');await p.waitForTimeout(100);
-  r.igual((await visibles(p)).join(' | '),'Fiado | Tienda o abarrotes | Me deben','la búsqueda (sin acentos) encuentra el fiado, el paquete que lo trae y «Me deben»');
+  r.igual((await visibles(p)).join(' | '),'Fiado | Tienda o abarrotes','la búsqueda (sin acentos) encuentra el fiado y el paquete que lo trae');
   await p.fill('#crBuscar','zzz');await p.waitForTimeout(100);
   r.cumple(await p.isVisible('#crNada')&&!(await visibles(p)).length,'si nada coincide, lo dice');
   await p.fill('#crBuscar','');
@@ -59,9 +59,9 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   r.cumple(/Se crearon 5 páginas: Cortes de caja, Inventario, Reporte de .+, Fiado, Proveedores\./.test(await p.textContent('#avisoApp')),'y el Inicio lo avisa',await p.textContent('#avisoApp'));
 
   /* Las plantillas nuevas traen sus bloques */
-  const pl=await p.evaluate(function(){var o={};['plan','finanzas','medeben','clientes','lista'].forEach(function(t){var d=AT.crear.armar(t);o[t]=d.titulo+': '+d.contenido.content.map(function(b){return b.type}).filter(function(x){return x!=='paragraph'&&x!=='heading'}).join(',')});return o});
-  r.cumple(pl.plan==='Plan de negocio: precio,taskList'&&pl.finanzas==='Finanzas del mes: gastos,pagos,taskList'&&pl.medeben==='Me deben: fiado'&&pl.clientes==='Clientes: basedatos'&&pl.lista==='Lista de precios: callout,table',
-    'plan de negocio, finanzas del mes, me deben, clientes y lista de precios traen sus bloques',pl);
+  const pl=await p.evaluate(function(){var o={};['plan','prestamo','clientes','lista'].forEach(function(t){var d=AT.crear.armar(t);o[t]=d.titulo+': '+d.contenido.content.map(function(b){return b.type}).filter(function(x){return x!=='paragraph'&&x!=='heading'}).join(',')});return o});
+  r.cumple(pl.plan==='Plan de negocio: precio,taskList'&&pl.prestamo==='Préstamo o crédito: pagos'&&pl.clientes==='Clientes: basedatos'&&pl.lista==='Lista de precios: callout,table',
+    'plan de negocio, préstamo, clientes y lista de precios traen sus bloques',pl);
 
   /* ---------- Acciones rápidas ---------- */
   const corteId=ds.filter(function(d){return d.tipo==='corte'})[0].id;
@@ -205,18 +205,12 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   await revisar(q,r,'galería de plantillas en escritorio (oscuro)');
   await cerrar(q);
 
-  /* Personal: sus acciones y su galería; sin «Prepara tu negocio» */
+  /* Un espacio de «Mis finanzas» (de antes) ya es de negocio: sus acciones y su galería son las del negocio */
   const s=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'personal',modulos:['negocio'],nombre:'Ana',negocio:null,creado:'2026-01-01'},ajustes:{contraste:'high'}});
   await s.goto(base+'inicio.html');await listo(s);
-  r.cumple(await s.evaluate(function(){return [].map.call(document.querySelectorAll('#iniAcciones [data-accion]'),function(b){return b.textContent}).join(' | ')==='Anotar un gasto | Me deben | Una deuda'&&document.getElementById('iniPrepara').hidden&&
-    [].map.call(document.querySelectorAll('#iniPlantillas .ini-pl b'),function(b){return b.textContent}).join(' | ')==='Finanzas del mes | Gastos del mes | Préstamo o crédito | Me deben | Notas'}),'personal: acciones de finanzas, sus páginas listas y sin «Prepara tu negocio»');
-  await Promise.all([s.waitForURL(/documento\.html/),s.click('[data-accion="gasto"]')]);await listo(s,500);
-  r.cumple(/Finanzas del mes/.test(await s.inputValue('#docTitulo'))&&!!await s.$('.nb-gastos'),'«Anotar un gasto» sin páginas crea «Finanzas del mes»');
-  await revisar(s,r,'finanzas del mes en escritorio (alto contraste)');
-  await s.goto(base+'inicio.html');await listo(s);
+  r.igual(await s.evaluate(function(){return [].map.call(document.querySelectorAll('#iniAcciones [data-accion]'),function(b){return b.textContent}).join(' | ')}),'Corte de hoy | Nueva venta | Anotar fiado | Anotar un gasto','un espacio de «Mis finanzas» de antes tiene las acciones del negocio');
   await abrirCrear(s);
-  r.igual(await s.$$eval('dialog.crear-dlg .crear-chip',function(e){return e.map(function(x){return x.textContent}).join(' | ')}),'Todas | Tus finanzas | Para tu negocio | Paquetes por giro','personal: la galería empieza por sus finanzas');
-  r.igual(await s.evaluate(function(){return document.querySelector('.crear-sec').getAttribute('data-cat')}),'finanzas','con «Tus finanzas» primero');
+  r.igual(await s.$$eval('dialog.crear-dlg .crear-chip',function(e){return e.map(function(x){return x.textContent}).join(' | ')}),'Todas | Para tu negocio | Paquetes por giro','y la galería del negocio');
   await revisar(s,r,'galería en escritorio (alto contraste)');
   await cerrar(s);
 

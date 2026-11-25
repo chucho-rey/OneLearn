@@ -5,8 +5,7 @@
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,reduce=AT.reduce;
 var setNav=function(v){AT.setNav(v)};
-var R=AT.rutas,RAIZ=R.raiz,LECC=R.lecciones,ES_INICIO=R.esInicio;
-var catalogo=AT.catalogo||[],actual=AT.leccion;
+var R=AT.rutas,RAIZ=R.raiz,ES_INICIO=R.esInicio;
 
 (function(){
   var aj=AT.ajustes,btn=$('#aaBtn'),ESC=aj.opciones.escala;

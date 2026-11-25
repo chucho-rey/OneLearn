@@ -6,7 +6,7 @@ prueba('Hito 2 · Panel Lectura',async function({browser,base,r}){
   const p=await pagina(browser);
   const fuentes=[];
   p.on('requestfinished',function(q){if(/atkinson|opendyslexic/.test(q.url()))fuentes.push(q.url().split('/').pop())});
-  await p.goto(base+'lecciones/ram.html');await listo(p);
+  await p.goto(base+'ayuda.html');await listo(p);
   r.igual(fuentes.length,0,'las fuentes para dislexia no se descargan si nadie las elige');
 
   await p.click('#aaBtn');
@@ -55,26 +55,26 @@ prueba('Hito 2 · Panel Lectura',async function({browser,base,r}){
 
   /* Si el sistema pide más contraste, se activa solo y el panel lo dice */
   const q=await pagina(browser,{contraste:'more'});
-  await q.goto(base+'lecciones/ram.html');await listo(q);
+  await q.goto(base+'ayuda.html');await listo(q);
   r.igual(await q.evaluate(function(){return document.documentElement.dataset.contrast}),'high','el alto contraste se activa si el sistema lo pide');
   await q.click('#aaBtn');
   r.cumple(/sistema pide más contraste/.test(await q.textContent('#lecCon')),'el panel avisa que el sistema pidió más contraste');
   await cerrar(q);
 
   /* Lo más exigente: 150%, espacios amplios y cada fuente, con el panel abierto */
-  for(const lec of ['ram','cpu'])for(const ancho of [390,1280])for(const fuente of ['normal','atkinson','opendyslexic'])
+  for(const pag of ['ayuda','inicio'])for(const ancho of [390,1280])for(const fuente of ['normal','atkinson','opendyslexic'])
   for(const [tema,contraste] of [['light','normal'],['dark','high']]){
     const s=await pagina(browser,{ancho:ancho,alto:844,ajustes:{tema:tema,contraste:contraste,fuente:fuente,escala:1.5,espaciado:'amplio',interlineado:'amplio',ancho:'amplio'}});
-    await s.goto(base+'lecciones/'+lec+'.html');await listo(s);
+    await s.goto(base+pag+'.html');await listo(s);
     await s.evaluate(function(){document.querySelectorAll('details').forEach(function(d){d.open=true})});
     await s.click('#aaBtn');await s.waitForTimeout(150);
-    const et=lec+' '+ancho+'px '+fuente+' '+tema+'/'+contraste+' ×1.5 amplio, panel abierto';
+    const et=pag+' '+ancho+'px '+fuente+' '+tema+'/'+contraste+' ×1.5 amplio, panel abierto';
     const v=await s.evaluate(function(){
-      const l=document.getElementById('lectura'),rc=l.getBoundingClientRect(),h=document.getElementById('sheet').getBoundingClientRect();
-      return {dentro:rc.left>=0&&rc.right<=innerWidth,interno:l.scrollWidth-l.clientWidth,antesDeApuntes:rc.bottom<=h.top+1};
+      const l=document.getElementById('lectura'),rc=l.getBoundingClientRect();
+      return {dentro:rc.left>=0&&rc.right<=innerWidth,interno:l.scrollWidth-l.clientWidth,abajo:rc.bottom<=innerHeight+1};
     });
     r.cumple(v.dentro&&v.interno<=0,et+': el panel cabe en la pantalla',v);
-    r.cumple(v.antesDeApuntes,et+': el panel termina antes de la barra de apuntes',v);
+    r.cumple(v.abajo,et+': el panel termina dentro de la pantalla',v);
     await revisar(s,r,et);
     await cerrar(s);
   }

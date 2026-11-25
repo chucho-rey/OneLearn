@@ -1,9 +1,0 @@
-/* Estilos propios de los laboratorios de «Monitoreo y registros». La terminal está en assets/css/terminal.css. */
-.ma-svg{display:block;width:100%;height:auto;margin-top:0.875rem;border:1px solid var(--line);border-radius:0.5rem;background:var(--bg-side)}
-.ma-inc{fill:var(--bad-bg)}
-.ma-eje{stroke:var(--line);stroke-width:1}
-.ma-tx{font-family:var(--font-mono);font-size:10px;fill:var(--fg-2)}
-.ma-linea{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
-.ma-umbral{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 4}
-.ma-ok{fill:var(--good);stroke:var(--bg);stroke-width:2}
-.ma-falsa{fill:var(--bad);stroke:var(--bg);stroke-width:2}

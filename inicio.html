@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>OneBook</title>
-<meta name="description" content="Aprende cómo funciona la tecnología con lecciones y laboratorios interactivos. Tu avance y tus apuntes se guardan en tu dispositivo.">
+<meta name="description" content="El Inicio de tu empresa en OneBook: tus páginas, acciones rápidas y el resumen de tu negocio. Todo se guarda en tu dispositivo.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
 <link rel="icon" href="assets/icons/icono-32.png" sizes="32x32" type="image/png">
@@ -24,20 +24,19 @@
 <body data-pagina="inicio">
 
 <div class="app">
-  <aside class="side" id="side" aria-label="Lecciones"></aside>
+  <aside class="side" id="side" aria-label="Navegación"></aside>
 
   <div class="main">
     <header class="topbar" id="topbar"></header>
 
     <main class="page inicio">
       <h1 id="saludo">Hola</h1>
-      <p class="ini-sub" id="iniSub">Qué quieres aprender hoy.</p>
+      <p class="ini-sub" id="iniSub"></p>
 
-      <div class="bienv m-estudio" id="bienvenida">
-        <p>OneBook explica cómo funciona la tecnología con lecciones cortas y laboratorios que puedes tocar. Tu avance y tus apuntes se guardan en este dispositivo.</p>
-        <div class="bienv-b"><a class="btn pri" href="lecciones/como-funciona.html">Así funciona OneBook</a><a class="btn" href="lecciones/ram.html">Empieza por Memoria RAM</a></div>
+      <div class="ini-resp ini-aviso" id="iniAviso" role="region" aria-labelledby="iniAvisoT" hidden>
+        <p><b id="iniAvisoT">OneBook ahora es para empresas.</b> <span id="iniAvisoTxt"></span></p>
+        <div class="ini-resp-b"><button class="btn pri" type="button" id="iniAvisoResp">Descargar respaldo</button><button class="btn" type="button" id="iniAvisoOk">Entendido</button></div>
       </div>
-      <div class="m-estudio" id="continuar" hidden></div>
 
       <section class="ini-sec ini-rapidas" id="iniRapidas" aria-labelledby="t-rapidas" hidden>
         <h2 id="t-rapidas" class="vh">Acciones rápidas</h2>
@@ -45,7 +44,7 @@
       </section>
 
       <section class="ini-sec ini-paginas" id="iniPaginas" aria-labelledby="t-docs">
-        <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus documentos</h2></div>
+        <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus páginas</h2></div>
         <div class="ini-resp" id="iniRespaldo" role="region" aria-label="Recordatorio de respaldo" hidden>
           <p id="iniRespaldoTxt"></p>
           <div class="ini-resp-b"><button class="btn pri" type="button" id="iniRespaldoSi">Descargar respaldo</button><button class="btn" type="button" id="iniRespaldoNo">Recordármelo en una semana</button></div>
@@ -71,37 +70,11 @@
         <button class="btn ini-prep-x" type="button" id="iniPrepOcultar">Ocultar esta lista</button>
       </section>
 
-      <section class="ini-sec m-sin-estudio" id="iniEmpezar" aria-labelledby="t-empezar">
+      <section class="ini-sec" id="iniEmpezar" aria-labelledby="t-empezar">
         <h2 id="t-empezar">Páginas listas para usar</h2>
         <p class="ini-nota">Empieza con una de estas y cámbiala a tu gusto con «/».</p>
         <div class="ini-plantillas" id="iniPlantillas"></div>
         <p class="ini-mas"><button class="btn" type="button" data-crear>Ver todas las plantillas</button></p>
-      </section>
-
-      <section class="ini-sec m-estudio" aria-labelledby="t-notas">
-        <h2 id="t-notas">Tus notas recientes</h2>
-        <ul class="ini-notas" id="recientes"></ul>
-      </section>
-
-      <section class="ini-sec m-estudio" aria-labelledby="t-rutas">
-        <div class="ini-sec-h"><h2 id="t-rutas">Rutas</h2><a class="btn" href="rutas.html">Ver la ruta completa</a></div>
-        <div id="iniRutas"></div>
-      </section>
-
-      <section class="ini-sec m-estudio" aria-labelledby="t-proyectos">
-        <div class="ini-sec-h"><h2 id="t-proyectos">Proyectos</h2><a class="btn" href="proyectos/index.html">Ver todos</a></div>
-        <div id="iniProyectos"></div>
-      </section>
-
-      <section class="ini-sec m-estudio" aria-labelledby="t-explorar">
-        <h2 id="t-explorar">Explorar temas</h2>
-        <div id="explorar"></div>
-      </section>
-
-      <section class="ini-sec ini-app m-estudio" aria-labelledby="t-hecho">
-        <h2 id="t-hecho">¿Estudias programación?</h2>
-        <p>Mira con qué está hecho OneBook: HTML, CSS y JavaScript sin framework, el editor, tus datos en el navegador y las pruebas, con ejemplos del código real.</p>
-        <a class="btn" href="acerca.html">Cómo está hecho OneBook</a>
       </section>
 
       <section class="ini-sec ini-app" id="instalar" aria-labelledby="t-instalar" hidden>
@@ -113,7 +86,6 @@
   </div>
 </div>
 
-<script src="assets/js/catalogo.js"></script>
 <script src="assets/js/base.js"></script>
 <script src="assets/js/datos.js"></script>
 <script src="assets/js/barra.js"></script>
@@ -122,7 +94,6 @@
 <script src="assets/js/respaldo.js"></script>
 <script src="assets/js/crear.js"></script>
 <script src="assets/js/buscar.js"></script>
-<script src="assets/js/avance.js"></script>
 <script src="assets/js/bloques.js"></script>
 <script src="assets/js/pagos.js"></script>
 <script src="assets/js/negocio.js"></script>

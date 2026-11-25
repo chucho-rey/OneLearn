@@ -1,11 +1,11 @@
 /* OneBook: «Crea tu espacio» (entrar.html), la etapa A de entrar: sin cuenta y sin servidor.
-   Un asistente de tres pasos en una sola página:
-     1. ¿Para qué usarás OneBook? Mi negocio, Mis finanzas y notas o Estudiar (Mi escuela, pronto).
-     2. Tu negocio (nombre, giro y teléfono; en pesos mexicanos) o tu nombre, para saludarte.
-     3. ¿Con qué empiezas? Las páginas sugeridas según el perfil y el giro (AT.crear.sugeridas), ya marcadas.
+   Un asistente en una sola página (el paso de elegir perfil se salta mientras haya uno solo):
+     1. ¿Para qué usarás OneBook? (solo si hay más de un perfil)
+     2. Tu negocio: nombre, giro y teléfono (en pesos mexicanos) y «Tengo empleados».
+     3. ¿Con qué empiezas? Las páginas sugeridas según el giro (AT.crear.sugeridas), ya marcadas.
    «Crear mi espacio» guarda el perfil (AT.perfil.guardar), crea las páginas marcadas y abre inicio.html con lo que
    traiga la dirección (por ejemplo #guardar-pagos desde la bienvenida, o #crear).
-   - ?perfil=negocio|personal|estudio elige el perfil y empieza en el paso 2.
+   - ?perfil=negocio elige el perfil y empieza en el paso 2.
    - ?editar (desde «Tus datos» › «Cambiar tu espacio») abre lo que ya tienes: en el paso 3 se encienden o apagan
      los módulos y las páginas sugeridas vienen sin marcar.
    - «Restáuralo» importa un respaldo; si trae perfil, va directo al Inicio; si no, sigue con el paso 1.
@@ -15,15 +15,16 @@
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,P=AT.perfil;
 var EDITAR=/[?&]editar\b/.test(location.search),actual=P.actual();
 var param=(/[?&]perfil=([a-z]+)/.exec(location.search)||[])[1];
-var ICONOS={negocio:'pagos',personal:'notas',estudio:'libreta'};
+var ICONOS={negocio:'pagos'};
+/* Con un solo perfil no se pregunta: se empieza en «Tu negocio» */
+var UNO=Object.keys(P.PERFILES).length===1,PRIMERO=UNO?2:1,TOTAL=UNO?2:3;
 var paso=1,form=$('#enForm');
 
 /* ---------- Paso 1: los perfiles ---------- */
 $('#enPerfiles').insertAdjacentHTML('beforeend',Object.keys(P.PERFILES).map(function(k){
   var p=P.PERFILES[k];
   return '<label class="en-op"><input type="radio" name="perfil" value="'+k+'">'+ico(ICONOS[k])+'<span><b>'+esc(p.nombre)+'</b><small>'+esc(p.desc)+'</small></span></label>';
-}).join('')+
-  '<div class="en-op en-pronto">'+ico('clase')+'<span><b>Mi escuela</b><small>Grupos, tareas y exámenes con tus alumnos. <a href="estudiantes.html?conoce#lpEscuelas">Lo estamos preparando</a>.</small></span></div>');
+}).join(''));
 $('#enGiro').innerHTML=P.GIROS.map(function(g){return '<option value="'+g[0]+'">'+esc(g[1])+'</option>'}).join('');
 function perfilElegido(){var r=$('input[name="perfil"]:checked',form);return r?r.value:''}
 function elegirPerfil(k){var r=$('input[name="perfil"][value="'+k+'"]',form);if(r)r.checked=true}
@@ -39,6 +40,7 @@ if(EDITAR&&actual){
   $('#enT1').textContent='¿Para qué usas OneBook?';
   $('#enRestaurarP').hidden=true;
 }else if(P.PERFILES[param])elegirPerfil(param);
+if(UNO&&!perfilElegido())elegirPerfil(Object.keys(P.PERFILES)[0]);
 
 /* ---------- Paso 3: páginas para empezar y, al editar, los módulos ---------- */
 var pintado3='';
@@ -54,7 +56,6 @@ function pintarPaso3(){
       '<span><b>'+esc(t.nombre)+'</b><small>'+esc(t.desc)+'</small></span></label>';
   }).join(''));
   $('#enT3Txt').textContent=EDITAR?'Si quieres, crea también algunas de estas páginas. Lo que ya tienes no cambia.':
-    k==='estudio'?'Las lecciones, las rutas y los proyectos ya están en la barra lateral. Si quieres, empieza también con alguna de estas páginas.':
     'Te creamos estas páginas para empezar. Quita las que no quieras; después puedes crear más con «Crear».';
   if(EDITAR){
     var mods=actual&&actual.perfil===k?actual.modulos:P.PERFILES[k].modulos;
@@ -78,16 +79,16 @@ function mostrar(n,foco){
     $('#enT2').textContent=neg?'Tu negocio':'¿Cómo te llamas?';
   }
   if(n===3)pintarPaso3();
-  $('#enPaso').textContent='Paso '+n+' de 3';
-  $('#enAvance').style.width=Math.round(n/3*100)+'%';
-  $('#enAtras').hidden=n===1;
+  $('#enPaso').textContent='Paso '+(n-PRIMERO+1)+' de '+TOTAL;
+  $('#enAvance').style.width=Math.round((n-PRIMERO+1)/TOTAL*100)+'%';
+  $('#enAtras').hidden=n===PRIMERO;
   $('#enSig').textContent=n<3?'Siguiente':EDITAR?'Guardar cambios':'Crear mi espacio';
   mensaje('');
   if(foco!==false){var h=$('#enT'+n);h.focus({preventScroll:true});window.scrollTo(0,0)}
 }
 function mensaje(t,error){var m=$('#enMsg');m.textContent=t;m.classList.toggle('error',!!error)}
 
-$('#enAtras').addEventListener('click',function(){if(paso>1)mostrar(paso-1)});
+$('#enAtras').addEventListener('click',function(){if(paso>PRIMERO)mostrar(paso-1)});
 form.addEventListener('submit',function(e){
   e.preventDefault();
   if($('#enSig').getAttribute('aria-disabled')==='true')return;
@@ -137,11 +138,11 @@ $('#enArchivo').addEventListener('change',function(){
   }).then(function(res){
     var n=res.documentos===1?'1 documento':res.documentos+' documentos';
     if(res.perfil){mensaje('Listo: se restauraron '+n+' y tu espacio. Abriendo tu Inicio…');location.href='inicio.html'+location.hash;return}
-    mostrar(1,false);
-    mensaje('Listo: se restauraron '+n+'. Ahora elige para qué usarás OneBook.');
-    var r=$('input[name="perfil"]',form);if(r)r.focus();
+    mostrar(PRIMERO,false);
+    mensaje('Listo: se restauraron '+n+'. '+(UNO?'Ahora cuéntanos de tu negocio.':'Ahora elige para qué usarás OneBook.'));
+    var r=UNO?$('#enNegocio'):$('input[name="perfil"]',form);if(r)r.focus();
   }).catch(function(err){mensaje(err&&err.message||'No se pudo restaurar el respaldo.',true)});
 });
 
-mostrar(perfilElegido()&&!EDITAR?2:1,false);
+mostrar(perfilElegido()&&(!EDITAR||UNO)?2:1,false);
 })();

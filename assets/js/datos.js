@@ -21,6 +21,9 @@
      una sola vez cada uno); ver «Historial de versiones» más abajo. AT.datos.versiones.
    - Quién eres (AT.datos.yo), los permisos de cada página (doc.acceso, AT.datos.acceso) y quién tiene abierta
      cada página (AT.datos.presencia); ver «Quién eres, permisos…» más abajo.
+   - Lo de estudio que se separó de OneBook (notas de las lecciones, marcadores, avance, proyectos, ejercicios de
+     la terminal y las páginas de estudio) se sigue guardando y entra en el respaldo: nadie pierde nada.
+     AT.datos.deEstudio(doc) dice si una página es de estudio (las listas la esconden y se abre solo para leer).
    Expone AT.datos. Se carga después de base.js. */
 (function(){
 'use strict';
@@ -481,7 +484,6 @@ function importar(datos){
         });
         if(!act.ultima||(ent.ultima&&act.lecciones[ent.ultima]&&!act.lecciones[act.ultima]))act.ultima=ent.ultima;
         lsSet(PREF+'avance',JSON.stringify(act));
-        if(AT.avance&&AT.avance.recargar)AT.avance.recargar();
       }
       /* Proyectos: se suman las tareas hechas; el enlace y la fase, si aquí no hay */
       if(esObjeto(datos.proyectos)){
@@ -1019,8 +1021,13 @@ var papelera={
   DIAS:DIAS_PAPELERA
 };
 
+/* Páginas de estudio (de cuando OneBook tenía libretas, apuntes de clase y tesis) */
+var TIPOS_ESTUDIO={libreta:1,clase:1,libro:1,investigacion:1,tesis:1,guia:1,bitacora:1};
+function deEstudio(d){return !!(d&&TIPOS_ESTUDIO[d.tipo])}
+
 AT.datos={
   listo:listo,
+  deEstudio:deEstudio,
   motor:function(){return motor&&motor.tipo},
   documentos:docsCol,
   marcadores:coleccion('marcadores'),

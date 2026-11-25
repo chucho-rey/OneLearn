@@ -5,8 +5,7 @@
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,reduce=AT.reduce;
-var R=AT.rutas,RAIZ=R.raiz,LECC=R.lecciones,ES_INICIO=R.esInicio;
-var catalogo=AT.catalogo||[],actual=AT.leccion;
+var R=AT.rutas,RAIZ=R.raiz,ES_INICIO=R.esInicio;
 
 AT.aviso=function(texto,accion,fn){
   var v=document.getElementById('avisoApp');

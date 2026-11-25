@@ -1,114 +1,75 @@
-/* Hito 3: barra lateral con Temas, Mis apuntes y Comunidad. */
+/* La barra lateral: Inicio, Crear, Buscar, «Tus páginas» (favoritas primero, la página abierta marcada; sin «Mi negocio»,
+   «Tu equipo» ni las páginas de estudio; la papelera al final si hay algo) y el pie (Lectura, Tus datos, Ayuda y
+   modo zen en una página). En celular el menú retiene el foco. Variantes de lectura sin desbordes. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
-const NOTAS={'aprende-tecnologia:apuntes:ram':'Refresco: 64 ms en DDR4\nsegunda línea','aprende-tecnologia:apuntes:cpu':'Amdahl limita los núcleos'};
-function activo(p){return p.evaluate(function(){const a=document.activeElement;return a.id||a.className})}
+function doc(id,titulo,extra){
+  return Object.assign({formato:1,tipo:'notas',id:id,titulo:titulo,props:[],creado:'2026-11-01T10:00:00.000Z',editado:'2026-11-01T10:00:00.000Z',
+    contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-'+id.slice(2,8)},content:[{type:'text',text:'Hola'}]}]}},extra||{});
+}
+const DOCS=[doc('d-uno','Ventas de noviembre',{editado:'2026-11-20T10:00:00.000Z'}),doc('d-dos','Proveedores',{editado:'2026-11-22T10:00:00.000Z'}),
+  doc('d-fav','Lista de precios',{favorito:true}),doc('d-tesis','Mi tesis',{tipo:'tesis'}),doc('d-miequipo','Tu equipo')];
+async function sembrar(p){await p.evaluate(function(l){return Promise.all(l.map(function(d){return AT.datos.documentos.guardar(d,{conservarFecha:true})}))},DOCS)}
+function nombres(p){return p.$$eval('#docsLista a.doc > span',function(e){return e.map(function(x){return x.textContent})})}
 
 prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
-  /* Escritorio: pestañas, notas y teclado */
-  const p=await pagina(browser,{local:NOTAS});
-  await p.goto(base+'lecciones/ram.html');await listo(p);
-  r.igual(await p.getAttribute('.tab[aria-selected="true"]','id'),'tab-temas','empieza en la pestaña Temas');
-  await p.focus('#tab-temas');await p.keyboard.press('ArrowRight');
-  r.igual(await activo(p),'tab-apuntes','la flecha derecha pasa a Mis apuntes');
-  r.cumple(await p.isVisible('#pn-apuntes')&&await p.isHidden('#pn-temas'),'solo se ve el panel de la pestaña elegida');
-  const tarjetas=await p.$$eval('#notasLista .nota',function(e){return e.map(function(x){return [x.querySelector('b').textContent,x.querySelector('span').textContent,x.querySelector('small').textContent,x.classList.contains('on')]})});
-  r.cumple(tarjetas.length===2&&tarjetas[0][0]==='Memoria RAM'&&tarjetas[0][1]==='Refresco: 64 ms en DDR4'&&tarjetas[0][2]==='7 palabras'&&tarjetas[0][3]&&tarjetas[1][0]==='Procesador (CPU)',
-    'Mis apuntes muestra una tarjeta por nota, con primera línea, palabras y la lección actual marcada',tarjetas);
-  await p.keyboard.press('End');r.igual(await activo(p),'tab-comunidad','Fin va a la última pestaña');
-  await p.keyboard.press('Home');r.igual(await activo(p),'tab-temas','Inicio va a la primera pestaña');
-  await p.keyboard.press('ArrowLeft');r.igual(await activo(p),'tab-comunidad','la flecha izquierda da la vuelta');
-  await p.click('#tab-apuntes');await p.reload();await listo(p);
-  r.igual(await p.getAttribute('.tab[aria-selected="true"]','id'),'tab-apuntes','se recuerda la última pestaña');
-
-  await p.click('#shMain');await p.fill('#notes','');await p.type('#notes','Nueva idea sobre la RAM');await p.waitForTimeout(700);
-  r.igual(await p.textContent('#notasLista .nota.on span'),'Nueva idea sobre la RAM','la lista se actualiza mientras escribes');
-  await p.keyboard.press('Escape');await p.waitForTimeout(300);
-  await p.click('#notasLista .nota.on');await p.waitForTimeout(300);
-  r.cumple(/ram\.html$/.test(p.url())&&await p.getAttribute('#sheet','data-state')==='half'&&await activo(p)==='notes','la nota de la lección actual se abre sin recargar');
-  await p.keyboard.press('Escape');await p.waitForTimeout(300);
-
-  await p.focus('#tab-apuntes');await p.keyboard.press('Tab');await p.keyboard.press('Tab');
-  r.cumple(/Procesador/.test(await p.evaluate(function(){return document.activeElement.textContent})),'con Tab se llega a la nota de otra lección');
-  await Promise.all([p.waitForURL(/cpu\.html/),p.keyboard.press('Enter')]);await listo(p,400);
-  r.cumple(await p.getAttribute('#sheet','data-state')==='half'&&await p.inputValue('#notes')==='Amdahl limita los núcleos'&&await activo(p)==='notes',
-    'Enter abre la otra lección con su nota abierta');
-  r.cumple(!/#apuntes/.test(p.url()),'la marca #apuntes se quita de la dirección');
-  await p.keyboard.press('Escape');
+  const p=await pagina(browser);
+  await p.goto(base+'inicio.html');await listo(p);
+  await sembrar(p);
+  await p.reload();await listo(p,500);
+  r.igual((await nombres(p)).join(' · '),'Lista de precios · Proveedores · Ventas de noviembre','«Tus páginas»: la favorita primero y después las más recientes; sin «Mi negocio», «Tu equipo» ni la tesis');
+  r.cumple(await p.isVisible('#docsLista a.doc .doc-est'),'la favorita lleva su estrella');
+  r.cumple(await p.getAttribute('#side a.nv[href="inicio.html"]','aria-current')==='page','el Inicio está marcado como la página actual');
+  r.cumple(await p.isVisible('#sideCrear')&&await p.isVisible('#sideBuscar')&&await p.isVisible('#sideAyuda')&&await p.isVisible('#sideDatos'),'Crear, Buscar, Ayuda y Tus datos están en la barra');
+  r.igual(await p.$$eval('#side .tabs,#side .tab,#side .grp-btn,#notasLista,#marcLista',function(e){return e.length}),0,'ya no hay pestañas de temas, apuntes ni marcadores');
+  r.cumple(!await p.$('#sideRutas')&&!await p.$('#sideProyectos')&&!await p.$('#side a[href="acerca.html"]'),'ni rutas, ni proyectos, ni «Cómo está hecho»');
+  /* La papelera aparece al final cuando hay algo en ella */
+  await p.evaluate(function(){return AT.datos.documentos.leer('d-uno').then(function(d){return AT.datos.papelera.mover(d)})});
+  await p.waitForTimeout(700);
+  r.igual((await nombres(p)).join(' · '),'Lista de precios · Proveedores','al mandar una página a la papelera sale de la lista');
+  r.cumple(/Papelera\s*1/.test(await p.textContent('#docsLista [data-papelera]')),'y la papelera aparece al final con cuántas tiene');
   await p.click('#sideLectura');
   r.cumple(await p.isVisible('#lectura'),'«Lectura» del pie abre el panel');
+  await p.keyboard.press('Escape');
+  /* En una página: queda marcada y el pie ofrece el modo zen */
+  await p.goto(base+'documento.html?id=d-dos');await listo(p,400);
+  r.igual(await p.getAttribute('#docsLista a.doc.on','aria-current'),'page','la página abierta está marcada en la lista');
+  r.cumple(await p.isVisible('#sideZen'),'en una página, el pie ofrece el modo zen');
   r.cumple(p.errores.length===0,'sin errores en escritorio',p.errores);
   await cerrar(p);
 
-  /* Sin notas */
-  const v=await pagina(browser,{ajustes:{pestana:'apuntes'}});
-  await v.goto(base+'lecciones/ram.html');await listo(v);
-  r.cumple(/Todavía no tienes apuntes/.test(await v.textContent('#notasLista')),'sin notas se explica cómo escribir la primera');
+  /* Sin páginas */
+  const v=await pagina(browser);
+  await v.goto(base+'inicio.html');await listo(v,400);
+  r.cumple(/Todavía no tienes páginas/.test(await v.textContent('#docsLista')),'sin páginas, la barra dice cómo crear la primera');
   await cerrar(v);
 
   /* Celular: el menú retiene el foco */
-  const c=await pagina(browser,{ancho:390,alto:844,local:{'aprende-tecnologia:apuntes:ram':'nota de ram'}});
-  await c.goto(base+'lecciones/cpu.html');await listo(c);
+  const c=await pagina(browser,{ancho:390,alto:844});
+  await c.goto(base+'inicio.html');await listo(c);
+  await sembrar(c);await c.reload();await listo(c,400);
   await c.focus('#menuBtn');await c.keyboard.press('Enter');await c.waitForTimeout(300);
-  r.cumple(/Procesador/.test(await c.evaluate(function(){return document.activeElement.textContent})),'en celular, al abrir el menú el foco va a la lección actual');
+  r.cumple(/Inicio/.test(await c.evaluate(function(){return document.activeElement.textContent})),'en celular, al abrir el menú el foco va a la página actual');
   let fuera=0;
   for(let i=0;i<30;i++){await c.keyboard.press('Tab');if(!await c.evaluate(function(){return document.getElementById('side').contains(document.activeElement)}))fuera++}
   r.igual(fuera,0,'en celular, Tab no sale del menú abierto');
-  await c.focus('#tab-temas');await c.keyboard.press('ArrowRight');await c.keyboard.press('Tab');
-  await Promise.all([c.waitForURL(/ram\.html/),c.keyboard.press('Enter')]);await listo(c,400);
-  r.cumple(await c.getAttribute('#sheet','data-state')==='half'&&!await c.evaluate(function(){return document.body.classList.contains('nav-open')}),'en celular, la nota de otra lección se abre y el menú se cierra');
+  await Promise.all([c.waitForURL(/documento\.html\?id=d-fav/),c.click('#docsLista a.doc:has-text("Lista de precios")')]);await listo(c,400);
+  r.cumple(!await c.evaluate(function(){return document.body.classList.contains('nav-open')}),'al elegir una página, se abre y el menú queda cerrado');
   r.cumple(c.errores.length===0,'sin errores en celular',c.errores);
   await cerrar(c);
 
-  /* Grupos plegables del temario: no se satura aunque haya muchos temas */
-  const g=await pagina(browser,{ancho:1280});
-  await g.goto(base+'lecciones/cpu.html');await listo(g);
-  const grupos=function(){return g.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn')].map(function(b){
-    return b.getAttribute('data-grupo')+':'+(b.getAttribute('aria-expanded')==='true'?'abierto':'cerrado')+(document.getElementById(b.getAttribute('aria-controls')).hidden?':oculto':'')})})};
-  let gs=await grupos();
-  r.igual(gs.join(' '),'onebook:cerrado:oculto hardware:abierto electronica:cerrado:oculto software:cerrado:oculto linux:cerrado:oculto redes:cerrado:oculto servidores-y-nube:cerrado:oculto ciberseguridad:cerrado:oculto inteligencia-artificial:cerrado:oculto',
-    'la primera vez solo se abre el grupo de la lección actual; Linux, Servidores y nube, Ciberseguridad e Inteligencia artificial están en el temario');
-  const hw=await g.evaluate(function(){const l=AT.catalogo.filter(function(x){return x.grupo==='Hardware'})[0].lecciones;return [l.filter(function(x){return x.archivo}).length,l.length]});
-  r.igual(await g.textContent('#grpb-hardware em'),hw[0]+'/'+hw[1],'el grupo dice cuántas lecciones tiene disponibles');
-  r.cumple(new RegExp(hw[0]+' de '+hw[1]+' lecciones disponibles').test(await g.textContent('#grpb-hardware')),'y lo dice completo a los lectores de pantalla');
-  await g.click('#grpb-ciberseguridad');await g.waitForTimeout(100);
-  r.cumple(await g.isVisible('#grp-ciberseguridad .nv'),'al tocar un grupo se abre y muestra sus lecciones');
-  await g.focus('#grpb-hardware');await g.keyboard.press('Enter');await g.waitForTimeout(100);
-  r.cumple(!await g.isVisible('#grp-hardware'),'con el teclado (Enter) también se pliega');
-  await g.reload();await listo(g);
-  gs=await grupos();
-  r.cumple(gs.indexOf('ciberseguridad:abierto')>=0,'se recuerda qué grupos dejaste abiertos',gs);
-  r.cumple(gs.indexOf('hardware:abierto')>=0,'el grupo de la lección actual siempre se abre, aunque lo hayas plegado',gs);
-  await g.goto(base+'inicio.html');await listo(g);
-  gs=await grupos();
-  r.cumple(gs.indexOf('hardware:cerrado:oculto')>=0&&gs.indexOf('ciberseguridad:abierto')>=0,'en Inicio se respeta lo que plegaste',gs);
-  const pronto=await g.evaluate(function(){return [[...document.querySelectorAll('.exp-pronto b')].map(function(b){return b.textContent}).join(', '),
-    AT.catalogo.filter(function(x){return !x.lecciones.some(function(l){return l.archivo})}).map(function(x){return x.grupo}).join(', ')]});
-  r.igual(pronto[0],pronto[1],'Inicio junta los grupos sin lecciones en «Próximos temas»');
-  await revisar(g,r,'Inicio con grupos plegados');
-  await cerrar(g);
-  const g2=await pagina(browser,{ancho:1280});
-  await g2.goto(base+'inicio.html');await listo(g2);
-  r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#side .grp-btn[aria-expanded="true"]')].map(function(b){return b.getAttribute('data-grupo')}).join(',')}),
-    'onebook','la primera vez, en Inicio, solo se abre el primer grupo (OneBook, con «Cómo funciona»)');
-  r.igual(await g2.evaluate(function(){return [...document.querySelectorAll('#explorar details.exp-g[open]')].map(function(d){return d.getAttribute('data-g')}).join(',')}),
-    'OneBook','en «Explorar temas», la primera vez solo se abre el primer grupo');
-  await g2.click('#explorar details[data-g="Redes"] summary');
-  r.cumple(await g2.isVisible('#explorar details[data-g="Redes"] a.exp-i'),'tocar un grupo de «Explorar temas» muestra sus lecciones');
-  await revisar(g2,r,'Inicio con «Explorar temas» plegable');
-  await cerrar(g2);
-
-  /* Las tres pestañas con letra grande, OpenDyslexic y alto contraste */
+  /* Letra grande, OpenDyslexic y alto contraste, con una página de nombre muy largo */
   for(const ancho of [390,1280])for(const [escala,fuente] of [[1,'normal'],[1.5,'normal'],[1,'opendyslexic'],[1.5,'opendyslexic']])
-  for(const [tema,contraste] of [['light','normal'],['dark','high']])for(const pestana of ['temas','apuntes','comunidad']){
-    const s=await pagina(browser,{ancho:ancho,alto:844,local:{'aprende-tecnologia:apuntes:ram':'Una nota con una palabra larguísimasinespaciosquepodríadesbordar la barra','aprende-tecnologia:apuntes:cpu':'otra'},
-      ajustes:{escala:escala,fuente:fuente,tema:tema,contraste:contraste,pestana:pestana}});
-    await s.goto(base+'lecciones/ram.html');await listo(s);
+  for(const [tema,contraste] of [['light','normal'],['dark','high']]){
+    const s=await pagina(browser,{ancho:ancho,alto:844,ajustes:{escala:escala,fuente:fuente,tema:tema,contraste:contraste}});
+    await s.goto(base+'inicio.html');await listo(s);
+    await s.evaluate(function(d){return AT.datos.documentos.guardar(d,{conservarFecha:true})},doc('d-largo','Un nombre con una palabra larguísimasinespaciosquepodríadesbordar la barra'));
+    await s.reload();await listo(s,300);
     if(ancho<900){await s.click('#menuBtn');await s.waitForTimeout(350)}
-    const et=ancho+'px ×'+escala+' '+fuente+' '+tema+'/'+contraste+' pestaña '+pestana;
+    const et=ancho+'px ×'+escala+' '+fuente+' '+tema+'/'+contraste;
     r.cumple(await s.evaluate(function(){const b=document.getElementById('side');return b.scrollWidth<=b.clientWidth}),et+': la barra lateral no se desborda');
-    if(pestana!=='comunidad')await revisar(s,r,et);
+    await revisar(s,r,et);
     await cerrar(s);
   }
 });

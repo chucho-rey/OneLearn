@@ -1,5 +1,5 @@
-/* Hito 2.2: tus datos en IndexedDB, las notas de antes pasadas sin perder nada, y el respaldo:
-   exportas, borras los datos del navegador, importas y recuperas todo. */
+/* Hito 2.2: tus datos en IndexedDB, las notas de antes (de las lecciones) pasadas sin perder nada, y el respaldo:
+   exportas, borras los datos del navegador, importas y recuperas todo, también lo de estudio que se separó. */
 'use strict';
 const fs=require('fs'),path=require('path'),os=require('os');
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
@@ -22,50 +22,43 @@ function leerIDB(p,almacen){
 function claves(p){return p.evaluate(function(){return Object.keys(localStorage).filter(function(k){return k.indexOf('apuntes:')>0}).sort()})}
 
 prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r}){
-  /* ---------- Las notas de antes pasan a IndexedDB ---------- */
+  /* ---------- Las notas de antes (de las lecciones) pasan a IndexedDB y se conservan ---------- */
   const p=await pagina(browser,{local:{
     'aprende-tecnologia:apuntes:ram':'Nota vieja de RAM','aprende-tecnologia:apuntes:ram:editado':'2026-10-01T10:00:00.000Z',
     'aprende-tecnologia:apuntes:cpu':'Nota de CPU sin fecha','aprende-tecnologia:apuntes:cpu:pendiente':'1'}});
-  await p.goto(base+'lecciones/ram.html');await listo(p,500);
-  r.igual(await p.inputValue('#notes'),'Nota vieja de RAM','la nota de antes se muestra en su lección');
+  await p.goto(base+'ayuda.html');await listo(p,500);
   let idb=await leerIDB(p,'notas');
   const porId={};(idb||[]).forEach(function(n){porId[n.id]=n});
-  r.cumple(porId.ram&&porId.ram.texto==='Nota vieja de RAM'&&porId.ram.editado==='2026-10-01T10:00:00.000Z','la nota pasa a IndexedDB con su fecha',porId.ram);
+  r.cumple(porId.ram&&porId.ram.texto==='Nota vieja de RAM'&&porId.ram.editado==='2026-10-01T10:00:00.000Z','la nota de antes pasa a IndexedDB con su fecha',porId.ram);
   r.cumple(porId.cpu&&porId.cpu.texto==='Nota de CPU sin fecha'&&porId.cpu.editado==='','una nota sin fecha también pasa',porId.cpu);
   r.igual((await claves(p)).length,0,'después de pasarlas, se quitan de localStorage');
   r.igual(await p.evaluate(function(){return AT.datos.motor()}),'indexeddb','se usa IndexedDB');
 
-  /* Escribir y recargar */
-  await p.click('#shMain');await p.fill('#notes','');await p.type('#notes','Nota nueva en IndexedDB');
-  await p.waitForFunction(function(){return document.getElementById('nStat').textContent==='Guardado'});
-  idb=await leerIDB(p,'notas');
-  r.cumple(idb.some(function(n){return n.id==='ram'&&n.texto==='Nota nueva en IndexedDB'&&n.editado>'2026-11'}),'lo que escribes llega a IndexedDB');
-  r.igual((await claves(p)).length,0,'y no queda copia en localStorage cuando ya se guardó');
-  await p.reload();await listo(p,400);
-  r.igual(await p.inputValue('#notes'),'Nota nueva en IndexedDB','al recargar, la nota sigue ahí');
-
-  /* Si la página se cierra antes de llegar a la base, la próxima carga termina el trabajo */
+  /* Si la página se cerró antes de llegar a la base, la próxima carga termina el trabajo */
   await p.evaluate(function(){
     localStorage.setItem('aprende-tecnologia:apuntes:ram','Escrito justo antes de cerrar');
     localStorage.setItem('aprende-tecnologia:apuntes:ram:editado',new Date(Date.now()+1000).toISOString());
   });
   await p.reload();await listo(p,400);
-  r.igual(await p.inputValue('#notes'),'Escrito justo antes de cerrar','una nota que no alcanzó a guardarse no se pierde');
   idb=await leerIDB(p,'notas');
-  r.cumple(idb.some(function(n){return n.id==='ram'&&n.texto==='Escrito justo antes de cerrar'}),'y se termina de guardar en IndexedDB');
+  r.cumple(idb.some(function(n){return n.id==='ram'&&n.texto==='Escrito justo antes de cerrar'}),'una nota que no alcanzó a guardarse no se pierde: se termina de guardar en IndexedDB');
+  r.igual((await claves(p)).length,0,'y no queda copia en localStorage cuando ya se guardó');
 
-  /* Otra pestaña se entera */
+  /* Una página llega a IndexedDB y otra pestaña se entera */
   const p2=await p.context().newPage();
-  await p2.goto(base+'lecciones/cpu.html');await listo(p2,400);
-  await p2.click('#tab-apuntes');
-  await p.bringToFront();await p.click('#shMain');await p.fill('#notes','Cambio desde otra pestaña');await p.waitForTimeout(900);
-  r.cumple(/Cambio desde otra pestaña/.test(await p2.textContent('#notasLista')),'otra pestaña abierta ve el cambio en Mis apuntes');
+  await p2.goto(base+'ayuda.html');await listo(p2,400);
+  await p.bringToFront();
+  await p.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-otra',titulo:'Cambio desde otra pestaña',contenido:{type:'doc',content:[]}})});
+  idb=await leerIDB(p,'documentos');
+  r.cumple(idb.some(function(d){return d.id==='d-otra'&&d.editado>'2026-11'}),'una página llega a IndexedDB con su fecha');
+  await p2.waitForTimeout(900);
+  r.cumple(/Cambio desde otra pestaña/.test(await p2.textContent('#docsLista')),'otra pestaña abierta ve la página nueva en su barra lateral');
   await p2.close();
 
   /* ---------- Tus datos y respaldo ---------- */
   await p.evaluate(function(){
     return Promise.all([
-      AT.datos.documentos.guardar({formato:1,tipo:'libreta',id:'d-respaldo',titulo:'Libreta de prueba',contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-1'},content:[{type:'text',text:'Hola'}]}]}}),
+      AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-respaldo',titulo:'Página de prueba',contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-1'},content:[{type:'text',text:'Hola'}]}]}}),
       AT.datos.marcadores.guardar({id:'m-1',doc:'ram',bloque:'s-celda',texto:'Cómo guarda un bit la RAM'})
     ]);
   });
@@ -73,7 +66,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   await p.click('#sideDatos');await p.waitForTimeout(400);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.tus-datos').open}),'«Tus datos» abre su ventana');
   const res=await p.textContent('#tdRes');
-  r.cumple(/Documentos\s*1/.test(res)&&/Notas\s*2/.test(res)&&/Marcadores\s*1/.test(res)&&/Espacio usado/.test(res)&&/Disponible/.test(res),'muestra cuántos documentos, notas y marcadores hay, el espacio usado y el disponible',res);
+  r.cumple(/Páginas\s*2/.test(res)&&/Bases de datos\s*0/.test(res)&&/Notas y marcadores de estudio\s*3/.test(res)&&/Espacio usado/.test(res)&&/Disponible/.test(res),'muestra cuántas páginas y bases hay (y lo de estudio que quedó), el espacio usado y el disponible',res);
   r.cumple(/Usas .+ de los .+ que el navegador le reserva/.test(await p.textContent('#tdNotaEsp'))&&await p.isVisible('#tdBar'),'explica qué parte del espacio reservado se usa, con una barra');
   r.cumple(/Todavía no has descargado/.test(await p.textContent('#tdUlt')),'avisa que aún no hay respaldo');
   r.cumple((await p.textContent('#tdProt')).length>10,'explica si el navegador protege los datos');
@@ -83,8 +76,8 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   const archivo=path.join(os.tmpdir(),'onelearn-prueba-respaldo.json');
   await descarga.saveAs(archivo);
   const datos=JSON.parse(fs.readFileSync(archivo,'utf8'));
-  r.cumple(datos.app==='OneBook'&&datos.formato===1&&datos.documentos.length===1&&datos.notas.length===2&&datos.marcadores.length===1&&datos.avance.lecciones.ram,
-    'el respaldo trae documentos, notas, marcadores y avance',{docs:datos.documentos.length,notas:datos.notas.length});
+  r.cumple(datos.app==='OneBook'&&datos.formato===1&&datos.documentos.length===2&&datos.notas.length===2&&datos.marcadores.length===1&&datos.avance.lecciones.ram,
+    'el respaldo trae páginas y también lo de estudio: notas, marcadores y avance',{docs:datos.documentos.length,notas:datos.notas.length});
   await p.waitForTimeout(200);
   r.cumple(/Listo/.test(await p.textContent('#tdMsg'))&&/hoy/.test(await p.textContent('#tdUlt')),'confirma la descarga y recuerda la fecha');
   await p.keyboard.press('Escape');await p.waitForTimeout(200);
@@ -94,20 +87,21 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
 
   /* Navegador limpio: importar recupera todo */
   const n=await pagina(browser,{ancho:390,alto:844,movil:true});
-  await n.goto(base+'inicio.html');await listo(n);
+  await n.goto(base+'ayuda.html');await listo(n);
   await n.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-local',titulo:'Ya estaba aquí',contenido:{type:'doc',content:[]}})});
   await n.tap('#menuBtn');await n.waitForTimeout(300);await n.tap('#sideDatos');await n.waitForTimeout(300);
   await revisar(n,r,'ventana Tus datos en celular');
   await n.setInputFiles('#tdArchivo',archivo);
   await n.waitForFunction(function(){return /Se recuperaron|No había/.test(document.getElementById('tdMsg').textContent)});
-  r.cumple(/1 documento, 2 notas y 1 marcador, y tu avance de lectura/.test(await n.textContent('#tdMsg')),'importar cuenta lo recuperado',await n.textContent('#tdMsg'));
+  r.cumple(/2 páginas y 3 notas y marcadores de estudio/.test(await n.textContent('#tdMsg')),'importar cuenta lo recuperado',await n.textContent('#tdMsg'));
   const rec=await n.evaluate(function(){
     return Promise.all([AT.datos.documentos.todos(),AT.datos.notas.todas(),AT.datos.marcadores.todos()]).then(function(x){
-      return {docs:x[0].map(function(d){return d.id}).sort(),notas:x[1].map(function(d){return d.id+':'+d.texto}).sort(),marc:x[2].length,avance:AT.avance.porcentaje('ram')};
+      const av=JSON.parse(localStorage.getItem('aprende-tecnologia:avance')||'{}');
+      return {docs:x[0].map(function(d){return d.id}).sort(),notas:x[1].map(function(d){return d.id+':'+d.texto}).sort(),marc:x[2].length,avance:!!(av.lecciones&&av.lecciones.ram)};
     });
   });
-  r.cumple(rec.docs.join()==='d-local,d-respaldo'&&rec.notas.join('|')==='cpu:Nota de CPU sin fecha|ram:Cambio desde otra pestaña'&&rec.marc===1&&rec.avance>0,
-    'se recuperan documentos, notas, marcadores y avance, y se conserva lo que ya había',rec);
+  r.cumple(rec.docs.join()==='d-local,d-otra,d-respaldo'&&rec.notas.join('|')==='cpu:Nota de CPU sin fecha|ram:Escrito justo antes de cerrar'&&rec.marc===1&&rec.avance,
+    'se recuperan las páginas y lo de estudio (notas, marcadores y avance), y se conserva lo que ya había',rec);
   /* Importar dos veces no duplica ni pisa */
   await n.setInputFiles('#tdArchivo',archivo);
   await n.waitForFunction(function(){return /No había/.test(document.getElementById('tdMsg').textContent)});
@@ -135,12 +129,11 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   /* ---------- Sin IndexedDB, se usa localStorage ---------- */
   const s=await pagina(browser);
   await s.context().addInitScript(function(){try{Object.defineProperty(window,'indexedDB',{value:undefined})}catch(e){}});
-  await s.goto(base+'lecciones/ram.html');await listo(s,400);
+  await s.goto(base+'ayuda.html');await listo(s,400);
   r.igual(await s.evaluate(function(){return AT.datos.motor()}),'localstorage','sin IndexedDB se usa localStorage');
-  await s.click('#shMain');await s.type('#notes','Sin IndexedDB');
-  await s.waitForFunction(function(){return document.getElementById('nStat').textContent==='Guardado'});
+  await s.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-ls',titulo:'Sin IndexedDB',contenido:{type:'doc',content:[]}})});
   await s.reload();await listo(s,400);
-  r.igual(await s.inputValue('#notes'),'Sin IndexedDB','y las notas se guardan igual');
+  r.igual(await s.evaluate(function(){return AT.datos.documentos.leer('d-ls').then(function(d){return d&&d.titulo})}),'Sin IndexedDB','y las páginas se guardan igual');
   r.cumple(s.errores.length===0,'sin errores sin IndexedDB',s.errores);
   await cerrar(s);
 
@@ -155,10 +148,10 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   /* Recordatorio de respaldo en Inicio */
   const rr=await pagina(browser,{ancho:1280});
   await rr.goto(base+'inicio.html');await listo(rr);
-  r.cumple(await rr.isHidden('#iniRespaldo'),'sin documentos ni notas, Inicio no pide respaldo');
+  r.cumple(await rr.isHidden('#iniRespaldo'),'sin páginas, Inicio no pide respaldo');
   await rr.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-rec',titulo:'Algo',contenido:{type:'doc',content:[]}})});
   await rr.reload();await listo(rr);
-  r.cumple(await rr.isVisible('#iniRespaldo')&&/Todavía no has descargado/.test(await rr.textContent('#iniRespaldoTxt')),'con un documento y sin respaldo, Inicio lo recuerda');
+  r.cumple(await rr.isVisible('#iniRespaldo')&&/Todavía no has descargado/.test(await rr.textContent('#iniRespaldoTxt')),'con una página y sin respaldo, Inicio lo recuerda');
   await revisar(rr,r,'Inicio con recordatorio de respaldo');
   await rr.click('#iniRespaldoNo');
   r.cumple(await rr.isHidden('#iniRespaldo')&&await rr.evaluate(function(){return document.activeElement.id})==='t-docs','«Recordármelo en una semana» lo esconde y el foco no se pierde');

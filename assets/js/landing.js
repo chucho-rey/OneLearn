@@ -1,7 +1,6 @@
-/* OneBook: páginas de bienvenida (index.html para negocios y estudiantes.html).
+/* OneBook: página de bienvenida (index.html).
    - Quien ya usa OneBook en este navegador (hay datos con el prefijo aprende-tecnologia:) va directo a su Inicio
      (inicio.html), antes de pintar nada. Con ?conoce se queda aquí, por ejemplo para compartir la página.
-   - estudiantes.html: las cifras (lecciones, ruta y proyectos) se cuentan del temario (catalogo.js).
    - index.html: dibuja con bloques reales (bloques.js y pagos.js) la página de ejemplo y el plan de pagos para
      probar. «Guárdalo en tu espacio» deja el plan en sessionStorage y abre entrar.html?perfil=negocio#guardar-pagos:
      al crear el espacio se abre inicio.html#guardar-pagos, donde crear.js lo convierte en un documento (si ya hay
@@ -23,18 +22,6 @@ if(!/[?&]conoce\b/.test(location.search)&&usaLaApp()){
   return;
 }
 function $(id){return document.getElementById(id)}
-
-/* ---------- estudiantes.html: cifras del temario ---------- */
-function contar(){
-  var AT=window.AT||{},n=0,ruta=0;
-  (AT.catalogo||[]).forEach(function(g){(g.lecciones||[]).forEach(function(l){if(l.archivo)n++})});
-  var c=(AT.caminos||[])[0];
-  if(c)(c.modulos||[]).forEach(function(m){(m.lecciones||[]).forEach(function(){ruta++})});
-  function poner(id,v){var e=$(id);if(e&&v)e.textContent=String(v)}
-  poner('lpLecciones',n);
-  poner('lpRuta',ruta);
-  poner('lpProyectos',(AT.proyectos||[]).length);
-}
 
 /* ---------- index.html: bloques de ejemplo ---------- */
 function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
@@ -112,7 +99,6 @@ function calculadora(){
 }
 
 function listo(){
-  if($('lpLecciones'))contar();
   hojaEjemplo();
   prueba();
   calculadora();

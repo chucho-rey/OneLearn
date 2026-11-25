@@ -2,11 +2,12 @@
    Cada tipo de documento es una plantilla: empieza con su estructura y sus bloques. Es de un módulo (perfil.js) y
    solo se ofrece si ese módulo está encendido; además tiene una categoría para la galería:
      negocio   pendientes del día, cortes de caja, fiado, gastos (con «Generar mes»), nota de venta (con folio),
-               precios de venta, lista para surtir, proveedores (con cuentas por pagar), plan de negocio, clientes
-               y lista de precios
-     finanzas  finanzas del mes, me deben y préstamo o crédito (plan de pagos)
-     estudio   libreta de estudio, apuntes de clase y tesis (con fuentes, citas en APA 7 y registro de autoría)
-     (las notas, del núcleo, van en la primera categoría)
+               precios de venta, lista para surtir, inventario, reportes, presupuesto, proveedores (con cuentas por
+               pagar), clientes, lista de precios, plan de negocio y préstamo o crédito (plan de pagos)
+     rh        tu equipo y las calculadoras de nómina
+     (las notas y el documento en blanco, del núcleo, van en la primera categoría)
+   Las plantillas de estudio (libreta, apuntes de clase, tesis…) y las de finanzas personales se fueron de OneBook;
+   las páginas que ya existen no cambian (las de estudio se abren solo para leer).
    Los bloques de la tienda vienen de negocio.js y sus archivos, que en inicio.html no se cargan: las plantillas solo
    guardan sus datos iniciales. Los que no tienen «listo» se anuncian en «Llegan después».
    La ventana «¿Qué quieres crear?» es una galería (fase F5): categorías que se filtran, búsqueda, lo que trae cada
@@ -20,15 +21,8 @@
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,RAIZ=AT.rutas.raiz;
 
 var TIPOS=AT.tiposDoc={
-  libreta:{nombre:'Libreta de estudio',icono:'libreta',desc:'Secciones, resumen y preguntas de repaso, como una lección.',listo:true,modulo:'estudio',cat:'estudio'},
   notas:{nombre:'Notas',icono:'notas',desc:'Una página en blanco para escribir rápido.',listo:true,modulo:'nucleo',cat:'general'},
-  clase:{nombre:'Apuntes de clase',icono:'clase',desc:'Materia, profesor y fecha arriba; tareas al final.',listo:true,modulo:'estudio',cat:'estudio'},
-  libro:{nombre:'Libro',icono:'libro',desc:'Portada, partes y capítulos.',modulo:'estudio',cat:'estudio'},
-  investigacion:{nombre:'Documento de investigación',icono:'investigacion',desc:'Resumen, método, resultados y referencias.',modulo:'estudio',cat:'estudio'},
-  tesis:{nombre:'Tesis',icono:'tesis',desc:'Capítulos, fuentes y citas en APA 7, y registro de autoría.',listo:true,academico:true,modulo:'estudio',cat:'estudio'},
-  guia:{nombre:'Guía para examen',icono:'guia',desc:'Temas, preguntas y repaso hasta la fecha del examen.',modulo:'estudio',cat:'estudio'},
-  bitacora:{nombre:'Bitácora de laboratorio',icono:'bitacora',desc:'Entradas con fecha, objetivo y resultados.',modulo:'estudio',cat:'estudio'},
-  presentacion:{nombre:'Presentación',icono:'presentacion',desc:'Diapositivas hechas con los mismos bloques.',modulo:'estudio',cat:'estudio'},
+  presentacion:{nombre:'Presentación',icono:'presentacion',desc:'Diapositivas hechas con los mismos bloques.',modulo:'nucleo',cat:'general'},
   blanco:{nombre:'Documento en blanco',icono:'blanco',desc:'Solo las herramientas básicas.',modulo:'nucleo',cat:'general'},
   /* Negocio y dinero: plantillas hechas con los bloques de negocio («trae»: lo que se ve en la galería) */
   pendientes:{nombre:'Pendientes del día',icono:'tareas',desc:'Lo que hay que hacer al abrir, durante el día y al cerrar.',listo:true,modulo:'negocio',cat:'negocio',trae:['Listas de tareas']},
@@ -39,17 +33,14 @@ var TIPOS=AT.tiposDoc={
   precio:{nombre:'Precios de venta',icono:'precio',desc:'A cuánto vender con tu ganancia, el IVA y la comisión de la tarjeta.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta']},
   surtir:{nombre:'Lista para surtir',icono:'lista',desc:'Lo que se acaba, cuánto queda y a quién pedirlo.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   proveedores:{nombre:'Proveedores',icono:'porpagar',desc:'Quién te surte, su día de visita y lo que le debes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla','Cuentas por pagar']},
-  presupuesto:{nombre:'Presupuesto del mes',icono:'gastos',desc:'Cuánto quieres gastar por categoría y cuánto llevas: lo disponible en rojo si te pasas.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Reporte','Gastos','Presupuesto']},
+  presupuesto:{nombre:'Presupuesto del mes',icono:'gastos',desc:'Cuánto quieres gastar por categoría y cuánto llevas: lo disponible en rojo si te pasas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Reporte','Gastos','Presupuesto']},
   reporte:{nombre:'Reporte del mes',icono:'grafica',desc:'Ventas por producto y compras por proveedor del mes, contra el mes pasado, con gráficas. Crea uno cada mes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Reportes']},
   inventario:{nombre:'Inventario',icono:'datos',desc:'Productos, entradas y salidas; las existencias se calculan solas, las ventas las descuentan y armas el pedido al proveedor.',listo:true,modulo:'negocio',cat:'negocio',trae:['Resumen del inventario','Productos','Entradas y salidas','Compras']},
   clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar; en tabla o en tarjetas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
   lista:{nombre:'Lista de precios',icono:'tabla',desc:'Tus productos y servicios con su precio, para imprimir o compartir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   plan:{nombre:'Plan de negocio',icono:'idea',desc:'En una página: qué vendes, a quién, a cuánto, cuánto ganas y tus metas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta','Lista de tareas']},
   cotizacion:{nombre:'Cotización',icono:'notas',desc:'Conceptos, precios e IVA para enviar; después, nota de venta.',modulo:'negocio',cat:'negocio'},
-  /* Tus finanzas (también del módulo de negocio y dinero) */
-  finanzas:{nombre:'Finanzas del mes',icono:'gastos',desc:'Tus gastos, tus deudas y tus metas de ahorro en una página.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Gastos del mes','Plan de pagos','Lista de tareas']},
-  medeben:{nombre:'Me deben',icono:'fiado',desc:'A quién le prestaste, lo que te ha abonado y cuánto falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Fiado']},
-  prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Una deuda en pagos: cuánto es cada uno y cuánto te falta.',listo:true,modulo:'negocio',cat:'finanzas',trae:['Plan de pagos']},
+  prestamo:{nombre:'Préstamo o crédito',icono:'pagos',desc:'Un crédito del negocio en pagos: cuánto es cada uno y cuánto falta.',listo:true,modulo:'negocio',cat:'negocio',trae:['Plan de pagos']},
   /* Recursos humanos (módulo rh): tu equipo y las calculadoras de nómina (rh.js y equipo.js) */
   equipo:{nombre:'Mi equipo',icono:'users',desc:'Tus empleados, sus faltas y vacaciones; quién falta hoy, cumpleaños y lo que te cuestan al mes.',listo:true,modulo:'rh',cat:'rh',trae:['Resumen de tu equipo','Empleados','Incidencias']},
   nominas:{nombre:'Nómina del periodo',icono:'recibo',desc:'La nómina de todo tu equipo (con faltas y horas extra) y un recibo por persona.',listo:true,modulo:'rh',cat:'rh',trae:['Nómina de tu equipo','Recibo de nómina']},
@@ -59,11 +50,10 @@ var TIPOS=AT.tiposDoc={
   ptu:{nombre:'Reparto de utilidades (PTU)',icono:'reparto',desc:'El 10 % de la utilidad entre tu equipo: por días y por salario, con sus topes.',listo:true,modulo:'rh',cat:'rh',trae:['Reparto de utilidades']},
   calculadoras:{nombre:'Calculadoras de nómina',icono:'recibo',desc:'Recibo de nómina, vacaciones, aguinaldo y finiquito en una página, para hacer cuentas rápidas.',listo:true,modulo:'rh',cat:'rh',trae:['Recibo de nómina','Vacaciones','Aguinaldo','Finiquito']}
 };
-var ORDEN=['libreta','notas','clase','tesis','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','clientes','lista','plan',
-  'equipo','nominas','vacaciones','aguinaldos','finiquito','ptu','calculadoras',
-  'finanzas','medeben','prestamo','cotizacion','libro','investigacion','guia','bitacora','presentacion','blanco'];
-var CATS={negocio:'Para tu negocio',rh:'Recursos humanos',finanzas:'Tus finanzas',paquetes:'Paquetes por giro',estudio:'Estudio',mis:'Mis plantillas'};
-var CAT_MOD={negocio:'negocio',rh:'rh',finanzas:'negocio',paquetes:'negocio',estudio:'estudio',mis:'nucleo'};
+var ORDEN=['notas','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','clientes','lista','plan','prestamo',
+  'equipo','nominas','vacaciones','aguinaldos','finiquito','ptu','calculadoras','cotizacion','presentacion','blanco'];
+var CATS={negocio:'Para tu negocio',rh:'Recursos humanos',paquetes:'Paquetes por giro',mis:'Mis plantillas'};
+var CAT_MOD={negocio:'negocio',rh:'rh',paquetes:'negocio',mis:'nucleo'};
 var PER=AT.perfil;
 function tiene(m){return !PER||PER.tiene(m)}
 function hoyISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
@@ -111,26 +101,7 @@ var SEMILLAS={
     vistas:[vista('v-tabla','Tabla','tabla',{s:{col:'c-nombre',dir:1},s2:{col:'',dir:1}}),vista('v-tarjetas','Tarjetas','galeria')],filas:[]}}
 };
 var PLANTILLAS={
-  libreta:function(){return {titulo:'Libreta sin título',props:[{nombre:'Materia',valor:'',estilo:'etiqueta'}],contenido:[
-    {type:'indice',attrs:{id:id()}},
-    H(''),P(),
-    H('Repasa lo aprendido'),
-    {type:'repaso',attrs:{id:id(),preguntas:[{q:'',o:['',''],a:0,e:''}]}},
-    {type:'resumen',attrs:{id:id()},content:[{type:'bulletList',content:[{type:'listItem',content:[{type:'paragraph'}]}]}]}
-  ]}},
   notas:function(){return {titulo:'Notas sin título',props:[],contenido:[P()]}},
-  tesis:function(){
-    function cap(t){return [H(t),P()]}
-    return {titulo:'Tesis sin título',props:[
-      {nombre:'Autor(a)',valor:'',estilo:'texto'},{nombre:'Universidad',valor:'',estilo:'texto'},{nombre:'Programa',valor:'',estilo:'texto'},
-      {nombre:'Asesor(a)',valor:'',estilo:'texto'},{nombre:'Año',valor:String(new Date().getFullYear()),estilo:'texto'}],
-      fuentes:[],autoria:{v:1,sesiones:[],pegados:[]},
-      contenido:[{type:'indice',attrs:{id:id()}},{type:'indicePiezas',attrs:{id:id(),clase:'figura'}},{type:'indicePiezas',attrs:{id:id(),clase:'tabla'}},
-        {type:'declaracion',attrs:{id:id(),ia:'no',usos:[]}}]
-        .concat(cap('Resumen'),cap('Introducción'),cap('Capítulo 1. Planteamiento del problema'),cap('Capítulo 2. Marco teórico'),
-          cap('Capítulo 3. Metodología'),cap('Capítulo 4. Resultados'),cap('Capítulo 5. Discusión'),cap('Conclusiones'),
-          [H('Referencias'),{type:'bibliografia',attrs:{id:id(),todas:false}}],cap('Anexos'))};
-  },
   pendientes:function(){return {titulo:'Pendientes del día',props:[],contenido:[
     P('Marca cada pendiente al terminarlo. Agrega los tuyos con «/» y «Lista de tareas».'),
     H('Al abrir'),tareas(['Contar el fondo de caja','Revisar qué hace falta','']),
@@ -217,15 +188,6 @@ var PLANTILLAS={
     H('¿Cuánto quieres ganar al mes?'),P(),
     H('Metas de los próximos tres meses'),tareas(['','',''])
   ]}},
-  finanzas:function(){return {titulo:'Finanzas del mes',props:[],contenido:[
-    P('Lo que entra, lo que sale y lo que debes. Los gastos fijos se anotan una vez y «Generar mes» los agrega cada mes.'),
-    H('Gastos'),{type:'gastos',attrs:{id:id(),titulo:'Mis gastos',mes:hoyISO().slice(0,7),filas:[],fijos:[]}},
-    H('Deudas'),{type:'pagos',attrs:{id:id(),titulo:'',modo:'plazos',monto:'',pagos:'12',cuota:'',frecuencia:'mensual',inicio:hoyISO(),pagados:{}}},
-    H('Metas de ahorro'),tareas(['Fondo para emergencias','']),P()
-  ]}},
-  medeben:function(){return {titulo:'Me deben',props:[],contenido:[
-    {type:'fiado',attrs:{id:id(),titulo:'Me deben',clientes:[]}},P()
-  ]}},
   /* Recursos humanos */
   equipo:function(){return {titulo:'Mi equipo',props:[],contenido:[
     P('Tu equipo de un vistazo. Agrega a cada persona con su fecha de ingreso y su salario diario; anota sus faltas, vacaciones, incapacidades y horas extra en «Incidencias». La antigüedad y los días de vacaciones se calculan solos.'),
@@ -269,12 +231,6 @@ var PLANTILLAS={
     H('Vacaciones'),{type:'vacaciones',attrs:{id:id()}},
     H('Aguinaldo'),{type:'aguinaldo',attrs:{id:id()}},
     H('Finiquito o liquidación'),{type:'finiquito',attrs:{id:id(),salida:hoyISO()}},P()
-  ]}},
-  clase:function(){return {titulo:'Clase del '+hoy(),props:[
-      {nombre:'Materia',valor:'',estilo:'etiqueta'},{nombre:'Profesor',valor:'',estilo:'texto'},{nombre:'Fecha',valor:hoy(),estilo:'texto'}],contenido:[
-    H(''),P(),
-    H('Tareas'),
-    {type:'taskList',attrs:{id:id()},content:[{type:'taskItem',attrs:{checked:false},content:[{type:'paragraph'}]}]}
   ]}}
 };
 /* Paquetes por giro: varias páginas de una vez */
@@ -282,8 +238,7 @@ var PAQUETES={
   tienda:{nombre:'Tienda o abarrotes',tipos:['corte','inventario','reporte','fiado','proveedores']},
   comida:{nombre:'Comida (cocina, cafetería, repostería)',tipos:['corte','inventario','presupuesto','precio','pendientes']},
   servicios:{nombre:'Servicios (estética, taller, consultorio)',tipos:['venta','clientes','gastos','pendientes']},
-  catalogo:{nombre:'Ventas por catálogo o redes',tipos:['lista','clientes','venta','gastos']},
-  freelance:{nombre:'Freelance o profesional independiente',tipos:['venta','clientes','precio','gastos']}
+  catalogo:{nombre:'Ventas por catálogo o redes',tipos:['lista','clientes','venta','gastos']}
 };
 function idDoc(){
   var a=new Uint8Array(8),s='';
@@ -298,8 +253,6 @@ function armar(tipo,extra){
   var base=Object.assign(pl(),extra||{}),ahora=new Date().toISOString();
   var doc={formato:1,tipo:tipo,id:idDoc(),titulo:base.titulo,props:base.props,creado:ahora,editado:ahora,
     contenido:{type:'doc',content:base.contenido}};
-  if(base.fuentes)doc.fuentes=base.fuentes;
-  if(base.autoria)doc.autoria=base.autoria;
   return doc;
 }
 /* Guarda un documento nuevo y lo abre */
@@ -365,7 +318,7 @@ function desmarcar(n){
   if(n.type==='taskItem'&&n.attrs)n.attrs.checked=false;
   (n.content||[]).forEach(desmarcar);
 }
-/* La plantilla de un documento: {id, nombre, desc, tipo, titulo, props, contenido[, fuentes]} */
+/* La plantilla de un documento: {id, nombre, desc, tipo, titulo, props, contenido} */
 function plantillaDe(doc,op){
   op=op||{};
   var c=clonar(doc.contenido&&doc.contenido.content||[]);
@@ -373,7 +326,6 @@ function plantillaDe(doc,op){
   var pl={id:'p-'+idDoc().slice(2),nombre:String(op.nombre||doc.titulo||'Mi plantilla').replace(/\s+/g,' ').trim().slice(0,80)||'Mi plantilla',
     desc:String(op.desc||'').replace(/\s+/g,' ').trim().slice(0,160),tipo:TIPOS[doc.tipo]?doc.tipo:'notas',
     titulo:doc.titulo||'',props:clonar(doc.props||[]).map(function(p){return op.vaciar?Object.assign(p,{valor:''}):p}),contenido:{type:'doc',content:c}};
-  if(Array.isArray(doc.fuentes)&&doc.fuentes.length)pl.fuentes=clonar(doc.fuentes);
   return pl;
 }
 /* Las bases de datos van como semilla: su estructura y, si no se quita lo anotado, sus filas */
@@ -399,43 +351,30 @@ function desdePlantilla(pl){
   /* «Nota de venta V-007» pasa a llevar el folio nuevo */
   if(folioNuevo){titulo=folioViejo&&titulo.indexOf(folioViejo)>=0?titulo.replace(folioViejo,folioNuevo):/V-\d{3,}/.test(titulo)?titulo.replace(/V-\d{3,}/,folioNuevo):titulo}
   var doc={formato:1,tipo:tipo,id:idDoc(),titulo:titulo,props:clonar(pl.props||[]),creado:ahora,editado:ahora,contenido:{type:'doc',content:c.length?c:[P()]}};
-  if(TIPOS[tipo].academico){doc.fuentes=clonar(pl.fuentes||[]);doc.autoria={v:1,sesiones:[],pegados:[]}}
   return doc;
 }
 function nuevoDesde(pl){return guardarYAbrir(desdePlantilla(pl))}
 
 /* ---------- Qué se ofrece según el perfil ---------- */
-/* Los módulos encendidos, el del perfil primero (sin perfil: estudio y negocio, como antes) */
-function modulosVisibles(){
-  var ms=PER&&PER.actual()?PER.actual().modulos.slice():['estudio','negocio'];
-  return ms.filter(function(m){return tiene(m)});
-}
-/* Las categorías de la galería, en el orden del perfil; las notas van en la primera */
+/* Las categorías de la galería; las notas y el documento en blanco van en la primera */
 function categorias(){
-  var tipo=PER&&PER.tipo(),orden=tipo==='personal'?['finanzas','negocio','rh','paquetes','estudio']:tipo==='negocio'?['negocio','rh','paquetes','finanzas','estudio']:
-    modulosVisibles()[0]==='negocio'?['negocio','rh','paquetes','finanzas','estudio']:['estudio','negocio','rh','paquetes','finanzas'];
-  return orden.filter(function(c){return tiene(CAT_MOD[c])});
+  return ['negocio','rh','paquetes'].filter(function(c){return tiene(CAT_MOD[c])});
 }
 function tiposDe(cat,primera){
   return ORDEN.filter(function(k){var t=TIPOS[k];return t.listo&&tiene(t.modulo)&&(t.cat===cat||(primera&&t.cat==='general'))});
 }
-/* Las páginas listas para usar del Inicio (sin el módulo de estudio), según el perfil */
-var INICIO={negocio:['pendientes','corte','fiado','gastos','venta','precio','surtir','proveedores','clientes','equipo','nominas'],personal:['finanzas','gastos','prestamo','medeben','notas']};
+/* Las páginas listas para usar del Inicio */
+var INICIO=['pendientes','corte','fiado','gastos','venta','precio','surtir','proveedores','clientes','equipo','nominas'];
 function plantillasInicio(){
-  var l=INICIO[PER&&PER.tipo()]||INICIO.negocio;
-  return l.filter(function(k){return TIPOS[k]&&TIPOS[k].listo&&tiene(TIPOS[k].modulo)});
+  return INICIO.filter(function(k){return TIPOS[k]&&TIPOS[k].listo&&tiene(TIPOS[k].modulo)});
 }
-/* Lo que «Crea tu espacio» sugiere al empezar: [{tipo, marcado}] según el perfil y el giro */
+/* Lo que «Crea tu espacio» sugiere al empezar: [{tipo, marcado}] según el giro */
 function sugeridas(perfil,giro,rh){
-  if(perfil==='negocio'){
-    var tienda=giro==='tienda',mercancia=['tienda','comida','catalogo'].indexOf(giro)>=0;
-    /* Con «Tengo empleados», primero tu equipo y su nómina */
-    return (rh?[['equipo',true],['nominas',true]]:[]).concat([['corte',mercancia],['fiado',tienda],['gastos',true],['surtir',mercancia],['venta',!mercancia],['pendientes',!mercancia],
-      ['proveedores',false],['precio',false],['prestamo',false],['notas',false]])
-      .map(function(x){return {tipo:x[0],marcado:x[1]}});
-  }
-  if(perfil==='personal')return [{tipo:'finanzas',marcado:true},{tipo:'prestamo',marcado:false},{tipo:'medeben',marcado:false},{tipo:'notas',marcado:false}];
-  return [{tipo:'libreta',marcado:false},{tipo:'clase',marcado:false},{tipo:'notas',marcado:false}];
+  var tienda=giro==='tienda',mercancia=['tienda','comida','catalogo'].indexOf(giro)>=0;
+  /* Con «Tengo empleados», primero tu equipo y su nómina */
+  return (rh?[['equipo',true],['nominas',true]]:[]).concat([['corte',mercancia],['fiado',tienda],['gastos',true],['surtir',mercancia],['venta',!mercancia],['pendientes',!mercancia],
+    ['proveedores',false],['precio',false],['prestamo',false],['notas',false]])
+    .map(function(x){return {tipo:x[0],marcado:x[1]}});
 }
 
 /* ---------- Ventana «¿Qué quieres crear?»: la galería ---------- */
@@ -459,7 +398,7 @@ function opcionMia(pl){
 }
 function seccion(cat,html){
   return '<section class="crear-sec" data-cat="'+cat+'" aria-labelledby="crS-'+cat+'"><h3 class="crear-h" id="crS-'+cat+'">'+esc(CATS[cat])+'</h3>'+
-    '<div class="crear-g" data-modulo="'+(CAT_MOD[cat]==='nucleo'?'mis':cat==='finanzas'||cat==='paquetes'?cat:CAT_MOD[cat])+'">'+html+'</div></section>';
+    '<div class="crear-g" data-modulo="'+(CAT_MOD[cat]==='nucleo'?'mis':cat==='paquetes'?cat:CAT_MOD[cat])+'">'+html+'</div></section>';
 }
 function pintarGaleria(){
   var cats=categorias(),orden=[];
@@ -469,11 +408,8 @@ function pintarGaleria(){
     return html?seccion(c,html):'';
   }).join('');
   if(!cats.length)h=seccion('negocio',tiposDe('general',true).map(opcion).join('')).replace(esc(CATS.negocio),'Para empezar');
-  /* Tus plantillas van primero (en un espacio de estudio, al final) */
-  if(mias.length){
-    var mis=seccion('mis',mias.map(opcionMia).join(''));
-    if(PER&&PER.tipo()==='estudio'){h+=mis;orden.push('mis')}else{h=mis+h;orden.unshift('mis')}
-  }
+  /* Tus plantillas van primero */
+  if(mias.length){h=seccion('mis',mias.map(opcionMia).join(''))+h;orden.unshift('mis')}
   $('#crSecs',dlg).innerHTML=h;
   if(filtro!=='todas'&&orden.indexOf(filtro)<0)filtro='todas';
   /* Las categorías, en el mismo orden que las secciones */
@@ -496,7 +432,8 @@ function filtrar(){
 }
 function cargarMias(){
   return AT.datos.plantillas.todos().then(function(l){
-    mias=l.sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:1});
+    /* Las plantillas de páginas de estudio (de antes) ya no se ofrecen */
+    mias=l.filter(function(x){return !(AT.datos.deEstudio&&AT.datos.deEstudio(x))}).sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:1});
   },function(){mias=[]});
 }
 function ocupado(si,msg){
@@ -507,7 +444,7 @@ function crearVentana(){
   dlg=document.createElement('dialog');
   dlg.className='atajos crear-dlg';
   dlg.setAttribute('aria-labelledby','crT');
-  var pronto=ORDEN.filter(function(k){var t=TIPOS[k];return !t.listo&&tiene(t.modulo)&&(t.modulo!=='nucleo'||modulosVisibles().length)});
+  var pronto=ORDEN.filter(function(k){var t=TIPOS[k];return !t.listo&&tiene(t.modulo)});
   dlg.innerHTML='<div class="at-h"><h2 id="crT">¿Qué quieres crear?</h2>'+
     '<button class="lec-x" type="button" data-cr="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
     '<p class="td-p">Elige una plantilla: empieza con su estructura y sus bloques, y después la cambias a tu gusto. Se guarda solo en este dispositivo.</p>'+
