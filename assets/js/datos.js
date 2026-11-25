@@ -19,6 +19,8 @@
      tienen un índice por base (AT.datos.filas.deBase). Entran en el respaldo.
    - Historial de versiones de las páginas: almacenes «versiones» (índice por página) y «trozos» (los bloques,
      una sola vez cada uno); ver «Historial de versiones» más abajo. AT.datos.versiones.
+   - Quién eres (AT.datos.yo), los permisos de cada página (doc.acceso, AT.datos.acceso) y quién tiene abierta
+     cada página (AT.datos.presencia); ver «Quién eres, permisos…» más abajo.
    Expone AT.datos. Se carga después de base.js. */
 (function(){
 'use strict';
@@ -89,6 +91,22 @@ function motorIDB(db){
     borrar:function(a,id){return tx(a,'readwrite',function(s){return s.delete(id)})},
     borrarVarios:function(a,ids){return tx(a,'readwrite',function(s){ids.forEach(function(id){s.delete(id)})})},
     claves:function(a){return tx(a,'readonly',function(s){return s.getAllKeys()})},
+    /* Lee un registro, lo cambia con fn (síncrona) y lo escribe, todo en una transacción: nadie escribe en medio.
+       Si fn devuelve null, no se escribe nada. Devuelve lo que se escribió */
+    actualizar:function(a,id,fn){
+      return new Promise(function(ok,no){
+        var t,res=null,fallo=null;
+        try{t=db.transaction(a,'readwrite')}catch(e){return no(e)}
+        var s=t.objectStore(a),r=s.get(id);
+        r.onsuccess=function(){
+          try{res=fn(r.result)}catch(e){fallo=e;try{t.abort()}catch(x){}return}
+          if(res)s.put(res);
+        };
+        t.oncomplete=function(){ok(res)};
+        t.onerror=function(){no(fallo||t.error)};
+        t.onabort=function(){no(fallo||t.error||new Error('Se canceló la escritura'))};
+      });
+    },
     /* Varios registros por id en una lectura (los que no existen salen undefined) */
     leerVarios:function(a,ids){
       return new Promise(function(ok,no){
@@ -153,7 +171,13 @@ function motorLocal(){
     poner:function(a,lista){var m=mapa(a);lista.forEach(function(o){m[o.id]=o});return escribir(a,m)},
     borrar:function(a,id){var m=mapa(a);delete m[id];return escribir(a,m)},
     borrarVarios:function(a,ids){var m=mapa(a);ids.forEach(function(id){delete m[id]});return escribir(a,m)},
-    claves:function(a){return Promise.resolve(Object.keys(mapa(a)))}
+    claves:function(a){return Promise.resolve(Object.keys(mapa(a)))},
+    actualizar:function(a,id,fn){
+      var m=mapa(a),x;
+      try{x=fn(m[id])}catch(e){return Promise.reject(e)}
+      if(!x)return Promise.resolve(null);
+      m[id]=x;return escribir(a,m).then(function(){return x});
+    }
     /* Sin IndexedDB no hay historial de versiones (no cabría en localStorage) */
   };
 }
@@ -283,7 +307,7 @@ function exportar(){
       app:'OneBook',formato:1,exportado:ahora(),
       documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],plantillas:r[3],bases:r[4],filas:r[5],
       avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
-      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios')
+      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios'),yo:leerJSON(CLAVE_YO)
     };
   });
 }
@@ -404,13 +428,32 @@ function importar(datos){
     return conMotor(function(m){return m.todos(almacen)}).then(function(actuales){
       var porId={};actuales.forEach(function(a){porId[a.id]=a});
       var poner=entrantes.filter(function(e){var a=porId[e.id];return !a||(e.editado||'')>(a.editado||'')});
-      res[clave]=poner.length;
+      if(almacen==='documentos'){
+        /* El acceso (permisos y solicitudes) tiene su propia fecha: gana el más nuevo, cambie o no el contenido */
+        var cambio=function(d){return esObjeto(d&&d.acceso)?String(d.acceso.cambio||''):''};
+        poner=poner.map(function(e){var a=porId[e.id];return a&&cambio(a)>cambio(e)?Object.assign({},e,{acceso:a.acceso}):e});
+        entrantes.forEach(function(e){
+          var a=porId[e.id];
+          if(a&&poner.indexOf(e)<0&&!poner.some(function(x){return x.id===e.id})&&cambio(e)>cambio(a)){poner.push(Object.assign({},a,{acceso:e.acceso}));res.accesos=(res.accesos||0)+1}
+        });
+      }
+      res[clave]=poner.length-(almacen==='documentos'?res.accesos||0:0);
       /* Una página que el respaldo reemplaza guarda antes su versión (se recupera desde su historial) */
-      var antes=almacen==='documentos'?poner.filter(function(e){return porId[e.id]}).map(function(e){return versiones.tomar(porId[e.id],{motivo:'importar'})}):[];
+      var antes=almacen==='documentos'?poner.filter(function(e){var a=porId[e.id];return a&&(e.editado||'')>(a.editado||'')}).map(function(e){return versiones.tomar(porId[e.id],{motivo:'importar'})}):[];
       return Promise.all(antes).then(function(){return poner.length?motor.poner(almacen,poner):null});
     });
   }
-  return combinar('documentos',docs,'documentos')
+  /* Quién eres: si en este navegador todavía no le pusiste nombre ni correo, ni eres propietario o persona con
+     acceso de ninguna página, se adopta el del respaldo (así, al restaurar el tuyo en otro dispositivo, tus páginas
+     siguen siendo tuyas; si importas las de otra persona después de poner tu nombre, sigues siendo tú) */
+  return conMotor(function(m){return m.todos('documentos')}).then(function(locales){
+    var r=datos.yo,y=yo();
+    if(!esObjeto(r)||!/^u-[\w-]{4,40}$/.test(String(r.id))||r.id===y.id||y.nombre||y.correo)return;
+    var usado=locales.some(function(d){var a=d.acceso;return esObjeto(a)&&(mismaPersona(a.dueno,y)||(a.personas||[]).some(function(p){return mismaPersona(p,y)}))});
+    if(usado)return;
+    lsSet(CLAVE_YO,JSON.stringify({id:r.id,nombre:limpio(r.nombre,60)||y.nombre,correo:correoValido(String(r.correo||''))?String(r.correo).toLowerCase():y.correo,creado:y.creado}));
+    res.yo=true;
+  }).then(function(){return combinar('documentos',docs,'documentos')})
     .then(function(){return notas.todas()}).then(function(actuales){
       var porId={};actuales.forEach(function(a){porId[a.id]=a});
       var poner=ns.filter(function(e){var a=porId[e.id];return !a||(e.editado||'')>(a.editado||'')});
@@ -517,7 +560,7 @@ function espacio(){
    6 meses; a lo más 100 automáticas por página. Los trozos que ya nadie usa se borran en la misma transacción que
    los revisa. Solo con IndexedDB; el respaldo no las lleva. */
 var VER={ventana:5*60e3,grandeBloques:3,grandeLetras:300,max:100};
-var FUERA_META=['id','contenido','editado','creado','favorito','anchoCompleto','autoria','eliminado'];
+var FUERA_META=['id','contenido','editado','creado','favorito','anchoCompleto','autoria','eliminado','acceso','editadoPor'];
 /* Huella de un texto: dos hashes de 32 bits (cyrb53) y su largo */
 function huella(s){
   var h1=0xdeadbeef^s.length,h2=0x41c6ce57^s.length;
@@ -714,6 +757,202 @@ var versiones={
 /* Otra pestaña guardó o borró versiones: se vuelven a leer */
 oyentes.push(function(c,deOtra){if(deOtra&&c.almacen==='versiones'&&c.doc)delete VCACHE[c.doc];if(deOtra&&c.almacen==='*')VCACHE={}});
 
+/* ---------- Quién eres, permisos de cada página y quién la tiene abierta ----------
+   Mientras OneBook vive en este navegador hay una sola persona: tú. Aun así, cada página ya lleva su lista de
+   personas con acceso, para compartirla cuando lleguen las cuentas y la nube (F9):
+   - AT.datos.yo(): {id, nombre, correo}; se crea una vez (aprende-tecnologia:yo) y entra en el respaldo (al
+     restaurar en otro navegador, se adopta si aquí todavía no se usó).
+   - doc.acceso = {dueno:{id, nombre, correo}, personas:[{id, nombre, correo, rol, estado, desde, por}],
+     solicitudes:[{id, de:{id, nombre, correo}, rol, mensaje, fecha, estado, resuelta, por}], cambio}. Una página sin
+     acceso es tuya. Roles: dueno (Propietario), admin (Administrador: edita y cambia permisos), editor (Puede
+     editar) y lector (Solo puede ver); quien no está en la lista no puede editar y puede pedir acceso. Una persona
+     invitada queda «invitado» hasta que existan las cuentas.
+   - AT.datos.acceso: rol, puede, personas, pendientes, invitar, cambiarRol, quitar, solicitar y responder (siempre
+     sobre lo último guardado). documentos.guardar no pisa un acceso más nuevo y anota quién editó (editadoPor).
+   - AT.datos.presencia: cada página abierta se anuncia (cada 15 s, entre pestañas) y dice si se edita o se lee.
+     Con la nube, será también la de las demás personas.
+   No es seguridad todavía: sin servidor, quien tiene el navegador tiene los datos. */
+var CLAVE_YO=PREF+'yo';
+function limpio(v,max){return typeof v==='string'?v.replace(/\s+/g,' ').trim().slice(0,max):''}
+function correoValido(c){return /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$/.test(c)}
+function yo(){
+  var y=leerJSON(CLAVE_YO);
+  if(!esObjeto(y)||!/^u-[\w-]{4,40}$/.test(String(y.id))){y={id:idNuevo('u'),nombre:'',correo:'',creado:ahora()};lsSet(CLAVE_YO,JSON.stringify(y))}
+  return y;
+}
+/* Tu nombre: el que pusiste aquí o el de tu espacio */
+function quienSoy(){
+  var y=yo(),p=AT.perfil&&AT.perfil.actual&&AT.perfil.actual();
+  return {id:y.id,nombre:limpio(y.nombre,60)||limpio(p&&p.nombre,60),correo:limpio(y.correo,254)};
+}
+function cambiarYo(c){
+  var y=yo();
+  if(c&&c.nombre!=null)y.nombre=limpio(String(c.nombre),60);
+  if(c&&c.correo!=null){var k=limpio(String(c.correo),254).toLowerCase();if(k&&!correoValido(k))throw new Error('Ese correo no parece válido.');y.correo=k}
+  lsSet(CLAVE_YO,JSON.stringify(y));
+  avisar({almacen:'yo'});
+  return quienSoy();
+}
+var ROLES_ACC={dueno:{n:4,nombre:'Propietario',desc:'Hace todo y no se le puede quitar el acceso.'},
+  admin:{n:3,nombre:'Administrador',desc:'Edita y decide quién más entra y con qué permiso.'},
+  editor:{n:2,nombre:'Puede editar',desc:'Cambia el contenido de la página.'},
+  lector:{n:1,nombre:'Solo puede ver',desc:'La lee, sin cambiarla.'}};
+function mismaPersona(a,b){
+  if(!a||!b)return false;
+  if(a.id&&b.id&&a.id===b.id)return true;
+  return !!a.correo&&!!b.correo&&String(a.correo).toLowerCase()===String(b.correo).toLowerCase();
+}
+function rolAcceso(a,p){
+  if(!a||!a.dueno)return 'dueno';
+  if(mismaPersona(a.dueno,p))return 'dueno';
+  var m=(a.personas||[]).filter(function(x){return mismaPersona(x,p)})[0];
+  return m&&m.rol!=='dueno'&&ROLES_ACC[m.rol]?m.rol:'ninguno';
+}
+function nivelDe(rol){return ROLES_ACC[rol]?ROLES_ACC[rol].n:0}
+function puedeEn(a,que,p){var n=nivelDe(rolAcceso(a,p||quienSoy()));return que==='compartir'?n>=3:que==='editar'?n>=2:n>=1}
+function accesoNuevo(){return {dueno:quienSoy(),personas:[],solicitudes:[]}}
+/* Cambia el acceso de una página sobre lo último guardado, leyendo y escribiendo en la misma transacción (así no
+   pisa lo que el autoguardado escriba al mismo tiempo) y sin cambiar la fecha de edición */
+function cambiarAcceso(id,fn){
+  var r,a;
+  return conMotor(function(m){
+    return m.actualizar('documentos',id,function(d){
+      if(!d)throw new Error('Esa página ya no existe.');
+      a=esObjeto(d.acceso)&&d.acceso.dueno?JSON.parse(JSON.stringify(d.acceso)):accesoNuevo();
+      if(!Array.isArray(a.personas))a.personas=[];
+      if(!Array.isArray(a.solicitudes))a.solicitudes=[];
+      r=fn(a,d);
+      a.cambio=ahora();
+      d.acceso=a;
+      return d;
+    });
+  }).then(function(){avisar({almacen:'documentos',id:id,acceso:true});return r===undefined?a:r});
+}
+function exigir(a,que){if(!puedeEn(a,que))throw new Error(que==='compartir'?'Solo quien administra la página puede cambiar los permisos.':'No tienes permiso para eso.')}
+var acceso={
+  ROLES:ROLES_ACC,
+  rol:function(doc,p){return rolAcceso(doc&&doc.acceso,p||quienSoy())},
+  nombreRol:function(r){return r==='ninguno'?'Sin acceso':(ROLES_ACC[r]||{}).nombre||''},
+  puede:function(doc,que){return puedeEn(doc&&doc.acceso,que)},
+  /* Quién tiene acceso, el propietario primero: [{id, nombre, correo, rol, estado, tu}] */
+  personas:function(doc){
+    var a=doc&&doc.acceso,y=quienSoy();
+    if(!a||!a.dueno)return [{id:y.id,nombre:y.nombre,correo:y.correo,rol:'dueno',estado:'activo',tu:true}];
+    var l=[{id:a.dueno.id,nombre:a.dueno.nombre||'',correo:a.dueno.correo||'',rol:'dueno',estado:'activo',tu:mismaPersona(a.dueno,y)}];
+    (a.personas||[]).forEach(function(p){if(ROLES_ACC[p.rol]&&p.rol!=='dueno')l.push({id:p.id,nombre:p.nombre||'',correo:p.correo||'',rol:p.rol,estado:p.estado||'activo',desde:p.desde,tu:mismaPersona(p,y)})});
+    return l;
+  },
+  pendientes:function(doc){var a=doc&&doc.acceso;return a&&Array.isArray(a.solicitudes)?a.solicitudes.filter(function(s){return s.estado==='pendiente'}):[]},
+  tuSolicitud:function(doc){var y=quienSoy();return acceso.pendientes(doc).filter(function(s){return mismaPersona(s.de,y)})[0]||null},
+  invitar:function(id,p){
+    return cambiarAcceso(id,function(a){
+      exigir(a,'compartir');
+      var correo=limpio(String(p&&p.correo||''),254).toLowerCase(),nombre=limpio(String(p&&p.nombre||''),60),rol=p&&p.rol;
+      if(!correoValido(correo))throw new Error('Escribe un correo válido.');
+      if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige un permiso.');
+      if(mismaPersona(a.dueno,{correo:correo}))throw new Error('Esa persona es la propietaria.');
+      var ya=a.personas.filter(function(x){return mismaPersona(x,{correo:correo})})[0];
+      if(ya){ya.rol=rol;if(nombre)ya.nombre=nombre;return ya}
+      var n={id:idNuevo('p'),nombre:nombre,correo:correo,rol:rol,estado:'invitado',desde:ahora(),por:quienSoy().id};
+      a.personas.push(n);
+      return n;
+    });
+  },
+  cambiarRol:function(id,pid,rol){
+    return cambiarAcceso(id,function(a){
+      exigir(a,'compartir');
+      if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige un permiso.');
+      var p=a.personas.filter(function(x){return x.id===pid})[0];if(!p)throw new Error('Esa persona ya no tiene acceso.');
+      p.rol=rol;return p;
+    });
+  },
+  quitar:function(id,pid){
+    return cambiarAcceso(id,function(a){
+      exigir(a,'compartir');
+      var n=a.personas.length;a.personas=a.personas.filter(function(x){return x.id!==pid});
+      if(a.personas.length===n)throw new Error('Esa persona ya no tiene acceso.');
+    });
+  },
+  /* Abrir una página a la que te invitaron acepta la invitación (queda «activo», ligado a quien eres) */
+  aceptar:function(id){
+    return docsCol.leer(id).then(function(d){
+      var y=quienSoy(),a=d&&d.acceso,m=a&&(a.personas||[]).filter(function(p){return mismaPersona(p,y)})[0];
+      if(!m||m.estado!=='invitado')return null;
+      return cambiarAcceso(id,function(a2){
+        var p=a2.personas.filter(function(x){return mismaPersona(x,y)})[0];
+        if(p){p.estado='activo';p.acepto=ahora();p.id=y.id;if(!p.nombre)p.nombre=y.nombre}
+        return p;
+      });
+    });
+  },
+  /* Pedir un permiso (quien no administra la página): queda pendiente para los administradores */
+  solicitar:function(id,p){
+    return cambiarAcceso(id,function(a){
+      var y=quienSoy(),rol=p&&p.rol;
+      if(!ROLES_ACC[rol]||rol==='dueno')throw new Error('Elige qué permiso pides.');
+      if(nivelDe(rolAcceso(a,y))>=nivelDe(rol))throw new Error('Ya tienes ese permiso.');
+      var s=a.solicitudes.filter(function(x){return x.estado==='pendiente'&&mismaPersona(x.de,y)})[0];
+      if(!s){s={id:idNuevo('s'),de:{id:y.id,nombre:y.nombre,correo:y.correo},estado:'pendiente'};a.solicitudes.push(s)}
+      s.rol=rol;s.mensaje=limpio(String(p&&p.mensaje||''),300);s.fecha=ahora();
+      return s;
+    });
+  },
+  responder:function(id,sid,aprobar){
+    return cambiarAcceso(id,function(a){
+      exigir(a,'compartir');
+      var s=a.solicitudes.filter(function(x){return x.id===sid})[0];
+      if(!s||s.estado!=='pendiente')throw new Error('Esa solicitud ya se respondió.');
+      s.estado=aprobar?'aprobada':'rechazada';s.resuelta=ahora();s.por=quienSoy().id;
+      if(aprobar&&!mismaPersona(a.dueno,s.de)){
+        var p=a.personas.filter(function(x){return mismaPersona(x,s.de)})[0];
+        if(!p){p={id:s.de.id||idNuevo('p'),nombre:s.de.nombre||'',correo:s.de.correo||'',desde:ahora(),por:quienSoy().id};a.personas.push(p)}
+        p.rol=s.rol;p.estado='activo';
+      }
+      return s;
+    });
+  }
+};
+
+/* ---------- Presencia: quién tiene abierta cada página (entre pestañas de este navegador) ---------- */
+var CLAVE_PRES=PREF+'presencia',PESTANA=idNuevo('t'),presAnuncio=null,presUltimo=null,presTimer=null,VIDA_PRES=45e3;
+function presLeer(){var m=leerJSON(CLAVE_PRES);return esObjeto(m)?m:{}}
+function presVivas(m){var t=Date.now();Object.keys(m).forEach(function(k){if(!esObjeto(m[k])||!(t-m[k].t<VIDA_PRES))delete m[k]});return m}
+function presLatido(){
+  if(!presAnuncio)return;
+  var m=presVivas(presLeer()),q=quienSoy();
+  m[PESTANA]={doc:presAnuncio.doc,modo:presAnuncio.modo,t:Date.now(),quien:{id:q.id,nombre:q.nombre}};
+  lsSet(CLAVE_PRES,JSON.stringify(m));
+  avisar({almacen:'presencia',doc:presAnuncio.doc});
+}
+var presencia={
+  pestana:PESTANA,VIDA:VIDA_PRES,
+  /* Esta pestaña tiene abierta la página doc, para editar o para leer */
+  anunciar:function(doc,modo){
+    presAnuncio=presUltimo={doc:doc,modo:modo==='editar'?'editar':'leer'};
+    presLatido();
+    if(!presTimer)presTimer=setInterval(presLatido,15e3);
+  },
+  dejar:function(){
+    if(!presAnuncio)return;
+    var d=presAnuncio.doc;presAnuncio=null;clearInterval(presTimer);presTimer=null;
+    var m=presLeer();delete m[PESTANA];lsSet(CLAVE_PRES,JSON.stringify(m));
+    avisar({almacen:'presencia',doc:d});
+  },
+  /* Quién tiene abierta cada página: {doc: [{quien, modo, pestanas, aqui}]} (editar gana a leer) */
+  todas:function(){
+    var m=presVivas(presLeer()),out={};
+    Object.keys(m).forEach(function(k){
+      var e=m[k],l=out[e.doc]||(out[e.doc]=[]),q=e.quien||{},p=l.filter(function(x){return x.quien.id===q.id})[0];
+      if(!p){p={quien:{id:q.id||'',nombre:q.nombre||''},modo:'leer',pestanas:0,aqui:false};l.push(p)}
+      p.pestanas++;if(e.modo==='editar')p.modo='editar';if(k===PESTANA)p.aqui=true;
+    });
+    return out;
+  },
+  de:function(doc){return presencia.todas()[doc]||[]}
+};
+addEventListener('pagehide',function(){presencia.dejar()});
+addEventListener('pageshow',function(e){if(e.persisted&&presUltimo)presencia.anunciar(presUltimo.doc,presUltimo.modo)});
+
 /* ---------- Bases de datos ---------- */
 var basesCol=coleccion('bases'),filasCol=coleccion('filas');
 filasCol.deBase=function(id){return conMotor(function(m){return m.porIndice('filas','base',id)})};
@@ -732,6 +971,20 @@ basesCol.borrarConFilas=borrarBase;
 
 /* ---------- Papelera ---------- */
 var docsCol=coleccion('documentos'),papCol=coleccion('papelera');
+/* Guardar una página: en una sola transacción lee lo guardado para no pisar un acceso (permisos) más nuevo que el
+   que trae, y anota quién la editó */
+docsCol.guardar=function(obj,op){
+  var o=JSON.parse(JSON.stringify(obj)),fecha=!(op&&op.conservarFecha);
+  if(fecha)o.editado=ahora();
+  if(!o.creado)o.creado=o.editado||ahora();
+  if(fecha){var q=quienSoy();o.editadoPor={id:q.id,nombre:q.nombre}}
+  return conMotor(function(m){
+    return m.actualizar('documentos',o.id,function(ant){
+      if(ant&&esObjeto(ant.acceso)&&(!esObjeto(o.acceso)||String(o.acceso.cambio||'')<String(ant.acceso.cambio||'')))o.acceso=ant.acceso;
+      return o;
+    });
+  }).then(function(){avisar({almacen:'documentos',id:o.id});return o});
+};
 /* Borrar para siempre: la página y las bases de datos que eran suyas */
 function borrarDeVerdad(id){
   return papCol.borrar(id).then(function(){return basesCol.todos()}).then(function(bs){
@@ -776,6 +1029,10 @@ AT.datos={
   bases:basesCol,
   filas:filasCol,
   versiones:versiones,
+  yo:quienSoy,
+  cambiarYo:cambiarYo,
+  acceso:acceso,
+  presencia:presencia,
   notas:notas,
   exportar:exportar,
   descargar:descargar,

@@ -18,6 +18,8 @@
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/negocio.css">
 <link rel="stylesheet" href="assets/css/bases.css">
+<link rel="stylesheet" href="assets/css/permisos.css">
+<link rel="stylesheet" href="assets/css/explorador.css">
 </head>
 <body data-pagina="inicio">
 
@@ -42,6 +44,16 @@
         <div class="ini-acc" id="iniAcciones"></div>
       </section>
 
+      <section class="ini-sec ini-paginas" id="iniPaginas" aria-labelledby="t-docs">
+        <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus documentos</h2></div>
+        <div class="ini-resp" id="iniRespaldo" role="region" aria-label="Recordatorio de respaldo" hidden>
+          <p id="iniRespaldoTxt"></p>
+          <div class="ini-resp-b"><button class="btn pri" type="button" id="iniRespaldoSi">Descargar respaldo</button><button class="btn" type="button" id="iniRespaldoNo">Recordármelo en una semana</button></div>
+        </div>
+        <!-- El explorador de tus páginas (explorador.js) -->
+        <div class="xp" id="xp"></div>
+      </section>
+
       <section class="ini-sec ini-neg" id="iniNegocio" aria-labelledby="t-negocio" hidden>
         <div class="ini-sec-h"><h2 id="t-negocio">Mi negocio</h2><a class="btn" id="iniNegEditar" href="documento.html?id=d-minegocio">Editar esta sección</a></div>
         <div class="ini-neg-c" id="iniNegocioC"></div>
@@ -57,18 +69,6 @@
         <div class="ini-prep-bar" aria-hidden="true"><i id="iniPrepBar"></i></div>
         <ol class="ini-prep" id="iniPrepLista"></ol>
         <button class="btn ini-prep-x" type="button" id="iniPrepOcultar">Ocultar esta lista</button>
-      </section>
-
-      <section class="ini-sec" aria-labelledby="t-docs">
-        <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus documentos</h2><button class="btn" type="button" data-crear>+ Crear</button></div>
-        <div class="ini-resp" id="iniRespaldo" role="region" aria-label="Recordatorio de respaldo" hidden>
-          <p id="iniRespaldoTxt"></p>
-          <div class="ini-resp-b"><button class="btn pri" type="button" id="iniRespaldoSi">Descargar respaldo</button><button class="btn" type="button" id="iniRespaldoNo">Recordármelo en una semana</button></div>
-        </div>
-        <h3 class="ini-sub-h" id="iniFavsT" hidden>Favoritas</h3>
-        <ul class="ini-notas" id="iniFavs" aria-labelledby="iniFavsT" hidden></ul>
-        <h3 class="ini-sub-h" id="iniRecT" hidden>Recientes</h3>
-        <ul class="ini-notas" id="iniDocs"></ul>
       </section>
 
       <section class="ini-sec m-sin-estudio" id="iniEmpezar" aria-labelledby="t-empezar">
@@ -140,6 +140,8 @@
 <script src="assets/js/reporte.js"></script>
 <script src="assets/js/indicadores.js"></script>
 <script src="assets/js/equipo.js"></script>
+<script src="assets/js/permisos.js"></script>
+<script src="assets/js/explorador.js"></script>
 <script src="assets/js/inicio.js"></script>
 </body>
 </html>

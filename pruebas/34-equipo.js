@@ -129,7 +129,7 @@ prueba('Recursos humanos: tu equipo',async function({browser,base,r}){
   await i.goto(base+'inicio.html');await listo(i,900);
   await i.waitForFunction(function(){return /Laura Pérez/.test((document.querySelector('#iniEquipoC')||{}).textContent||'')},null,{timeout:10000});
   r.cumple(!(await i.$('#iniEquipoC [data-acc]')),'en el Inicio, el resumen sale sin botones');
-  r.cumple(!(await i.evaluate(function(){return [].some.call(document.querySelectorAll('#iniDocs a'),function(a){return /d-miequipo/.test(a.getAttribute('href')||'')})})),'«Tu equipo» no sale entre tus páginas recientes');
+  r.cumple(!(await i.evaluate(function(){return [].some.call(document.querySelectorAll('#xpLista a'),function(a){return /d-miequipo/.test(a.getAttribute('href')||'')})})),'«Tu equipo» no sale entre tus páginas recientes');
   /* Acción rápida: anotar falta */
   await i.click('#iniAcciones [data-accion="incidencia"]');
   await i.waitForSelector('dialog[open] [name="tipo"]');

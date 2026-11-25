@@ -16,7 +16,7 @@ prueba('Mi negocio en el Inicio',async function({browser,base,r}){
   const mi=await p.evaluate(function(){return AT.datos.documentos.leer('d-minegocio').then(function(d){return d&&d.contenido.content.map(function(b){return b.type}).join(',')})});
   r.igual(mi,'paragraph,indicadores,heading,vencimientos,heading,inventario','la página «Mi negocio» se crea con indicadores, vencimientos e inventario');
   r.cumple(/Necesita tu Inventario/.test(await p.textContent('#iniNegocio .ind')),'sin inventario, los indicadores dicen qué falta');
-  r.cumple(!(await p.evaluate(function(){return [].some.call(document.querySelectorAll('#iniDocs .nota, #iniFavs .nota'),function(a){return /d-minegocio/.test(a.getAttribute('href')||'')})})),'«Mi negocio» no sale entre tus páginas recientes');
+  r.cumple(!(await p.evaluate(function(){return [].some.call(document.querySelectorAll('#xpLista a'),function(a){return /d-minegocio/.test(a.getAttribute('href')||'')})})),'«Mi negocio» no sale entre tus páginas recientes');
 
   /* Con inventario y una compra por pagar, los bloques se llenan */
   await p.evaluate(function(f){

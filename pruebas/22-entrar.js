@@ -56,7 +56,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   r.cumple(!barra.rutas&&!barra.tabs&&!barra.temas&&!barra.acerca&&barra.docs===4&&barra.etiqueta==='Navegación'&&barra.menu==='Abrir menú','la barra lateral deja solo Inicio, Crear, Buscar y tus páginas',barra);
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo del negocio */
-  await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
+  await p.click('.xp-nuevo');await p.waitForTimeout(300);
   r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Proveedores | Clientes | Lista de precios | Plan de negocio | '+
     'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes | Freelance o profesional independiente | Presupuesto del mes | Finanzas del mes | Me deben | Préstamo o crédito',
     '«Crear» ofrece notas, las plantillas de negocio, los paquetes por giro (el suyo marcado) y las de finanzas, sin libreta ni tesis');
@@ -111,7 +111,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   const con=await p.evaluate(function(){var s=document.getElementById('side');return {mods:JSON.parse(localStorage.getItem('aprende-tecnologia:perfil')).modulos.join(),
     tabs:!!s.querySelector('.tabs'),rutas:!!document.querySelector('#iniRutas').getClientRects().length}});
   r.cumple(con.mods==='negocio,estudio'&&con.tabs&&con.rutas,'encender «Estudio» trae las lecciones a la barra y al Inicio',con);
-  await p.click('.ini-sec-h [data-crear]');await p.waitForTimeout(300);
+  await p.click('.xp-nuevo');await p.waitForTimeout(300);
   r.cumple(await p.evaluate(function(){var g=[].map.call(document.querySelectorAll('dialog.crear-dlg .crear-g'),function(x){return x.getAttribute('data-modulo')});return g.join()==='negocio,paquetes,finanzas,estudio'}),
     '«Crear» muestra primero lo del negocio y después lo de estudio');
   r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.filter(function(d){return d.id!=='d-minegocio'}).length})}),5,'cambiar el espacio no crea ni borra páginas (sin contar «Mi negocio», el Inicio de un negocio)');
@@ -139,7 +139,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   const es=await e.evaluate(function(){return {sub:document.getElementById('iniSub').textContent,rutas:!!document.querySelector('#iniRutas').getClientRects().length,
     mods:JSON.parse(localStorage.getItem('aprende-tecnologia:perfil')).modulos.join(),pagos:AT.perfil.tiene('negocio')}});
   r.cumple(es.sub==='Qué quieres aprender hoy.'&&es.rutas&&es.mods==='estudio'&&!es.pagos,'con estudio, Inicio es el de OneLearn y el negocio queda apagado',es);
-  await e.click('.ini-sec-h [data-crear]');await e.waitForTimeout(300);
+  await e.click('.xp-nuevo');await e.waitForTimeout(300);
   r.igual(await opcionesCrear(e),'Libreta de estudio | Notas | Apuntes de clase | Tesis','«Crear» ofrece libreta, notas, apuntes de clase y tesis');
   await cerrar(e);
 
@@ -160,7 +160,7 @@ prueba('Perfiles y «Crea tu espacio»',async function({browser,base,r}){
   await Promise.all([s.waitForURL(/inicio\.html$/),s.setInputFiles('#enArchivo',{name:'respaldo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(conPerfil))})]);await listo(s,400);
   const rp=await perfil(s);
   r.cumple(await s.textContent('#saludo')==='Papelería Sol'&&rp.modulos.join()==='negocio'&&rp.negocio.telefono==='55'&&!('extra' in rp),'un respaldo con perfil restaura el espacio (limpio) y abre el Inicio',rp);
-  r.cumple(/Cuentas de la semana/.test(await s.textContent('#iniDocs')),'con sus documentos');
+  r.cumple(/Cuentas de la semana/.test(await s.textContent('#xp')),'con sus documentos');
   await cerrar(s);
   const s2=await pagina(browser,{ancho:390,perfil:false});
   await s2.goto(base+'entrar.html');await listo(s2);
