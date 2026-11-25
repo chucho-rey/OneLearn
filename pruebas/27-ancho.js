@@ -34,7 +34,8 @@ prueba('Ancho y detalles visuales',async function({browser,base,r}){
   await p.goto(base+'inicio.html');await listo(p);
   const wIni=await ancho(p,'.page');
   r.cumple(wIni>1000,'el Inicio usa más ancho en escritorio',wIni);
-  const btn=await p.evaluate(function(){var a=document.querySelector('.ini-sec-h a.btn');if(!a)return null;var cs=getComputedStyle(a);return {deco:cs.textDecorationLine,color:cs.color,fg:getComputedStyle(document.body).color}});
+  await p.waitForSelector('.tab-pie a.btn');
+  const btn=await p.evaluate(function(){var a=document.querySelector('.tab-pie a.btn');if(!a)return null;var cs=getComputedStyle(a);return {deco:cs.textDecorationLine,color:cs.color,fg:getComputedStyle(document.body).color}});
   r.cumple(btn&&btn.deco==='none'&&btn.color===btn.fg,'un enlace con forma de botón no se ve como enlace',btn);
 
   await p.goto(base+'documento.html?id=d-ancho01');await listo(p,800);

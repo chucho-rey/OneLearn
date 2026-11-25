@@ -6,10 +6,10 @@
      páginas; se puede ocultar) y páginas listas para usar (AT.crear.plantillasInicio).
    - «Tus páginas» es un explorador (explorador.js): ubicaciones, columnas (modificado, tipo, quién la tiene abierta,
      permisos y tamaño), buscar, ordenar y el menú de cada página.
-   - Fase F7e: «Mi negocio» arriba: una página de bloques (d-minegocio) que se crea sola con indicadores, próximos
-     vencimientos y el resumen del inventario, y que se edita como cualquier página («Editar esta sección»); no sale
-     entre tus páginas. Con recursos humanos, igual «Tu equipo» (d-miequipo, con el resumen de tu equipo) y dos
-     acciones rápidas más: anotar falta o vacaciones y la nómina.
+   - Etapa Empresas, E4: el tablero (tablero.js). «De tu empresa» (lo arma quien la administra; mientras no, trae los
+     accesos rápidos, «Mi negocio» y, con recursos humanos, «Tu equipo») y «Lo tuyo» (favoritas y recientes y tus
+     salas, hasta que lo armes). «Mi negocio» (d-minegocio) y «Tu equipo» (d-miequipo) son páginas de bloques que se
+     crean solas la primera vez que su módulo las muestra; no salen entre tus páginas mientras estén en el tablero.
    Usa AT.datos (datos.js). */
 (function(){
 'use strict';
@@ -74,34 +74,42 @@ function miEquipoNuevo(){
     {type:'equipo',attrs:{id:n(),titulo:''}}
   ]}};
 }
-/* Una página de bloques arriba del Inicio: se crea una sola vez y se dibuja viva */
-var PAGINAS_INI=[
-  {id:MI,sec:'#iniNegocio',caja:'#iniNegocioC',ver:esNegocio,nueva:miNegocioNuevo,pintado:'',creando:false},
-  {id:EQ,sec:'#iniEquipo',caja:'#iniEquipoC',ver:esEquipo,nueva:miEquipoNuevo,pintado:'',creando:false}
-];
-function pintarPaginaIni(P){
-  var sec=$(P.sec);if(!sec)return;
-  var ver=P.ver();sec.hidden=!ver;if(!ver)return;
-  var d=docsCache.filter(function(x){return x.id===P.id})[0];
-  /* Existe, pero no la puedes ver (por ejemplo, «Tu equipo» en la sala de Recursos humanos) */
-  if(!d&&todosCache.some(function(x){return x.id===P.id})){sec.hidden=true;return}
-  /* «Tu equipo» de antes (sin lista de acceso, en la General) pasa una vez a su sala o a Privado */
-  if(d&&d.id===EQ&&!d.acceso&&!P.ubicando){var acc=accesoEquipo();if(acc){P.ubicando=true;d.acceso=acc;AT.datos.documentos.guardar(d,{conservarFecha:true}).then(function(){P.ubicando=false;recargar()},function(){P.ubicando=false})}}
-  if(!d){
-    /* Solo si de verdad no existe (todavía no se leen tus páginas, o se creó en otra pestaña): nunca la pisa */
-    if(P.creando||!docsListos)return;P.creando=true;
-    AT.datos.documentos.leer(P.id).then(function(ya){return ya||AT.datos.documentos.guardar(P.nueva(),{conservarFecha:true})})
-      .then(function(){P.creando=false;recargar()},function(){P.creando=false});
-    return;
-  }
-  /* Se vuelve a dibujar solo si la página cambió (sus bloques se actualizan solos) */
-  var clave=d.editado+'|'+JSON.stringify(d.contenido).length;
-  if(clave===P.pintado)return;
-  P.pintado=clave;
-  var c=$(P.caja);c.innerHTML='';
-  AT.bloques.dibujar(d,c,{encabezado:false});
+/* «Tu equipo» de antes (sin lista de acceso, en la General) pasa una vez a su sala o a Privado */
+var ubicando=false;
+function ubicarEquipo(){
+  var d=todosCache.filter(function(x){return x.id===EQ})[0];
+  if(!d||d.acceso||ubicando)return;
+  var acc=accesoEquipo();if(!acc)return;
+  ubicando=true;d.acceso=acc;
+  AT.datos.documentos.guardar(d,{conservarFecha:true}).then(function(){ubicando=false;recargar()},function(){ubicando=false});
 }
-function pintarMiNegocio(){PAGINAS_INI.forEach(pintarPaginaIni)}
+
+/* ---------- El tablero (E4) ---------- */
+/* Mientras nadie lo arma: los accesos rápidos, «Mi negocio» y, con recursos humanos, «Tu equipo» */
+function defectoEmpresa(){
+  var l=[];
+  if(esNegocio()){l.push({id:'m-acciones',tipo:'acciones',tam:'l',cfg:{}});l.push({id:'m-minegocio',tipo:'pagina',tam:'l',cfg:{doc:MI,crear:'minegocio'}})}
+  if(esEquipo())l.push({id:'m-miequipo',tipo:'pagina',tam:'l',cfg:{doc:EQ,crear:'miequipo'}});
+  return l;
+}
+function defectoTuyo(){return [{id:'m-recientes',tipo:'recientes',tam:'m',cfg:{}},{id:'m-salas',tipo:'salas',tam:'s',cfg:{}}]}
+/* Las páginas que el tablero de la empresa ya muestra no se repiten entre tus páginas */
+function enTablero(){
+  var E=AT.empresa,m=E&&E.existe()?E.tablero('empresa'):null,o={};
+  (m||defectoEmpresa()).forEach(function(x){if(x.tipo==='pagina'&&x.cfg&&x.cfg.doc)o[x.cfg.doc]=1});
+  return o;
+}
+var montado=false;
+function montarTableros(){
+  if(montado||!AT.tablero||!AT.empresa||!AT.empresa.existe())return;
+  montado=true;
+  AT.tablero.acciones=acciones;
+  AT.tablero.creadores={minegocio:miNegocioNuevo,miequipo:miEquipoNuevo};
+  AT.tablero.montar($('#iniTabEmp'),{capa:'empresa',id:'tabEmp',titulo:'De tu empresa',defecto:defectoEmpresa,ocultarVacio:true,
+    vacio:'Arma el tablero de tu empresa: lo que todos ven al abrir OneBook. Usa «Agregar».'});
+  AT.tablero.montar($('#iniTabTuyo'),{capa:'persona',id:'tabTuyo',titulo:'Lo tuyo',defecto:defectoTuyo,
+    vacio:'Agrega lo que quieras ver tú: una nota, tus favoritas, una gráfica…'});
+}
 /* Recordatorio de respaldo: si tienes páginas y no descargas un respaldo desde hace 14 días
    (o nunca), Inicio lo sugiere. «Recordármelo en una semana» lo pospone 7 días. Un espacio recién creado
    (menos de 3 días, perfil.js) todavía no lo pide: sus páginas acaban de salir de las plantillas. */
@@ -128,9 +136,7 @@ $('#iniRespaldoNo').addEventListener('click',function(){
 /* Tus páginas: el explorador (explorador.js), sin «Mi negocio» ni «Tu equipo», que ya están arriba */
 function pintarDocs(){
   if(!AT.explorador)return;
-  var ocultos={};
-  if(esNegocio())ocultos[MI]=1;
-  if(esEquipo())ocultos[EQ]=1;
+  var ocultos=enTablero();
   AT.explorador.datos(docsCache.filter(function(d){return !ocultos[d.id]}),{vacio:'Todavía no tienes páginas. Crea la primera con «Nuevo» o con una de las que están aquí abajo. Se guardan en este dispositivo.'});
 }
 
@@ -165,22 +171,6 @@ function acciones(){
   if(l&&PER.tipo()==='negocio'&&PER.tiene('rh')&&AT.equipo)l=l.concat(ACCIONES.rh);
   return l;
 }
-function pintarAcciones(){
-  var l=acciones();
-  $('#iniRapidas').hidden=!l||!AT.crear||!PER.tiene('negocio');
-  if($('#iniRapidas').hidden)return;
-  $('#iniAcciones').innerHTML=l.map(function(a){
-    return '<button type="button" class="ini-acc-b" data-accion="'+a.k+'">'+ico(a.i)+'<span>'+esc(a.t)+'</span></button>';
-  }).join('');
-}
-$('#iniAcciones').addEventListener('click',function(e){
-  var b=e.target.closest('[data-accion]');if(!b||b.getAttribute('aria-disabled')==='true')return;
-  var a=(acciones()||[]).filter(function(x){return x.k===b.getAttribute('data-accion')})[0];if(!a)return;
-  b.setAttribute('aria-disabled','true');
-  /* Las que abren una ventana aquí mismo vuelven a quedar listas al cerrarla */
-  Promise.resolve(a.f()).then(function(){if(a.k==='incidencia')b.removeAttribute('aria-disabled')},
-    function(){b.removeAttribute('aria-disabled');AT.aviso('No se pudo abrir. Inténtalo otra vez.')});
-});
 function cent(v){var n=parseFloat(String(v==null?'':v).replace(/[$,\s]/g,''));return isFinite(n)&&n>0?Math.round(n*100):0}
 var CLAVE_PREPARA='aprende-tecnologia:prepara';
 /* Cada paso se marca solo al revisar tus páginas */
@@ -278,10 +268,9 @@ function pintarQuien(){
   c.hidden=!(E&&E.existe()&&!E.activa()&&AT.persona);
 }
 $('#iniQuienB').addEventListener('click',function(){if(AT.persona)AT.persona.abrir(this)});
-function pintar(){pintarQuien();pintarMiNegocio();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
+function pintar(){pintarQuien();montarTableros();ubicarEquipo();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
 function recargar(){cargarDocs().then(pintar)}
 pintarSaludo();
-pintarAcciones();
 pintarPlantillas();
 pintar();
 recargar();

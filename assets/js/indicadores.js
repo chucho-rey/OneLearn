@@ -167,7 +167,8 @@ Object.keys(BLOQUES).forEach(function(nombre){
     dibujar:function(n,ctx,h){
       var a=h.attrs(n),s=document.createElement('section');s.setAttribute('aria-label',D.etiqueta);
       var pag=document.body.getAttribute('data-pagina');
-      if(pag!=='documento'&&pag!=='inicio'){s.className=nombre==='indicadores'?'ind-b ind-papel':'ven-b ven-papel';s.innerHTML=D.papel(a);return s}
+      /* Vivos en una página, en el Inicio y en la portada de una sala; en papel al imprimir */
+      if(pag!=='documento'&&pag!=='inicio'&&pag!=='sala'){s.className=nombre==='indicadores'?'ind-b ind-papel':'ven-b ven-papel';s.innerHTML=D.papel(a);return s}
       D.montar(s,{cfg:a.cfg,editable:false});
       return s;
     },

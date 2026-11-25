@@ -19,6 +19,9 @@
      nombre y su color son los del departamento: responsable administra, miembro edita, consulta ve). Las libres (entre
      departamentos) las crean quien administra la empresa y los responsables. Quien administra la empresa administra
      todas. La sala de cada página vive en su acceso (datos.js: doc.acceso.sala; Privado es solo de su lista).
+   - Tableros (E4, tablero.js): el de la empresa (empresa.tablero, lo arma quien la administra), el de cada persona
+     (persona.tablero) y la portada de cada sala (sala.tablero, quien la administra): {modulos:[{id:'m-…', tipo, tam
+     s|m|l, cfg}], cambio}. Viajan con la empresa, la persona o la sala en el respaldo.
    No es seguridad: sin servidor, quien tiene el navegador tiene los datos; el PIN solo ordena quién entra como quién.
    Con la nube (F9), las cuentas y los permisos por fila harán cumplir esto mismo.
    Expone AT.empresa. */
@@ -68,12 +71,24 @@ function huellaPin(pid,pin){
 function pinValido(pin){return /^\d{4,8}$/.test(String(pin||''))}
 
 /* ---------- Forma de los datos (también llegan de respaldos) ---------- */
+/* Un tablero: hasta 40 módulos, cada uno con su configuración (cfg, hasta 20 000 letras) */
+function limpiarTablero(t){
+  if(!esObjeto(t)||!Array.isArray(t.modulos))return null;
+  var vistos={},mods=[];
+  t.modulos.forEach(function(m){
+    if(!esObjeto(m)||typeof m.id!=='string'||!/^m-[\w-]{4,40}$/.test(m.id)||vistos[m.id]||typeof m.tipo!=='string'||!/^[a-z]{2,20}$/.test(m.tipo)||mods.length>=40)return;
+    var cfg={};try{if(esObjeto(m.cfg)&&JSON.stringify(m.cfg).length<=20000)cfg=JSON.parse(JSON.stringify(m.cfg))}catch(err){}
+    vistos[m.id]=1;mods.push({id:m.id,tipo:m.tipo,tam:m.tam==='s'||m.tam==='l'?m.tam:'m',cfg:cfg});
+  });
+  return {modulos:mods,cambio:fecha(t.cambio)||ahora()};
+}
 function limpiarPersona(p){
   if(!esObjeto(p)||!idPersona(p.id))return null;
   var x={id:p.id,nombre:limpio(p.nombre,60),correo:'',rol:ROLES[p.rol]?p.rol:'miembro',deptos:{},
     pin:typeof p.pin==='string'&&/^[0-9a-f]{14}$/.test(p.pin)?p.pin:'',creado:fecha(p.creado)||ahora(),cambio:fecha(p.cambio)||fecha(p.creado)||ahora()};
   var c=limpio(p.correo,254).toLowerCase();if(c&&correoValido(c))x.correo=c;
   if(x.rol==='propietario'&&fecha(p.desde))x.desde=p.desde;
+  var tp=limpiarTablero(p.tablero);if(tp)x.tablero=tp;
   if(esObjeto(p.deptos))Object.keys(p.deptos).forEach(function(d){if(idDepto(d)&&ROLES_DEP[p.deptos[d]])x.deptos[d]=p.deptos[d]});
   if(p.borrado){x.borrado=true;x.deptos={};x.pin='';if(x.rol==='propietario')x.rol='miembro'}
   return x;
@@ -98,6 +113,7 @@ function limpiarSala(s){
   var a=esObjeto(s.acceso)?s.acceso:{};
   if(esObjeto(a.deptos))Object.keys(a.deptos).forEach(function(d){if(idDepto(d)&&(a.deptos[d]==='edita'||a.deptos[d]==='ve'))x.acceso.deptos[d]=a.deptos[d]});
   if(esObjeto(a.personas))Object.keys(a.personas).forEach(function(q){if(idPersona(q)&&ACC_SALA[a.personas[q]])x.acceso.personas[q]=a.personas[q]});
+  var ts=limpiarTablero(s.tablero);if(ts)x.tablero=ts;
   if(s.borrado)x.borrado=true;
   else if(x.tipo==='libre'&&!x.nombre)x.nombre='Sala';
   return x;
@@ -114,6 +130,7 @@ function limpiarEmpresa(e){
     personas:porId(e.personas,limpiarPersona).slice(0,MAX_PERSONAS*2),departamentos:porId(e.departamentos,limpiarDepto).slice(0,MAX_DEPTOS*2),
     salas:porId(e.salas,limpiarSala).slice(0,MAX_SALAS*2)};
   if(e.auto)x.auto=true;
+  var te=limpiarTablero(e.tablero);if(te)x.tablero=te;
   /* Nadie pertenece a un departamento que ya no existe */
   var vivos={};x.departamentos.forEach(function(d){if(!d.borrado)vivos[d.id]=1});
   x.personas.forEach(function(p){Object.keys(p.deptos).forEach(function(d){if(!vivos[d])delete p.deptos[d]})});
@@ -543,6 +560,30 @@ function quitarSala(sid){
   return cambiar(function(e){var sa=buscarSala(e,sid);sa.borrado=true;sa.cambio=ahora();return sa},{tipo:'sala',accion:'quitar',id:sid});
 }
 
+/* ---------- Tableros (E4) ---------- */
+/* capa: 'empresa', 'persona' (quien usa OneBook ahora) o 'sala' (sid). Devuelve sus módulos o null si nunca se armó */
+function tablero(capa,sid){
+  var e=leerGuardada();if(!e)return null;
+  var t=capa==='empresa'?e.tablero:capa==='persona'?(buscar(e,yoId())||{}).tablero:capa==='sala'?(buscarSala(e,sid)||{}).tablero:null;
+  return t?copia(t.modulos):null;
+}
+function puedeTablero(capa,sid){
+  if(capa==='empresa')return esAdmin();
+  if(capa==='persona')return !!buscar(leerGuardada(),yoId());
+  if(capa==='sala')return puedeSala(sid,'administrar');
+  return false;
+}
+function guardarTablero(capa,modulos,sid){
+  if(!puedeTablero(capa,sid))throw new Error(capa==='empresa'?'Solo quien administra la empresa arma su tablero.':capa==='sala'?'Solo quien administra la sala arma su portada.':'Elige quién eres para guardar tu tablero.');
+  var t=limpiarTablero({modulos:modulos,cambio:ahora()});
+  return cambiar(function(e){
+    if(capa==='empresa')e.tablero=t;
+    else if(capa==='persona'){var p=buscar(e,yoId());p.tablero=t;p.cambio=t.cambio}
+    else{var sa=buscarSala(e,sid);if(!sa)throw new Error('Esa sala ya no existe.');sa.tablero=t;sa.cambio=t.cambio}
+    return t.modulos;
+  },{tipo:'tablero',capa:capa,sala:sid||''});
+}
+
 /* ---------- Leer ---------- */
 function personas(op){
   var e=leerGuardada();if(!e)return [];
@@ -592,6 +633,8 @@ function combinar(entrante,op){
   }
   var r=JSON.parse(JSON.stringify(loc));
   if(ent.cambio>loc.cambio)['nombre','giro','telefono','rfc','cambio'].forEach(function(k){r[k]=ent[k]});
+  /* El tablero de la empresa: gana el que cambió al último */
+  if(ent.tablero&&(!loc.tablero||ent.tablero.cambio>loc.tablero.cambio))r.tablero=ent.tablero;
   r.personas=juntar(loc.personas,ent.personas);
   r.departamentos=juntar(loc.departamentos,ent.departamentos);
   r.salas=juntar(loc.salas,ent.salas);
@@ -669,6 +712,10 @@ AT.empresa={
   agregarSala:agregarSala,
   cambiarSala:cambiarSala,
   quitarSala:quitarSala,
+  /* Tableros (E4) */
+  tablero:tablero,
+  puedeTablero:puedeTablero,
+  guardarTablero:guardarTablero,
   /* Termina lo que quedó en curso (renombrar un departamento en las bases) */
   esperar:function(){return trabajo},
   /* fn({tipo:'empresa'|'persona'|'depto', accion, id, antes, nombre}, deOtraPestana) */

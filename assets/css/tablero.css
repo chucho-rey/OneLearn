@@ -1,0 +1,61 @@
+/* OneBook: el tablero (tablero.js): el Inicio («De tu empresa» y «Lo tuyo») y la portada de cada sala. Una
+   cuadrícula de tres columnas que baja a dos y a una según el ancho que tiene (container queries). */
+.tab{container-type:inline-size;margin-top:1.75rem}
+.tab-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem 1rem;margin-bottom:0.75rem}
+.tab-h h2{margin:0}
+.tab-bt{display:flex;flex-wrap:wrap;gap:0.5rem}
+.tab-bt .btn{display:inline-flex;align-items:center;gap:0.375rem}
+.tab-ayuda{margin:-0.25rem 0 0.75rem;font-size:0.875rem;color:var(--fg-2);max-width:none}
+.tab-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.875rem}
+.tab-m{grid-column:span 1;display:flex;flex-direction:column;gap:0.5rem;min-width:0;padding:0.875rem 1rem;border:1px solid var(--line);border-radius:0.75rem;background:var(--bg);box-shadow:var(--sh-1)}
+.tab-m.tam-m{grid-column:span 2}
+.tab-m.tam-l{grid-column:1/-1}
+@container (max-width:52rem){.tab-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tab-m.tam-m{grid-column:1/-1}}
+@container (max-width:34rem){.tab-grid{grid-template-columns:minmax(0,1fr)}.tab-m,.tab-m.tam-m{grid-column:1/-1}}
+.tab-oculto{display:none}
+.tab-mh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.375rem 0.75rem}
+.tab-mh h3{margin:0;font-size:1rem;overflow-wrap:anywhere}
+.tab-mc{min-width:0}
+.tab-mc>:first-child{margin-top:0}
+.tab-nada{margin:0;font-size:0.9375rem;color:var(--fg-2);max-width:none}
+.tab-vacio{padding:1rem;border:1px dashed var(--line-strong);border-radius:0.75rem}
+.tab-pie{margin:0.5rem 0 0}
+.tab-aviso{padding:0.625rem 0.875rem;border-left:3px solid var(--accent);border-radius:0.375rem;background:var(--accent-bg);color:var(--fg);overflow-wrap:anywhere}
+.tab-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tab-l>li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 0.75rem;padding:0.375rem 0;border-bottom:1px solid var(--line)}
+.tab-l>li:last-child{border-bottom:0}
+.tab-l a{display:inline-flex;align-items:center;gap:0.5rem;min-width:0;color:var(--fg);font-weight:500;text-decoration:none}
+.tab-l a:hover span{text-decoration:underline;text-underline-offset:0.1875rem}
+.tab-l a .ico{flex:none;color:var(--accent-ink)}
+.tab-l a span{overflow-wrap:anywhere}
+.tab-l a>.emp-dot{width:0.625rem;height:0.625rem;margin:0 0.1875rem}
+.tab-l small{font-size:0.8125rem;color:var(--fg-2)}
+.tab-l small .ico{color:var(--warn)}
+.tab-nota{width:100%;min-height:7rem;padding:0.5rem 0.625rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--warn-bg);color:var(--fg);font:inherit;resize:vertical}
+.tab-nota:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tab-pag>:first-child{margin-top:0}
+/* Al editar: controles de cada módulo y arrastrar */
+.tab.editando .tab-m{border-style:dashed;border-color:var(--line-strong);cursor:grab}
+.tab-m.arrastrando{opacity:.5}
+.tab-m.sobre{box-shadow:0 0 0 2px var(--accent)}
+.tab-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:0.25rem}
+.tab-ico{display:grid;place-items:center;width:2rem;height:2rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg-2);cursor:pointer}
+.tab-ico:hover{background:var(--hover);color:var(--fg)}
+.tab-ico[aria-disabled="true"]{opacity:.45;cursor:default}
+.tab-quitar{color:var(--bad-ink)}
+.tab-tam{min-height:2rem;padding:0.125rem 0.375rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.8125rem}
+.tab-tam:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+/* El catálogo y la configuración */
+dialog.tab-dlg{width:min(36rem,calc(100vw - 2rem))}
+.tab-cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,15rem),1fr));gap:0.5rem}
+.tab-o{display:flex;align-items:flex-start;gap:0.625rem;min-width:0;padding:0.625rem 0.75rem;border:1px solid var(--line);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.tab-o:hover{border-color:var(--accent);background:var(--hover)}
+.tab-o .ico{flex:none;font-size:1.25rem;color:var(--accent-ink)}
+.tab-o span{display:flex;flex-direction:column;gap:0.125rem;min-width:0}
+.tab-o small{font-size:0.8125rem;color:var(--fg-2);line-height:1.4}
+.tab-f{display:flex;flex-direction:column;gap:0.75rem}
+.tab-f textarea{width:100%;min-width:0;padding:0.5rem 0.625rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;resize:vertical}
+.tab-f textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tab-campos{display:flex;flex-direction:column;gap:0.75rem}
+.tab-nota-f{margin:0;font-size:0.8125rem;color:var(--fg-2);max-width:none}
+[data-contrast="high"] .tab-m{border-color:var(--line-strong)}

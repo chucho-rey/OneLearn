@@ -1,6 +1,6 @@
 # OneBook
 
-OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico; empresa, personas y departamentos, y salas, hechas; siguen el Inicio armable y la bienvenida para empresas).
+OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico; empresa, personas y departamentos; salas, y el Inicio armable, hechas; sigue la bienvenida para empresas).
 
 Lo académico de OneLearn (lecciones, rutas, proyectos, terminal simulada, libretas, apuntes y la tesis) se separó de OneBook el 25 de noviembre de 2026 (etapa E1). Queda completo en la historia de git: el último commit con todo es `b0e99c5` (y la etiqueta `onelearn-final`, `b4b9f6f`, es la versión de antes del cambio de nombre). Nadie pierde datos: ver «Lo de estudio que se separó» más abajo.
 
@@ -18,8 +18,9 @@ app.html                    Pestañas dentro de la app, como en un navegador: ca
 entrar.html                 «Crea tu empresa»: tu empresa (nombre, giro, teléfono, tu nombre, «Tengo empleados»), sus
                             departamentos y las páginas para empezar; con ?editar cambia los módulos; también restaura un respaldo
 empresa.html                «Tu empresa»: las personas (rol, departamentos, PIN), los departamentos y las salas (tuempresa.js, empresa.css)
-sala.html                   Una sala (?id=sa-… o ?id=privado; ?nueva crea una): quién entra, sus páginas y sus herramientas (sala.js)
-inicio.html                 Inicio de la empresa: el nombre del negocio y la fecha, acciones rápidas, «Mi negocio» y «Tu equipo»,
+sala.html                   Una sala (?id=sa-… o ?id=privado; ?nueva crea una): su portada (tablero), quién entra, sus páginas y
+                            sus herramientas (sala.js)
+inicio.html                 Inicio de la empresa: el nombre del negocio y la fecha, los tableros «De tu empresa» y «Lo tuyo»,
                             tus páginas (explorador) y páginas listas para usar
 documento.html              Una página tuya (?id=...): editarla con el editor de bloques o leerla
 imprimir.html               Vista para imprimir o guardar como PDF de una página (imprimir.html?id=…)
@@ -50,6 +51,9 @@ assets/
   js/sala.js                La página de una sala: quién entra, herramientas sugeridas, «Nueva página aquí», sus páginas y
                             «Administrar sala» (departamentos que editan o solo ven, personas sueltas)
   css/empresa.css           Estilos de «Tu empresa» y los colores de los departamentos
+  js/tablero.js             Tableros de módulos (etapa E4): el Inicio («De tu empresa» y «Lo tuyo») y la portada de cada sala;
+                            catálogo de módulos, editar, mover, arrastrar, tamaño y configurar (AT.tablero)
+  css/tablero.css           Estilos de los tableros (rejilla de 3, 2 o 1 columnas según el ancho del tablero)
   js/datos.js               Tus datos en IndexedDB: páginas, tus plantillas, la papelera, las bases de datos (bases y filas),
                             el historial de versiones, quién eres, permisos y presencia; respaldo e importación, también de
                             Bases unificadas; y lo de estudio que quedó (notas, marcadores, avance) (AT.datos)
@@ -116,8 +120,9 @@ assets/
   js/exportar-docx.js       Exportar una página a Word con la librería docx (AT.exportarDocx)
   js/buscar.js              Búsqueda con Ctrl K en tus páginas y en la Ayuda; índice compartido (AT.indice)
   js/bloques.js             Formato de bloques: dibuja una página a partir de su JSON, también el legado (AT.bloques)
-  js/inicio.js              Pantalla de inicio (inicio.html): acciones rápidas, «Prepara tu negocio», «Mi negocio» y «Tu
-                            equipo», el explorador y páginas listas para usar
+  js/inicio.js              Pantalla de inicio (inicio.html): los tableros (lo que traen mientras nadie los arma, las acciones
+                            rápidas y cómo se crean «Mi negocio» y «Tu equipo»), «Prepara tu negocio», el explorador y páginas
+                            listas para usar
   js/landing.js             Bienvenida: manda al Inicio a quien ya usa OneBook; dibuja la página de ejemplo, el plan de pagos
                             y la calculadora de precio para probar
   css/landing.css           Estilos de la página de bienvenida
@@ -173,6 +178,14 @@ Etapa Empresas, E3. Una sala es un espacio de trabajo con sus páginas; viven en
 - **Crear**: «¿Dónde?» elige la sala (la de la página de sala o la ubicación del explorador, `AT.salaActual`, o la General; también Privado). Cada página nueva es de quien la crea (`AT.datos.acceso.nueva`); duplicar deja la copia en la misma sala. «⋯ › Mover a otra sala» (`AT.datos.acceso.mover`) la cambia, si puedes crear páginas en la sala de destino.
 - **La página de una sala** (`sala.html`): quién entra, herramientas sugeridas según el nombre del departamento (Ventas: nota de venta, corte de caja…), «Nueva página aquí» y sus páginas; «Administrar sala» para quien la administra. Una sala con páginas no se quita; quitar un departamento deja su sala (con sus páginas) como sala entre departamentos, con la misma gente.
 - **«Tu equipo»** (sueldos) nace en la sala de Recursos humanos si hay un departamento con ese nombre, o en Privado del propietario; la de antes pasa ahí una vez.
+
+## Inicio armable y portadas
+
+Etapa Empresas, E4. Un tablero es una lista de módulos `{modulos:[{id:'m-…', tipo, tam:'s'|'m'|'l', cfg}], cambio}` guardada en la empresa (`aprende-tecnologia:empresa`, así entra en el respaldo): `empresa.tablero` («De tu empresa»), `persona.tablero` («Lo tuyo», de cada persona) y `sala.tablero` (la portada de la sala). `AT.empresa.tablero(capa, sala)` lo lee (null si nadie lo armó), `puedeTablero` dice quién lo edita (la empresa, quien la administra; lo tuyo, tú; una sala, quien la administra) y `guardarTablero` lo guarda (limpio: hasta 40 módulos, tipos y tamaños válidos, `cfg` de hasta 20,000 caracteres). Al juntar respaldos gana el tablero con `cambio` más reciente.
+
+- **`tablero.js`** (`AT.tablero.montar(contenedor, {capa, sala, id, titulo, defecto, vacio, ocultarVacio})`) dibuja el tablero en una rejilla de 3 columnas (2 y 1 según el ancho del propio tablero, con `container-type`) y, para quien puede, «Editar»: mover antes y después, arrastrar, tamaño, configurar, quitar y «Agregar» (catálogo `AT.tablero.MODS`, filtrado por capa y por los módulos del espacio). Se vuelve a dibujar si cambian las páginas o la empresa (también desde otra pestaña).
+- **Módulos**: accesos rápidos, una página (sus bloques vivos con `AT.bloques.dibujar`; así son «Mi negocio» y «Tu equipo», que se crean solas con `AT.tablero.creadores`), indicadores, próximos vencimientos, inventario, gráfica de una base (un bloque `reporte` con la base y la columna que eliges), tu equipo, avisos, actividad reciente, tus salas, favoritas y recientes y una nota (solo en «Lo tuyo»). Un módulo con una página que no puedes ver no se muestra.
+- **Por omisión** (mientras nadie lo arma, no se guarda nada): «De tu empresa» trae los accesos rápidos, «Mi negocio» y, con recursos humanos, «Tu equipo»; «Lo tuyo», favoritas y recientes y tus salas; la portada de una sala está vacía y no se muestra a quien no la administra. Las páginas que se ven en el tablero de la empresa no se repiten en las sugerencias del explorador.
 
 ## Pestañas, bloques de la tienda y perfiles
 

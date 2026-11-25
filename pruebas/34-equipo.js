@@ -28,11 +28,11 @@ prueba('Recursos humanos: tu equipo',async function({browser,base,r}){
   r.igual(sug,'equipo,nominas','con empleados sugiere «Mi equipo» y la nómina, ya marcadas');
   await Promise.all([e.waitForURL(/inicio\.html/),e.click('#enSig')]);await listo(e,800);
   r.igual(await e.evaluate(function(){return AT.perfil.actual().modulos.join(',')}),'negocio,rh','el espacio queda con el módulo de recursos humanos');
-  await e.waitForSelector('#iniEquipo:not([hidden])',{timeout:10000});
-  r.cumple(await e.isVisible('#iniEquipo h2:has-text("Tu equipo")'),'el Inicio muestra «Tu equipo»');
-  const acc=await e.evaluate(function(){return [].map.call(document.querySelectorAll('#iniAcciones [data-accion]'),function(b){return b.getAttribute('data-accion')}).join(',')});
+  await e.waitForSelector('[data-m="m-miequipo"] .tab-pag',{timeout:10000});
+  r.cumple(await e.isVisible('[data-m="m-miequipo"] h3:has-text("Tu equipo")'),'el Inicio muestra «Tu equipo»');
+  const acc=await e.evaluate(function(){return [].map.call(document.querySelectorAll('[data-acciones] [data-accion]'),function(b){return b.getAttribute('data-accion')}).join(',')});
   r.cumple(/incidencia/.test(acc)&&/nomina/.test(acc),'acciones rápidas: anotar falta o vacaciones y la nómina',acc);
-  r.cumple(/Empieza con|Agrega a tu equipo/.test(await e.textContent('#iniEquipoC')),'sin personas, el resumen dice cómo empezar');
+  r.cumple(/Empieza con|Agrega a tu equipo/.test(await e.textContent('[data-m="m-miequipo"] .tab-mc')),'sin personas, el resumen dice cómo empezar');
   await cerrar(e);
 
   /* ---------- Mi equipo: agregar personas y anotar ---------- */
@@ -130,17 +130,17 @@ prueba('Recursos humanos: tu equipo',async function({browser,base,r}){
   /* ---------- El Inicio con tu equipo ---------- */
   const i=p;
   await i.goto(base+'inicio.html');await listo(i,900);
-  await i.waitForFunction(function(){return /Laura Pérez/.test((document.querySelector('#iniEquipoC')||{}).textContent||'')},null,{timeout:10000});
-  r.cumple(!(await i.$('#iniEquipoC [data-acc]')),'en el Inicio, el resumen sale sin botones');
+  await i.waitForFunction(function(){return /Laura Pérez/.test((document.querySelector('[data-m="m-miequipo"] .tab-mc')||{}).textContent||'')},null,{timeout:10000});
+  r.cumple(!(await i.$('[data-m="m-miequipo"] .tab-mc [data-acc]')),'en el Inicio, el resumen sale sin botones');
   r.cumple(!(await i.evaluate(function(){return [].some.call(document.querySelectorAll('#xpLista a'),function(a){return /d-miequipo/.test(a.getAttribute('href')||'')})})),'«Tu equipo» no sale entre tus páginas recientes');
   /* Acción rápida: anotar falta */
-  await i.click('#iniAcciones [data-accion="incidencia"]');
+  await i.click('[data-acciones] [data-accion="incidencia"]');
   await i.waitForSelector('dialog[open] [name="tipo"]');
   await i.selectOption('dialog[open] [name="tipo"]','Incapacidad');await i.fill('dialog[open] [name="dias"]','2');
   await i.click('dialog[open] button[type="submit"]');await i.waitForFunction(function(){return !document.querySelector('dialog[open]')});
-  await i.waitForFunction(function(){return /con incapacidad/.test((document.querySelector('#iniEquipoC')||{}).textContent||'')},null,{timeout:8000});
+  await i.waitForFunction(function(){return /con incapacidad/.test((document.querySelector('[data-m="m-miequipo"] .tab-mc')||{}).textContent||'')},null,{timeout:8000});
   r.cumple(true,'la acción rápida anota la incapacidad y el Inicio la muestra');
-  r.cumple(await i.getAttribute('#iniAcciones [data-accion="incidencia"]','aria-disabled')===null,'el botón vuelve a quedar listo');
+  r.cumple(await i.getAttribute('[data-acciones] [data-accion="incidencia"]','aria-disabled')===null,'el botón vuelve a quedar listo');
   await revisar(i,r,'Inicio con tu equipo');
   await i.click('#sideCrear');await i.waitForSelector('[data-cat="rh"] [data-tipo="calculadoras"]');
   r.cumple(/Recursos humanos/.test(await i.textContent('[data-cat="rh"] h3')),'«Crear» trae la sección Recursos humanos');
@@ -148,7 +148,7 @@ prueba('Recursos humanos: tu equipo',async function({browser,base,r}){
   await i.keyboard.press('Escape');await i.waitForTimeout(300);
   await i.setViewportSize({width:390,height:844});
   await i.evaluate(function(){AT.ajustes.set('tema','dark')});await i.reload();await listo(i,900);
-  await i.waitForFunction(function(){return /Laura Pérez/.test((document.querySelector('#iniEquipoC')||{}).textContent||'')},null,{timeout:10000});
+  await i.waitForFunction(function(){return /Laura Pérez/.test((document.querySelector('[data-m="m-miequipo"] .tab-mc')||{}).textContent||'')},null,{timeout:10000});
   await revisar(i,r,'Inicio con tu equipo en celular (oscuro)');
   if(CAP)await i.screenshot({path:CAP+'/rh-inicio.png',fullPage:true});
   await cerrar(i);
@@ -156,8 +156,8 @@ prueba('Recursos humanos: tu equipo',async function({browser,base,r}){
   /* ---------- Sin el módulo ---------- */
   const s=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'negocio',modulos:['negocio'],nombre:'',negocio:{nombre:'Tienda',giro:'tienda',telefono:''},creado:'2026-01-01'}});
   await s.goto(base+'inicio.html');await listo(s,600);
-  r.cumple(await s.isHidden('#iniEquipo'),'sin recursos humanos no hay «Tu equipo» en el Inicio');
-  r.cumple(!(await s.$('#iniAcciones [data-accion="incidencia"]')),'ni sus acciones rápidas');
+  r.cumple(await s.isHidden('[data-m="m-miequipo"]'),'sin recursos humanos no hay «Tu equipo» en el Inicio');
+  r.cumple(!(await s.$('[data-acciones] [data-accion="incidencia"]')),'ni sus acciones rápidas');
   await s.click('#sideCrear');await s.waitForSelector('[data-tipo="inventario"]');
   r.cumple(!(await s.$('[data-tipo="calculadoras"]'))&&!(await s.$('[data-cat="rh"]')),'ni sus plantillas en «Crear»');
   await s.keyboard.press('Escape');

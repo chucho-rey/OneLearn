@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="assets/css/bases.css">
 <link rel="stylesheet" href="assets/css/permisos.css">
 <link rel="stylesheet" href="assets/css/explorador.css">
+<link rel="stylesheet" href="assets/css/tablero.css">
 </head>
 <body data-pagina="inicio">
 
@@ -43,10 +44,9 @@
         <div class="ini-resp-b"><button class="btn pri" type="button" id="iniAvisoResp">Descargar respaldo</button><button class="btn" type="button" id="iniAvisoOk">Entendido</button></div>
       </div>
 
-      <section class="ini-sec ini-rapidas" id="iniRapidas" aria-labelledby="t-rapidas" hidden>
-        <h2 id="t-rapidas" class="vh">Acciones rápidas</h2>
-        <div class="ini-acc" id="iniAcciones"></div>
-      </section>
+      <!-- El tablero (tablero.js): el de la empresa y el tuyo -->
+      <section class="ini-sec tab" id="iniTabEmp" aria-labelledby="tabEmpT"></section>
+      <section class="ini-sec tab" id="iniTabTuyo" aria-labelledby="tabTuyoT"></section>
 
       <section class="ini-sec ini-paginas" id="iniPaginas" aria-labelledby="t-docs">
         <div class="ini-sec-h"><h2 id="t-docs" tabindex="-1">Tus páginas</h2></div>
@@ -56,16 +56,6 @@
         </div>
         <!-- El explorador de tus páginas (explorador.js) -->
         <div class="xp" id="xp"></div>
-      </section>
-
-      <section class="ini-sec ini-neg" id="iniNegocio" aria-labelledby="t-negocio" hidden>
-        <div class="ini-sec-h"><h2 id="t-negocio">Mi negocio</h2><a class="btn" id="iniNegEditar" href="documento.html?id=d-minegocio">Editar esta sección</a></div>
-        <div class="ini-neg-c" id="iniNegocioC"></div>
-      </section>
-
-      <section class="ini-sec ini-neg" id="iniEquipo" aria-labelledby="t-equipo" hidden>
-        <div class="ini-sec-h"><h2 id="t-equipo">Tu equipo</h2><a class="btn" id="iniEqEditar" href="documento.html?id=d-miequipo">Editar esta sección</a></div>
-        <div class="ini-neg-c" id="iniEquipoC"></div>
       </section>
 
       <section class="ini-sec ini-prepara" id="iniPrepara" aria-labelledby="t-prepara" hidden>
@@ -120,6 +110,7 @@
 <script src="assets/js/equipo.js"></script>
 <script src="assets/js/permisos.js"></script>
 <script src="assets/js/explorador.js"></script>
+<script src="assets/js/tablero.js"></script>
 <script src="assets/js/inicio.js"></script>
 </body>
 </html>
