@@ -52,7 +52,9 @@ prueba('Mi negocio en el Inicio',async function({browser,base,r}){
   /* Celular oscuro */
   await p.setViewportSize({width:390,height:844});
   await p.evaluate(function(){AT.ajustes.set('tema','dark')});
-  await p.reload();await listo(p,900);await p.waitForSelector('[data-m="m-minegocio"] .ind .ind-t');await p.waitForTimeout(500);
+  await p.reload();await listo(p,900);
+  /* En el celular, los tableros están en la sección Inicio */
+  await p.click('.cn-b[data-seccion="inicio"]');await p.waitForSelector('[data-m="m-minegocio"] .ind .ind-t');await p.waitForTimeout(500);
   await revisar(p,r,'Mi negocio en celular (oscuro)');
   await cerrar(p);
 

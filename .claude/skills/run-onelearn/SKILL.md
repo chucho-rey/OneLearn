@@ -59,7 +59,7 @@ service worker.
 ```bash
 cd pruebas
 NODE_PATH=/opt/node-tools/node_modules node todas.js 21     # solo 21-pagos.js (unos 10 s)
-NODE_PATH=/opt/node-tools/node_modules node todas.js        # todas (34 archivos, unos 8 min): córrela en segundo plano
+NODE_PATH=/opt/node-tools/node_modules node todas.js        # todas (35 archivos, unos 8 min): córrela en segundo plano
 ```
 
 ## Gotchas

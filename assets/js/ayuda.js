@@ -13,7 +13,7 @@ var MODULOS={nucleo:'',negocio:'Negocio y dinero',rh:'Recursos humanos'};
 /* La plantilla de cada herramienta */
 var PLANTILLA={'ay-nucleo-bases':'clientes','ay-negocio-corte':'corte','ay-negocio-fiado':'fiado','ay-negocio-gastos':'gastos',
   'ay-negocio-venta':'venta','ay-negocio-precio':'precio','ay-negocio-porpagar':'proveedores','ay-negocio-pagos':'prestamo',
-  'ay-negocio-inventario':'inventario','ay-negocio-reporte':'reporte','ay-negocio-presupuesto':'presupuesto',
+  'ay-negocio-inventario':'inventario','ay-negocio-reporte':'reporte','ay-negocio-presupuesto':'presupuesto','ay-negocio-cajachica':'cajachica',
   'ay-rh-equipo':'equipo','ay-rh-nomina':'nominas','ay-rh-recibo':'calculadoras','ay-rh-vacaciones':'vacaciones','ay-rh-aguinaldo':'aguinaldos',
   'ay-rh-finiquito':'finiquito','ay-rh-ptu':'ptu'};
 function tiene(m){return m==='nucleo'||!PER||PER.tiene(m)}

@@ -23,6 +23,8 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   const p=await pagina(browser,{ancho:390,alto:844,reducir:true,perfil:NEGOCIO});
   const errores=[];p.on('pageerror',function(e){errores.push(e.message)});
   await p.goto(base+'inicio.html');await listo(p);
+  /* En el celular, los tableros y «Prepara tu negocio» están en la sección Inicio (se recuerda en la pestaña) */
+  await p.click('.cn-b[data-seccion="inicio"]');await p.waitForTimeout(200);
 
   /* ---------- Inicio de negocio, recién creado ---------- */
   const ini=await p.evaluate(function(){
@@ -147,7 +149,7 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
     '«Prepara tu negocio» marca solos el corte, el fiado y la nota de venta');
   await revisar(p,r,'Inicio con favoritas y Prepara tu negocio en celular');
   await p.click('#iniPrepOcultar');await p.waitForTimeout(150);
-  r.cumple(await p.isHidden('#iniPrepara')&&await p.evaluate(function(){return document.activeElement.id==='t-docs'}),'«Ocultar esta lista» la esconde y el foco pasa a tus páginas');
+  r.cumple(await p.isHidden('#iniPrepara')&&await p.evaluate(function(){return document.activeElement.id==='t-empezar'}),'«Ocultar esta lista» la esconde y el foco pasa a lo que sigue (en el celular, «Tus páginas» está en otra sección)');
   await p.reload();await listo(p);
   r.cumple(await p.isHidden('#iniPrepara'),'y se queda oculta');
 

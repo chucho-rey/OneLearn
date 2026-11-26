@@ -298,7 +298,7 @@ AT.ubicaciones={SISTEMA:SISTEMA,CATS:CATS,UBIC:UBIC,info:infoPagina,de:ubicDe,pa
     if(u&&ES_INICIO&&AT.explorador&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&e.button===0){
       e.preventDefault();
       AT.explorador.ir(u.getAttribute('data-ubic'));
-      if(!isDesk()){setNav(false);var t=$('#t-docs');if(t)t.focus()}
+      if(!isDesk()){setNav(false);if(AT.archivos)AT.archivos.ir(u.getAttribute('data-ubic'));else{var t=$('#t-docs');if(t)t.focus()}}
       else{var s=$('#iniPaginas');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
     }
   });

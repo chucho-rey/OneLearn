@@ -133,6 +133,8 @@ prueba('Inicio armable y portada de las salas',async function({browser,base,r}){
   await q.goto(base+'entrar.html');await listo(q);
   await Promise.all([q.waitForURL(/inicio\.html$/),q.setInputFiles('#enArchivo',{name:'respaldo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(resp))})]);await listo(q,800);
   r.cumple(await guardados(q,'empresa')==='avisos:l | pagina:l | pagina:m'&&/nota/.test(await guardados(q,'persona'))&&await guardados(q,'sala',ids.sv)==='avisos:l','el respaldo lleva los tableros: de la empresa, el tuyo y el de la sala');
+  /* En el celular, los tableros están en la sección Inicio */
+  await q.click('.cn-b[data-seccion="inicio"]');await q.waitForTimeout(300);
   await revisar(q,r,'Inicio armado (celular)');
   await q.click(EMP+' [data-tab="editar"]');
   await revisar(q,r,'tablero al editar (celular)');
@@ -146,6 +148,8 @@ prueba('Inicio armable y portada de las salas',async function({browser,base,r}){
     await x.goto(base+'entrar.html');await listo(x);
     await Promise.all([x.waitForURL(/inicio\.html$/),x.setInputFiles('#enArchivo',{name:'respaldo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(resp))})]);await listo(x,300);
     await x.evaluate(function(a){localStorage.setItem('aprende-tecnologia:ajustes',JSON.stringify(a))},aj);await x.reload();await listo(x,800);
+    /* En el celular, los tableros están en la sección Inicio */
+    if(ancho<900){await x.click('.cn-b[data-seccion="inicio"]');await x.waitForTimeout(300)}
     await revisar(x,r,'Inicio armado, '+nombre);
     await x.click(TUYO+' [data-tab="editar"]');await x.click(TUYO+' [data-tab="agregar"]');await x.waitForSelector('dialog.tab-dlg[open]');
     await revisar(x,r,'catálogo, '+nombre);

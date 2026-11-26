@@ -107,6 +107,8 @@ prueba('Hito 6 · App instalable y sin conexión',async function({browser,base,r
   await ctx.addInitScript(function(){try{localStorage.setItem('aprende-tecnologia:perfil',JSON.stringify({perfil:'negocio',modulos:['negocio']}))}catch(e){}});
   const i=await ctx.newPage();
   await i.goto(base+'inicio.html');await i.waitForLoadState('load');
+  /* En el celular, «Instala OneBook» está en la sección Inicio */
+  await i.click('.cn-b[data-seccion="inicio"]');
   r.cumple(await i.isVisible('#instalar')&&await i.isHidden('#instalarBtn')&&/Agregar a inicio/.test(await i.textContent('#instalarTxt')),'en iPhone se explica cómo agregarlo al inicio');
   await ctx.close();
 });
