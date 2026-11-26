@@ -541,29 +541,6 @@ if(AT.rutas&&AT.rutas.esInicio&&location.hash==='#crear'){
   try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
   setTimeout(abrir,0);
 }
-/* inicio.html#guardar-pagos: el plan de pagos que se probó en la página de bienvenida (landing.js lo deja en
-   sessionStorage) se guarda como un documento de notas con ese bloque. Solo entran campos conocidos y con forma válida. */
-function planDeBienvenida(a){
-  if(!a||typeof a!=='object')return null;
-  function texto(v,max){return typeof v==='string'?v.slice(0,max):''}
-  var pagados={};
-  if(a.pagados&&typeof a.pagados==='object')Object.keys(a.pagados).forEach(function(k){
-    if(/^\d{1,3}$/.test(k)&&/^\d{4}-\d{2}-\d{2}$/.test(a.pagados[k]))pagados[k]=a.pagados[k];
-  });
-  return {titulo:texto(a.titulo,120)||'Mi plan de pagos',modo:'plazos',monto:texto(a.monto,20).replace(/[^\d.,$\s]/g,''),
-    pagos:String(Math.max(1,Math.min(520,parseInt(a.pagos,10)||12))),cuota:'',
-    frecuencia:['semanal','quincenal','mensual'].indexOf(a.frecuencia)>=0?a.frecuencia:'mensual',
-    inicio:/^\d{4}-\d{2}-\d{2}$/.test(a.inicio)?a.inicio:'',pagados:pagados};
-}
-if(AT.rutas&&AT.rutas.esInicio&&location.hash==='#guardar-pagos'){
-  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
-  var plan=null;
-  try{plan=planDeBienvenida(JSON.parse(sessionStorage.getItem('onebook:pagos-bienvenida')||'null'));sessionStorage.removeItem('onebook:pagos-bienvenida')}catch(e){}
-  if(plan)nuevo('notas',{titulo:plan.titulo,contenido:[{type:'pagos',attrs:Object.assign({id:id()},plan)},P()]}).catch(function(err){
-    if(AT.aviso)AT.aviso('No se pudo guardar tu plan de pagos: '+(err&&err.message||'inténtalo otra vez'));
-  });
-}
-
 /* ---------- Deshacer una eliminación (la página está en la papelera) y avisos de otra página ---------- */
 var borrado=null;
 try{borrado=JSON.parse(sessionStorage.getItem('onelearn:eliminado')||'null');sessionStorage.removeItem('onelearn:eliminado')}catch(e){}

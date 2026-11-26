@@ -1,6 +1,6 @@
 # OneBook
 
-OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico; empresa, personas y departamentos; salas, y el Inicio armable, hechas; sigue la bienvenida para empresas).
+OneBook (antes OneLearn) es un espacio de trabajo para **empresas** hecho de **bloques y plantillas**: ventas, cobros, inventario, gastos, recursos humanos y notas en páginas que cada quien arma a su medida. Todo se guarda en el dispositivo; la versión local es gratis y habrá planes de pago con nube. El plan y sus fases están en Notion («OneBook: plan para pivotear» y el Roadmap con el área OneBook); la etapa en curso es **Empresas** (E1 a E5: separar lo académico; empresa, personas y departamentos; salas; el Inicio armable, y la bienvenida para empresas con una empresa de ejemplo, hechas).
 
 Lo académico de OneLearn (lecciones, rutas, proyectos, terminal simulada, libretas, apuntes y la tesis) se separó de OneBook el 25 de noviembre de 2026 (etapa E1). Queda completo en la historia de git: el último commit con todo es `b0e99c5` (y la etiqueta `onelearn-final`, `b4b9f6f`, es la versión de antes del cambio de nombre). Nadie pierde datos: ver «Lo de estudio que se separó» más abajo.
 
@@ -9,10 +9,11 @@ Es un sitio estático: no necesita servidor propio ni dependencias para funciona
 ## Estructura
 
 ```
-index.html                  Página de bienvenida (la raíz del sitio): una página de ejemplo hecha con bloques reales, un plan de
-                            pagos para probar sin cuenta («Guárdalo en tu espacio» lo convierte en página), la calculadora de
-                            precio de venta, cómo funciona, lo que ya hay, precios y preguntas. Quien ya usa OneBook en ese
-                            navegador va directo a inicio.html (con ?conoce se queda en la bienvenida)
+index.html                  Página de bienvenida para empresas (la raíz del sitio): un Inicio de ejemplo dibujado, la empresa de
+                            ejemplo para explorar, cómo se organiza, herramientas por área, la calculadora de precio de venta,
+                            precios (local gratis, nube «Próximamente») y preguntas. Quien ya usa OneBook en ese navegador va
+                            directo a inicio.html (con ?conoce se queda en la bienvenida)
+ejemplo.html                Arma la empresa de ejemplo (Ferretería El Clavo) en un navegador sin empresa y abre su Inicio (ejemplo.js)
 app.html                    Pestañas dentro de la app, como en un navegador: cada pestaña es una página de la app en un iframe.
                             La app instalada abre aquí; «Abrir en pestañas» (barra lateral) entra con la página actual
 entrar.html                 «Crea tu empresa»: tu empresa (nombre, giro, teléfono, tu nombre, «Tengo empleados»), sus
@@ -123,8 +124,10 @@ assets/
   js/inicio.js              Pantalla de inicio (inicio.html): los tableros (lo que traen mientras nadie los arma, las acciones
                             rápidas y cómo se crean «Mi negocio» y «Tu equipo»), «Prepara tu negocio», el explorador y páginas
                             listas para usar
-  js/landing.js             Bienvenida: manda al Inicio a quien ya usa OneBook; dibuja la página de ejemplo, el plan de pagos
-                            y la calculadora de precio para probar
+  js/landing.js             Bienvenida: manda al Inicio a quien ya usa OneBook, ajusta la nota de la empresa de ejemplo y
+                            dibuja la calculadora de precio para probar
+  js/ejemplo.js             La empresa de ejemplo (AT.ejemplo.armar): personas, departamentos, páginas en sus salas,
+                            inventario con dos meses de ventas, compras, gastos, equipo y tableros, con cifras fijas
   css/landing.css           Estilos de la página de bienvenida
   css/entrar.css            Estilos de «Crea tu empresa»
   css/pestanas.css          Estilos del contenedor de pestañas
@@ -186,6 +189,13 @@ Etapa Empresas, E4. Un tablero es una lista de módulos `{modulos:[{id:'m-…', 
 - **`tablero.js`** (`AT.tablero.montar(contenedor, {capa, sala, id, titulo, defecto, vacio, ocultarVacio})`) dibuja el tablero en una rejilla de 3 columnas (2 y 1 según el ancho del propio tablero, con `container-type`) y, para quien puede, «Editar»: mover antes y después, arrastrar, tamaño, configurar, quitar y «Agregar» (catálogo `AT.tablero.MODS`, filtrado por capa y por los módulos del espacio). Se vuelve a dibujar si cambian las páginas o la empresa (también desde otra pestaña).
 - **Módulos**: accesos rápidos, una página (sus bloques vivos con `AT.bloques.dibujar`; así son «Mi negocio» y «Tu equipo», que se crean solas con `AT.tablero.creadores`), indicadores, próximos vencimientos, inventario, gráfica de una base (un bloque `reporte` con la base y la columna que eliges), tu equipo, avisos, actividad reciente, tus salas, favoritas y recientes y una nota (solo en «Lo tuyo»). Un módulo con una página que no puedes ver no se muestra.
 - **Por omisión** (mientras nadie lo arma, no se guarda nada): «De tu empresa» trae los accesos rápidos, «Mi negocio» y, con recursos humanos, «Tu equipo»; «Lo tuyo», favoritas y recientes y tus salas; la portada de una sala está vacía y no se muestra a quien no la administra. Las páginas que se ven en el tablero de la empresa no se repiten en las sugerencias del explorador.
+
+## La bienvenida y la empresa de ejemplo
+
+Etapa Empresas, E5. `index.html` es para pymes de 5 a 100 personas: portada con un Inicio de ejemplo dibujado en HTML, «Explora una empresa de ejemplo», cómo se organiza (empresa, gente, salas, Inicio), herramientas por área, la calculadora de precio, tus datos, precios (local gratis; la nube «Próximamente» sin cifra) y preguntas honestas (cómo lo usan varias personas hoy, que los permisos aún no son una protección, CFDI, nómina, Excel). Sin contacto ni freelance; el plan de pagos para probar y «Guárdalo en tu espacio» salieron.
+
+- **`ejemplo.html` + `ejemplo.js`**: en un navegador sin espacio arma Ferretería El Clavo y abre el Inicio. El perfil queda con `ejemplo:true` (`perfil.js` lo conserva); `base.js` no marca la visita en esa página. Con una empresa propia no toca nada y lo explica (ventana privada); con el ejemplo ya armado, abre el Inicio. Las cifras salen de una semilla fija, con fechas relativas a hoy.
+- **«Crear mi empresa»** (aviso `#iniEjemplo` del Inicio, con confirmación en línea): `AT.datos.borrarTodo()` vacía cada almacén de la base y las claves con el prefijo, y abre «Crea tu empresa».
 
 ## Pestañas, bloques de la tienda y perfiles
 

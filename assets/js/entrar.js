@@ -6,7 +6,7 @@
      4. ¿Con qué empiezas? Las páginas sugeridas según el giro (AT.crear.sugeridas), ya marcadas.
    «Crear mi empresa» guarda el perfil (AT.perfil.guardar) y la empresa (AT.empresa.crear: tú como propietario y
    responsable de cada departamento), crea las páginas marcadas y abre inicio.html con lo que traiga la dirección
-   (por ejemplo #guardar-pagos desde la bienvenida, o #crear).
+   (por ejemplo #crear).
    - ?perfil=negocio elige el perfil y empieza en el paso 2.
    - ?editar (desde «Tus datos» › «Cambiar tu espacio», solo para quien administra la empresa) abre lo que ya tienes:
      sin el paso de departamentos (se cambian en «Tu empresa»); en el último paso se encienden o apagan los módulos

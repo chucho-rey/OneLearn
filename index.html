@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>OneBook · Tu negocio, en bloques</title>
-<meta name="description" content="Pagos, cobros, listas, tablas y notas de tu negocio en páginas que armas con bloques. Gratis, en tu celular, sin crear cuenta y sin internet. Tus datos se quedan en tu dispositivo.">
+<title>OneBook · Tu empresa, en bloques</title>
+<meta name="description" content="Ventas, inventario, gastos y nómina de tu empresa en páginas de bloques, con departamentos, salas y un Inicio que cada quien arma. Gratis en tu navegador, sin cuenta y sin internet.">
 <link rel="canonical" href="https://chucho-rey.github.io/OneLearn/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_MX">
 <meta property="og:site_name" content="OneBook">
-<meta property="og:title" content="OneBook · Tu negocio, en bloques">
-<meta property="og:description" content="Pagos, cobros, listas y notas de tu negocio en páginas que armas con bloques. Gratis, sin cuenta y sin internet.">
+<meta property="og:title" content="OneBook · Tu empresa, en bloques">
+<meta property="og:description" content="Ventas, inventario, gastos y nómina de tu empresa, por departamentos y salas. Gratis en tu navegador y sin cuenta.">
 <meta property="og:url" content="https://chucho-rey.github.io/OneLearn/">
 <meta property="og:image" content="https://chucho-rey.github.io/OneLearn/assets/icons/icono-512.png">
 <link rel="icon" href="assets/icons/icono.svg" type="image/svg+xml">
@@ -37,6 +37,7 @@
     <a class="brand" href="./" aria-label="OneBook, página principal"><svg class="brand-mk" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14"/><path d="M18.5 22.5 27.5 16v32M27.5 16h8a7.5 7.5 0 0 1 0 15h-8M27.5 31h9.5a8.5 8.5 0 0 1 0 17h-9.5"/></svg><span>One<b>Book</b></span></a>
     <nav class="lp-nav" aria-label="Principal">
       <a href="#como">Cómo funciona</a>
+      <a href="#areas">Herramientas</a>
       <a href="#precios">Precios</a>
       <a class="btn pri" href="inicio.html">Entrar</a>
     </nav>
@@ -47,96 +48,93 @@
 
   <section class="lp-in lp-hero" aria-labelledby="lpTitulo">
     <div class="lp-hero-t">
-      <p class="lp-eti">Gratis · En tu celular · Sin crear cuenta</p>
-      <h1 id="lpTitulo">Tu negocio, en bloques.</h1>
-      <p class="lp-lead">Pagos, cobros, pendientes y notas en páginas que armas a tu medida. Funciona sin internet y todo se queda en tu dispositivo.</p>
+      <p class="lp-eti">Para empresas de 5 a 100 personas · Gratis en tu navegador</p>
+      <h1 id="lpTitulo">Tu empresa, en bloques.</h1>
+      <p class="lp-lead">Ventas, cobros, inventario, gastos y nómina en páginas que cada departamento arma a su medida. Cada quien ve lo suyo y el Inicio muestra lo importante del día.</p>
       <div class="lp-cta">
-        <a class="btn pri" href="entrar.html?perfil=negocio">Empieza gratis</a>
-        <a class="btn" href="#prueba">Pruébalo aquí</a>
+        <a class="btn pri" href="entrar.html">Crea tu empresa</a>
+        <a class="btn" href="ejemplo.html" data-ejemplo>Explora una empresa de ejemplo</a>
       </div>
     </div>
-    <figure class="lp-hoja" aria-labelledby="lpHojaT">
-      <div class="lp-hoja-h" aria-hidden="true"><i></i><i></i><i></i><span>Página de ejemplo</span></div>
-      <div class="lp-hoja-b">
-        <p class="lp-hoja-t" id="lpHojaT">Abarrotes Lupita</p>
-        <div id="lpHoja"></div>
+    <figure class="lp-hoja" aria-labelledby="lpHojaC">
+      <div class="lp-hoja-h" aria-hidden="true"><i></i><i></i><i></i><span>Inicio de Ferretería El Clavo</span></div>
+      <div class="lp-hoja-b lp-mini">
+        <ul class="lp-mini-salas" aria-label="Salas">
+          <li><i class="lp-pt lp-pt-1"></i>General</li><li><i class="lp-pt lp-pt-2"></i>Ventas</li><li><i class="lp-pt lp-pt-3"></i>Almacén</li><li><i class="lp-pt lp-pt-4"></i>Administración</li><li><i class="lp-pt lp-pt-5"></i>Recursos humanos</li>
+        </ul>
+        <p class="lp-mini-aviso">Inventario general el sábado a las 9. Ventas: meta del mes, 60 notas.</p>
+        <dl class="lp-mini-k">
+          <div><dt>Ventas del mes</dt><dd>$186,420</dd><dd class="lp-sube">▲ 9 % contra el mes pasado</dd></div>
+          <div><dt>Compras por pagar</dt><dd>$23,954</dd><dd>1 vence en 3 días</dd></div>
+          <div><dt>Productos por surtir</dt><dd>4</dd><dd>1 agotado</dd></div>
+        </dl>
+        <p class="lp-mini-t">Tu equipo hoy</p>
+        <ul class="lp-mini-l">
+          <li><b>Jorge Díaz</b> falta (avisó que está enfermo)</li>
+          <li><b>Carlos Ruiz</b> cumple años el viernes</li>
+          <li><b>Rosa Lima</b> sale de vacaciones el lunes</li>
+        </ul>
       </div>
-      <figcaption>Una página de OneBook: un aviso, una lista de tareas, un plan de pagos y una tabla. Cada pieza es un bloque.</figcaption>
+      <figcaption id="lpHojaC">El Inicio de una empresa: cada sala es un departamento y el tablero lo arma cada quien. Las cifras son de ejemplo.</figcaption>
     </figure>
   </section>
 
-  <section class="lp-in lp-sec" id="prueba" aria-labelledby="lpPrueba">
-    <h2 id="lpPrueba">Pruébalo aquí: ¿de cuánto es cada pago?</h2>
-    <p>Escribe cuánto debes y en cuántos pagos. Marca los que ya hiciste y mira cuánto te falta. Así funciona el bloque «Plan de pagos» dentro de OneBook.</p>
-    <div class="lp-prueba">
-      <form class="lp-form" id="lpForm" novalidate>
-        <label class="lp-campo"><span>¿Cuánto debes?</span><input id="lpMonto" name="monto" type="text" inputmode="decimal" autocomplete="off" value="20000"></label>
-        <label class="lp-campo"><span>Número de pagos</span><input id="lpPagos" name="pagos" type="number" inputmode="numeric" min="1" max="520" value="12"></label>
-        <label class="lp-campo"><span>Cada cuándo</span><select id="lpFrec" name="frecuencia"><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual" selected>Mensual</option></select></label>
-        <label class="lp-campo"><span>Primer pago</span><input id="lpInicio" name="inicio" type="date"></label>
-      </form>
-      <div class="lp-plan" id="lpPlan"></div>
-      <p class="vh" id="lpVoz" aria-live="polite"></p>
-      <div class="lp-cta lp-guardar">
-        <button class="btn pri" type="button" id="lpGuardar">Guárdalo en tu espacio</button>
-        <p class="lp-nota">Se guarda en este dispositivo, sin crear cuenta.</p>
+  <section class="lp-in lp-sec lp-ej" id="ejemplo" aria-labelledby="lpEjemplo">
+    <div>
+      <h2 id="lpEjemplo">Explora una empresa de ejemplo</h2>
+      <p><b>Ferretería El Clavo</b> ya está lista: seis personas en cuatro departamentos, cada uno con su sala, dos meses de ventas, inventario, compras por pagar, gastos y la nómina de su equipo. Entra como Lupita, la dueña, o como Carlos, de Ventas, y mira qué ve cada quien.</p>
+      <div class="lp-cta">
+        <a class="btn pri" href="ejemplo.html" data-ejemplo>Abrir la empresa de ejemplo</a>
       </div>
+      <p class="lp-nota" id="lpEjNota">Se arma en este navegador, sin cuenta. Cuando quieras, «Crear mi empresa» la borra y empiezas la tuya.</p>
     </div>
   </section>
 
-  <section class="lp-in lp-sec" id="calcula" aria-labelledby="lpPrecioT">
-    <h2 id="lpPrecioT">¿A cuánto lo vendo?</h2>
-    <p>Escribe cuánto te cuesta y cuánto quieres ganar. OneBook te dice el precio y lo que de verdad te queda, con el IVA y la comisión de la tarjeta si los tienes. Es el bloque «Precio de venta».</p>
-    <div class="lp-prueba lp-calc" id="lpPrecio"></div>
-  </section>
-
   <section class="lp-in lp-sec" id="como" aria-labelledby="lpComo">
-    <h2 id="lpComo">Cómo funciona</h2>
-    <ol class="lp-pasos">
+    <h2 id="lpComo">Cómo se organiza tu empresa</h2>
+    <ol class="lp-pasos lp-pasos-4">
       <li>
-        <h3>Crea una página</h3>
-        <p>Para tu negocio, una deuda, tus pendientes o tus notas. Sin cuenta: se guarda en tu celular o tu computadora.</p>
+        <h3>Crea tu empresa</h3>
+        <p>Su nombre, su giro y sus departamentos: Ventas, Almacén, Administración, Recursos humanos o los que tengas.</p>
       </li>
       <li>
-        <h3>Agrega bloques con «/»</h3>
-        <p>Escribe / y elige: corte de caja, fiado, gastos, nota de venta, lista de tareas, tabla, imagen… Muévelos y quítalos a tu gusto.</p>
+        <h3>Agrega a tu gente</h3>
+        <p>Cada persona con su rol (propietario, administrador o miembro) y sus departamentos: responsable, miembro o solo consulta.</p>
       </li>
       <li>
-        <h3>Úsala todos los días</h3>
-        <p>Haz el corte, anota lo que te fían y lo que pagas. Imprime o guarda en PDF lo que necesites.</p>
+        <h3>Trabaja en salas</h3>
+        <p>Cada departamento tiene su sala con sus páginas, y solo entra su gente. La sala General es de todos y lo tuyo puede ser privado.</p>
+      </li>
+      <li>
+        <h3>Arma tu Inicio</h3>
+        <p>Indicadores, vencimientos, avisos, gráficas de tus bases y accesos rápidos: la empresa fija lo común y cada quien agrega lo suyo.</p>
       </li>
     </ol>
   </section>
 
-  <section class="lp-in lp-sec" id="bloques" aria-labelledby="lpBloques">
-    <h2 id="lpBloques">Lo que ya puedes hacer</h2>
-    <ul class="lp-cols lp-cols-6">
-      <li><h3>Corte de caja</h3><p>Fondo, ventas y efectivo contado, billete por billete: sabes al momento si sobra o falta.</p></li>
-      <li><h3>Fiado</h3><p>Quién te debe, lo que se lleva y sus abonos, con el saldo de cada cliente.</p></li>
-      <li><h3>Gastos del mes</h3><p>Por categoría y con lo pendiente. La renta y la luz se anotan una vez y se generan cada mes.</p></li>
-      <li><h3>Nota de venta</h3><p>Recibo con folio, IVA, total y cambio, listo para imprimir o mandar en PDF.</p></li>
-      <li><h3>Precio de venta y cuentas por pagar</h3><p>A cuánto vender para ganar lo que quieres, y lo que debes a tus proveedores antes de que venza.</p></li>
-      <li><h3>Plan de pagos</h3><p>Préstamos, créditos y apartados: cuánto es cada pago, cuándo toca y cuánto te falta.</p></li>
-      <li><h3>Tareas, tablas y notas</h3><p>La apertura y el cierre del día, precios o existencias, fotos de tickets y acuerdos con clientes.</p></li>
-      <li><h3>Imprimir o PDF</h3><p>Cualquier página sale lista para imprimir o para mandarla como PDF.</p></li>
-      <li><h3>Respaldo</h3><p>Descarga una copia de todo en un archivo y recupérala en otro dispositivo.</p></li>
+  <section class="lp-in lp-sec" id="areas" aria-labelledby="lpAreas">
+    <h2 id="lpAreas">Herramientas por área</h2>
+    <p>Cada página se arma con bloques: escribe «/» y elige. Las plantillas ya traen los bloques de cada área.</p>
+    <ul class="lp-cols lp-areas">
+      <li><h3>Ventas</h3><p>Nota de venta con folio que descuenta del inventario, corte de caja billete por billete, fiado con abonos, clientes, cotizaciones y lista de precios.</p></li>
+      <li><h3>Almacén e inventario</h3><p>Existencias que se calculan solas, avisos de lo que se acaba, pedidos por proveedor y entradas desde la factura XML del proveedor.</p></li>
+      <li><h3>Administración y finanzas</h3><p>Gastos fijos que se generan cada mes, compras y cuentas por pagar con su vencimiento, presupuesto, reportes que comparan periodos e indicadores.</p></li>
+      <li><h3>Recursos humanos</h3><p>Tu equipo con faltas y vacaciones, la nómina del periodo con ISR e IMSS de 2026, vacaciones, aguinaldo, finiquito y PTU.</p></li>
+      <li><h3>Para todos los equipos</h3><p>Bases de datos con vistas de tabla, tablero y calendario, fórmulas, relaciones e importar de Excel (CSV); pendientes, notas y presentaciones.</p></li>
+      <li><h3>Documentos de la empresa</h3><p>Cualquier página sale en PDF o en Word, con historial de versiones, permisos por página y respaldo en un archivo.</p></li>
     </ul>
-    <div class="lp-viene">
-      <h3 id="lpViene">Lo que viene</h3>
-      <ul aria-labelledby="lpViene">
-        <li><span class="lp-pronto">Pronto</span>Cotizaciones con folio que se vuelven nota de venta</li>
-        <li><span class="lp-pronto">Pronto</span>Inventario con aviso de existencias bajas</li>
-        <li><span class="lp-pronto">Pronto</span>Tanda, presupuesto y recordatorio de cobro por WhatsApp</li>
-        <li><span class="lp-pronto">Pronto</span>Calculadoras: costo de receta y punto de equilibrio</li>
-        <li><span class="lp-pronto">Pronto</span>Plantillas para tienda, comida, servicios y ventas por catálogo</li>
-      </ul>
-    </div>
+  </section>
+
+  <section class="lp-in lp-sec" id="calcula" aria-labelledby="lpPrecioT">
+    <h2 id="lpPrecioT">Prueba una herramienta: ¿a cuánto lo vendo?</h2>
+    <p>Escribe cuánto te cuesta y cuánto quieres ganar. OneBook te dice el precio y lo que de verdad te queda, con el IVA y la comisión de la tarjeta si los tienes. Es el bloque «Precio de venta».</p>
+    <div class="lp-prueba lp-calc" id="lpPrecio"></div>
   </section>
 
   <section class="lp-in lp-sec" id="datos" aria-labelledby="lpDatos">
-    <h2 id="lpDatos">Tuyo, sin letra chiquita</h2>
+    <h2 id="lpDatos">Tus datos, sin letra chiquita</h2>
     <ul class="lp-cols">
-      <li><h3>Privado</h3><p>Lo que escribes se guarda en tu dispositivo. No se sube a ningún servidor y no hay anuncios.</p></li>
+      <li><h3>En tu navegador</h3><p>Lo que escribes se guarda en tu computadora o tu celular. No se sube a ningún servidor y no hay anuncios.</p></li>
       <li><h3>Sin internet</h3><p>Instálalo como app desde el navegador y úsalo aunque se caiga la señal.</p></li>
       <li><h3>Para todos</h3><p>Letra grande, tema oscuro, alto contraste, fuente para dislexia y todo se usa con el teclado.</p></li>
     </ul>
@@ -144,62 +142,52 @@
 
   <section class="lp-in lp-sec" id="precios" aria-labelledby="lpPrecios">
     <h2 id="lpPrecios">Precios</h2>
-    <p>Lo que se guarda en tu dispositivo es gratis y lo seguirá siendo. La nube, para usar OneBook en varios dispositivos y con tu equipo, viene después.</p>
-    <ul class="lp-planes">
+    <p>Lo que se guarda en tu navegador es gratis y lo seguirá siendo. La nube, para que cada persona entre desde su propio dispositivo, viene después.</p>
+    <ul class="lp-planes lp-planes-2">
       <li class="lp-plan-gratis">
         <h3>Local</h3>
         <p class="lp-precio"><b>Gratis</b> <span>para siempre</span></p>
         <ul>
-          <li>Todas las páginas y bloques que quieras</li>
-          <li>En tu celular o computadora, sin internet</li>
-          <li>Respaldo en un archivo</li>
-          <li>Sin cuenta y sin anuncios</li>
+          <li>Personas, departamentos, salas y páginas sin límite</li>
+          <li>Todas las herramientas de ventas, inventario, finanzas y recursos humanos</li>
+          <li>En una computadora o un celular, aun sin internet</li>
+          <li>Respaldo en un archivo, sin cuenta y sin anuncios</li>
         </ul>
-        <a class="btn pri" href="entrar.html?perfil=negocio">Empieza gratis</a>
+        <a class="btn pri" href="entrar.html">Crea tu empresa</a>
       </li>
       <li>
         <h3>Nube <span class="lp-pronto">Próximamente</span></h3>
-        <p class="lp-precio"><b>$99</b> <span>MXN al mes*</span></p>
-        <p class="lp-precio-n">o $990 MXN al año</p>
+        <p class="lp-precio"><b>Por anunciar</b></p>
         <ul>
           <li>Todo lo de Local</li>
-          <li>Tus páginas en todos tus dispositivos</li>
+          <li>Cada persona con su cuenta, desde su celular o su computadora</li>
+          <li>Los permisos de cada sala se cumplen en el servidor</li>
           <li>Respaldo automático</li>
-          <li>Entras con tu correo</li>
-        </ul>
-      </li>
-      <li>
-        <h3>Equipo <span class="lp-pronto">Próximamente</span></h3>
-        <p class="lp-precio"><b>$199</b> <span>MXN al mes*</span></p>
-        <p class="lp-precio-n">con 3 personas; $49 MXN por persona extra</p>
-        <ul>
-          <li>Todo lo de Nube</li>
-          <li>Tus empleados, cada quien con su acceso</li>
-          <li>Permisos: quién ve ventas, gastos o ganancias</li>
-          <li>Cuentas que creas para tus clientes</li>
         </ul>
       </li>
     </ul>
-    <p class="lp-nota">* Precios estimados de los planes con nube: pueden cambiar antes de que salgan. Lo local seguirá siendo gratis.</p>
+    <p class="lp-nota">Daremos a conocer el precio de la nube antes de que salga. Lo local seguirá siendo gratis.</p>
   </section>
 
   <section class="lp-in lp-sec" id="preguntas" aria-labelledby="lpPreguntas">
     <h2 id="lpPreguntas">Preguntas</h2>
     <div class="lp-faq">
-      <details><summary>¿Es gratis?</summary><p>Sí. Todo lo que se guarda en tu dispositivo es gratis y lo seguirá siendo. Más adelante habrá planes de pago para usar OneBook en la nube, en varios dispositivos y con tu equipo.</p></details>
-      <details><summary>¿Necesito crear una cuenta?</summary><p>No. Abres OneBook y empiezas. Tus páginas se guardan en el navegador de ese dispositivo.</p></details>
-      <details><summary>¿Hace facturas (CFDI)?</summary><p>Todavía no. Ya puedes hacer notas de venta con folio e imprimirlas o guardarlas en PDF, y pronto cotizaciones. La factura electrónica necesita un proveedor autorizado por el SAT y llegará después.</p></details>
-      <details><summary>¿Funciona en el celular?</summary><p>Sí, en cualquier navegador actual. Puedes instalarlo como app y usarlo sin internet.</p></details>
-      <details><summary>¿Qué pasa si cambio de celular o se borra el navegador?</summary><p>Descarga un respaldo desde «Tus datos» de vez en cuando: con ese archivo recuperas todo en otro dispositivo. Con la nube será automático.</p></details>
-      <details><summary>¿Puedo usarlo con mis empleados?</summary><p>Todavía no. Primero llega la nube para usar OneBook en todos tus dispositivos; después, el plan Equipo para tus empleados. Por ahora, cada dispositivo tiene sus propias páginas.</p></details>
+      <details><summary>¿Es gratis?</summary><p>Sí. Todo lo que se guarda en tu navegador es gratis y lo seguirá siendo, sin límite de personas ni de páginas. La nube será de pago y su precio se anunciará antes de que salga.</p></details>
+      <details><summary>¿Cómo lo usamos varias personas hoy?</summary><p>Hoy OneBook vive en un navegador: varias personas pueden usar la misma computadora, cada quien con su nombre y su PIN («Cambiar de persona»), y ver solo sus salas. Para llevar el trabajo a otra computadora se usa el respaldo. Con la nube, cada quien entrará desde su dispositivo.</p></details>
+      <details><summary>¿Los permisos son seguros?</summary><p>Ordenan quién ve y quién edita cada sala y cada página, pero hoy no son una protección: quien tiene el navegador tiene los datos. Con la nube, el servidor hará cumplir esos mismos permisos.</p></details>
+      <details><summary>¿Hace facturas (CFDI)?</summary><p>Todavía no. Ya puedes hacer notas de venta con folio y cotizaciones, imprimirlas o guardarlas en PDF, y leer las facturas XML de tus proveedores para registrar compras. Timbrar facturas necesita un proveedor autorizado por el SAT y llegará después.</p></details>
+      <details><summary>¿Calcula la nómina?</summary><p>La estima con las cifras de 2026: ISR, subsidio, cuotas del IMSS, horas extra, faltas, vacaciones, aguinaldo, finiquito y PTU. El recibo oficial (CFDI de nómina) lo timbra tu contador.</p></details>
+      <details><summary>¿Puedo traer mis datos de Excel?</summary><p>Sí. Cada base de datos importa un archivo CSV (Excel lo guarda así) y reconoce pesos, fechas y sí o no. También abre los respaldos de Bases unificadas.</p></details>
+      <details><summary>¿Qué pasa si se borra el navegador?</summary><p>Descarga un respaldo desde «Tus datos» de vez en cuando: con ese archivo recuperas todo en otra computadora. Con la nube será automático.</p></details>
     </div>
   </section>
 
   <section class="lp-in lp-sec lp-final" aria-labelledby="lpEmpieza">
-    <h2 id="lpEmpieza">Empieza en un minuto</h2>
-    <p>Sin cuenta y sin tarjeta. Crea tu primera página y agrégale un plan de pagos.</p>
+    <h2 id="lpEmpieza">Empieza hoy</h2>
+    <p>Sin cuenta y sin tarjeta. Crea tu empresa en un minuto o explora primero la de ejemplo.</p>
     <div class="lp-cta">
-      <a class="btn pri" href="entrar.html?perfil=negocio">Empieza gratis</a>
+      <a class="btn pri" href="entrar.html">Crea tu empresa</a>
+      <a class="btn" href="ejemplo.html" data-ejemplo>Explora la empresa de ejemplo</a>
       <a class="btn" href="ayuda.html">Cómo se usa OneBook</a>
     </div>
   </section>
@@ -208,7 +196,7 @@
 
 <footer class="lp-pie">
   <div class="lp-in lp-pie-in">
-    <p><b>OneBook</b> · Gratis en tu dispositivo.</p>
+    <p><b>OneBook</b> · Para empresas. Gratis en tu navegador.</p>
     <nav aria-label="Más">
       <a href="inicio.html">Inicio</a>
       <a href="ayuda.html">Ayuda</a>
@@ -219,7 +207,6 @@
 
 <script src="assets/js/base.js"></script>
 <script src="assets/js/bloques.js"></script>
-<script src="assets/js/pagos.js"></script>
 <script src="assets/js/negocio.js"></script>
 <script src="assets/js/precio.js"></script>
 </body>

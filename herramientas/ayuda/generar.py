@@ -41,6 +41,13 @@ c+=herramienta('nucleo','espacio','Crea tu empresa y sus módulos',
   'Elige las páginas con las que quieres empezar y pulsa «Crear mi empresa».',
   'Para cambiarlo después: **Tus datos** (barra lateral) → «Cambiar tu espacio» (solo quien administra la empresa). Ahí enciendes o apagas los módulos: Negocio y dinero y Recursos humanos.'],
  'Apagar un módulo no borra nada: solo deja de mostrar sus herramientas.')
+c+=herramienta('nucleo','ejemplo','La empresa de ejemplo',
+ 'Para conocer OneBook sin capturar nada: Ferretería El Clavo ya trae seis personas en cuatro departamentos, cada uno con su sala, dos meses de ventas, inventario, compras por pagar, gastos, la nómina de su equipo y el Inicio armado.',
+ ['En la página de bienvenida, pulsa **Explora una empresa de ejemplo**. Se arma en este navegador en unos segundos y abre su Inicio.',
+  'Empieza por la página **Empieza aquí** (en tus favoritas): dice qué probar.',
+  'Abajo en la barra lateral, **cambia de persona**: Lupita es la dueña y ve todo; Carlos (Ventas), Rosa (Almacén), Mario (Administración) y Ana (Recursos humanos) ven solo sus salas.',
+  'Cuando quieras empezar la tuya, pulsa **Crear mi empresa** en el Inicio y confirma: el ejemplo se borra de este navegador y se abre «Crea tu empresa».'],
+ 'El ejemplo solo se arma en un navegador sin empresa: si ya tienes la tuya, no la toca. Para verlo sin mezclar nada, ábrelo en una ventana privada (o de incógnito).')
 c+=herramienta('nucleo','empresa','Tu empresa: personas y roles',
  'En «Tu empresa» (barra lateral) está la gente que usa OneBook en tu empresa, el rol de cada quien y sus departamentos.',
  ['Pulsa **Agregar persona**: su nombre, su correo (si quieres), su rol y sus departamentos. Puedes ponerle un PIN.',

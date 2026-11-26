@@ -43,7 +43,7 @@ function limpiar(p){
   var aviso=ANTES[p.perfil]?p.perfil:ANTES[p.aviso]?p.aviso:'';
   return {perfil:'negocio',modulos:mods,nombre:texto(p.nombre,60),
     negocio:{nombre:texto(n&&n.nombre,80),giro:n&&giros.indexOf(n.giro)>=0?n.giro:'otro',telefono:texto(n&&n.telefono,30).replace(/[^\d+()\s-]/g,'')},
-    creado:/^\d{4}-\d{2}-\d{2}$/.test(p.creado)?p.creado:hoy(),migrado:!!p.migrado,aviso:aviso};
+    creado:/^\d{4}-\d{2}-\d{2}$/.test(p.creado)?p.creado:hoy(),migrado:!!p.migrado,aviso:aviso,ejemplo:p.ejemplo===true};
 }
 function leer(){
   var crudo=null;

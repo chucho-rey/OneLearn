@@ -1109,7 +1109,24 @@ var papelera={
 var TIPOS_ESTUDIO={libreta:1,clase:1,libro:1,investigacion:1,tesis:1,guia:1,bitacora:1};
 function deEstudio(d){return !!(d&&TIPOS_ESTUDIO[d.tipo])}
 
+/* Borra todo lo de OneBook en este navegador: cada almacén de la base y las claves con el prefijo (lo usa
+   «Crear mi empresa» para dejar la empresa de ejemplo). No borra la base misma: otras pestañas la tienen abierta. */
+function borrarTodo(){
+  return conMotor(function(m){
+    return ALMACENES.reduce(function(pr,a){
+      return pr.then(function(){return m.claves(a).then(function(ids){return ids.length?m.borrarVarios(a,ids):null})});
+    },Promise.resolve());
+  }).then(function(){
+    try{
+      var ks=[];for(var i=0;i<localStorage.length;i++){var k=String(localStorage.key(i));if(k.indexOf(PREF)===0)ks.push(k)}
+      ks.forEach(function(k){localStorage.removeItem(k)});
+    }catch(e){}
+    avisar({almacen:'todo',accion:'borrar'});
+  });
+}
+
 AT.datos={
+  borrarTodo:borrarTodo,
   listo:listo,
   deEstudio:deEstudio,
   motor:function(){return motor&&motor.tipo},

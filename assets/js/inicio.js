@@ -37,6 +37,27 @@ $('#iniAvisoResp').addEventListener('click',function(){
   AT.datos.descargar().then(function(){AT.aviso('Respaldo descargado. Guárdalo en tu nube o en una memoria USB.')},function(){AT.aviso('No se pudo crear el respaldo. Inténtalo otra vez.')});
 });
 $('#iniAvisoOk').addEventListener('click',function(){if(PER&&PER.quitarAviso)PER.quitarAviso();pintarAviso();$('#t-docs').focus()});
+/* ---------- La empresa de ejemplo (E5, ejemplo.html): «Crear mi empresa» la borra y abre «Crea tu empresa» ---------- */
+function pintarEjemplo(){
+  var caja=$('#iniEjemplo'),p=PER&&PER.actual?PER.actual():null;
+  if(caja)caja.hidden=!(p&&p.ejemplo);
+}
+$('#iniEjemplo').addEventListener('click',function(e){
+  var b=e.target.closest('[data-ej]');if(!b||b.getAttribute('aria-disabled')==='true')return;
+  var bt=$('#iniEjemploB'),a=b.getAttribute('data-ej');
+  if(a==='crear'){
+    bt.innerHTML='<span class="pap-seguro">¿Borrar la empresa de ejemplo de este navegador?</span><button class="btn danger" type="button" data-ej="si">Sí, borrarla</button><button class="btn" type="button" data-ej="no">Cancelar</button>';
+    $('[data-ej="no"]',bt).focus();
+  }else if(a==='no'){
+    bt.innerHTML='<button class="btn pri" type="button" data-ej="crear">Crear mi empresa</button>';
+    $('[data-ej="crear"]',bt).focus();
+  }else if(a==='si'){
+    b.setAttribute('aria-disabled','true');
+    AT.datos.borrarTodo().then(function(){location.href=AT.rutas.raiz+'entrar.html'},function(){
+      b.removeAttribute('aria-disabled');AT.aviso('No se pudo borrar el ejemplo. Inténtalo otra vez.');
+    });
+  }
+});
 var docsListos=false;
 /* docsCache: las páginas que puedes ver (con salas); todosCache: todas, para no volver a crear las del Inicio */
 var todosCache=[];
@@ -268,7 +289,7 @@ function pintarQuien(){
   c.hidden=!(E&&E.existe()&&!E.activa()&&AT.persona);
 }
 $('#iniQuienB').addEventListener('click',function(){if(AT.persona)AT.persona.abrir(this)});
-function pintar(){pintarQuien();montarTableros();ubicarEquipo();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
+function pintar(){pintarEjemplo();pintarQuien();montarTableros();ubicarEquipo();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
 function recargar(){cargarDocs().then(pintar)}
 pintarSaludo();
 pintarPlantillas();
