@@ -50,7 +50,12 @@ function avisar(cambio,deOtra){
   oyentes.forEach(function(fn){try{fn(cambio,!!deOtra)}catch(e){if(window.console)console.error(e)}});
   if(!deOtra&&canal)try{canal.postMessage(cambio)}catch(e){}
 }
-if(canal)canal.onmessage=function(e){if(e.data&&e.data.almacen)avisar(e.data,true)};
+/* Si otra pestaña eliminó todos los datos, esta deja de escribir y se recarga (para no volver a crear lo que tenía abierto) */
+if(canal)canal.onmessage=function(e){
+  if(!e.data||!e.data.almacen)return;
+  if(e.data.almacen==='todo'){bloquear();try{location.reload()}catch(x){}return}
+  avisar(e.data,true);
+};
 
 /* ---------- Motores: IndexedDB o localStorage ---------- */
 function abrirIDB(){
@@ -1015,12 +1020,20 @@ var papelera={
 
 /* Borra todo lo de OneBook en este navegador: cada almacén de la base y las claves con el prefijo (lo usa
    «Crear mi empresa» para dejar la empresa de ejemplo). No borra la base misma: otras pestañas la tienen abierta. */
+/* Después de eliminar todo, esta pestaña ya no escribe nada (hasta recargar): lo que tenga abierto (el Inicio, una
+   página) no vuelve a crearse antes de ir a «Crea tu empresa» */
+function bloquear(){
+  return conMotor(function(m){
+    ['poner','borrar','borrarVarios','ponerVarios'].forEach(function(k){if(m[k])m[k]=function(){return Promise.resolve()}});
+    if(m.actualizar)m.actualizar=function(){return Promise.resolve(null)};
+  });
+}
 function borrarTodo(){
   return conMotor(function(m){
     return ALMACENES.reduce(function(pr,a){
       return pr.then(function(){return m.claves(a).then(function(ids){return ids.length?m.borrarVarios(a,ids):null})});
     },Promise.resolve());
-  }).then(function(){
+  }).then(bloquear).then(function(){
     try{
       var ks=[];for(var i=0;i<localStorage.length;i++){var k=String(localStorage.key(i));if(k.indexOf(PREF)===0)ks.push(k)}
       ks.forEach(function(k){localStorage.removeItem(k)});

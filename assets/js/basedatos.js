@@ -15,7 +15,7 @@
 var AT=window.AT,B=AT.bases;
 if(!B)return;
 var $=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico;
-var ICONO_TIPO={texto:'Aa',numero:'#',moneda:'$',fecha:'📅',seleccion:'▾',multiple:'☰',casilla:'☑',telefono:'☎',relacion:'↗',referencia:'↳',formula:'ƒ',suma:'Σ'};
+var ICONO_TIPO={texto:'Aa',numero:'#',moneda:'$',fecha:'📅',seleccion:'▾',multiple:'☰',casilla:'☑',telefono:'☎',relacion:'↗',referencia:'↳',formula:'ƒ',suma:'Σ',consecutivo:'№',saldo:'⚖'};
 var NOMBRE_TIPO={};B.TIPOS.forEach(function(t){NOMBRE_TIPO[t[0]]=t[1]});
 var VISTAS=[['tabla','Tabla'],['tablero','Tablero'],['galeria','Galería'],['calendario','Calendario']];
 var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -99,10 +99,21 @@ function montar(raiz,op){
         '<button type="button" class="btn" data-acc="vista">Ajustar vista</button>'+
         '<button type="button" class="btn bd-mas" data-acc="mas" aria-label="Más opciones de la base" aria-haspopup="menu">'+ico('puntos')+'</button>'+
         '<button type="button" class="btn pri" data-acc="nuevaFila">+ Nueva</button></div>':'')+
-      resumenVista(v)+
+      resumenVista(v)+franjaSaldo()+
       '<div class="bd-cuerpo">'+(v.tipo==='tablero'?tablero(v,fs):v.tipo==='galeria'?galeria(v,fs):v.tipo==='calendario'?calendario(v,fs):tabla(v,fs))+'</div>'+
       '<p class="bd-msg" role="status"></p>';
     enfocar(foco);
+  }
+  /* Saldo inicial, ingresos, egresos y saldo final (si la base tiene una columna de saldo acumulado) */
+  function franjaSaldo(){
+    var sc=b.columnas.filter(function(c){return c.tipo==='saldo'})[0],r=sc&&B.resumenSaldo(b,sc);
+    if(!r)return '';
+    var ini=ed?'<input type="text" inputmode="decimal" class="bd-in bd-num bd-ini" data-saldo-ini="'+esc(sc.id)+'" value="'+esc(B.dinero(r.inicial))+'" aria-label="Saldo inicial">':'<b>'+esc(B.dinero(r.inicial))+'</b>';
+    return '<dl class="bd-saldo" aria-label="Resumen de '+esc(sc.nombre)+'">'+
+      '<div><dt>Saldo inicial</dt><dd>'+ini+'</dd></div>'+
+      '<div><dt>Ingresos</dt><dd class="bd-ing">+ '+esc(B.dinero(r.ingresos))+'</dd></div>'+
+      '<div><dt>Egresos</dt><dd class="bd-egr">− '+esc(B.dinero(r.egresos))+'</dd></div>'+
+      '<div class="bd-fin"><dt>Saldo final</dt><dd'+(r.final<0?' class="neg"':'')+'>'+esc(B.dinero(r.final))+'</dd></div></dl>';
   }
   function resumenVista(v){
     var p=[];
@@ -118,7 +129,7 @@ function montar(raiz,op){
   /* El editor de una celda (o su texto, si no se puede editar) */
   function celda(c,f,extra){
     var v=B.valor(b,f,c),t=B.texto(b,f,c),et=esc(c.nombre+' de '+(B.titulo(b,f)||'la fila nueva')),a=' data-c="'+esc(c.id)+'" data-f="'+esc(f.id)+'" aria-label="'+et+'"'+(extra||'');
-    if(B.CALCULADO[c.tipo]||!ed){
+    if(B.CALCULADO[c.tipo]||B.SOLO_LEER[c.tipo]||!ed){
       var neg=typeof v==='number'&&v<0,err=typeof v==='string'&&v.charAt(0)==='#';
       return '<output class="bd-calc'+(neg?' neg':'')+(err?' err':'')+(B.esNumerica(b,c)?' bd-num':'')+'" data-calc="'+esc(c.id)+'" data-f="'+esc(f.id)+'"'+(err?' title="'+esc(errorTexto(t))+'"':'')+'>'+esc(t)+'</output>';
     }
@@ -244,6 +255,7 @@ function montar(raiz,op){
     var e=document.activeElement;if(!e||!raiz.contains(e))return null;
     if(e.getAttribute('data-c'))return {sel:'[data-c="'+e.getAttribute('data-c')+'"][data-f="'+e.getAttribute('data-f')+'"]',ini:typeof e.selectionStart==='number'?e.selectionStart:null};
     if(e.getAttribute('data-acc'))return {sel:'[data-acc="'+e.getAttribute('data-acc')+'"]'};
+    if(e.hasAttribute('data-saldo-ini'))return {sel:'[data-saldo-ini]'};
     if(e.getAttribute('data-vista'))return {sel:'[data-vista="'+e.getAttribute('data-vista')+'"]'};
     if(e.hasAttribute('data-bd-buscar'))return {sel:'[data-bd-buscar]',ini:e.selectionStart};
     if(e.hasAttribute('data-bd-nombre'))return {sel:'[data-bd-nombre]',ini:e.selectionStart};
@@ -325,6 +337,8 @@ function montar(raiz,op){
   raiz.addEventListener('change',function(e){
     var t=e.target;
     if(t.hasAttribute('data-bd-nombre')){var n=t.value.trim()||'Base de datos';if(n!==b.nombre)cambiarBase(function(x){x.nombre=n},'el nombre de la base');return}
+    if(t.hasAttribute('data-saldo-ini')){var si=t.getAttribute('data-saldo-ini'),ni=B.capturar({tipo:'moneda'},t.value);ni=typeof ni==='number'?ni:0;
+      cambiarBase(function(x){x.columnas.forEach(function(k){if(k.id===si)k.inicial=ni})},'el saldo inicial').then(function(){decir('Saldo inicial: '+B.dinero(ni)+'.')});return}
     var fid=t.getAttribute('data-f'),cid=t.getAttribute('data-c');if(!fid||!cid)return;
     if(t.classList.contains('bd-sel'))t.setAttribute('data-tono',tonoDe(B.col(b,t.getAttribute('data-c')),t.value,t.selectedIndex-1));
     var f=fila(fid),c=B.col(b,cid),k=fid+'|'+cid;if(!f||!c)return;
@@ -379,7 +393,7 @@ function montar(raiz,op){
     var v=vista(),val={},gc=colId&&B.col(b,colId);
     if(gc&&valorGrupo)val[gc.id]=B.capturar(gc,valorGrupo);
     var fc=v.f&&B.col(b,v.f.col);
-    if(fc&&!B.CALCULADO[fc.tipo]&&fc.tipo!=='relacion'&&(v.f.op==='igual'||v.f.op==='contiene')&&v.f.val!=='')val[fc.id]=B.capturar(fc,v.f.val);
+    if(fc&&!B.CALCULADO[fc.tipo]&&!B.SOLO_LEER[fc.tipo]&&fc.tipo!=='relacion'&&(v.f.op==='igual'||v.f.op==='contiene')&&v.f.val!=='')val[fc.id]=B.capturar(fc,v.f.val);
     if(v.tipo==='calendario'){var dc=B.col(b,v.fecha)||b.columnas.filter(function(c){return c.tipo==='fecha'})[0];if(dc)val[dc.id]=hoy()}
     var f=B.nuevaFila(b.id,val);
     registrar({tipo:'filas',antes:[],despues:[B.clonar(f)],que:'la fila nueva'});
@@ -450,7 +464,7 @@ function montar(raiz,op){
       if(!c)return '<li><span class="bd-hn">Columna quitada</span></li>';
       var a=valorH(b,c,ch.a),dd=valorH(b,c,ch.d);
       return '<li><span class="bd-hn">'+esc(c.nombre)+':</span> <span class="bd-ha">'+esc(a)+'</span> <span aria-hidden="true">→</span><span class="vh"> cambió a </span> <span class="bd-hd">'+esc(dd)+'</span>'+
-        (enFicha&&ed&&!B.CALCULADO[c.tipo]?' <button type="button" class="bd-hv" data-volver="'+esc(e.id+'|'+k)+'" aria-label="Volver '+esc(c.nombre)+' a «'+esc(a)+'»">Volver a «'+esc(a.length>24?a.slice(0,24)+'…':a)+'»</button>':'')+'</li>';
+        (enFicha&&ed&&!B.CALCULADO[c.tipo]&&!B.SOLO_LEER[c.tipo]?' <button type="button" class="bd-hv" data-volver="'+esc(e.id+'|'+k)+'" aria-label="Volver '+esc(c.nombre)+' a «'+esc(a)+'»">Volver a «'+esc(a.length>24?a.slice(0,24)+'…':a)+'»</button>':'')+'</li>';
     }).join('')+'</ul></li>';
   }
   /* Actividad de la base: lo último que cambió, quién y cuándo, con filtro por persona y «Recuperar fila» */
@@ -493,7 +507,7 @@ function montar(raiz,op){
     function pintarFicha(){
       var ff=fila(fid);if(!ff){d.close();return}
       $('.bd-ficha-c',d).innerHTML='<dl class="bd-fcampos">'+b.columnas.map(function(c){
-        return '<div><dt>'+(B.CALCULADO[c.tipo]||!ed?esc(c.nombre):'<label for="bdF-'+esc(c.id)+'">'+esc(c.nombre)+'</label>')+'</dt><dd>'+celda(c,ff,' id="bdF-'+esc(c.id)+'"')+'</dd></div>';
+        return '<div><dt>'+(B.CALCULADO[c.tipo]||B.SOLO_LEER[c.tipo]||!ed?esc(c.nombre):'<label for="bdF-'+esc(c.id)+'">'+esc(c.nombre)+'</label>')+'</dt><dd>'+celda(c,ff,' id="bdF-'+esc(c.id)+'"')+'</dd></div>';
       }).join('')+'</dl>';
       $('h2',d).textContent=B.titulo(b,ff)||'Sin nombre';
     }
@@ -578,6 +592,13 @@ function montar(raiz,op){
         '<label class="campo-l" data-si="suma"><span>Suma el campo</span><select name="scampo"></select></label>'+
         '<label class="campo-l" data-si="formula"><span>Fórmula</span><input type="text" name="expr" value="'+esc(c.expr||'')+'" placeholder="{Cantidad} * {Precio}" autocomplete="off" spellcheck="false"></label>'+
         '<p class="hint" data-si="formula">Usa el nombre de otras columnas entre llaves, + − × ÷ y paréntesis. También compara y decide: SI({Existencias} &lt; {Mínimo}; "Bajo"; "Bien"), MAX, MIN, ENTERO, REDONDEAR y DIAS({Vence}) (días que faltan). <span class="bd-prev" aria-live="polite"></span></p>'+
+        '<label class="campo-l" data-si="saldo"><span>Saldo inicial</span><input type="text" inputmode="decimal" name="inicial" value="'+esc(c.tipo==='saldo'?B.dinero(Number(c.inicial)||0):'')+'" autocomplete="off"></label>'+
+        '<label class="campo-l" data-si="saldo"><span>Monto de cada movimiento</span><select name="smonto"><option value=""></option>'+opciones(b.columnas.filter(function(k){return k.tipo==='numero'||k.tipo==='moneda'}).map(function(k){return [k.id,k.nombre]}),c.monto||'')+'</select></label>'+
+        '<label class="campo-l" data-si="saldo"><span>Ingreso o egreso según</span><select name="ssigno"><option value="">(todo suma)</option>'+opciones(b.columnas.filter(function(k){return k.tipo==='seleccion'}).map(function(k){return [k.id,k.nombre]}),c.signo||'')+'</select></label>'+
+        '<label class="campo-l" data-si="saldo"><span>Resta cuando dice</span><input type="text" name="sresta" value="'+esc(c.resta||'Egreso')+'" autocomplete="off"></label>'+
+        '<label class="campo-l" data-si="saldo"><span>En el orden de</span><select name="spor"><option value="">El orden en que se agregaron</option>'+opciones(b.columnas.filter(function(k){return k.tipo==='consecutivo'||k.tipo==='fecha'||k.tipo==='numero'}).map(function(k){return [k.id,k.nombre]}),c.por||'')+'</select></label>'+
+        '<p class="hint" data-si="saldo">Cada fila muestra el saldo después de su movimiento: el de la fila anterior más el ingreso o menos el egreso, empezando por el saldo inicial.</p>'+
+        '<p class="hint" data-si="consecutivo">Se numera solo: cada fila nueva recibe el número que sigue. No se repite ni se vuelve a usar aunque elimines filas.</p>'+
         '<label class="pl-op" data-si="formula suma"><input type="checkbox" name="moneda"'+(c.moneda?' checked':'')+'><span>Mostrar en pesos</span></label>'+
         '<label class="campo-l"><span>Total al pie</span><select name="pie">'+opciones(B.PIES,c.pie||'')+'</select></label>'+
         '<div class="bd-col-ops"><label class="pl-op"><input type="checkbox" name="negritas"'+(c.negritas?' checked':'')+'><span>Negritas</span></label>'+
@@ -639,13 +660,16 @@ function montar(raiz,op){
         var nombre=sel('nombre').value.replace(/\s+/g,' ').trim(),tipo=primera?'texto':sel('tipo').value,msg=$('[data-msg]',d);
         if(!nombre){msg.textContent='Escribe el nombre de la columna.';sel('nombre').focus();return}
         if(b.columnas.some(function(k){return k.id!==c.id&&B.sinAcentos(k.nombre)===B.sinAcentos(nombre)})){msg.textContent='Ya hay una columna con ese nombre.';sel('nombre').focus();return}
-        var x={id:c.id,nombre:nombre,tipo:tipo};
+        var x={id:c.id,nombre:nombre,tipo:tipo},viejoC=nueva?null:B.col(b,c.id);
         if(tipo==='seleccion'&&c.origen==='departamentos')x.origen='departamentos';
         else if(tipo==='seleccion'||tipo==='multiple')x.opciones=(sel('opciones')?sel('opciones').value:'').split(/\n/).map(function(s){return s.trim()}).filter(function(s,i,a){return s&&a.indexOf(s)===i});
         if(tipo==='relacion'){x.base=sel('base').value;if(!x.base){msg.textContent='Elige con qué base se relaciona.';return}}
         if(tipo==='referencia'){x.rel=sel('rel').value;x.campo=sel('campo').value;if(!x.rel||!x.campo){msg.textContent='Elige la relación y el dato que trae.';return}}
         if(tipo==='suma'){x.base=sel('sbase').value;x.rel=sel('srel').value;x.campo=sel('scampo').value;if(!x.base||!x.rel||!x.campo){msg.textContent='Elige la base, la relación y el campo que se suma.';return}}
         if(tipo==='formula'){x.expr=sel('expr').value.trim();if(!B.compilar(x.expr)){msg.textContent='La fórmula tiene un error. Ejemplo: {Cantidad} * {Precio}';sel('expr').focus();return}}
+        if(tipo==='saldo'){x.inicial=B.capturar({tipo:'moneda'},sel('inicial').value)||0;x.monto=sel('smonto').value;x.signo=sel('ssigno').value;x.resta=sel('sresta').value.trim()||'Egreso';x.por=sel('spor').value;
+          if(!x.monto){msg.textContent='Elige la columna con el monto de cada movimiento.';return}}
+        if(tipo==='consecutivo'&&viejoC&&viejoC.tipo==='consecutivo'&&viejoC.ultimo)x.ultimo=viejoC.ultimo;
         if((tipo==='formula'||tipo==='suma')&&sel('moneda').checked)x.moneda=true;
         if(sel('pie').value)x.pie=sel('pie').value;
         if(sel('negritas').checked)x.negritas=true;
@@ -654,13 +678,21 @@ function montar(raiz,op){
         if(colores.length)x.colores=colores;
         var oculta=!primera&&sel('oculta').checked,viejo=nueva?null:B.col(b,c.id);
         /* Cambiar de tipo convierte lo escrito; renombrar actualiza las fórmulas que la usan */
-        var convertir=viejo&&viejo.tipo!==tipo&&!B.CALCULADO[tipo]&&!B.CALCULADO[viejo.tipo]&&tipo!=='relacion'&&viejo.tipo!=='relacion';
-        var antesFilas=convertir?B.clonar(B.filas(b.id)):null;
+        var convertir=viejo&&viejo.tipo!==tipo&&!B.CALCULADO[tipo]&&!B.CALCULADO[viejo.tipo]&&tipo!=='relacion'&&viejo.tipo!=='relacion'&&tipo!=='consecutivo';
+        /* Una columna que se vuelve número consecutivo numera las filas que ya hay, en el orden en que se agregaron */
+        var numerar=tipo==='consecutivo'&&(!viejo||viejo.tipo!=='consecutivo');
+        var antesFilas=convertir||numerar?B.clonar(B.filas(b.id)):null;
+        if(numerar){var nn=0;x.ultimo=antesFilas.length}
         cambiarBase(function(base){
           if(nueva)base.columnas.push(x);else base.columnas=base.columnas.map(function(k){return k.id===x.id?x:k});
           if(viejo&&viejo.nombre!==nombre)base.columnas.forEach(function(k){if(k.tipo==='formula'&&k.expr)k.expr=k.expr.replace(/\{([^}]*)\}/g,function(m0,n){return B.sinAcentos(n.trim())===B.sinAcentos(viejo.nombre)?'{'+nombre+'}':m0})});
           base.vistas.forEach(function(w){if(w.id===v.id){w.ocultas=w.ocultas.filter(function(o){return o!==x.id});if(oculta)w.ocultas.push(x.id)}});
         },nueva?'la columna nueva':'el cambio en la columna «'+nombre+'»',null).then(function(){
+          if(numerar){
+            var num=antesFilas.slice().sort(function(p,q){return (p.orden||0)-(q.orden||0)}).map(function(f){var nf=B.clonar(f);nf.v[x.id]=++nn;return nf});
+            registrar({tipo:'filas',antes:antesFilas,despues:B.clonar(num),que:'la numeración'});
+            return B.guardarFilas(num,{historial:false});
+          }
           if(convertir){
             var conv=antesFilas.map(function(f){
               var nf=B.clonar(f),r=f.v[x.id];

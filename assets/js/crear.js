@@ -34,6 +34,7 @@ var TIPOS=AT.tiposDoc={
   presupuesto:{nombre:'Presupuesto del mes',icono:'gastos',desc:'Cuánto quieres gastar por categoría y cuánto llevas: lo disponible en rojo si te pasas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Reporte','Gastos','Presupuesto']},
   reporte:{nombre:'Reporte del mes',icono:'grafica',desc:'Ventas por producto y compras por proveedor del mes, contra el mes pasado, con gráficas. Crea uno cada mes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Reportes']},
   inventario:{nombre:'Inventario',icono:'datos',desc:'Productos, entradas y salidas; las existencias se calculan solas, las ventas las descuentan y armas el pedido al proveedor.',listo:true,modulo:'negocio',cat:'negocio',trae:['Resumen del inventario','Productos','Entradas y salidas','Compras']},
+  cajachica:{nombre:'Caja chica',icono:'caja',desc:'El efectivo que entra y los pagos que salen, con su saldo después de cada movimiento. Una por mes: empieza con el saldo del mes anterior.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos con saldo']},
   clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar; en tabla o en tarjetas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
   lista:{nombre:'Lista de precios',icono:'tabla',desc:'Tus productos y servicios con su precio, para imprimir o compartir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   plan:{nombre:'Plan de negocio',icono:'idea',desc:'En una página: qué vendes, a quién, a cuánto, cuánto ganas y tus metas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta','Lista de tareas']},
@@ -48,7 +49,7 @@ var TIPOS=AT.tiposDoc={
   ptu:{nombre:'Reparto de utilidades (PTU)',icono:'reparto',desc:'El 10 % de la utilidad entre tu equipo: por días y por salario, con sus topes.',listo:true,modulo:'rh',cat:'rh',trae:['Reparto de utilidades']},
   calculadoras:{nombre:'Calculadoras de nómina',icono:'recibo',desc:'Recibo de nómina, vacaciones, aguinaldo y finiquito en una página, para hacer cuentas rápidas.',listo:true,modulo:'rh',cat:'rh',trae:['Recibo de nómina','Vacaciones','Aguinaldo','Finiquito']}
 };
-var ORDEN=['notas','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','clientes','lista','plan','prestamo',
+var ORDEN=['notas','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','cajachica','clientes','lista','plan','prestamo',
   'equipo','nominas','vacaciones','aguinaldos','finiquito','ptu','calculadoras','cotizacion','presentacion','blanco'];
 var CATS={negocio:'Para tu negocio',rh:'Recursos humanos',paquetes:'Paquetes por giro',mis:'Mis plantillas'};
 var CAT_MOD={negocio:'negocio',rh:'rh',paquetes:'negocio',mis:'nucleo'};
@@ -90,6 +91,17 @@ var SEMILLAS={
   compras:function(){return {rol:'compras',nombre:'Compras'}},
   gastos:function(){return {rol:'gastos',nombre:'Gastos'}},
   presupuesto:function(){return {rol:'presupuesto',nombre:'Presupuesto'}},
+  /* Caja chica: un movimiento por fila; el saldo se calcula en el orden del número de movimiento */
+  cajachica:function(mes){return {nombre:'Caja chica de '+mes,arrastre:'caja-chica',columnas:[
+    {id:'k-concepto',nombre:'Concepto',tipo:'texto'},
+    {id:'k-num',nombre:'Número de movimiento',tipo:'consecutivo'},
+    {id:'k-fecha',nombre:'Fecha',tipo:'fecha'},
+    {id:'k-suc',nombre:'Sucursal',tipo:'seleccion',opciones:['HM Montejo']},
+    {id:'k-prov',nombre:'Proveedor',tipo:'texto'},
+    {id:'k-tipo',nombre:'Ingreso/Egreso',tipo:'seleccion',opciones:['Ingreso','Egreso'],colores:[{op:'igual',val:'Ingreso',tono:'bien'},{op:'igual',val:'Egreso',tono:'mal'}]},
+    {id:'k-monto',nombre:'Monto',tipo:'moneda',pie:'suma'},
+    {id:'k-saldo',nombre:'Saldo',tipo:'saldo',inicial:0,monto:'k-monto',signo:'k-tipo',resta:'Egreso',por:'k-num'}],
+    vistas:[vista('v-tabla','Movimientos','tabla',{s:{col:'k-num',dir:1},s2:{col:'',dir:1}}),vista('v-suc','Por sucursal','tabla',{s:{col:'k-num',dir:1},s2:{col:'',dir:1},agrupar:'k-suc'})],filas:[]}},
   clientes:function(){return {nombre:'Clientes',columnas:[
     {id:'c-nombre',nombre:'Nombre',tipo:'texto'},
     {id:'c-tel',nombre:'Teléfono',tipo:'telefono'},
@@ -138,6 +150,13 @@ var PLANTILLAS={
     tabla(['Proveedor','Qué te surte','Teléfono','Día de visita'],3),
     H('Lo que les debes'),{type:'porpagar',attrs:{id:id(),titulo:'',cuentas:[]}},P()
   ]}},
+  cajachica:function(){
+    var mes=new Date().toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+    return {titulo:'Caja chica de '+mes,props:[],contenido:[
+      P('Anota cada entrega de efectivo de los restaurantes como «Ingreso» y cada pago o compra como «Egreso», con su monto en positivo. El saldo de cada fila es el de la anterior más el ingreso o menos el egreso. El saldo inicial viene del final de la caja chica anterior; puedes cambiarlo arriba de la tabla.'),
+      baseDatos(SEMILLAS.cajachica(mes)),P()
+    ]};
+  },
   clientes:function(){return {titulo:'Clientes',props:[],contenido:[
     P('Una fila por cliente. Toca el cuadrito de la izquierda para ver su ficha.'),
     baseDatos(SEMILLAS.clientes()),P()

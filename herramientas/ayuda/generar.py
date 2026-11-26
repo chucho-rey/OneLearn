@@ -163,10 +163,19 @@ c+=herramienta('nucleo','datos','Tus datos y respaldos',
  ['**Tus datos** → «Descargar respaldo» guarda un archivo con todo: páginas, bases de datos, plantillas y ajustes.',
   'En otro dispositivo o navegador: «Importar respaldo» con ese archivo.',
   'El Inicio te recuerda descargar un respaldo cada dos semanas.',
-  'Para usar OneBook sin internet, instálalo como app desde el menú del navegador («Instalar» o «Agregar a la pantalla de inicio»).'],
+  'Para usar OneBook sin internet, instálalo como app desde el menú del navegador («Instalar» o «Agregar a la pantalla de inicio»).',
+  'Para empezar de cero: **Tus datos** → «Eliminar todos los datos» → «Sí, eliminar todo». Se borran tus páginas, bases, plantillas, la papelera, tu empresa y tus ajustes de este navegador, y vuelves a «Crea tu empresa». No se puede deshacer: descarga antes un respaldo si quieres conservar algo.'],
  'Si borras los datos del navegador se borra lo que no esté respaldado. Guarda tus respaldos en otro lugar.','')
 
 # ---------------- Negocio ----------------
+c+=herramienta('negocio','cajachica','Caja chica',
+ 'El efectivo que entregan las sucursales y los pagos o compras que salen de la misma caja, con el saldo después de cada movimiento. Se hace una por mes.',
+ ['Crea «Caja chica» (Crear → Para tu negocio). Se llama con el mes, por ejemplo «Caja chica de noviembre de 2026».',
+  'Revisa el **Saldo inicial** arriba de la tabla: viene del saldo final de la caja chica anterior. Si es la primera, escríbelo.',
+  'Agrega un movimiento con **+ Nueva**: concepto, fecha, sucursal, proveedor, **Ingreso** o **Egreso** y el monto (siempre en positivo). El **Número de movimiento** se pone solo.',
+  'La columna **Saldo** es el saldo de la fila anterior más el ingreso o menos el egreso. Arriba ves el saldo inicial, los ingresos, los egresos y el saldo final.',
+  'Al empezar el mes, crea otra «Caja chica»: arranca con el saldo final de la anterior.'],
+ 'El saldo sigue el número de movimiento, no el orden en que ves la tabla: puedes ordenar o filtrar sin que cambie. Las sucursales se agregan en las opciones de la columna «Sucursal».')
 c+=herramienta('negocio','corte','Corte de caja',
  'Al cerrar el día: fondo, ventas, retiros y efectivo contado. Te dice si la caja cuadra.',
  ['Crea la página «Corte de caja» (o usa la acción rápida «Corte de hoy»).',
@@ -239,7 +248,8 @@ c+=herramienta('negocio','presupuesto','Presupuesto del mes',
 c+=herramienta('nucleo','bases','Bases de datos',
  'Una tabla con columnas de distintos tipos, cálculos y varias vistas: clientes, productos, pedidos, lo que necesites.',
  ['Inserta «Base de datos» con «/» o crea la página «Clientes».',
-  'Agrega columnas con «+»: texto, número, moneda, fecha, selección, casilla, teléfono, relación con otra base, fórmula o suma de otra base.',
+  'Agrega columnas con «+»: texto, número, moneda, fecha, selección, casilla, teléfono, relación con otra base, fórmula, suma de otra base, número consecutivo o saldo acumulado.',
+  '**Número consecutivo** numera solo cada fila nueva (1, 2, 3…); no se repite ni se reusa aunque elimines filas. **Saldo acumulado** suma o resta el monto de cada fila al saldo de la anterior, desde un saldo inicial, según una columna de selección (por ejemplo, «Egreso» resta).',
   'Cambia de vista: tabla, tablero (por grupos), galería (tarjetas) o calendario. Cada vista guarda su filtro, orden y columnas ocultas.',
   'Toca el cuadrito de la izquierda de una fila para ver su ficha completa.',
   'Importa o descarga en CSV (por ejemplo, desde Excel) en «⋯» de la base.'],
@@ -254,7 +264,8 @@ c+=herramienta('nucleo','historialfilas','Historial de las filas',
 c+=herramienta('nucleo','colores','Color según el valor',
  'Pinta las celdas de una columna según lo que dicen: en rojo lo vencido, en verde lo pagado.',
  ['En el encabezado de la columna, abre su menú y elige «Color según el valor».',
-  'Agrega hasta tres reglas: es, no es, contiene, mayor, menor o vacío, cada una con su color (verde, amarillo, rojo o azul).'])
+  'Agrega hasta tres reglas: es, no es, contiene, mayor, menor o vacío, cada una con su color (verde, amarillo, rojo o azul).'],
+ 'Una celda vacía no es mayor ni menor que nada: solo la pinta la regla «está vacío».')
 
 # ---------------- Recursos humanos ----------------
 RH_INFO=C('**Recursos humanos** se enciende con «Tengo empleados» al crear tu espacio, o en Tus datos → «Cambiar tu espacio». Los cálculos usan las cifras de 2026 (UMA $117.31, salario mínimo $315.04 y $440.87 en la frontera norte, tarifa del ISR del SAT y cuotas del IMSS). Son estimaciones para planear: tu contador timbra los recibos oficiales.','info')

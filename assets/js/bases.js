@@ -33,8 +33,11 @@
 'use strict';
 var AT=window.AT;
 var TIPOS=[['texto','Texto'],['numero','Número'],['moneda','Moneda (pesos)'],['fecha','Fecha'],['seleccion','Selección'],['multiple','Selección múltiple'],
-  ['casilla','Casilla'],['telefono','Teléfono'],['relacion','Relación con otra base'],['referencia','Dato de la relación'],['formula','Fórmula'],['suma','Suma de otra base']];
-var CALCULADO={referencia:1,formula:1,suma:1};
+  ['casilla','Casilla'],['telefono','Teléfono'],['relacion','Relación con otra base'],['referencia','Dato de la relación'],['formula','Fórmula'],['suma','Suma de otra base'],
+  ['consecutivo','Número consecutivo'],['saldo','Saldo acumulado']];
+var CALCULADO={referencia:1,formula:1,suma:1,saldo:1};
+/* Se guardan pero no se escriben a mano: el número consecutivo lo pone nuevaFila */
+var SOLO_LEER={consecutivo:1};
 var OPS=[['contiene','contiene'],['igual','es igual a'],['distinto','no es'],['mayor','es mayor que'],['menor','es menor que'],['vacio','está vacío'],['novacio','no está vacío']];
 var PIES=[['','Sin total'],['suma','Suma'],['promedio','Promedio'],['conteo','Conteo']];
 
@@ -146,7 +149,7 @@ function guardarHistorial(lista){
 
 /* ---------- Guardar ---------- */
 function guardarBase(b){
-  BASES[b.id]=b;
+  BASES[b.id]=b;version++;
   return AT.datos.bases.guardar(b).then(function(x){avisar({base:b.id,tipo:'base'});return x});
 }
 function guardarFila(f,op){
@@ -158,8 +161,16 @@ function guardarFila(f,op){
   return AT.datos.filas.guardar(f).then(function(x){return guardarHistorial([h]).then(function(){avisar({base:f.base,tipo:'fila',id:f.id});return x})});
 }
 function nuevaFila(bid,v){
-  var l=filasDe(bid),orden=l.reduce(function(m,f){return Math.max(m,f.orden||0)},0)+1;
-  return {id:nuevoId('f'),base:bid,v:v||{},orden:orden};
+  var l=filasDe(bid),orden=l.reduce(function(m,f){return Math.max(m,f.orden||0)},0)+1,b=BASES[bid];
+  v=v||{};
+  /* Número consecutivo: el siguiente al más alto que se ha dado (aunque esa fila ya no exista); nunca se reusa */
+  if(b)b.columnas.forEach(function(c){
+    if(c.tipo!=='consecutivo'||(typeof v[c.id]==='number'))return;
+    var max=l.reduce(function(m,f){var n=f.v[c.id];return typeof n==='number'&&n>m?n:m},Number(c.ultimo)||0);
+    v[c.id]=max+1;c.ultimo=max+1;
+    guardarBase(b);
+  });
+  return {id:nuevoId('f'),base:bid,v:v,orden:orden};
 }
 function borrarFila(f,op){
   var antes=filasDe(f.base).filter(function(x){return x.id===f.id})[0]||f;
@@ -184,18 +195,33 @@ function guardarFilas(lista,op){
 function crear(semilla,doc){
   var s=clonar(semilla||{}),b=normal({id:nuevoId('bd'),nombre:s.nombre||'Base de datos',doc:doc||'',columnas:s.columnas,vistas:s.vistas});
   if(s.rol)b.rol=String(s.rol);
+  if(s.arrastre){b.arrastre=String(s.arrastre);b.creada=new Date().toISOString()}
   var mapa={},fs=(s.filas||[]).map(function(x,i){var id=nuevoId('f');if(x.id)mapa[x.id]=id;return {id:id,base:b.id,v:clonar(x.v||{}),orden:i+1}});
   /* Las relaciones con filas de la misma base siguen apuntando a sus copias */
   b.columnas.forEach(function(c){if(c.tipo==='relacion'&&(!c.base||c.base===s.id||c.base==='propia'))c.base=b.id});
   fs.forEach(function(f){b.columnas.forEach(function(c){if(c.tipo==='relacion'&&c.base===b.id&&mapa[f.v[c.id]])f.v[c.id]=mapa[f.v[c.id]]})});
   BASES[b.id]=b;FILAS[b.id]=fs;
-  return AT.datos.bases.guardar(b).then(function(){return fs.length?AT.datos.filas.guardarVarias(fs):null}).then(function(){return cargar(b.id)});
+  return arrastrarSaldo(b,fs).then(function(){return AT.datos.bases.guardar(b)}).then(function(){return fs.length?AT.datos.filas.guardarVarias(fs):null}).then(function(){return cargar(b.id)});
+}
+/* Una base nueva y vacía con «arrastre» (la caja chica de cada mes) empieza con el saldo final de la última base con
+   el mismo arrastre: su saldo inicial (se puede cambiar) */
+function arrastrarSaldo(b,fs){
+  var sc=b.columnas.filter(function(c){return c.tipo==='saldo'})[0];
+  if(!b.arrastre||!sc||fs.length)return Promise.resolve();
+  return AT.datos.bases.todos().then(function(l){
+    var prev=l.filter(function(x){return x.id!==b.id&&x.arrastre===b.arrastre&&x.creada}).sort(function(x,y){return x.creada<y.creada?1:-1})[0];
+    if(!prev)return;
+    return cargar(prev.id).then(function(pb){
+      var ps=pb&&pb.columnas.filter(function(c){return c.tipo==='saldo'})[0],r=ps&&resumenSaldo(pb,ps);
+      if(r){sc.inicial=r.final;b.desde=pb.id}
+    });
+  });
 }
 /* La semilla de una base: su estructura y, si se pide, sus filas (sin lo calculado) */
 function semillaDe(id,conFilas){
   return cargar(id).then(function(b){
     if(!b)return null;
-    return {id:b.id,nombre:b.nombre,rol:b.rol||undefined,columnas:clonar(b.columnas),vistas:clonar(b.vistas),
+    return {id:b.id,nombre:b.nombre,rol:b.rol||undefined,arrastre:b.arrastre||undefined,columnas:clonar(b.columnas),vistas:clonar(b.vistas),
       filas:conFilas?filasDe(id).map(function(f){return {id:f.id,v:clonar(f.v)}}):[]};
   });
 }
@@ -335,6 +361,38 @@ function sumas(col){
   SUMAS[k]=m;
   return m;
 }
+/* Saldo acumulado: col {inicial, monto (columna del monto), signo (columna de selección), resta (la opción que
+   resta, «Egreso»), por (columna que ordena: el número consecutivo o una fecha)}. Cada fila tiene el saldo después de
+   su movimiento, en el orden de «por» (no en el de la vista) */
+var SALDOS={},versionSaldos=-1;
+function saldos(b,col){
+  if(versionSaldos!==version){SALDOS={};versionSaldos=version}
+  var k=b.id+'|'+JSON.stringify(col);
+  if(SALDOS[k])return SALDOS[k];
+  var mc=colPorId(b,col.monto),sc=colPorId(b,col.signo),oc=colPorId(b,col.por);
+  if(!mc)return null;
+  var resta=sinAcentos(col.resta||'Egreso'),s=Number(col.inicial)||0,m={};
+  filasDe(b.id).slice().sort(function(x,y){
+    var vx=oc?valor(b,x,oc,1):'',vy=oc?valor(b,y,oc,1):'';
+    if(vx===''&&vy!=='')return 1;if(vy===''&&vx!=='')return -1;
+    return (oc?comparar(vx,vy):0)||(x.orden||0)-(y.orden||0);
+  }).forEach(function(f){
+    var v=valor(b,f,mc,1);
+    if(typeof v==='number'&&isFinite(v)){if(sc&&sinAcentos(texto(b,f,sc))===resta)s-=v;else s+=v}
+    m[f.id]=Math.round(s*100)/100;
+  });
+  m.$final=Math.round(s*100)/100;
+  SALDOS[k]=m;
+  return m;
+}
+/* Saldo inicial, ingresos, egresos y saldo final de una columna de saldo (todas las filas) */
+function resumenSaldo(b,col){
+  var mc=colPorId(b,col.monto),sc=colPorId(b,col.signo);if(!mc)return null;
+  var resta=sinAcentos(col.resta||'Egreso'),ing=0,egr=0;
+  filasDe(b.id).forEach(function(f){var v=valor(b,f,mc,1);if(typeof v!=='number'||!isFinite(v))return;if(sc&&sinAcentos(texto(b,f,sc))===resta)egr+=v;else ing+=v});
+  var ini=Number(col.inicial)||0;
+  return {inicial:ini,ingresos:Math.round(ing*100)/100,egresos:Math.round(egr*100)/100,final:Math.round((ini+ing-egr)*100)/100};
+}
 /* El valor de una celda: lo guardado o lo calculado (número, texto, lista, verdadero/falso o un error «#…») */
 function valor(b,f,col,d){
   d=d||0;
@@ -363,10 +421,11 @@ function valor(b,f,col,d){
     return typeof r==='boolean'?r:r==null?'':String(r);
   }
   if(col.tipo==='suma'){var m=sumas(col);return m?Math.round((m[f.id]||0)*100)/100:'#REF'}
+  if(col.tipo==='saldo'){var sm=saldos(b,col);return sm?(f.id in sm?sm[f.id]:''):'#REF'}
   var v=f.v[col.id];
   if(col.tipo==='casilla')return !!v;
   if(col.tipo==='multiple')return Array.isArray(v)?v:[];
-  if(col.tipo==='numero'||col.tipo==='moneda')return typeof v==='number'&&isFinite(v)?v:'';
+  if(col.tipo==='numero'||col.tipo==='moneda'||col.tipo==='consecutivo')return typeof v==='number'&&isFinite(v)?v:'';
   return v==null?'':v;
 }
 /* Cómo se ve un cálculo: el tipo de la columna de origen (dato de la relación) o pesos si se pidió */
@@ -374,6 +433,8 @@ function tipoVisto(b,col){
   if(col.tipo==='referencia'){var rc=colPorId(b,col.rel),tb=rc&&base(rc.base),tc=tb&&colPorId(tb,col.campo);return tc?tipoVisto(tb,tc):'texto'}
   if(col.tipo==='formula'){var fn=compilar(col.expr||'');if(fn&&fn.tipo!=='numero')return 'texto'}
   if(col.tipo==='formula'||col.tipo==='suma')return col.moneda?'moneda':'numero';
+  if(col.tipo==='saldo')return 'moneda';
+  if(col.tipo==='consecutivo')return 'numero';
   return col.tipo;
 }
 function esNumerica(b,col){var t=tipoVisto(b,col);return t==='numero'||t==='moneda'}
@@ -418,6 +479,8 @@ function cumpleFiltro(b,f,filtro){
   var num=typeof v==='number'&&q!==''&&isFinite(Number(q.replace(/[$,\s]/g,'')));
   var qn=num?Number(q.replace(/[$,\s]/g,'')):0;
   var crudo=col.tipo==='fecha'?String(v):t;
+  /* Una celda vacía no es mayor ni menor que nada */
+  if((op==='mayor'||op==='menor')&&t==='')return false;
   if(op==='mayor')return num?v>qn:comparar(crudo,q)>0;
   if(op==='menor')return num?v<qn:comparar(crudo,q)<0;
   var igual=num?v===qn:Array.isArray(v)?v.some(function(x){return sinAcentos(x)===sinAcentos(q)}):sinAcentos(crudo)===sinAcentos(q)||sinAcentos(t)===sinAcentos(q);
@@ -567,7 +630,7 @@ function deCSV(b,txt){
   var cab=filas[0].map(function(t,i){return String(t).trim()||'Columna '+(i+1)}),datos=filas.slice(1);
   var nuevas=[],cols=cab.map(function(n,i){
     var c=colPorNombre(b,n);
-    if(c&&!CALCULADO[c.tipo])return c;
+    if(c&&!CALCULADO[c.tipo]&&!SOLO_LEER[c.tipo])return c;
     if(c)return null;
     c={id:nuevoId('c'),nombre:n,tipo:detectarTipo(datos.map(function(f){return f[i]||''}))};
     nuevas.push(c);return c;
@@ -616,7 +679,7 @@ if(AT.datos&&AT.datos.on)AT.datos.on(function(c,deOtra){
   else if(c.almacen==='*')Object.keys(BASES).forEach(function(id){recargar(id)});
 });
 
-AT.bases={HISTORIAL:HISTORIAL,TIPOS:TIPOS,CALCULADO:CALCULADO,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clonar:clonar,sinAcentos:sinAcentos,opciones:opciones,
+AT.bases={HISTORIAL:HISTORIAL,TIPOS:TIPOS,CALCULADO:CALCULADO,SOLO_LEER:SOLO_LEER,resumenSaldo:resumenSaldo,saldos:saldos,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clonar:clonar,sinAcentos:sinAcentos,opciones:opciones,
   cargar:cargar,recargar:recargar,todas:todas,base:base,filas:filasDe,fila:filaPorId,col:colPorId,colPorNombre:colPorNombre,
   guardarBase:guardarBase,guardarFila:guardarFila,guardarFilas:guardarFilas,nuevaFila:nuevaFila,borrarFila:borrarFila,
   crear:crear,semillaDe:semillaDe,vistaNueva:vistaNueva,normal:normal,

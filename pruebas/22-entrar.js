@@ -64,7 +64,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
       estudio:!!document.querySelector('#iniRutas,#explorar,#continuar,#t-hecho,#bienvenida,#recientes'),aviso:ve('#iniAviso'),listas:document.querySelectorAll('#iniPlantillas .ini-pl').length,
       respaldo:ve('#iniRespaldo'),clases:document.documentElement.className};
   });
-  r.cumple(ini.h1==='Abarrotes Lupita'&&/^Buen(os|as) \w+, Lupita · /.test(ini.sub)&&ini.docs==='Tus páginas','Inicio saluda con el nombre de la empresa, tu nombre y la fecha',ini);
+  r.cumple(ini.h1==='Abarrotes Lupita'&&/^Buen(os|as) [^,]+, Lupita · /.test(ini.sub)&&ini.docs==='Tus páginas','Inicio saluda con el nombre de la empresa, tu nombre y la fecha',ini);
   r.cumple(!ini.estudio&&!ini.aviso&&/con-negocio/.test(ini.clases)&&!/estudio/.test(ini.clases),'el Inicio ya no tiene rutas, temas ni lecciones, ni el aviso (es un espacio nuevo)',ini);
   r.cumple(ini.listas===9&&!ini.respaldo,'ofrece 9 páginas listas para usar y, recién creado, todavía no pide respaldo',ini);
   const barra=await p.evaluate(function(){var s=document.getElementById('side');
@@ -76,7 +76,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo de la empresa */
   await p.click('.xp-nuevo');await p.waitForTimeout(300);
-  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Presupuesto del mes | Proveedores | Clientes | Lista de precios | Plan de negocio | Préstamo o crédito | '+
+  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Presupuesto del mes | Proveedores | Caja chica | Clientes | Lista de precios | Plan de negocio | Préstamo o crédito | '+
     'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes',
     '«Crear» ofrece notas, las plantillas del negocio y los paquetes por giro (el suyo marcado), sin estudio, finanzas personales ni freelance');
   const pronto=await p.textContent('dialog.crear-dlg .crear-p');
