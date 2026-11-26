@@ -4,7 +4,7 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-55';
+const VERSION='onelearn-56';
 const ARCHIVOS=[
   './',
   'index.html',
@@ -22,6 +22,7 @@ const ARCHIVOS=[
   'assets/css/ayuda.css',
   'assets/css/empresa.css',
   'assets/css/tablero.css',
+  'assets/css/archivos.css',
   'assets/css/versiones.css',
   'assets/css/permisos.css',
   'assets/css/explorador.css',
@@ -45,6 +46,7 @@ const ARCHIVOS=[
   'assets/js/tuempresa.js',
   'assets/js/sala.js',
   'assets/js/tablero.js',
+  'assets/js/archivos.js',
   'assets/js/respaldo.js',
   'assets/js/barra.js',
   'assets/js/lectura.js',

@@ -240,16 +240,17 @@ prueba('Explorador de páginas y permisos',async function({browser,base,r}){
   await c.goto(base+'inicio.html');await listo(c,400);
   await sembrar(c,[['corte','Corte de caja'],['inventario','Inventario'],['notas','Ideas']]);
   await c.evaluate(function(){AT.ajustes.set('tema','dark')});
-  await c.reload();await listo(c,700);await c.waitForSelector('#xpLista [data-fila]');
-  r.cumple(await c.isHidden('.xp-t th.xp-c-mod')&&await c.isVisible('.xp-nom-m'),'en celular, la fecha va debajo del nombre');
-  r.cumple(await c.isVisible('#xpLista [data-fila] [data-k="mas"]'),'y el menú de cada página sigue a la mano');
+  await c.reload();await listo(c,700);await c.waitForSelector('#celArchivos .ca-f');
+  /* En el celular, tus páginas se ven como una app de archivos (archivos.js; su prueba es 45-archivos-celular.js) */
+  r.cumple(await c.isHidden('#xp')&&/Hoy|Ayer/.test(await c.textContent('#celArchivos .ca-f small')),'en celular, cada página dice cuándo cambió, debajo del nombre');
+  r.cumple(await c.isVisible('#celArchivos .ca-f [data-mas]'),'y el menú de cada página sigue a la mano');
   await revisar(c,r,'Explorador en celular (oscuro)');
   if(CAP)await c.screenshot({path:CAP+'/explorador-celular.png',fullPage:true});
-  await c.click('#xpLista [data-fila] [data-k="perm"]');await c.waitForSelector('dialog.perm-dlg[open]');
+  await c.click('#celArchivos .ca-f [data-mas]');await c.click('.xp-menu .xp-mi:has-text("Personas y permisos")');await c.waitForSelector('dialog.perm-dlg[open]');
   await revisar(c,r,'Permisos en celular (oscuro)');
   await c.keyboard.press('Escape');await c.waitForTimeout(200);
   /* En la página, «⋯» también abre «Personas y permisos» */
-  await Promise.all([c.waitForURL(/documento\.html/),c.click('#xpLista [data-fila] [data-k="abrir"]')]);await listo(c,700);
+  await Promise.all([c.waitForURL(/documento\.html/),c.click('#celArchivos .ca-f .ca-a')]);await listo(c,700);
   await c.click('#docMas');await c.waitForTimeout(200);
   await c.click('.menu [role="menuitem"]:has-text("Personas y permisos")');
   await c.waitForSelector('dialog.perm-dlg[open]');

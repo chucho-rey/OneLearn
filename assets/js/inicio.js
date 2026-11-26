@@ -137,6 +137,7 @@ $('#iniRespaldoNo').addEventListener('click',function(){
 function pintarDocs(){
   if(!AT.explorador)return;
   AT.explorador.datos(docsCache,{vacio:'Todavía no tienes páginas. Crea la primera con «Nuevo» o con una de las que están aquí abajo. Se guardan en este dispositivo.'});
+  if(AT.archivos)AT.archivos.datos(docsCache);
 }
 
 /* ---------- Acciones rápidas y «Prepara tu negocio» (fase F5) ---------- */
@@ -213,7 +214,10 @@ $('#iniPrepLista').addEventListener('click',function(e){
 });
 $('#iniPrepOcultar').addEventListener('click',function(){
   try{localStorage.setItem(CLAVE_PREPARA,'oculta')}catch(e){}
-  pintarPrepara();$('#t-docs').focus();
+  pintarPrepara();
+  /* En el celular, «Tus páginas» está en otra sección: el foco pasa a lo que sigue */
+  var t=$('#t-docs');if(!t.getClientRects().length){t=$('#t-empezar');t.setAttribute('tabindex','-1')}
+  t.focus();
   AT.aviso('Lista oculta. Todo lo que tiene está en «Crear» y en tus páginas.');
 });
 

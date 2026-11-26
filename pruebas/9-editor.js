@@ -192,7 +192,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   /* ---------- Pendientes del día y propiedades, en celular ---------- */
   const c=await pagina(browser,{ancho:390,alto:844,movil:true});
   await c.goto(base+'inicio.html');await listo(c);
-  await c.tap('[data-crear]');await c.waitForTimeout(300);
+  await c.tap('#celNuevo');await c.waitForTimeout(300);
   await revisar(c,r,'ventana Crear en celular');
   await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="pendientes"]')]);await listo(c,500);
   const pend=await c.evaluate(function(){return {tareas:document.querySelectorAll('.ed-cuerpo ul.tareas').length,h2:Array.from(document.querySelectorAll('.ed-cuerpo h2')).map(function(h){return h.textContent})}});
@@ -206,7 +206,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
   r.cumple(/Centro/.test(await c.textContent('.props'))&&await c.$('li.tarea.hecha'),'al leer, la propiedad y la tarea hecha se muestran');
   await revisar(c,r,'pendientes del día al leer en celular');
   await c.goto(base+'inicio.html');await listo(c);
-  await c.tap('[data-crear]');await c.waitForTimeout(200);
+  await c.tap('#celNuevo');await c.waitForTimeout(200);
   await Promise.all([c.waitForURL(/documento/),c.tap('[data-tipo="notas"]')]);await listo(c,500);
   r.cumple(await c.evaluate(function(){return document.querySelectorAll('.ed-cuerpo > *').length===1&&!document.querySelector('.dp-fila')}),'las notas empiezan como una página en blanco');
   r.cumple(c.errores.length===0,'sin errores en celular',c.errores);

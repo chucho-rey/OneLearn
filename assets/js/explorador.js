@@ -266,7 +266,7 @@ function abrirMenu(desde,items,x,y){
   var left=x!=null?x:r.right-w,top=y!=null?y:r.bottom+4;
   left=Math.max(8,Math.min(left,innerWidth-w-8));
   if(top+h>innerHeight-8)top=Math.max(8,(y!=null?y:r.top-4)-h);
-  menuEl.style.left=left+'px';menuEl.style.top=top+'px';
+  menuEl.style.left=left+'px';menuEl.style.top=top+'px';anclaTop=r.top;
   var bs=$$('[role^="menuitem"]',menuEl);
   menuEl.addEventListener('click',function(e){
     var b=e.target.closest('[data-i]');if(!b)return;
@@ -286,7 +286,9 @@ function abrirMenu(desde,items,x,y){
 }
 document.addEventListener('pointerdown',function(e){if(menuEl&&!menuEl.contains(e.target)&&!(menuDe&&menuDe.contains(e.target)))cerrarMenu()},true);
 addEventListener('resize',function(){cerrarMenu()});
-addEventListener('scroll',function(){cerrarMenu()},true);
+/* Se cierra si lo que lo abrió se movió (un desplazamiento que llega tarde, sin mover nada, no lo cierra) */
+var anclaTop=0;
+addEventListener('scroll',function(){if(menuEl&&!(menuDe&&menuDe.isConnected&&Math.abs(menuDe.getBoundingClientRect().top-anclaTop)<3))cerrarMenu()},true);
 
 function urlDe(id,h){return 'documento.html?id='+encodeURIComponent(id)+(h||'')}
 function abrirEnPestana(id){
@@ -321,8 +323,11 @@ function menuColumnas(b){
 }
 
 /* ---------- Acciones ---------- */
+var desdeFuera=null;
 function permisos(id){
   var b=lst.querySelector('[data-fila="'+cssId(id)+'"] [data-k="perm"]')||lst.querySelector('[data-fila="'+cssId(id)+'"] [data-k="abrir"]');
+  /* Si la lista del explorador no se ve (en el celular), el foco vuelve al botón que abrió el menú */
+  if(desdeFuera&&desdeFuera.isConnected&&(!b||!b.getClientRects().length))b=desdeFuera;
   if(AT.permisos)AT.permisos.abrir(id,b);
 }
 function favoritas(l){
@@ -490,7 +495,9 @@ AT.explorador={
   ir:irA,
   ubicacion:function(){return est.ubic},
   estado:function(){return JSON.parse(JSON.stringify(est))},
-  lista:function(){return lista.map(function(x){return x.id})}
+  lista:function(){return lista.map(function(x){return x.id})},
+  /* El menú de una página desde otro lugar (la vista de archivos del celular, archivos.js) */
+  menu:function(boton,id){var x=docs.filter(function(y){return y.id===id})[0];if(x){desdeFuera=boton;abrirMenu(boton,itemsDe(x))}}
 };
 /* La barra lateral pudo dibujarse antes que el explorador: se le avisa dónde está */
 if(AT.barraUbicacion)AT.barraUbicacion(est.ubic);

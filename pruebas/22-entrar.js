@@ -75,7 +75,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
     barra.persona==='LHLupita HernándezCambiar de persona','la barra lateral deja Inicio, Crear, Buscar, Tu empresa, tus páginas y quién entra',barra);
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo de la empresa */
-  await p.click('.xp-nuevo');await p.waitForTimeout(300);
+  await p.click('#celNuevo');await p.waitForTimeout(300);
   r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Presupuesto del mes | Proveedores | Caja chica | Clientes | Lista de precios | Plan de negocio | Préstamo o crédito | '+
     'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes',
     '«Crear» ofrece notas, las plantillas del negocio y los paquetes por giro (el suyo marcado), sin estudio, finanzas personales ni freelance');
@@ -83,7 +83,8 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   r.cumple(/Cotización/.test(pronto)&&!/Corte de caja|Fiado/.test(pronto)&&!/Libro|Bitácora/.test(pronto),'«Llegan después» anuncia lo que falta y nada de estudio',pronto);
   await revisar(p,r,'Crear de negocio en celular');
   await p.keyboard.press('Escape');await p.waitForTimeout(150);
-  /* Una página lista para usar se crea y se abre */
+  /* Una página lista para usar se crea y se abre (en el celular, en la sección Inicio) */
+  await p.click('.cn-b[data-seccion="inicio"]');await p.waitForTimeout(200);
   await Promise.all([p.waitForURL(/documento\.html\?id=/),p.click('#iniPlantillas [data-nuevo="proveedores"]')]);await listo(p,500);
   const prov=await p.evaluate(function(){var d=AT.docActual;return {tipo:d.tipo,titulo:d.titulo,cols:d.contenido.content.filter(function(b){return b.type==='table'}).map(function(t){return t.content[0].content.length})[0],
     porPagar:d.contenido.content.some(function(b){return b.type==='porpagar'}),bloque:!!document.querySelector('.nb-porpagar')}});
@@ -131,7 +132,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   await Promise.all([p.waitForURL(/inicio\.html$/),p.click('#enSig')]);await listo(p,400);
   r.igual((await perfil(p)).modulos.join(),'negocio,rh','encender «Recursos humanos» se guarda');
   r.cumple(await p.evaluate(function(){return AT.empresa.leer().nombre==='Abarrotes Lupita e Hijos'&&AT.perfil.nombre()==='Abarrotes Lupita e Hijos'}),'y el nombre nuevo de la empresa, en la empresa y en el espacio');
-  await p.click('.xp-nuevo');await p.waitForTimeout(300);
+  await p.click('.cn-b[data-seccion="paginas"]');await p.click('#celNuevo');await p.waitForTimeout(300);
   r.igual(await p.evaluate(function(){return [].map.call(document.querySelectorAll('dialog.crear-dlg .crear-g'),function(x){return x.getAttribute('data-modulo')}).join()}),'negocio,rh,paquetes','y «Crear» suma las plantillas de recursos humanos');
   r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.filter(function(d){return d.id!=='d-minegocio'&&d.id!=='d-miequipo'}).length})}),5,'cambiar el espacio no crea ni borra tus páginas');
   await cerrar(p);
@@ -155,7 +156,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   await Promise.all([s.waitForURL(/inicio\.html$/),s.setInputFiles('#enArchivo',{name:'respaldo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(conPerfil))})]);await listo(s,400);
   const rp=await perfil(s);
   r.cumple(await s.textContent('#saludo')==='Papelería Sol'&&rp.modulos.join()==='negocio'&&rp.negocio.telefono==='55'&&!('extra' in rp),'un respaldo con perfil restaura el espacio (limpio) y abre el Inicio',rp);
-  r.cumple(/Cuentas de la semana/.test(await s.textContent('#xp')),'con sus páginas');
+  r.cumple(/Cuentas de la semana/.test(await s.textContent('#celArchivos')),'con sus páginas');
   await cerrar(s);
   const s2=await pagina(browser,{ancho:390,perfil:false});
   await s2.goto(base+'entrar.html');await listo(s2);

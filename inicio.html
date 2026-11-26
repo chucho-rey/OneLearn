@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="assets/css/permisos.css">
 <link rel="stylesheet" href="assets/css/explorador.css">
 <link rel="stylesheet" href="assets/css/tablero.css">
+<link rel="stylesheet" href="assets/css/archivos.css">
 </head>
 <body data-pagina="inicio">
 
@@ -52,6 +53,8 @@
         </div>
         <!-- El explorador de tus páginas (explorador.js) -->
         <div class="xp" id="xp"></div>
+        <!-- En el celular, tus páginas como una app de archivos (archivos.js) -->
+        <div class="ca" id="celArchivos"></div>
       </section>
 
       <!-- El tablero (tablero.js): el de la empresa y el tuyo -->
@@ -77,7 +80,11 @@
         <p id="instalarTxt">Ábrelo como una app, desde tu pantalla de inicio, y úsalo sin conexión.</p>
         <button class="btn" type="button" id="instalarBtn" hidden>Instalar</button>
       </section>
+      <!-- En el celular: la sección Empresa (archivos.js) -->
+      <section class="ce" id="celEmpresa" aria-labelledby="celEmpT"></section>
     </main>
+    <!-- En el celular: Páginas · Inicio · Empresa (archivos.js) -->
+    <nav class="cn" id="celNav" aria-label="Secciones del Inicio"></nav>
   </div>
 </div>
 
@@ -111,6 +118,7 @@
 <script src="assets/js/permisos.js"></script>
 <script src="assets/js/explorador.js"></script>
 <script src="assets/js/tablero.js"></script>
+<script src="assets/js/archivos.js"></script>
 <script src="assets/js/inicio.js"></script>
 </body>
 </html>
