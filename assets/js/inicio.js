@@ -1,6 +1,5 @@
 /* Pantalla de inicio de OneBook (de una empresa):
-   - El nombre del negocio y la fecha; un aviso, una vez, a quien venía de un espacio de estudio o de «Mis finanzas»
-     (lo de estudio se separó de OneBook; sus datos siguen en este navegador y en el respaldo).
+   - El nombre del negocio y la fecha; los avisos (quién eres, la empresa de ejemplo) y «Tus páginas», primero.
    - Fase F5: acciones rápidas (el corte de hoy, una venta, el fiado, un gasto; abren la página que ya tienes, con
      documento.html#agregar=<bloque>, o la crean), «Prepara tu negocio» (una lista que se marca sola al revisar tus
      páginas; se puede ocultar) y páginas listas para usar (AT.crear.plantillasInicio).
@@ -21,22 +20,8 @@ function saludo(){
   return h>=5&&h<12?'Buenos días':h>=12&&h<19?'Buenas tardes':'Buenas noches';
 }
 var docsCache=[];
-function hayPaginas(){return docsCache.some(function(d){return d.id!==MI&&d.id!==EQ&&!(AT.datos.deEstudio&&AT.datos.deEstudio(d))})}
+function hayPaginas(){return docsCache.some(function(d){return d.id!==MI&&d.id!==EQ})}
 
-/* Aviso, una vez, para quien venía de un espacio de estudio o de «Mis finanzas» (perfil.js lo deja en aviso) */
-function pintarAviso(){
-  var caja=$('#iniAviso');if(!caja)return;
-  var a=PER&&PER.aviso?PER.aviso():'';
-  caja.hidden=!a;
-  if(!a)return;
-  $('#iniAvisoTxt').textContent=a==='estudio'?
-    'Lo de estudio (lecciones, rutas, libretas, apuntes y tesis) se separó y ya no está aquí. Lo que guardaste no se borró: sigue en este navegador y entra en tus respaldos; tus páginas de estudio están en «De estudio», solo para leer. Descarga un respaldo para conservarlo.':
-    'Las plantillas de finanzas personales se fueron, pero tus páginas siguen aquí tal como las dejaste. Descarga un respaldo de vez en cuando.';
-}
-$('#iniAvisoResp').addEventListener('click',function(){
-  AT.datos.descargar().then(function(){AT.aviso('Respaldo descargado. Guárdalo en tu nube o en una memoria USB.')},function(){AT.aviso('No se pudo crear el respaldo. Inténtalo otra vez.')});
-});
-$('#iniAvisoOk').addEventListener('click',function(){if(PER&&PER.quitarAviso)PER.quitarAviso();pintarAviso();$('#t-docs').focus()});
 /* ---------- La empresa de ejemplo (E5, ejemplo.html): «Crear mi empresa» la borra y abre «Crea tu empresa» ---------- */
 function pintarEjemplo(){
   var caja=$('#iniEjemplo'),p=PER&&PER.actual?PER.actual():null;
@@ -282,7 +267,7 @@ function pintarQuien(){
   c.hidden=!(E&&E.existe()&&!E.activa()&&AT.persona);
 }
 $('#iniQuienB').addEventListener('click',function(){if(AT.persona)AT.persona.abrir(this)});
-function pintar(){pintarEjemplo();pintarQuien();montarTableros();ubicarEquipo();pintarAviso();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
+function pintar(){pintarEjemplo();pintarQuien();montarTableros();ubicarEquipo();pintarRespaldo();pintarDocs();pintarInstalar();pintarPrepara()}
 function recargar(){cargarDocs().then(pintar)}
 pintarSaludo();
 pintarPlantillas();

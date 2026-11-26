@@ -6,8 +6,6 @@
                pagar), clientes, lista de precios, plan de negocio y préstamo o crédito (plan de pagos)
      rh        tu equipo y las calculadoras de nómina
      (las notas y el documento en blanco, del núcleo, van en la primera categoría)
-   Las plantillas de estudio (libreta, apuntes de clase, tesis…) y las de finanzas personales se fueron de OneBook;
-   las páginas que ya existen no cambian (las de estudio se abren solo para leer).
    Los bloques de la tienda vienen de negocio.js y sus archivos, que en inicio.html no se cargan: las plantillas solo
    guardan sus datos iniciales. Los que no tienen «listo» se anuncian en «Llegan después».
    La ventana «¿Qué quieres crear?» es una galería (fase F5): categorías que se filtran, búsqueda, lo que trae cada
@@ -442,8 +440,7 @@ function filtrar(){
 }
 function cargarMias(){
   return AT.datos.plantillas.todos().then(function(l){
-    /* Las plantillas de páginas de estudio (de antes) ya no se ofrecen */
-    mias=l.filter(function(x){return !(AT.datos.deEstudio&&AT.datos.deEstudio(x))}).sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:1});
+    mias=l.slice().sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:1});
   },function(){mias=[]});
 }
 function ocupado(si,msg){

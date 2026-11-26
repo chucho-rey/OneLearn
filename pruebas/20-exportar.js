@@ -1,8 +1,7 @@
 /* Imprimir o exportar una página (exportar.js, imprimir.js y exportar-docx.js): la ventana «Imprimir o exportar»
    (papel carta o A4, vertical u horizontal), el PDF paginado con Paged.js (título y propiedades arriba, número de
    página abajo, índice con páginas, notas al pie al pie de su página) y el Word (DOCX) de documento de trabajo: Arial,
-   títulos de Word, tabla numerada, imagen, notas al pie, número de página y orientación. Lo de estudio que quedó
-   en una página (legado) sale como texto. El DOCX se revisa abriendo el ZIP con zlib de Node. */
+   títulos de Word, tabla numerada, imagen, notas al pie, número de página y orientación. El DOCX se revisa abriendo el ZIP con zlib de Node. */
 'use strict';
 const fs=require('fs'),zlib=require('zlib');
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
@@ -19,8 +18,8 @@ function unzip(buf){
   }
   return out;
 }
-/* Un informe con todo: propiedades, índice, secciones, callout, tabla numerada, imagen, notas al pie, referencia
-   cruzada y lo de estudio que quedó (preguntas de repaso y una cita bibliográfica) */
+/* Un informe con todo: propiedades, índice, secciones, callout, tabla numerada, imagen, notas al pie y referencia
+   cruzada */
 function informe(png){
   let k=0;
   function id(){return 'b-x'+(++k).toString(36).padStart(4,'0')}
@@ -40,8 +39,7 @@ function informe(png){
       {type:'tablaNumerada',attrs:{id:'b-tab',clave:'p-tab1',titulo:'Ventas por producto',nota:'Cifras en pesos.'},content:[{type:'table',content:[
         {type:'tableRow',content:[{type:'tableHeader',content:[P('Producto')]},{type:'tableHeader',content:[P('Ventas')]}]},
         {type:'tableRow',content:[{type:'tableCell',content:[P('Café de olla')]},{type:'tableCell',content:[P('$12,400')]}]}]}]},
-      H('Lo que quedó de antes'),P('Una cita de antes: ',[{type:'referencia',attrs:{fuente:'f-a',pagina:'12'}}]),
-      {type:'repaso',attrs:{id:'b-rep',preguntas:[{q:'¿Cuánto vendimos en octubre?',o:['Más','Menos'],a:0,e:'Más.'}]}},
+      H('Pendientes'),P('Revisar los precios de octubre con el proveedor.'),
       H('Conclusiones'),P('El trimestre cerró bien.',[{type:'notaPie',attrs:{texto:'Una segunda aclaración.'}}])
     ])}};
 }
@@ -86,7 +84,7 @@ prueba('Imprimir o exportar: PDF y Word',async function({browser,base,r}){
   r.cumple(/<w:drawing>/.test(docx)&&Object.keys(zip).some(function(n){return /^word\/media\/.+\.png$/.test(n)})&&/Ventas por semana/.test(texto),'la imagen (WebP convertida a PNG) y su pie');
   r.cumple(/Datos del punto de venta\./.test(notasX)&&/Una segunda aclaración\./.test(notasX)&&(docx.match(/w:footnoteReference/g)||[]).length===2,'las notas al pie son notas al pie de Word');
   r.cumple(/PAGE/.test(pies),'el número de página va al pie');
-  r.cumple(/Cuánto vendimos en octubre/.test(texto)&&/Cita bibliográfica/.test(texto)&&!/m:oMath/.test(docx),'lo de estudio que quedó sale como su texto');
+  r.cumple(/Revisar los precios de octubre/.test(texto),'el texto de cada sección');
   await p.keyboard.press('Escape');await p.waitForTimeout(150);
 
   /* ---------- PDF ---------- */
@@ -103,17 +101,15 @@ prueba('Imprimir o exportar: PDF y Word',async function({browser,base,r}){
       notas:[].map.call(document.querySelectorAll('.pagedjs_footnote_area'),function(a){return a.textContent.trim()}).filter(Boolean).join(' | '),
       toc:[].map.call(document.querySelectorAll('.im-toc a'),function(a){return a.textContent+(document.getElementById(a.getAttribute('href').slice(1))?'✓':'✗')}).join(' | '),
       fig:!!document.querySelector('.pagedjs_page figure.fig img'),tabla:(document.querySelector('.pagedjs_page figure.tabla-num .fig-n')||{}).textContent,
-      legado:[].map.call(document.querySelectorAll('.pagedjs_page .legado,.pagedjs_page .legado-l'),function(x){return x.textContent}).join(' | '),
       portada:!!document.querySelector('.pagedjs_portada_page,.portada'),ancho:Math.round(c.width),alto:Math.round(c.height)};
   });
   r.cumple(pg.n>=2&&pg.estado===pg.n+' páginas','el PDF se pagina y dice cuántas páginas tiene',pg.estado);
   r.igual(pg.reglas,Array.from({length:pg.n},function(_,i){return String(i+1)}).join(','),'las páginas se numeran desde 1');
-  r.cumple(pg.h1==='Informe de ventas'&&pg.props&&!pg.portada,'el título y las propiedades van arriba, sin portada de tesis',pg);
+  r.cumple(pg.h1==='Informe de ventas'&&pg.props&&!pg.portada,'el título y las propiedades van arriba, sin portada',pg);
   r.cumple(pg.ancho>pg.alto,'la hoja sale horizontal, como se eligió',pg);
   r.cumple(pg.notas==='Datos del punto de venta. | Una segunda aclaración.','las notas al pie quedan al pie de su página',pg.notas);
-  r.cumple(/^Resumen✓ \| Detalle✓ \| Lo que quedó de antes✓ \| Conclusiones✓$/.test(pg.toc),'el índice enlaza a cada sección, con su página',pg.toc);
+  r.cumple(/^Resumen✓ \| Detalle✓ \| Pendientes✓ \| Conclusiones✓$/.test(pg.toc),'el índice enlaza a cada sección, con su página',pg.toc);
   r.cumple(pg.fig&&pg.tabla==='Tabla 1','la imagen y la tabla numerada',pg);
-  r.cumple(/Preguntas de repaso/.test(pg.legado)&&/Cuánto vendimos/.test(pg.legado)&&/Cita bibliográfica/.test(pg.legado),'lo de estudio que quedó se imprime como texto',pg.legado);
   const pdf=await p.pdf({preferCSSPageSize:true});
   r.igual((pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length,pg.n,'al guardar como PDF salen las mismas páginas');
   await revisar(p,r,'vista para imprimir');

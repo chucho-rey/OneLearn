@@ -164,25 +164,24 @@ document.addEventListener('click',function(e){
 /* ---------- Ubicaciones de tus páginas: las comparten la barra lateral y el explorador del Inicio ---------- */
 /* «Mi negocio» y «Tu equipo» viven en el tablero del Inicio: no salen entre tus páginas (salvo la que tienes abierta) */
 var SISTEMA={'d-minegocio':1,'d-miequipo':1};
-var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['general','Otras','notas'],['estudio','De estudio (solo lectura)','libreta']];
+var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['general','Otras','notas']];
 var DIA=864e5;
 /* Lo que una ubicación necesita saber de cada página */
 function infoPagina(d){
-  var D=AT.datos,A=D.acceso,deEstudio=!!(D.deEstudio&&D.deEstudio(d));
-  var t=deEstudio?{nombre:'Página de estudio',icono:'libreta',cat:'estudio'}:AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
+  var D=AT.datos,A=D.acceso;
+  var t=AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
   var gente=A?A.personas(d):[],admin=A?A.puede(d,'compartir'):true;
   return {d:d,id:d.id,titulo:d.titulo||'Sin título',tipo:t,cat:CATS.some(function(c){return c[0]===t.cat})?t.cat:'general',
     gente:gente,admin:admin,pend:admin&&A?A.pendientes(d):[],contigo:gente.some(function(p){return p.tu&&p.rol!=='dueno'}),
     sala:A&&A.sala?A.sala(d):'',editado:d.editado||d.creado||''};
 }
-/* Las páginas de estudio (que se separaron de OneBook) solo salen en «De estudio» */
 var UBIC=[
-  {k:'todas',t:'Todas tus páginas',i:'notas',f:function(x){return x.cat!=='estudio'}},
-  {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return x.cat!=='estudio'&&!!x.d.favorito}},
-  {k:'recientes',t:'Recientes',i:'historial',f:function(x){return x.cat!=='estudio'&&Date.now()-Date.parse(x.editado)<7*DIA}},
-  {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.cat!=='estudio'&&x.gente.length>1}},
-  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.cat!=='estudio'&&x.contigo},siHay:true},
-  {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.cat!=='estudio'&&x.pend.length>0},siHay:true}
+  {k:'todas',t:'Todas tus páginas',i:'notas',f:function(x){return true}},
+  {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return !!x.d.favorito}},
+  {k:'recientes',t:'Recientes',i:'historial',f:function(x){return Date.now()-Date.parse(x.editado)<7*DIA}},
+  {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.gente.length>1}},
+  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.contigo},siHay:true},
+  {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.pend.length>0},siHay:true}
 ];
 /* Una ubicación por su clave: las de arriba, una sala ('sala:sa-…' o 'sala:privado') o un tipo ('cat:negocio') */
 function ubicDe(k){
@@ -191,7 +190,7 @@ function ubicDe(k){
   var sm=/^sala:(sa-[\w-]+|privado)$/.exec(k||'');
   if(sm){var so=sm[1]==='privado'?{nombre:'Privado'}:AT.empresa&&AT.empresa.existe()&&AT.empresa.sala(sm[1]);
     if(so)return {k:k,t:sm[1]==='privado'?'Privado':so.tipo==='general'?'General':so.nombre,i:sm[1]==='privado'?'candado':'deptos',sala:sm[1],
-      f:function(x){return x.cat!=='estudio'&&x.sala===sm[1]}}}
+      f:function(x){return x.sala===sm[1]}}}
   var c=/^cat:(\w+)$/.exec(k||''),cc=c&&CATS.filter(function(x){return x[0]===c[1]})[0];
   return cc?{k:k,t:cc[1],i:cc[2],f:function(x){return x.cat===cc[0]}}:UBIC[0];
 }
@@ -243,7 +242,7 @@ AT.ubicaciones={SISTEMA:SISTEMA,CATS:CATS,UBIC:UBIC,info:infoPagina,de:ubicDe,pa
   }
   /* Una sala: la flecha que muestra sus páginas, el enlace a la sala y sus páginas (favoritas primero, luego recientes) */
   function salaHTML(id,nombre,marca,color,xs,aqui){
-    var ps=xs.filter(function(x){return x.cat!=='estudio'&&x.sala===id}).sort(function(a,b){return (!!b.d.favorito-!!a.d.favorito)||(b.editado<a.editado?-1:b.editado>a.editado?1:0)});
+    var ps=xs.filter(function(x){return x.sala===id}).sort(function(a,b){return (!!b.d.favorito-!!a.d.favorito)||(b.editado<a.editado?-1:b.editado>a.editado?1:0)});
     var abierta=!!abiertas[id]||id===aqui,on=R.pagina==='sala'&&id===aqui,lid='arb-'+id.replace(/[^\w-]/g,'');
     var h='<li class="arb-sala" data-sala="'+esc(id)+'"><div class="arb-fila">'+
       '<button type="button" class="arb-tg" aria-expanded="'+abierta+'" aria-controls="'+lid+'" aria-label="'+(abierta?'Esconder':'Mostrar')+' las páginas de '+esc(nombre)+'" title="'+(abierta?'Esconder':'Mostrar')+' sus páginas">'+ico('chev-l')+'</button>'+

@@ -3,7 +3,6 @@
    dibujada para leer, con su índice y modo zen). Desde «⋯» se puede imprimir o exportar (PDF y Word),
    descargar como Markdown, duplicar o eliminar (con «Deshacer») y abrir el historial de versiones
    (versiones.js; cada guardado se lo cuenta a AT.datos.versiones, y AT.docVersiones restaura o recupera).
-   Las páginas de estudio (de cuando OneBook tenía lecciones y tesis) se abren solo para leer, con un aviso.
    Usa AT.datos (datos.js), AT.bloques (bloques.js) y AT.editor (editor.js). */
 (function(){
 'use strict';
@@ -283,12 +282,6 @@ function sinAccesoVista(){
 
 /* ---------- Más opciones ---------- */
 masBtn.addEventListener('click',function(){
-  /* Una página de estudio solo se lee: se puede exportar y descargar, nada más */
-  if(deEstudio){
-    AT.menu.abrir(masBtn,(AT.exportar?[{t:'Imprimir o exportar',i:'page',d:'PDF con números de página o Word',f:abrirExportar}]:[]).concat([
-      {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd}]),{etiqueta:'Más opciones del documento',devolver:masBtn,alElegir:function(it){it.f()}});
-    return;
-  }
   AT.menu.abrir(masBtn,(AT.exportar?[{t:'Imprimir o exportar',i:'page',d:'PDF con números de página o Word',f:abrirExportar}]:[]).concat([
     {t:'Descargar como Markdown',i:'descargar',d:'Un archivo .md con el texto',f:descargarMd}
   ],[
@@ -400,7 +393,6 @@ function mdTexto(lista){
   return (lista||[]).map(function(n){
     if(n.type==='hardBreak')return '  \n';
     if(n.type==='cita')return '['+((n.attrs||{}).texto||'cita')+']('+((n.attrs||{}).href||'')+')';
-    if(AT.bloques.LEGADO[n.type])return '*'+AT.bloques.textoLegado(n).replace(/\s+/g,' ').trim()+'*';
     if(AT.piezas&&AT.piezas.md[n.type])return AT.piezas.md[n.type](n,mdAyuda);
     if(n.type!=='text')return '';
     var t=n.text||'',ms=(n.marks||[]).map(function(m){return m.type});
@@ -447,8 +439,6 @@ function mdBloque(n,pre){
       return ['| '+cab.join(' | ')+' |','| '+sep.join(' | ')+' |'].concat(filas.slice(1).map(function(f){return '| '+f.join(' | ')+' |'})).join('\n');
     default:
       if(AT.piezas&&AT.piezas.md[n.type])return AT.piezas.md[n.type](n,mdAyuda);
-      /* Lo de estudio que ya no está en OneBook (legado): su texto, en cursiva */
-      if(AT.bloques.LEGADO[n.type]){var tl=AT.bloques.textoLegado(n).replace(/\s+/g,' ').trim();return tl?'*'+tl+'*':''}
       return mdBloques(c);
   }
 }
@@ -477,14 +467,12 @@ AT.datos.documentos.leer(ID).then(function(d){
   if(!d||!d.contenido){noEncontrado();return}
   doc=d;
   if(!doc.props)doc.props=[];
-  if(AT.datos.acceso&&!(AT.datos.deEstudio&&AT.datos.deEstudio(doc))&&!AT.datos.acceso.puede(doc,'ver')){sinAccesoVista();return}
+  if(AT.datos.acceso&&!AT.datos.acceso.puede(doc,'ver')){sinAccesoVista();return}
   AT.docActual=doc;AT.docCambio=cambio;
   titulo();pintarSala();
-  /* Una página de estudio (lo que se separó de OneBook) solo se lee */
-  deEstudio=!!(AT.datos.deEstudio&&AT.datos.deEstudio(doc));
-  sinPermiso=deEstudio||!!(AT.datos.acceso&&!AT.datos.acceso.puede(doc,'editar'));
+  sinPermiso=!!(AT.datos.acceso&&!AT.datos.acceso.puede(doc,'editar'));
   /* Si te invitaron a esta página, al abrirla aceptas la invitación */
-  if(AT.datos.acceso&&!deEstudio)AT.datos.acceso.aceptar(ID).catch(function(){});
+  if(AT.datos.acceso)AT.datos.acceso.aceptar(ID).catch(function(){});
   if(sinPermiso)AT.docCambio=null;
   else if(AT.datos.versiones)AT.datos.versiones.abrir(doc);
   modoBtn.hidden=sinPermiso;masBtn.hidden=false;favBtn.hidden=sinPermiso;
@@ -512,7 +500,7 @@ AT.datos.documentos.leer(ID).then(function(d){
 
 /* ---------- Historial de versiones: restaurar una versión o recuperar un bloque (versiones.js) ---------- */
 /* Lo que una versión no cambia de la página: su id, su fecha de creación, si es favorita y el registro de autoría */
-var CONSERVAR=['id','creado','favorito','anchoCompleto','autoria','acceso','editadoPor'];
+var CONSERVAR=['id','creado','favorito','anchoCompleto','acceso','editadoPor'];
 function contenidoAhora(){if(ed)doc.contenido=ed.json();return doc}
 /* Vuelve a pintar la página con lo que tiene doc (sin pasar el editor viejo encima) */
 function repintar(){
@@ -571,7 +559,7 @@ var YO=Math.random().toString(36).slice(2),bloqueado=false,abiertoEn=0,canalDoc=
 /* ---------- Permisos (datos.js: AT.datos.acceso; la ventana está en permisos.js) ----------
    Con «Solo puede ver» (o sin estar en la lista de una página de otra persona) la página se abre para leer, con un
    aviso y «Pedir permiso para editar». Si los permisos cambian en otra ventana, la página se ajusta. */
-var sinPermiso=false,deEstudio=false;
+var sinPermiso=false;
 function permisoTexto(){
   var A=AT.datos.acceso;if(!A||!doc)return '';
   var n=A.personas(doc).length,r=A.rol(doc);
@@ -579,13 +567,6 @@ function permisoTexto(){
 }
 function pintarPermiso(){
   var v=document.createElement('div');
-  if(deEstudio){
-    v.className='doc-bloqueo doc-permiso doc-estudio';v.setAttribute('role','status');
-    v.innerHTML='<p><b>Esta página es de estudio.</b> OneBook ahora es para empresas y lo de estudio (lecciones, libretas y tesis) se separó: '+
-      'aquí ya no se edita, pero sigue guardada en este navegador y en tus respaldos. Puedes leerla, exportarla o descargarla desde «⋯».</p>';
-    page.insertBefore(v,page.firstChild);
-    return;
-  }
   var A=AT.datos.acceso,r=A.rol(doc),s=A.tuSolicitud(doc);
   v.className='doc-bloqueo doc-permiso';v.setAttribute('role','status');
   v.innerHTML='<p><b>Solo puedes ver esta página.</b> '+(r==='ninguno'?'No estás en la lista de personas con acceso.':'Tu permiso: '+esc(A.nombreRol(r))+'.')+
@@ -596,7 +577,6 @@ function pintarPermiso(){
 }
 /* Los permisos de esta página cambiaron (aquí o en otra pestaña): se vuelve a ver qué puedes hacer */
 function revisarPermiso(){
-  if(deEstudio)return;
   AT.datos.documentos.leer(ID).then(function(d){
     if(!d||!doc)return;
     doc.acceso=d.acceso;

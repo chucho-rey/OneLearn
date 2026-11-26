@@ -18,7 +18,7 @@ var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,D=AT.datos;
 var TAMS=[['s','Chico'],['m','Mediano'],['l','Grande']];
 function nuevoId(){return 'm-'+Math.random().toString(36).slice(2,10)}
 function tiene(m){return !m||!AT.perfil||AT.perfil.tiene(m)}
-function visible(d){return (!D.acceso||D.acceso.puede(d,'ver'))&&!(D.deEstudio&&D.deEstudio(d))}
+function visible(d){return !D.acceso||D.acceso.puede(d,'ver')}
 function porFecha(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0}
 function cuando(t){
   var d=new Date(t),min=(Date.now()-d)/6e4;

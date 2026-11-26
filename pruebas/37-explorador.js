@@ -178,7 +178,7 @@ prueba('Explorador de páginas y permisos',async function({browser,base,r}){
   soloInv.documentos=soloInv.documentos.filter(function(d){return d.id===idInv});
   soloInv.documentos[0].acceso.personas.forEach(function(x){if(x.correo==='luis@ejemplo.com')x.rol='lector'});
   soloInv.documentos[0].acceso.cambio=new Date(Date.now()+1000).toISOString();
-  ['plantillas','bases','filas','notas','marcadores'].forEach(function(k){soloInv[k]=[]});
+  ['plantillas','bases','filas'].forEach(function(k){soloInv[k]=[]});
   await l.evaluate(function(d){return AT.datos.importar(d)},soloInv);
   r.cumple(await l.evaluate(function(){return AT.datos.yo().nombre==='Luis Gómez'}),'importar páginas de otra persona no te cambia quién eres');
   await l.reload();await listo(l,700);await l.waitForSelector('#xpLista [data-fila]');

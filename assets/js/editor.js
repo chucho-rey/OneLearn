@@ -6,7 +6,7 @@
    - Barra de herramientas (role=toolbar, con flechas), menú «/» para insertar, «@» para enlazar otra página,
      asa «+ ⋮⋮» para insertar, arrastrar y abrir las opciones de un bloque, y atajos: Alt+↑/↓ mueven el bloque,
      Ctrl+Mayús+D lo duplica.
-   - Lo que el editor no conoce (los bloques de estudio que se separaron de OneBook u otros) no se pierde: entra
+   - Lo que el editor no conoce (por ejemplo, de un respaldo de otra versión) no se pierde: entra
      envuelto en «legado» (o «legadoLinea» dentro del texto) con su JSON original, se ve sin poder editarse y al
      guardar vuelve tal cual (desenvolver).
    Se carga solo en documento.html, después de bloques.js. */
@@ -131,14 +131,14 @@ var Indice=atomo('indice',function(p){
   indices.add(v);pintar();
   return v;
 });
-/* Legado: un bloque que este editor no conoce (por ejemplo, los de estudio que se separaron de OneBook). Guarda el
-   JSON original en attrs.json; se ve con su nombre y su texto, no se edita y al guardar vuelve tal cual (desenvolver) */
+/* Legado: un bloque que este editor no conoce (por ejemplo, de un respaldo de otra versión). Guarda el JSON original en
+   attrs.json; se ve con su texto, no se edita y al guardar vuelve tal cual (desenvolver): nada se pierde */
 function originalDe(n){try{var o=JSON.parse(n.attrs.json||'null');return o&&typeof o==='object'?o:null}catch(e){return null}}
-function textoDeOriginal(o){return o&&o.type?AT.bloques.textoLegado(o).replace(/\s+/g,' ').trim():''}
+function textoDeOriginal(o){return o&&o.type?AT.bloques.textoDe(o).replace(/\s+/g,' ').trim():''}
 var Legado=atomo('legado',function(p){
   var dom=el('div','ed-legado legado');dom.contentEditable='false';
-  var o=originalDe(p.node)||{},nom=(AT.bloques.LEGADO||{})[o.type],t=textoDeOriginal(o),b=el('p','legado-t');
-  b.textContent=(nom?nom+': ya no está en OneBook':p.editor.schema.nodes[o.type]?'Un bloque que no se pudo abrir':'Un bloque que esta versión de OneBook no conoce')+
+  var o=originalDe(p.node)||{},t=textoDeOriginal(o),b=el('p','legado-t');
+  b.textContent=(p.editor.schema.nodes[o.type]?'Un bloque que no se pudo abrir':'Un bloque que esta versión de OneBook no conoce')+
     '. Se conserva en la página tal como estaba.';
   dom.appendChild(b);
   if(t){var x=el('p');x.textContent=t.length>600?t.slice(0,600)+'…':t;dom.appendChild(x)}
@@ -149,8 +149,8 @@ var LegadoLinea=T.Node.create({
   addAttributes:function(){return {json:{default:'{}',parseHTML:function(e){return e.getAttribute('data-json')||'{}'},renderHTML:function(a){return {'data-json':a.json}}}}},
   parseHTML:function(){return [{tag:'span[data-legado]'}]},
   renderHTML:function(o){
-    var x=originalDe(o.node)||{},nom=(AT.bloques.LEGADO||{})[x.type];
-    return ['span',T.mergeAttributes(o.HTMLAttributes,{'data-legado':'',class:'legado-l',title:(nom||'Contenido')+' (ya no está en OneBook)'}),textoDeOriginal(x)||nom||'…'];
+    var x=originalDe(o.node)||{};
+    return ['span',T.mergeAttributes(o.HTMLAttributes,{'data-legado':'',class:'legado-l',title:'Contenido que esta versión de OneBook no conoce'}),textoDeOriginal(x)||'…'];
   },
   renderText:function(o){return textoDeOriginal(originalDe(o.node))}
 });

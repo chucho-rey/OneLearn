@@ -1,7 +1,7 @@
 /* OneBook: búsqueda (Ctrl K o «Buscar» en la barra lateral).
    Busca en tus páginas (títulos, secciones y texto) y en la Ayuda (cada herramienta es una sección). Todo pasa en
    tu navegador: la Ayuda se lee de su propio archivo (que el service worker guarda para usarla sin conexión) y lo
-   tuyo, de AT.datos. Las páginas de estudio (que se separaron de OneBook) no salen.
+   tuyo, de AT.datos.
    AT.indice.cargar() devuelve las entradas y AT.indice.buscar(texto) las ordena por relevancia;
    el editor las usa también para enlazar otra página con «@». */
 (function(){
@@ -49,7 +49,6 @@ function cargarTuyo(){
   return AT.datos.documentos.todos().then(function(docs){
     var out=[];
     docs.forEach(function(d){
-      if(AT.datos.deEstudio&&AT.datos.deEstudio(d))return;
       /* Con salas, solo las páginas que puedes ver */
       if(AT.datos.acceso&&!AT.datos.acceso.puede(d,'ver'))return;
       var tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo],href='documento.html?id='+encodeURIComponent(d.id);

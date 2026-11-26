@@ -1,9 +1,9 @@
 /* Fase F2 y etapa Empresas · Perfiles, módulos y «Crea tu empresa» (entrar.html, perfil.js, empresa.js).
    Un navegador sin espacio que abre Inicio va a «Crea tu empresa»; el asistente (tres pasos: tu empresa, sus
    departamentos y con qué empiezas) guarda el perfil y la empresa (tú como propietario) y crea las páginas sugeridas. Solo se ve el núcleo y los módulos de la empresa (barra,
-   Inicio, Crear, «/» y búsqueda). «Tu espacio» se cambia desde «Tus datos» (entrar.html?editar). Los espacios de
-   antes (estudio y «Mis finanzas») se convierten solos en negocio y el Inicio lo explica una vez; quien ya usaba
-   OneLearn entra directo; un respaldo con perfil lleva directo al Inicio. Contraste y desbordes en celular,
+   Inicio, Crear, «/» y búsqueda). «Tu espacio» se cambia desde «Tus datos» (entrar.html?editar). Un navegador
+   con datos y sin un perfil válido entra directo a un espacio de negocio; un respaldo con perfil lleva directo al
+   Inicio. Contraste y desbordes en celular,
    escritorio y variantes de lectura. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
@@ -136,44 +136,19 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.filter(function(d){return d.id!=='d-minegocio'&&d.id!=='d-miequipo'}).length})}),5,'cambiar el espacio no crea ni borra tus páginas');
   await cerrar(p);
 
-  /* ---------- Un espacio de «Mis finanzas» (de antes) ---------- */
-  const q=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'personal',modulos:['negocio'],nombre:'Ana',negocio:null,creado:'2026-01-01'}});
-  await q.goto(base+'inicio.html');await listo(q,400);
-  const qp=await perfil(q);
-  r.cumple(qp.perfil==='negocio'&&qp.aviso==='personal'&&qp.nombre==='Ana'&&qp.modulos.join()==='negocio','un espacio de «Mis finanzas» se convierte solo en negocio, con su nombre',qp);
-  r.cumple(await q.isVisible('#iniAviso')&&/finanzas personales/.test(await q.textContent('#iniAviso')),'el Inicio explica, una vez, que las plantillas de finanzas personales se fueron');
-  r.igual(await q.textContent('#saludo'),'Ana','y saluda con su nombre');
-  await revisar(q,r,'Inicio con el aviso, en escritorio');
-  await q.click('#iniAvisoOk');await q.waitForTimeout(150);
-  r.cumple(await q.isHidden('#iniAviso')&&await q.evaluate(function(){return document.activeElement.id})==='t-docs','«Entendido» lo esconde y el foco no se pierde');
-  await q.reload();await listo(q,300);
-  r.cumple(await q.isHidden('#iniAviso')&&!(await perfil(q)).aviso,'y no vuelve a salir');
-  await cerrar(q);
-
-  /* ---------- Un espacio de estudio (de antes) ---------- */
-  const e=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:{perfil:'estudio',modulos:['estudio'],nombre:'Luis',negocio:null,creado:'2026-01-01'}});
-  await e.goto(base+'inicio.html');await listo(e,400);
-  const ep=await perfil(e);
-  r.cumple(ep.perfil==='negocio'&&ep.aviso==='estudio'&&ep.modulos.join()==='negocio','un espacio de estudio se convierte en negocio',ep);
-  r.cumple(/Lo de estudio \(lecciones, rutas, libretas, apuntes y tesis\) se separó/.test(await e.textContent('#iniAviso'))&&/no se borró/.test(await e.textContent('#iniAviso')),'el Inicio explica que lo de estudio se separó y que no se borró nada');
-  const [res]=await Promise.all([e.waitForEvent('download'),e.click('#iniAvisoResp')]);
-  r.cumple(/onebook-respaldo/.test(res.suggestedFilename()),'y ofrece descargar un respaldo',res.suggestedFilename());
-  await e.click('.xp-nuevo');await e.waitForTimeout(300);
-  r.cumple(!/Libreta|Tesis|Apuntes de clase/.test(await opcionesCrear(e)),'«Crear» ya no ofrece plantillas de estudio');
-  await cerrar(e);
-
-  /* ---------- Quien ya usaba OneLearn (con datos y sin espacio) ---------- */
-  const v=await pagina(browser,{ancho:1280,perfil:false,local:{'aprende-tecnologia:avance':JSON.stringify({lecciones:{ram:{total:5,leidas:{a:'x'}}}})}});
+  /* ---------- Un navegador con datos y un perfil que ya no existe ---------- */
+  const v=await pagina(browser,{ancho:1280,perfil:{perfil:'estudio',modulos:['estudio'],nombre:'Luis',negocio:null,creado:'2026-01-01'},
+    local:{'aprende-tecnologia:ajustes':'{}','aprende-tecnologia:avance':JSON.stringify({lecciones:{ram:{total:5}}})}});
   await v.goto(base+'inicio.html');await listo(v);
   const mig=await perfil(v);
-  r.cumple(/inicio\.html$/.test(v.url())&&mig&&mig.perfil==='negocio'&&mig.modulos.join()==='negocio'&&mig.migrado&&mig.aviso==='estudio','quien ya usaba OneLearn entra directo, con el aviso de que lo de estudio se separó',mig);
-  r.cumple(await v.evaluate(function(){return !!JSON.parse(localStorage.getItem('aprende-tecnologia:avance')).lecciones.ram}),'y su avance sigue guardado');
+  r.cumple(/inicio\.html$/.test(v.url())&&mig&&mig.perfil==='negocio'&&mig.modulos.join()==='negocio'&&mig.migrado&&!('aviso' in mig),'con datos y un perfil que ya no existe, entra directo a un espacio de negocio (sin avisos de antes)',mig);
+  r.cumple(await v.evaluate(function(){return localStorage.getItem('aprende-tecnologia:avance')===null}),'y lo que guardaban las lecciones se borra');
   await cerrar(v);
 
   /* ---------- Restaurar un respaldo ---------- */
   const doc={formato:1,tipo:'notas',id:'d-respaldo1',titulo:'Cuentas de la semana',creado:'2026-11-01T10:00:00.000Z',editado:'2026-11-01T10:00:00.000Z',
     contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-aaa111'},content:[{type:'text',text:'hola'}]}]}};
-  const conPerfil={app:'OneBook',formato:1,documentos:[doc],notas:[],marcadores:[],
+  const conPerfil={app:'OneBook',formato:1,documentos:[doc],
     perfil:{perfil:'negocio',modulos:['negocio','raro'],negocio:{nombre:'Papelería Sol',giro:'tienda',telefono:'<b>55</b>'},creado:'2026-10-01',extra:'no'}};
   const s=await pagina(browser,{ancho:390,perfil:false});
   await s.goto(base+'entrar.html');await listo(s);
@@ -184,7 +159,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   await cerrar(s);
   const s2=await pagina(browser,{ancho:390,perfil:false});
   await s2.goto(base+'entrar.html');await listo(s2);
-  await s2.setInputFiles('#enArchivo',{name:'viejo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({app:'OneLearn',formato:1,documentos:[doc],notas:[],marcadores:[]}))});
+  await s2.setInputFiles('#enArchivo',{name:'viejo.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({app:'OneLearn',formato:1,documentos:[doc]}))});
   await s2.waitForFunction(function(){return /Ahora cuéntanos/.test(document.getElementById('enMsg').textContent)});
   r.cumple(/entrar\.html$/.test(s2.url())&&/se restauraron 1 documento/.test(await s2.textContent('#enMsg'))&&await s2.evaluate(function(){return document.activeElement.id==='enNegocio'}),'un respaldo de OneLearn (sin perfil) se restaura y sigue con «Tu empresa»');
   await s2.setInputFiles('#enArchivo',{name:'malo.json',mimeType:'application/json',buffer:Buffer.from('no es json')});

@@ -82,13 +82,13 @@ function crear(){
         mensaje('Se abrieron '+plural(r.documentos,'libro','libros')+' de Bases unificadas como páginas, con '+plural(r.bases,'base de datos','bases de datos')+' y '+plural(r.filas,'fila','filas')+'. Están en tus páginas.',false);
         pintar();return;
       }
-      var n=r.documentos+r.notas+r.marcadores+(r.plantillas||0)+(r.bases||0);
+      var n=r.documentos+(r.plantillas||0)+(r.bases||0);
       /* La empresa del respaldo: nueva, juntada con la tuya o de otra empresa (no se junta) */
       var emp=r.empresa==='nueva'?' También llegó la empresa, con sus personas y departamentos.':r.empresa==='combinada'?' Tu empresa recibió los cambios de personas y departamentos.':
         r.empresa==='otra'?' La empresa del respaldo es otra: sus personas y departamentos no se juntaron con los tuyos.':'';
-      if(!n&&!r.avance&&!r.empresa)mensaje('No había nada nuevo: todo lo del respaldo ya estaba aquí.',false);
+      if(!n&&!r.empresa)mensaje('No había nada nuevo: todo lo del respaldo ya estaba aquí.',false);
       else mensaje('Se recuperaron '+plural(r.documentos,'página','páginas')+(r.bases?', '+plural(r.bases,'base de datos','bases de datos'):'')+(r.plantillas?', '+plural(r.plantillas,'plantilla','plantillas'):'')+
-        (r.notas||r.marcadores?' y '+plural(r.notas+r.marcadores,'nota o marcador','notas y marcadores')+' de estudio':'')+'. Lo que ya tenías y era más reciente se conservó.'+emp,false);
+        '. Lo que ya tenías y era más reciente se conservó.'+emp,false);
       pintar();
     }).catch(function(e){mensaje(e&&e.message||'No se pudo importar el archivo.',true)});
   });
@@ -121,13 +121,11 @@ function pintar(){
     $('#tdPap',dlg).innerHTML='<h3>Papelera</h3><p class="td-p">'+(l.length?plural(l.length,'página','páginas')+' en la papelera. Se borran solas a los '+AT.datos.papelera.DIAS+' días.':'La papelera está vacía.')+'</p>'+
       (l.length?'<div class="td-bt"><button class="btn" type="button" data-td="papelera">Ver la papelera</button></div>':'');
   });
-  Promise.all([AT.datos.documentos.todos(),AT.datos.notas.todas(),AT.datos.marcadores.todos(),AT.datos.espacio(),AT.datos.persistente(),AT.datos.bases.todos()]).then(function(r){
-    var notas=r[1].filter(function(n){return n.texto&&n.texto.trim()}).length,esp=r[3],pers=r[4];
-    /* Las notas y los marcadores de las lecciones (de cuando OneBook tenía estudio) solo se cuentan si hay */
+  Promise.all([AT.datos.documentos.todos(),AT.datos.espacio(),AT.datos.persistente(),AT.datos.bases.todos()]).then(function(r){
+    var esp=r[1],pers=r[2];
     $('#tdRes',dlg).innerHTML=
       '<div><dt>Páginas</dt><dd>'+AT.fmt(r[0].length)+'</dd></div>'+
-      '<div><dt>Bases de datos</dt><dd>'+AT.fmt(r[5].length)+'</dd></div>'+
-      (notas+r[2].length?'<div><dt>Notas y marcadores de estudio</dt><dd>'+AT.fmt(notas+r[2].length)+'</dd></div>':'')+
+      '<div><dt>Bases de datos</dt><dd>'+AT.fmt(r[3].length)+'</dd></div>'+
       (esp?'<div><dt>Espacio usado</dt><dd>'+mb(esp.usado)+'</dd></div>':'')+
       (esp&&esp.cuota?'<div><dt>Disponible</dt><dd>'+mb(Math.max(0,esp.cuota-esp.usado))+'</dd></div>':'');
     /* La cuota es lo que el navegador le reserva a OneBook; depende del espacio libre del dispositivo */

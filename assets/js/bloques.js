@@ -7,8 +7,7 @@
    Los bloques de primer nivel llevan attrs.id, un identificador fijo: el ancla de los enlaces y de la búsqueda.
    Este archivo dibuja ese JSON como HTML (sin usar innerHTML con datos del documento, así que un
    documento importado no puede inyectar código).
-   Los bloques de estudio que se separaron de OneBook (LEGADO: preguntas de repaso, bibliografía, ecuaciones…)
-   se dibujan como «legado», con su nombre y su texto, y nunca se borran de la página.
+   Un tipo de bloque que no se conoce no se dibuja (el editor lo conserva intacto: legado y legadoLinea).
    Si la página trae <script type="application/json" id="documento">, lo dibuja al cargar dentro de .page.
    Expone AT.bloques. */
 (function(){
@@ -69,40 +68,17 @@ function enLinea(lista,padre,ctx){
     if(!n)return;
     if(n.type==='text')padre.appendChild(texto(n));
     else if(n.type==='hardBreak')padre.appendChild(el('br'));
-    else{var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):legado(n,true);if(e)padre.appendChild(e)}
+    else{var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):null;if(e)padre.appendChild(e)}
   });
   return padre;
 }
 function bloques(lista,padre,ctx){
   lista.forEach(function(n){
     if(!n)return;
-    var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):legado(n,false);
+    var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):null;
     if(e)padre.appendChild(e);
   });
   return padre;
-}
-/* ---------- Legado: los bloques de estudio que se separaron de OneBook ----------
-   No se pueden usar, pero se ven (su nombre y su texto) y se conservan en la página tal como estaban.
-   Otros tipos desconocidos (por ejemplo, de un módulo que esta página no carga) siguen sin dibujarse. */
-var LEGADO={repaso:'Preguntas de repaso',laboratorio:'Laboratorio',referencia:'Cita bibliográfica',bibliografia:'Bibliografía',
-  declaracion:'Declaración de autoría',ecuacion:'Ecuación',formula:'Fórmula',indicePiezas:'Índice de figuras o tablas'};
-function textoLegado(n){
-  var a=attrs(n);
-  if(n.type==='repaso')return (a.preguntas||[]).map(function(q){return q?[q.q].concat(q.o||[],[q.e||'']).join(' '):''}).join(' ');
-  if(typeof a.latex==='string'&&a.latex)return a.latex;
-  if(typeof a.texto==='string'&&a.texto)return a.texto;
-  if(typeof a.titulo==='string'&&a.titulo)return a.titulo;
-  return hijos(n).map(textoPlano).join(' ');
-}
-function legado(n,enLin){
-  if(!LEGADO[n.type])return null;
-  var t=textoLegado(n).replace(/\s+/g,' ').trim();
-  if(enLin){var s=el('span','legado-l',{title:LEGADO[n.type]+' (ya no está en OneBook)'});s.textContent=t||LEGADO[n.type];return s}
-  var d=el('div','legado'),b=el('p','legado-t');
-  b.textContent=LEGADO[n.type]+': ya no está en OneBook. Se conserva en la página tal como estaba.';
-  d.appendChild(b);
-  if(t){var x=el('p');x.textContent=t.length>600?t.slice(0,600)+'…':t;d.appendChild(x)}
-  return d;
 }
 /* Lo que el editor envolvió (legado y legadoLinea), por si llega aquí: se dibuja el original */
 function original(n){try{var o=JSON.parse(attrs(n).json||'null');return o&&typeof o==='object'?o:null}catch(e){return null}}
@@ -114,7 +90,6 @@ function textoPlano(n){
   if(n.type==='cita')return attrs(n).texto||'';
   if(n.type==='legado'||n.type==='legadoLinea'){var o=original(n);return o?textoPlano(o):''}
   if(TEXTO[n.type])return TEXTO[n.type](n,textoPlano);
-  if(LEGADO[n.type])return textoLegado(n);
   var sep=/^(paragraph|heading|listItem|taskItem|tableCell|tableHeader|codeBlock|desplegableTitulo)$/.test(n.type)?'\n':'';
   return hijos(n).map(textoPlano).join(n.type==='tableRow'?' ':'')+sep;
 }
@@ -203,16 +178,14 @@ var TIPOS={
   },
   cita:function(n){
     var a=attrs(n),h=hrefSeguro(a.href);
-    /* Las citas a lecciones, rutas o proyectos (de cuando OneBook tenía estudio) quedan como texto */
-    if(h&&/^(\.\.\/)?(lecciones|proyectos)\/|^(\.\.\/)?(rutas|acerca|estudiantes)\.html/.test(h))h=null;
     var e=el(h?'a':'span','cita',h?{href:h}:null);
     e.appendChild(icono('enlace'));
     var t=el('span');t.textContent=a.texto||'Cita';
     e.appendChild(t);
     return e;
   },
-  legado:function(n,c){var o=original(n);return o?(TIPOS[o.type]?TIPOS[o.type](o,c):legado(o,false)):null},
-  legadoLinea:function(n,c){var o=original(n);return o?(TIPOS[o.type]?TIPOS[o.type](o,c):legado(o,true)):null}
+  legado:function(n,c){var o=original(n);return o&&TIPOS[o.type]?TIPOS[o.type](o,c):null},
+  legadoLinea:function(n,c){var o=original(n);return o&&TIPOS[o.type]?TIPOS[o.type](o,c):null}
 };
 function celda(tag,n,c){
   var a=attrs(n),td=el(tag,null,{colspan:a.colspan>1?a.colspan:null,rowspan:a.rowspan>1?a.rowspan:null});
@@ -261,7 +234,7 @@ function dibujar(doc,cont,op){
   }
   hijos(doc.contenido).forEach(function(n){
     if(!n)return;
-    var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):legado(n,false);
+    var e=TIPOS[n.type]?TIPOS[n.type](n,ctx):null;
     if(!e)return;
     var id=attrs(n).id;
     if(id&&/^[A-Za-z][\w-]{0,63}$/.test(id))e.id=id;
@@ -303,8 +276,6 @@ AT.bloques={
   valido:valido,
   nuevoId:nuevoId,
   hrefSeguro:hrefSeguro,
-  LEGADO:LEGADO,
-  textoLegado:textoLegado,
   /* registrar(tipo, {dibujar(n, ctx, ayuda), texto(n, textoPlano)}): un tipo de bloque o de nodo en línea nuevo */
   registrar:function(tipo,o){
     if(o.dibujar)TIPOS[tipo]=function(n,c){return o.dibujar(n,c,{el:el,icono:icono,bloques:bloques,enLinea:enLinea,attrs:attrs,hijos:hijos})};

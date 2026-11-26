@@ -165,12 +165,6 @@ c+=herramienta('nucleo','datos','Tus datos y respaldos',
   'El Inicio te recuerda descargar un respaldo cada dos semanas.',
   'Para usar OneBook sin internet, instálalo como app desde el menú del navegador («Instalar» o «Agregar a la pantalla de inicio»).'],
  'Si borras los datos del navegador se borra lo que no esté respaldado. Guarda tus respaldos en otro lugar.','')
-c+=herramienta('nucleo','estudio','Lo de estudio que se separó',
- 'OneBook ahora es para empresas. Si lo usabas para estudiar (lecciones, rutas, libretas, apuntes de clase o una tesis), nada de lo que guardaste se borró.',
- ['Tus páginas de estudio están en el Inicio, en «Tus páginas» → **De estudio**. Se abren solo para leer; desde «⋯» se exportan en PDF o Word o se descargan.',
-  'Los bloques que ya no existen (preguntas de repaso, bibliografía, citas, ecuaciones…) se ven con su texto y se conservan en la página tal como estaban.',
-  'Tus notas y marcadores de las lecciones, tu avance y tus proyectos siguen en este navegador y entran en tus respaldos.'],
- 'Descarga un respaldo («Tus datos» → «Descargar respaldo») para conservar todo en un archivo.')
 
 # ---------------- Negocio ----------------
 c+=herramienta('negocio','corte','Corte de caja',

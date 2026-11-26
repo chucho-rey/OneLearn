@@ -1,7 +1,7 @@
 /* La barra lateral: Inicio, Crear, Buscar, «Tus páginas» como un explorador y el pie (Lectura, Tus datos, Ayuda y modo
    zen en una página). «Tus páginas»: las ubicaciones con su cuenta (en el Inicio cambian el explorador; desde otra
-   página abren el Inicio ahí), las salas como carpetas con sus páginas (favoritas primero; sin «Mi negocio», «Tu
-   equipo» ni las páginas de estudio; se abren y se cierran, y se recuerda), la sala de la página abierta abierta, por
+   página abren el Inicio ahí), las salas como carpetas con sus páginas (favoritas primero; sin «Mi negocio» ni «Tu
+   equipo»; se abren y se cierran, y se recuerda), la sala de la página abierta abierta, por
    tipo y la papelera con su cuenta. Se maneja con flechas como un árbol. En celular el menú retiene el foco.
    Variantes de lectura sin desbordes. */
 'use strict';
@@ -12,7 +12,7 @@ function doc(id,titulo,extra){
     contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-'+id.slice(2,8)},content:[{type:'text',text:'Hola'}]}]}},extra||{});
 }
 const DOCS=[doc('d-uno','Ventas de noviembre',{editado:'2026-11-20T10:00:00.000Z'}),doc('d-dos','Proveedores',{editado:'2026-11-22T10:00:00.000Z'}),
-  doc('d-fav','Lista de precios',{favorito:true}),doc('d-tesis','Mi tesis',{tipo:'tesis'}),doc('d-miequipo','Tu equipo')];
+  doc('d-fav','Lista de precios',{favorito:true}),doc('d-miequipo','Tu equipo')];
 async function sembrar(p){await p.evaluate(function(l){return Promise.all(l.map(function(d){return AT.datos.documentos.guardar(d,{conservarFecha:true})}))},DOCS)}
 const GEN='#arbol [data-sala="sa-general"]';
 function nombres(p){return p.$$eval(GEN+' .arb-pags a.doc > span',function(e){return e.map(function(x){return x.textContent})})}
@@ -23,7 +23,7 @@ prueba('Hito 3 · Barra lateral',async function({browser,base,r}){
   await p.goto(base+'inicio.html');await listo(p);
   await sembrar(p);
   await p.reload();await listo(p,500);
-  r.cumple(await cuenta(p,'todas')==='3'&&await cuenta(p,'favoritas')==='1'&&await p.textContent(GEN+' .sala-nv em')==='3','las ubicaciones y la sala General dicen cuántas páginas tienen (sin «Mi negocio», «Tu equipo» ni la tesis)');
+  r.cumple(await cuenta(p,'todas')==='3'&&await cuenta(p,'favoritas')==='1'&&await p.textContent(GEN+' .sala-nv em')==='3','las ubicaciones y la sala General dicen cuántas páginas tienen (sin «Mi negocio» ni «Tu equipo»)');
   r.igual((await nombres(p)).join(' · '),'Lista de precios · Proveedores · Ventas de noviembre','la General está abierta: la favorita primero y después las más recientes');
   r.cumple(await p.isVisible(GEN+' a.doc .doc-est'),'la favorita lleva su estrella');
   r.cumple(await p.evaluate(function(){var h=[].map.call(document.querySelectorAll('#arbol .arb-h'),function(x){return getComputedStyle(x).textTransform});return h.length>=2&&h.every(function(t){return t==='none'})}),'los encabezados («Tus páginas», «Salas») van en letra normal, no en mayúsculas');
