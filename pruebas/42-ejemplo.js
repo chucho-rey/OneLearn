@@ -15,7 +15,7 @@ async function entrarComo(p,nombre){
   await Promise.all([p.waitForNavigation({waitUntil:'load'}),p.click('.pe-p[data-id="'+pid+'"]')]);
   await listo(p,600);
 }
-function salasBarra(p){return p.$$eval('.side a[href*="sala.html?id=sa-"]',function(e){return e.map(function(a){return a.textContent.trim()}).join(', ')})}
+function salasBarra(p){return p.$$eval('.side a.sala-nv[href*="sala.html?id=sa-"] > span',function(e){return e.map(function(a){return a.textContent.trim()}).join(', ')})}
 function resumen(p){
   return p.evaluate(function(){
     var e=AT.empresa.leer();

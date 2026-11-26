@@ -71,9 +71,9 @@ prueba('Sin estudio: nada se pierde',async function({browser,base,r}){
 
   /* ---------- Las páginas de estudio ---------- */
   await p.goto(base+'inicio.html');await listo(p,600);
-  r.cumple(!/Mi tesis de antes/.test(await p.textContent('#docsLista')),'la tesis no sale en la barra lateral');
+  r.cumple(!/Mi tesis de antes/.test(await p.textContent('#arbol .arb-pags')),'la tesis no sale entre las páginas de las salas');
   r.cumple(!/Mi tesis de antes/.test(await p.textContent('#xpLista')),'ni en «Todas tus páginas»');
-  r.cumple(await p.isVisible('[data-ubic="cat:estudio"]'),'el explorador ofrece «De estudio (solo lectura)»');
+  r.cumple(await p.isVisible('[data-ubic="cat:estudio"]'),'la barra lateral ofrece «De estudio (solo lectura)»');
   await p.click('[data-ubic="cat:estudio"]');await p.waitForTimeout(200);
   r.cumple(/Mi tesis de antes/.test(await p.textContent('#xpLista'))&&/Página de estudio/.test(await p.textContent('#xpLista')),'ahí está, como página de estudio');
   await p.click('[data-ubic="todas"]');

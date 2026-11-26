@@ -1,10 +1,12 @@
 /* OneBook: barra lateral, barra superior y navegación.
-   Arma la barra lateral (Inicio, Crear, Buscar, Tu empresa, «Tus páginas» y el pie: quién usa OneBook ahora, con
-   «Cambiar de persona» (persona.js), Lectura, Tus datos, pestañas, Ayuda y modo zen)
-   y la barra superior; maneja el menú en celular (panel modal con trampa de foco), la barra compacta en escritorio
-   (solo iconos, con su nombre en un globo) y la lista de tus páginas (favoritas primero; sin «Mi negocio», «Tu
-   equipo» ni las páginas de estudio, que se separaron de OneBook).
-   Expone AT.setNav, AT.esEscritorio y AT.refrescarPaginas. */
+   Arma la barra lateral (Inicio, Crear, Buscar, Tu empresa, «Tus páginas» como un explorador y el pie: quién usa
+   OneBook ahora, con «Cambiar de persona» (persona.js), Lectura, Tus datos, pestañas, Ayuda y modo zen) y la barra
+   superior; maneja el menú en celular (panel modal con trampa de foco) y la barra compacta en escritorio (solo iconos,
+   con su nombre en un globo).
+   «Tus páginas»: las ubicaciones con su cuenta (todas, favoritas, recientes, compartidas…), las salas como carpetas con
+   sus páginas, por tipo y la papelera. AT.ubicaciones (el modelo de las ubicaciones) lo usa también el explorador del
+   Inicio, que ya no tiene su propia columna: en el Inicio, una ubicación cambia el explorador.
+   Expone AT.setNav, AT.esEscritorio, AT.ubicaciones, AT.refrescarPaginas, AT.pintarSalas y AT.barraUbicacion. */
 (function(){
 'use strict';
 var AT=window.AT,$=AT.$,$$=AT.$$,esc=AT.esc,ico=AT.ico,reduce=AT.reduce;
@@ -28,10 +30,8 @@ function botonPersona(){
     '<button class="nv nv-crear" type="button" id="sideCrear" aria-haspopup="dialog">'+ico('crear')+'<span>Crear</span></button>'+
     '<button class="nv" type="button" id="sideBuscar" aria-haspopup="dialog">'+ico('investigacion')+'<span>Buscar</span><kbd class="solo-teclado">Ctrl K</kbd></button>'+
     (EMP?'<a class="nv'+(R.pagina==='empresa'?' on" aria-current="page':'')+'" href="'+RAIZ+'empresa.html" id="sideEmpresa">'+ico('empresa')+'<span>Tu empresa</span></a>':'');
-  /* Las salas que ves (E3) y Privado */
-  if(EMP)h+='<div class="tabp" id="pn-salas"><div class="grp">Salas</div><ul class="docs" id="salasLista"></ul></div>';
-  h+='<div class="tabp" id="pn-apuntes"><div class="grp">Tus páginas</div><ul class="docs" id="docsLista"></ul>'+
-      '<p class="side-txt">Todo se guarda en este dispositivo.</p></div>';
+  /* Tus páginas como un explorador: ubicaciones, salas con sus páginas, por tipo y papelera (se dibuja abajo) */
+  h+='<nav class="tabp arb" id="arbol" aria-label="Tus páginas"></nav>';
   h+='<div class="side-foot">'+
       (EMP?botonPersona():'')+
       '<button class="nv" type="button" id="sideLectura"><span class="ico-txt" aria-hidden="true">Aa</span><span>Lectura</span></button>'+
@@ -161,63 +161,188 @@ document.addEventListener('click',function(e){
   if(t)t.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
 });
 
-/* ---------- Tus páginas ---------- */
+/* ---------- Ubicaciones de tus páginas: las comparten la barra lateral y el explorador del Inicio ---------- */
+/* «Mi negocio» y «Tu equipo» viven en el tablero del Inicio: no salen entre tus páginas (salvo la que tienes abierta) */
+var SISTEMA={'d-minegocio':1,'d-miequipo':1};
+var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['general','Otras','notas'],['estudio','De estudio (solo lectura)','libreta']];
+var DIA=864e5;
+/* Lo que una ubicación necesita saber de cada página */
+function infoPagina(d){
+  var D=AT.datos,A=D.acceso,deEstudio=!!(D.deEstudio&&D.deEstudio(d));
+  var t=deEstudio?{nombre:'Página de estudio',icono:'libreta',cat:'estudio'}:AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
+  var gente=A?A.personas(d):[],admin=A?A.puede(d,'compartir'):true;
+  return {d:d,id:d.id,titulo:d.titulo||'Sin título',tipo:t,cat:CATS.some(function(c){return c[0]===t.cat})?t.cat:'general',
+    gente:gente,admin:admin,pend:admin&&A?A.pendientes(d):[],contigo:gente.some(function(p){return p.tu&&p.rol!=='dueno'}),
+    sala:A&&A.sala?A.sala(d):'',editado:d.editado||d.creado||''};
+}
+/* Las páginas de estudio (que se separaron de OneBook) solo salen en «De estudio» */
+var UBIC=[
+  {k:'todas',t:'Todas tus páginas',i:'notas',f:function(x){return x.cat!=='estudio'}},
+  {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return x.cat!=='estudio'&&!!x.d.favorito}},
+  {k:'recientes',t:'Recientes',i:'historial',f:function(x){return x.cat!=='estudio'&&Date.now()-Date.parse(x.editado)<7*DIA}},
+  {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.cat!=='estudio'&&x.gente.length>1}},
+  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.cat!=='estudio'&&x.contigo},siHay:true},
+  {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.cat!=='estudio'&&x.pend.length>0},siHay:true}
+];
+/* Una ubicación por su clave: las de arriba, una sala ('sala:sa-…' o 'sala:privado') o un tipo ('cat:negocio') */
+function ubicDe(k){
+  var u=UBIC.filter(function(x){return x.k===k})[0];
+  if(u)return u;
+  var sm=/^sala:(sa-[\w-]+|privado)$/.exec(k||'');
+  if(sm){var so=sm[1]==='privado'?{nombre:'Privado'}:AT.empresa&&AT.empresa.existe()&&AT.empresa.sala(sm[1]);
+    if(so)return {k:k,t:sm[1]==='privado'?'Privado':so.tipo==='general'?'General':so.nombre,i:sm[1]==='privado'?'candado':'deptos',sala:sm[1],
+      f:function(x){return x.cat!=='estudio'&&x.sala===sm[1]}}}
+  var c=/^cat:(\w+)$/.exec(k||''),cc=c&&CATS.filter(function(x){return x[0]===c[1]})[0];
+  return cc?{k:k,t:cc[1],i:cc[2],f:function(x){return x.cat===cc[0]}}:UBIC[0];
+}
+/* Las páginas que cuentan: las que puedes ver, sin las del sistema (la abierta, sí) */
+function paginasVisibles(docs){
+  var A=AT.datos.acceso,abierto=AT.documentoAbierto||'';
+  return (docs||[]).filter(function(d){return (!SISTEMA[d.id]||d.id===abierto)&&(!A||A.puede(d,'ver'))});
+}
+AT.ubicaciones={SISTEMA:SISTEMA,CATS:CATS,UBIC:UBIC,info:infoPagina,de:ubicDe,paginas:paginasVisibles};
+
+/* ---------- Tus páginas: el árbol de la barra lateral ---------- */
+/* Arriba, las ubicaciones (en el Inicio cambian el explorador; en otra página abren el Inicio en esa ubicación); luego las
+   salas como carpetas que se abren para mostrar sus páginas (la sala lleva a su página); por tipo y la papelera.
+   Las salas abiertas se recuerdan en aprende-tecnologia:arbol; la de la página abierta se abre sola. */
 (function(){
-  /* Se dibuja al instante con lo ya leído y después se confirma con la base; si no cambió nada, no se toca la lista
-     (así no se pierde el foco) */
-  var pintando=0,docsCache=null,ultimoDocs='',listaDocs=$('#docsLista',sideEl),enPapelera=0;
+  var CLAVE='aprende-tecnologia:arbol',MAX=30;
+  var arbol=$('#arbol',sideEl);if(!arbol)return;
+  var pintando=0,docsCache=null,ultimo='',enPapelera=0;
+  var abiertas={};
+  try{(JSON.parse(localStorage.getItem(CLAVE)||'null')||['sa-general']).forEach(function(k){if(typeof k==='string')abiertas[k]=1})}catch(e){abiertas={'sa-general':1}}
+  function guardarAbiertas(){try{localStorage.setItem(CLAVE,JSON.stringify(Object.keys(abiertas)))}catch(e){}}
   function leer(){return Promise.all([AT.datos.documentos.todos(),AT.datos.papelera?AT.datos.papelera.todos():[]])}
   function pintarDocs(){
-    if(docsCache)pintarDocsCon(docsCache);
+    if(docsCache)pintar(docsCache);
     var n0=++pintando;
     leer().then(function(r){
       docsCache=r[0];enPapelera=r[1].length;
-      if(n0===pintando)pintarDocsCon(r[0]);
+      if(n0===pintando)pintar(r[0]);
     });
   }
-  /* Dentro de las pestañas de la app: el botón junto a cada documento lo abre en una pestaña nueva */
-  listaDocs.addEventListener('click',function(e){
-    var b=e.target.closest('[data-pt-url]');
-    if(b&&AT.pestanas){setNav(false);AT.pestanas.abrir(new URL(RAIZ+b.getAttribute('data-pt-url'),location.href).href)}
-  });
-  /* Documentos: las favoritas primero (con su estrella) y después los más recientes; el que está abierto, marcado.
-     Al final, «Papelera» si hay algo en ella (respaldo.js abre la ventana) */
-  function pintarDocsCon(docs){
-    var abierto=AT.documentoAbierto||'';
-    /* «Mi negocio» (fase F7e) es el Inicio de un negocio: no se repite entre tus páginas (salvo si estás en ella) */
-    /* Las páginas de estudio (que se separaron de OneBook) tampoco: se abren solo desde una dirección guardada */
-    /* Con salas, solo las páginas que puedes ver */
-    docs=docs.filter(function(d){return ((d.id!=='d-minegocio'&&d.id!=='d-miequipo')||abierto===d.id)&&!(AT.datos.deEstudio&&AT.datos.deEstudio(d)&&abierto!==d.id)&&
-      (!AT.datos.acceso||AT.datos.acceso.puede(d,'ver'))}).sort(function(a,b){return (!!b.favorito-!!a.favorito)||((b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0)});
-    var h=docs.map(function(d){
-      var aqui=d.id===abierto,tipo=AT.tiposDoc&&AT.tiposDoc[d.tipo];
-      var u='documento.html?id='+encodeURIComponent(d.id);
-      return '<li'+(AT.enPestana?' class="doc-li"':'')+'><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+u+'"'+(aqui?' aria-current="page"':'')+'>'+
-        ico(tipo?tipo.icono:'page')+'<span>'+esc(d.titulo||'Sin título')+'</span>'+(d.favorito?'<i class="doc-est" title="Favorita">'+ico('estrella-llena')+'<span class="vh"> (favorita)</span></i>':'')+'</a>'+
-        (AT.enPestana?'<button class="doc-pt" type="button" data-pt-url="'+esc(u)+'" aria-label="Abrir «'+esc(d.titulo||'Sin título')+'» en una pestaña nueva" title="Abrir en una pestaña nueva">'+ico('pestanas')+'</button>':'')+'</li>';
-    }).join('');
-    h=h||'<li class="side-txt">Todavía no tienes páginas. Toca «Crear» para empezar.</li>';
-    if(enPapelera)h+='<li><button class="nv doc-pap" type="button" data-papelera>'+ico('basura')+'<span>Papelera</span><em>'+enPapelera+'</em></button></li>';
-    if(h!==ultimoDocs){listaDocs.innerHTML=h;ultimoDocs=h}
+  /* La ubicación del explorador (solo en el Inicio) */
+  function ubicActual(){return ES_INICIO&&AT.explorador&&AT.explorador.ubicacion?AT.explorador.ubicacion():''}
+  /* La sala donde estás: la de la página de sala o la de la página abierta */
+  function salaAqui(){
+    if(R.pagina==='sala')return new URLSearchParams(location.search).get('id')||'';
+    return AT.datos.acceso&&AT.docActual?AT.datos.acceso.sala(AT.docActual)||'':'';
   }
+  function cuenta(xs,f){var n=0;xs.forEach(function(x){if(f(x))n++});return n}
+  function ubicHTML(k,i,t,n,extra){
+    var on=ubicActual()===k;
+    return '<li><a class="nv arb-u'+(extra||'')+(on?' on':'')+'" data-ubic="'+esc(k)+'" href="'+RAIZ+'inicio.html#ubic='+encodeURIComponent(k)+'"'+(on?' aria-current="true"':'')+'>'+
+      ico(i)+'<span>'+esc(t)+'</span><em>'+n+'</em></a></li>';
+  }
+  function paginaHTML(x){
+    var d=x.d,aqui=d.id===(AT.documentoAbierto||''),u='documento.html?id='+encodeURIComponent(d.id);
+    return '<li'+(AT.enPestana?' class="doc-li"':'')+'><a class="nv doc'+(aqui?' on':'')+'" href="'+RAIZ+u+'"'+(aqui?' aria-current="page"':'')+'>'+
+      ico(x.tipo.icono||'page')+'<span>'+esc(x.titulo)+'</span>'+(d.favorito?'<i class="doc-est" title="Favorita">'+ico('estrella-llena')+'<span class="vh"> (favorita)</span></i>':'')+'</a>'+
+      (AT.enPestana?'<button class="doc-pt" type="button" data-pt-url="'+esc(u)+'" aria-label="Abrir «'+esc(x.titulo)+'» en una pestaña nueva" title="Abrir en una pestaña nueva">'+ico('pestanas')+'</button>':'')+'</li>';
+  }
+  /* Una sala: la flecha que muestra sus páginas, el enlace a la sala y sus páginas (favoritas primero, luego recientes) */
+  function salaHTML(id,nombre,marca,color,xs,aqui){
+    var ps=xs.filter(function(x){return x.cat!=='estudio'&&x.sala===id}).sort(function(a,b){return (!!b.d.favorito-!!a.d.favorito)||(b.editado<a.editado?-1:b.editado>a.editado?1:0)});
+    var abierta=!!abiertas[id]||id===aqui,on=R.pagina==='sala'&&id===aqui,lid='arb-'+id.replace(/[^\w-]/g,'');
+    var h='<li class="arb-sala" data-sala="'+esc(id)+'"><div class="arb-fila">'+
+      '<button type="button" class="arb-tg" aria-expanded="'+abierta+'" aria-controls="'+lid+'" aria-label="'+(abierta?'Esconder':'Mostrar')+' las páginas de '+esc(nombre)+'" title="'+(abierta?'Esconder':'Mostrar')+' sus páginas">'+ico('chev-l')+'</button>'+
+      '<a class="nv sala-nv'+(id===aqui?' on':'')+'" href="'+RAIZ+'sala.html?id='+encodeURIComponent(id)+'"'+(on?' aria-current="page"':'')+'>'+marca+'<span>'+esc(nombre)+'</span><em>'+ps.length+'</em></a></div>'+
+      '<ul class="arb-pags'+(color?' arb-c-'+esc(color):'')+'" id="'+lid+'"'+(abierta?'':' hidden')+'>';
+    if(!ps.length)h+='<li class="arb-nada">Sin páginas todavía.</li>';
+    h+=ps.slice(0,MAX).map(paginaHTML).join('');
+    if(ps.length>MAX)h+='<li><a class="nv arb-mas" href="'+RAIZ+'sala.html?id='+encodeURIComponent(id)+'"><span>Ver las '+ps.length+' páginas</span></a></li>';
+    return h+'</ul></li>';
+  }
+  function pintar(docs){
+    var xs=paginasVisibles(docs).map(infoPagina),aqui=salaAqui();
+    var h='<h2 class="arb-h">Tus páginas</h2><ul class="arb-ul">'+UBIC.map(function(u){
+      var n=cuenta(xs,u.f);
+      if(u.siHay&&!n)return '';
+      return ubicHTML(u.k,u.i,u.t,n,u.k==='solicitudes'?' arb-aviso':'');
+    }).join('')+'</ul>';
+    if(!xs.length)h+='<p class="side-txt">Todavía no tienes páginas. Toca «Crear» para empezar.</p>';
+    if(EMP){
+      h+='<h2 class="arb-h">Salas</h2><ul class="arb-ul" id="salasLista">'+AT.empresa.salas().map(function(s){
+        return salaHTML(s.id,s.tipo==='general'?'General':s.nombre,'<i class="emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i>',s.color,xs,aqui);
+      }).join('')+salaHTML('privado','Privado',ico('candado'),'',xs,aqui)+'</ul>';
+    }
+    var cats=CATS.filter(function(c){return cuenta(xs,function(x){return x.cat===c[0]})});
+    if(cats.length>1)h+='<h2 class="arb-h">Por tipo</h2><ul class="arb-ul">'+cats.map(function(c){
+      return ubicHTML('cat:'+c[0],c[2],c[1],cuenta(xs,function(x){return x.cat===c[0]}));
+    }).join('')+'</ul>';
+    h+='<ul class="arb-ul arb-pie"><li><button class="nv doc-pap" type="button" data-papelera>'+ico('basura')+'<span>Papelera</span><em>'+enPapelera+'</em></button></li></ul>'+
+      '<p class="side-txt">Todo se guarda en este dispositivo.</p>';
+    if(h===ultimo)return;
+    /* Al volver a dibujar, el foco se queda en el mismo elemento */
+    var f=document.activeElement,clave=f&&arbol.contains(f)?(f.getAttribute('href')||f.getAttribute('aria-controls')||(f.hasAttribute('data-papelera')?'pap':'')):'';
+    arbol.innerHTML=h;ultimo=h;
+    if(clave){var g=clave==='pap'?$('[data-papelera]',arbol):arbol.querySelector('[href="'+CSS.escape(clave)+'"],[aria-controls="'+CSS.escape(clave)+'"]');if(g)g.focus()}
+  }
+  /* Abrir o cerrar una sala (sin volver a dibujar todo) */
+  function alternar(li,abrir){
+    var tg=$('.arb-tg',li),ul=$('.arb-pags',li),id=li.getAttribute('data-sala'),nombre=$('.sala-nv>span',li).textContent;
+    if(abrir===undefined)abrir=tg.getAttribute('aria-expanded')!=='true';
+    tg.setAttribute('aria-expanded',String(abrir));ul.hidden=!abrir;
+    tg.setAttribute('aria-label',(abrir?'Esconder':'Mostrar')+' las páginas de '+nombre);tg.title=(abrir?'Esconder':'Mostrar')+' sus páginas';
+    if(abrir)abiertas[id]=1;else delete abiertas[id];
+    guardarAbiertas();ultimo=arbol.innerHTML;
+  }
+  arbol.addEventListener('click',function(e){
+    var tg=e.target.closest('.arb-tg');
+    if(tg){alternar(tg.closest('.arb-sala'));return}
+    /* Dentro de las pestañas de la app: el botón junto a cada página la abre en una pestaña nueva */
+    var pt=e.target.closest('[data-pt-url]');
+    if(pt&&AT.pestanas){setNav(false);AT.pestanas.abrir(new URL(RAIZ+pt.getAttribute('data-pt-url'),location.href).href);return}
+    /* En el Inicio, una ubicación cambia el explorador sin recargar */
+    var u=e.target.closest('[data-ubic]');
+    if(u&&ES_INICIO&&AT.explorador&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&e.button===0){
+      e.preventDefault();
+      AT.explorador.ir(u.getAttribute('data-ubic'));
+      if(!isDesk()){setNav(false);var t=$('#t-docs');if(t)t.focus()}
+      else{var s=$('#iniPaginas');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
+    }
+  });
+  /* Teclado, como un árbol: flechas arriba y abajo entre lo que se ve; derecha abre una sala (o entra a sus páginas);
+     izquierda la cierra (o sube a su sala); Inicio y Fin */
+  arbol.addEventListener('keydown',function(e){
+    var k=e.key;if(['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'].indexOf(k)<0||e.altKey||e.ctrlKey||e.metaKey)return;
+    var items=$$('a.nv,button.nv',arbol).filter(function(x){return x.offsetParent!==null});
+    var cur=document.activeElement,i=items.indexOf(cur.classList.contains('arb-tg')?$('.sala-nv',cur.closest('.arb-sala')):cur);
+    if(i<0)return;
+    var li=cur.closest('.arb-sala'),esSala=!!li&&!cur.closest('.arb-pags');
+    var ir=function(x){if(x){x.focus();e.preventDefault()}};
+    if(k==='ArrowDown')ir(items[i+1]);
+    else if(k==='ArrowUp')ir(items[i-1]);
+    else if(k==='Home')ir(items[0]);
+    else if(k==='End')ir(items[items.length-1]);
+    else if(k==='ArrowRight'&&esSala){
+      if($('.arb-tg',li).getAttribute('aria-expanded')!=='true'){alternar(li,true);e.preventDefault()}
+      else ir($('.arb-pags a.nv',li));
+    }else if(k==='ArrowLeft'&&li){
+      if(esSala){if($('.arb-tg',li).getAttribute('aria-expanded')==='true'){alternar(li,false);ir($('.sala-nv',li))}}
+      else ir($('.sala-nv',li));
+    }
+  });
   var espera=null;
   AT.refrescarPaginas=function(){clearTimeout(espera);espera=setTimeout(pintarDocs,400)};
-  AT.datos.on(function(c){if(c.almacen==='documentos'||c.almacen==='papelera'||c.almacen==='*')AT.refrescarPaginas()});
+  AT.datos.on(function(c){if(c.almacen==='documentos'||c.almacen==='papelera'||c.almacen==='*'||c.almacen==='todo')AT.refrescarPaginas()});
+  if(EMP)AT.empresa.on(function(){if(docsCache)pintar(docsCache)});
+  /* La sala de la página abierta puede cambiar (documento.js la avisa al moverla) */
+  AT.pintarSalas=function(){if(docsCache)pintar(docsCache)};
+  /* El explorador avisa cuando cambia de ubicación */
+  AT.barraUbicacion=function(k){
+    $$('[data-ubic]',arbol).forEach(function(a){var on=a.getAttribute('data-ubic')===k;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current')});
+    ultimo=arbol.innerHTML;
+  };
+  /* Se dibuja cuando ya cargaron todos los scripts (los tipos de página de crear.js y el explorador del Inicio) */
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pintarDocs);else pintarDocs();
+})();
 
+/* ---------- Pie: Lectura y quién usa OneBook ---------- */
+(function(){
   $('#sideLectura').addEventListener('click',function(){setNav(false);AT.lectura.abrir()});
   /* Quién usa OneBook: «Cambiar de persona» (persona.js); el botón se vuelve a pintar si cambia tu nombre */
-  /* Salas: General, las de los departamentos y las demás que ves; Privado al final */
-  function pintarSalas(){
-    var ul=$('#salasLista');if(!ul)return;
-    var actual=R.pagina==='sala'?new URLSearchParams(location.search).get('id'):'';
-    if(!actual&&AT.datos.acceso&&AT.docActual)actual=AT.datos.acceso.sala(AT.docActual)||'';
-    var enlace=function(id,adentro,nombre){var on=id===actual;
-      return '<li><a class="nv sala-nv'+(on?' on':'')+'" href="'+RAIZ+'sala.html?id='+encodeURIComponent(id)+'"'+(on&&R.pagina==='sala'?' aria-current="page"':'')+'>'+adentro+'<span>'+esc(nombre)+'</span></a></li>'};
-    ul.innerHTML=AT.empresa.salas().map(function(s){return enlace(s.id,'<i class="emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i>',s.tipo==='general'?'General':s.nombre)}).join('')+
-      enlace('privado',ico('candado'),'Privado');
-  }
-  if(EMP){pintarSalas();AT.empresa.on(pintarSalas);AT.datos.on(function(c){if(c.almacen==='documentos'&&c.id===AT.documentoAbierto)setTimeout(pintarSalas,0)})}
-  AT.pintarSalas=pintarSalas;
   function enlazarPersona(b){b.addEventListener('click',function(){setNav(false);if(AT.persona)AT.persona.abrir(b)})}
   if($('#sidePersona')){
     enlazarPersona($('#sidePersona'));
@@ -230,6 +355,5 @@ document.addEventListener('click',function(e){
       if(foco)$('#sidePersona').focus();
     });
   }
-  pintarDocs();
 })();
 })();

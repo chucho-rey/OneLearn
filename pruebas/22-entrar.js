@@ -69,7 +69,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   r.cumple(ini.listas===9&&!ini.respaldo,'ofrece 9 páginas listas para usar y, recién creado, todavía no pide respaldo',ini);
   const barra=await p.evaluate(function(){var s=document.getElementById('side');
     return {rutas:!!s.querySelector('#sideRutas'),tabs:!!s.querySelector('.tabs'),temas:!!s.querySelector('.grp-btn'),acerca:!!s.querySelector('a[href$="acerca.html"]'),
-      docs:s.querySelectorAll('#docsLista a.doc').length,etiqueta:s.getAttribute('aria-label'),menu:document.getElementById('menuBtn').getAttribute('aria-label'),
+      docs:s.querySelectorAll('#arbol a.doc').length,etiqueta:s.getAttribute('aria-label'),menu:document.getElementById('menuBtn').getAttribute('aria-label'),
       empresa:(s.querySelector('#sideEmpresa')||{}).textContent,persona:(s.querySelector('#sidePersona')||{}).textContent}});
   r.cumple(!barra.rutas&&!barra.tabs&&!barra.temas&&!barra.acerca&&barra.docs===4&&barra.etiqueta==='Navegación'&&barra.menu==='Abrir menú'&&barra.empresa==='Tu empresa'&&
     barra.persona==='LHLupita HernándezCambiar de persona','la barra lateral deja Inicio, Crear, Buscar, Tu empresa, tus páginas y quién entra',barra);

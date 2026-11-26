@@ -30,7 +30,7 @@ Por omisión, `pagina()` abre un navegador con un espacio de negocio ya creado (
 |---|---|
 | `1-identidad.js` | Las cuatro variantes de color en el Inicio y la Ayuda, el contraste, los tamaños de texto y la migración de preferencias anteriores |
 | `2-lectura.js` | El panel Lectura: cada opción, el teclado, Restablecer, el contraste del sistema y las fuentes para dislexia |
-| `3-barra.js` | La barra lateral: Inicio, Crear, Buscar, «Tus páginas» (favoritas primero, la página abierta marcada; sin «Mi negocio», «Tu equipo» ni las páginas de estudio; la papelera al final si hay algo) y el pie; el foco en el menú del celular; variantes de lectura |
+| `3-barra.js` | La barra lateral: Inicio, Crear, Buscar y «Tus páginas» como explorador: ubicaciones con su cuenta (en el Inicio cambian el explorador sin recargar; desde otra página abren el Inicio ahí), salas como carpetas con sus páginas (favoritas primero, sin «Mi negocio», «Tu equipo» ni la tesis; se abren, se cierran y se recuerda), encabezados en letra normal, teclado como árbol, la página abierta marcada en su sala, papelera con su cuenta; sin páginas dice cómo crear; menú en celular con trampa de foco; letra grande, OpenDyslexic y alto contraste sin desbordes |
 | `5-zen.js` | El modo zen y los atajos en tus páginas y en la Ayuda: Z, J y K (sin caer en secciones escondidas), tamaño y ancho, ?, Esc y E para editar; nada se activa mientras escribes |
 | `6-app.js` | La app instalable: manifiesto, íconos, que `sw.js` guarde todo el sitio, uso sin conexión e «Instalar» |
 | `7-bloques.js` | El formato de bloques: la Ayuda y tus páginas dibujadas desde su JSON, que un documento no pueda inyectar código y los bloques de estudio que se separaron, como «legado» con su texto |

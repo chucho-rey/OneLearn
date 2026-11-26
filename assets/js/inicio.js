@@ -114,12 +114,6 @@ function defectoEmpresa(){
   return l;
 }
 function defectoTuyo(){return [{id:'m-recientes',tipo:'recientes',tam:'m',cfg:{}},{id:'m-salas',tipo:'salas',tam:'s',cfg:{}}]}
-/* Las páginas que el tablero de la empresa ya muestra no se repiten entre tus páginas */
-function enTablero(){
-  var E=AT.empresa,m=E&&E.existe()?E.tablero('empresa'):null,o={};
-  (m||defectoEmpresa()).forEach(function(x){if(x.tipo==='pagina'&&x.cfg&&x.cfg.doc)o[x.cfg.doc]=1});
-  return o;
-}
 var montado=false;
 function montarTableros(){
   if(montado||!AT.tablero||!AT.empresa||!AT.empresa.existe())return;
@@ -157,8 +151,7 @@ $('#iniRespaldoNo').addEventListener('click',function(){
 /* Tus páginas: el explorador (explorador.js), sin «Mi negocio» ni «Tu equipo», que ya están arriba */
 function pintarDocs(){
   if(!AT.explorador)return;
-  var ocultos=enTablero();
-  AT.explorador.datos(docsCache.filter(function(d){return !ocultos[d.id]}),{vacio:'Todavía no tienes páginas. Crea la primera con «Nuevo» o con una de las que están aquí abajo. Se guardan en este dispositivo.'});
+  AT.explorador.datos(docsCache,{vacio:'Todavía no tienes páginas. Crea la primera con «Nuevo» o con una de las que están aquí abajo. Se guardan en este dispositivo.'});
 }
 
 /* ---------- Acciones rápidas y «Prepara tu negocio» (fase F5) ---------- */

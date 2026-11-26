@@ -40,8 +40,8 @@ prueba('Pestañas dentro de la app',async function({browser,base,r}){
 
   /* Ctrl+clic en «Tus páginas» abre el documento en una pestaña nueva; la otra queda para leer */
   f=await activo(p);await listoMarco(f);
-  r.cumple(await f.$$eval('#docsLista .doc-pt',function(e){return e.length})===1,'dentro de las pestañas, cada página de la barra trae «Abrir en una pestaña nueva»');
-  await f.click('#docsLista a.doc',{modifiers:['Control']});
+  r.cumple(await f.$$eval('#arbol .doc-pt',function(e){return e.length})===1,'dentro de las pestañas, cada página de la barra trae «Abrir en una pestaña nueva»');
+  await f.click('#arbol a.doc',{modifiers:['Control']});
   await esperar(p,function(){return AT.pestanas.lista().length===4});await titulo(p,/^Lista para surtir$/);
   l=await lista(p);
   r.cumple(l[3].activa&&l[3].url===docUrl,'Ctrl+clic en un enlace lo abre en una pestaña nueva',l);
@@ -88,7 +88,7 @@ prueba('Pestañas dentro de la app',async function({browser,base,r}){
   /* Se recuerdan y solo se carga la activa */
   await p.click('#ptNueva');await titulo(p,/^Inicio$/);
   f=await activo(p);await listoMarco(f);
-  await f.click('#docsLista .doc-pt');await esperar(p,function(){return AT.pestanas.lista().length===3});await titulo(p,/^Lista para surtir$/);
+  await f.click('#arbol .doc-pt');await esperar(p,function(){return AT.pestanas.lista().length===3});await titulo(p,/^Lista para surtir$/);
   await p.click('#pt-t'+(await p.evaluate(function(){return document.querySelectorAll('.pt-tab')[0].id.slice(4)})));
   await p.reload();await listo(p,600);
   l=await lista(p);

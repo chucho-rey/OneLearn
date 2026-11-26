@@ -14,19 +14,7 @@
 .xp-vista .icon-btn{width:2rem;height:2rem;margin:0;border-radius:0.375rem;font-size:1rem;color:var(--fg-2)}
 .xp-vista [aria-pressed="true"]{background:var(--bg);color:var(--fg);box-shadow:var(--sh-1)}
 /* Ubicaciones y lista */
-.xp-cuerpo{display:grid;grid-template-columns:12.5rem minmax(0,1fr);min-height:16rem}
-.xp-nav{min-width:0;padding:0.5rem;border-right:1px solid var(--line);background:var(--bg-side)}
-.xp-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
-.xp-ul-pie{margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--line)}
-.xp-nav-h{margin:0.75rem 0.5rem 0.25rem;font-family:var(--font-mono);font-size:0.6875rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2);max-width:none}
-.xp-u{display:flex;align-items:center;gap:0.5rem;width:100%;min-height:2rem;padding:0.25rem 0.5rem;border:0;border-radius:0.375rem;background:transparent;color:var(--fg-2);font:inherit;font-size:0.875rem;text-align:left;cursor:pointer}
-.xp-u:hover{background:var(--hover);color:var(--fg)}
-.xp-u[aria-current="true"]{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}
-.xp-u .ico{flex:none;font-size:1rem}
-.xp-u>.xp-dot{width:0.625rem;height:0.625rem;margin:0 0.1875rem}
-.xp-u>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.xp-u em{flex:none;font-style:normal;font-family:var(--font-mono);font-size:0.75rem}
-.xp-u-aviso em{min-width:1.25rem;padding:0 0.375rem;border-radius:1rem;background:var(--warn-bg);color:var(--warn-ink);text-align:center}
+.xp-cuerpo{min-height:16rem}
 .xp-main{min-width:0;display:flex;flex-direction:column}
 .xp-ruta{display:flex;flex-wrap:wrap;align-items:center;gap:0.25rem;margin:0;padding:0.5rem 0.875rem;border-bottom:1px solid var(--line);font-size:0.875rem;color:var(--fg-2);max-width:none}
 .xp-ruta b{color:var(--fg)}
@@ -105,15 +93,8 @@
 @container (max-width:72rem){.xp-c-tam,.xp-perm small{display:none}}
 @container (max-width:62rem){.xp-c-tipo{display:none}}
 @container (max-width:52rem){.xp-c-sala{display:none}}
-/* Angosto (celular o columna): ubicaciones en una fila que se desliza, y solo las columnas importantes */
+/* Angosto (celular): solo las columnas importantes */
 @container (max-width:48rem){
-  .xp-cuerpo{grid-template-columns:minmax(0,1fr)}
-  .xp-nav{display:flex;gap:0.25rem;overflow-x:auto;padding:0.375rem;border-right:0;border-bottom:1px solid var(--line)}
-  .xp-nav .xp-ul{flex-direction:row;gap:0.25rem}
-  .xp-nav-h{display:none}
-  .xp-ul-pie{margin:0;padding:0;border:0}
-  .xp-u{width:auto;white-space:nowrap}
-  .xp-u>span{overflow:visible}
   .xp-c-tipo,.xp-c-sala,.xp-c-tam,.xp-c-ahora,.xp-c-sel,.xp-cols{display:none}
   .xp-q{flex-basis:100%;order:3;max-width:none;margin-left:0}
 }

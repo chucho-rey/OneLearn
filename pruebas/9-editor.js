@@ -138,7 +138,7 @@ prueba('Hito 2.3 · Crear y el editor',async function({browser,base,r}){
 
   /* La barra lateral lista la página y marca la abierta */
   await p.waitForTimeout(500);
-  r.cumple(/Plan de ventas/.test(await p.textContent('#docsLista .nv.on')),'«Tus páginas» lista la página y marca la abierta');
+  r.cumple(/Plan de ventas/.test(await p.textContent('#arbol .arb-pags .nv.on')),'«Tus páginas» lista la página y marca la abierta');
 
   /* ---------- Al leer se ve igual ---------- */
   await esperarGuardado(p);
