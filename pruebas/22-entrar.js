@@ -76,7 +76,7 @@ prueba('Perfiles y «Crea tu empresa»',async function({browser,base,r}){
   await revisar(p,r,'Inicio de negocio en celular');
   /* Crear: solo lo de la empresa */
   await p.click('#celNuevo');await p.waitForTimeout(300);
-  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Presupuesto del mes | Proveedores | Caja chica | Clientes | Lista de precios | Plan de negocio | Préstamo o crédito | '+
+  r.igual(await opcionesCrear(p),'Notas | Pendientes del día | Corte de caja | Fiado | Gastos del mes | Nota de venta | Precios de venta | Lista para surtir | Inventario | Reporte del mes | Presupuesto del mes | Proveedores | Caja chica | Cedis: pedidos de sucursales | Clientes | Lista de precios | Plan de negocio | Préstamo o crédito | '+
     'Tienda o abarrotes Tu giro | Comida (cocina, cafetería, repostería) | Servicios (estética, taller, consultorio) | Ventas por catálogo o redes',
     '«Crear» ofrece notas, las plantillas del negocio y los paquetes por giro (el suyo marcado), sin estudio, finanzas personales ni freelance');
   const pronto=await p.textContent('dialog.crear-dlg .crear-p');

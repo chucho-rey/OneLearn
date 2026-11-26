@@ -66,7 +66,9 @@ function montar(raiz,op){
     var clave=op.clave||JSON.stringify(op.semilla).length+'|'+(op.semilla.nombre||'');
     /* Con rol (el inventario, fase F7): la base de ese rol del espacio, la misma en todas las páginas */
     var rol=op.semilla.rol&&AT.inventario&&AT.inventario.ROLES.indexOf(op.semilla.rol)>=0;
-    if(!CREANDO[clave])CREANDO[clave]=rol?AT.inventario.base(op.semilla.rol,AT.docActual&&AT.docActual.id):B.crear(op.semilla,AT.docActual&&AT.docActual.id);
+    /* Otros roles (los del Cedis, fase F8) se registran en AT.bases.porRol */
+    var porRol=op.semilla.rol&&B.porRol&&B.porRol[op.semilla.rol];
+    if(!CREANDO[clave])CREANDO[clave]=porRol?porRol(AT.docActual&&AT.docActual.id):rol?AT.inventario.base(op.semilla.rol,AT.docActual&&AT.docActual.id):B.crear(op.semilla,AT.docActual&&AT.docActual.id);
     arranque=CREANDO[clave].then(function(x){
       var vi=x&&op.semilla.vista&&x.vistas.some(function(w){return w.id===op.semilla.vista})?op.semilla.vista:x&&x.vistas[0].id;
       if(x){vistaId=vi;if(op.alCambiar)op.alCambiar({base:x.id,vista:vi,semilla:null})}
