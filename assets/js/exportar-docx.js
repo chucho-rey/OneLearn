@@ -5,8 +5,7 @@
      de página abajo a la derecha; papel carta o A4, vertical u horizontal (doc.formato, ver exportar.js).
    - Estilos de Word de verdad (Título 1 y 2), así el índice es un campo de Word que se actualiza.
    - Imágenes (WebP se convierte a PNG), tablas con líneas, tablas numeradas con su leyenda y notas al pie de Word.
-   - Los bloques sin texto propio (plan de pagos, bloques de la tienda, bases de datos) van como su texto; los de
-     estudio que se separaron de OneBook (legado), como su texto en cursiva.
+   - Los bloques sin texto propio (plan de pagos, bloques de la tienda, bases de datos) van como su texto.
    Se carga en documento.html, después de exportar.js. */
 (function(){
 'use strict';
@@ -43,7 +42,6 @@ function nombreArchivo(doc){
   var s=(doc.titulo||'documento').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   return (s||'documento')+'.docx';
 }
-function legado(tipo){return !!(AT.bloques.LEGADO&&AT.bloques.LEGADO[tipo])}
 
 function exportar(doc){
   return cargar().then(function(D){
@@ -71,7 +69,6 @@ function exportar(doc){
         else if(n.type==='cita')out.push(new D.TextRun(Object.assign({text:a.texto||''},extra||{})));
         else if(n.type==='refCruzada')out.push(new D.TextRun(Object.assign({text:AT.piezas.etiqueta(piezas.por[a.destino])},extra||{})));
         else if(n.type==='notaPie'){nNota++;notas[nNota]={children:[new D.Paragraph({style:'NotaPie',children:[new D.TextRun(String(a.texto||''))]})]};out.push(new D.FootnoteReferenceRun(nNota))}
-        else if(legado(n.type)){var t=AT.bloques.textoLegado(n).replace(/\s+/g,' ').trim()||AT.bloques.LEGADO[n.type];out.push(new D.TextRun(Object.assign({text:t,italics:true},extra||{})))}
       });
       return out;
     }
@@ -125,12 +122,12 @@ function exportar(doc){
           return [{__imagen:lugar}].concat(a.titulo?[new D.Paragraph({style:'Pie',children:[new D.TextRun({text:a.titulo,italics:true})]})]:[],[new D.Paragraph({children:[]})]);
         case 'indice':
           return [new D.TableOfContents('Índice',{hyperlink:true,headingStyleRange:'1-2'})];
-        /* Los bloques sin contenido propio (plan de pagos, bloques de la tienda) van como su texto; los de estudio, en cursiva */
+        /* Los bloques sin contenido propio (plan de pagos, bloques de la tienda) van como su texto */
         default:
-          if(c.length&&!legado(n.type))return bloques(c,{dentro:true});
-          var tx=legado(n.type)?AT.bloques.textoLegado(n):AT.bloques.textoDe(n);
+          if(c.length)return bloques(c,{dentro:true});
+          var tx=AT.bloques.textoDe(n);
           return String(tx||'').split('\n').filter(function(l){return l.trim()}).map(function(l){
-            return new D.Paragraph({children:[new D.TextRun(legado(n.type)?{text:l.trim(),italics:true}:{text:l.trim()})]});
+            return new D.Paragraph({children:[new D.TextRun({text:l.trim()})]});
           });
       }
     }

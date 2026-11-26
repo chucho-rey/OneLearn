@@ -1,6 +1,6 @@
 /* Piezas de una página (piezas.js): imágenes que se comprimen (con pie y texto alternativo), tablas numeradas, notas al
-   pie y referencias cruzadas que se renumeran solas; al leer, en Markdown y en celular. Las ecuaciones, las fórmulas y
-   los índices de figuras o tablas se fueron con lo de estudio. Solo se cargan imágenes guardadas en la página. */
+   pie y referencias cruzadas que se renumeran solas; al leer, en Markdown y en celular. Solo se cargan imágenes guardadas
+   en la página; un tipo desconocido no se dibuja. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
@@ -85,16 +85,8 @@ prueba('Piezas · Imágenes, tablas numeradas, notas al pie y referencias',async
   await p.keyboard.type('Ventas por producto');await p.keyboard.press('Escape');await p.waitForTimeout(150);
   r.cumple(await p.textContent('.ed-tnum .ed-num')==='Tabla 1'&&/Producto/.test(await p.textContent('.ed-tnum')),'y la tabla queda numerada con su contenido');
 
-  /* ---------- Lo de estudio ya no se ofrece ---------- */
   await p.evaluate(function(){AT.editorActual.tiptap.commands.focus('end')});
-  await p.keyboard.press('Enter');await p.keyboard.type('/ecuacion');await p.waitForTimeout(200);
-  r.cumple(!(await menuBarra(p)).some(function(t){return /Ecuación|Fórmula/.test(t)}),'«/» ya no ofrece ecuaciones ni fórmulas');
-  await p.keyboard.press('Escape');await borrar(p,9);
-  await p.keyboard.type('/indice');await p.waitForTimeout(200);
-  const opI=await menuBarra(p);
-  r.cumple(opI.indexOf('Índice')>=0&&!opI.some(function(t){return /Índice de (figuras|tablas)/.test(t)}),'el índice de secciones sigue; los de figuras y tablas, no',opI);
-  await p.keyboard.press('Escape');await borrar(p,7);
-  r.cumple(await p.evaluate(function(){var s=AT.editorActual.tiptap.schema.nodes;return !s.ecuacion&&!s.formula&&!s.indicePiezas&&!s.repaso&&!s.referencia&&!!s.legado}),'el editor ya no tiene esos bloques (y sí sabe conservarlos como legado)');
+  await p.keyboard.press('Enter');
 
   /* ---------- Notas al pie ---------- */
   await p.keyboard.type('El crecimiento fue de 12 %');
@@ -192,13 +184,13 @@ prueba('Piezas · Imágenes, tablas numeradas, notas al pie y referencias',async
   await s.evaluate(function(){return AT.datos.documentos.guardar({id:'d-imagenes',formato:1,tipo:'notas',titulo:'Prueba',props:[],contenido:{type:'doc',content:[
     {type:'figura',attrs:{id:'b-aaaaaa',clave:'p-aaaaaa',src:'https://ejemplo.com/rastreo.png',titulo:'Externa'}},
     {type:'figura',attrs:{id:'b-bbbbbb',clave:'p-bbbbbb',src:'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',titulo:'SVG'}},
-    {type:'paragraph',content:[{type:'refCruzada',attrs:{destino:'p-zzzzzz'}},{type:'formula',attrs:{latex:'\\href{javascript:alert(1)}{x}'}}]}]}}).then(function(){return 1})});
+    {type:'paragraph',content:[{type:'refCruzada',attrs:{destino:'p-zzzzzz'}},{type:'desconocido',attrs:{href:'javascript:alert(1)'}}]}]}}).then(function(){return 1})});
   await s.goto(base+'documento.html?id=d-imagenes');await listo(s,500);
   if(/Leer/.test(await s.textContent('#docModo')))await s.click('#docModo');
   await s.waitForSelector('.page figure.fig');await s.waitForTimeout(300);
   const seg=await s.evaluate(function(){return {img:document.querySelectorAll('.page img').length,rota:(document.querySelector('.page .xref.rota')||{}).textContent,js:!!document.querySelector('.page a[href^="javascript"]'),
-    formula:(document.querySelector('.page .legado-l')||{}).textContent}});
+    raro:!!document.querySelector('.page [href^="javascript"],.page .legado-l')}});
   r.cumple(seg.img===0&&seg.rota==='(referencia rota)'&&!seg.js,'no se cargan imágenes externas ni SVG, una referencia sin destino se marca y nada crea enlaces javascript:',seg);
-  r.cumple(/href\{javascript/.test(seg.formula||''),'una fórmula de antes se ve como texto (legado), sin ejecutarse',seg);
+  r.cumple(!seg.raro,'un nodo desconocido dentro del texto no se dibuja',seg);
   await cerrar(s);
 });

@@ -1,5 +1,5 @@
-/* Hito 2.2: tus datos en IndexedDB, las notas de antes (de las lecciones) pasadas sin perder nada, y el respaldo:
-   exportas, borras los datos del navegador, importas y recuperas todo, también lo de estudio que se separó. */
+/* Hito 2.2: tus datos en IndexedDB y el respaldo: exportas, borras los datos del navegador, importas y recuperas
+   todo. Lo que guardaban las lecciones de antes (almacenes notas y marcadores, avance) se borra al cargar. */
 'use strict';
 const fs=require('fs'),path=require('path'),os=require('os');
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
@@ -22,34 +22,31 @@ function leerIDB(p,almacen){
 function claves(p){return p.evaluate(function(){return Object.keys(localStorage).filter(function(k){return k.indexOf('apuntes:')>0}).sort()})}
 
 prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r}){
-  /* ---------- Las notas de antes (de las lecciones) pasan a IndexedDB y se conservan ---------- */
-  const p=await pagina(browser,{local:{
-    'aprende-tecnologia:apuntes:ram':'Nota vieja de RAM','aprende-tecnologia:apuntes:ram:editado':'2026-10-01T10:00:00.000Z',
-    'aprende-tecnologia:apuntes:cpu':'Nota de CPU sin fecha','aprende-tecnologia:apuntes:cpu:pendiente':'1'}});
+  /* ---------- Lo de las lecciones de antes se borra: almacenes notas y marcadores, avance y apuntes ---------- */
+  const p=await pagina(browser,{local:{'aprende-tecnologia:apuntes:ram':'Nota vieja de RAM','aprende-tecnologia:avance':'{"lecciones":{}}'}});
+  /* Una base de la versión 4 con las notas y los marcadores de antes */
+  /* (en un archivo sin código del sitio, para que nadie abra antes la versión 5) */
+  await p.goto(base+'manifest.webmanifest');
+  await p.evaluate(function(){return new Promise(function(ok,no){
+    const r=indexedDB.open('onelearn',4);
+    r.onupgradeneeded=function(){var db=r.result;['documentos','notas','marcadores','plantillas','papelera','bases','filas','versiones','trozos'].forEach(function(a){db.createObjectStore(a,{keyPath:'id'})});
+      db.createObjectStore('x-tmp');db.deleteObjectStore('x-tmp');
+      r.transaction.objectStore('filas').createIndex('base','base');r.transaction.objectStore('versiones').createIndex('doc','doc');
+      r.transaction.objectStore('notas').put({id:'ram',texto:'Nota vieja'})};
+    r.onsuccess=function(){r.result.close();ok()};r.onerror=function(){no(r.error)};
+  })});
   await p.goto(base+'ayuda.html');await listo(p,500);
-  let idb=await leerIDB(p,'notas');
-  const porId={};(idb||[]).forEach(function(n){porId[n.id]=n});
-  r.cumple(porId.ram&&porId.ram.texto==='Nota vieja de RAM'&&porId.ram.editado==='2026-10-01T10:00:00.000Z','la nota de antes pasa a IndexedDB con su fecha',porId.ram);
-  r.cumple(porId.cpu&&porId.cpu.texto==='Nota de CPU sin fecha'&&porId.cpu.editado==='','una nota sin fecha también pasa',porId.cpu);
-  r.igual((await claves(p)).length,0,'después de pasarlas, se quitan de localStorage');
   r.igual(await p.evaluate(function(){return AT.datos.motor()}),'indexeddb','se usa IndexedDB');
-
-  /* Si la página se cerró antes de llegar a la base, la próxima carga termina el trabajo */
-  await p.evaluate(function(){
-    localStorage.setItem('aprende-tecnologia:apuntes:ram','Escrito justo antes de cerrar');
-    localStorage.setItem('aprende-tecnologia:apuntes:ram:editado',new Date(Date.now()+1000).toISOString());
-  });
-  await p.reload();await listo(p,400);
-  idb=await leerIDB(p,'notas');
-  r.cumple(idb.some(function(n){return n.id==='ram'&&n.texto==='Escrito justo antes de cerrar'}),'una nota que no alcanzó a guardarse no se pierde: se termina de guardar en IndexedDB');
-  r.igual((await claves(p)).length,0,'y no queda copia en localStorage cuando ya se guardó');
+  const almacenes=await p.evaluate(function(){return new Promise(function(ok){var r=indexedDB.open('onelearn');r.onsuccess=function(){var n=[].slice.call(r.result.objectStoreNames);r.result.close();ok(n)}})});
+  r.cumple(almacenes.indexOf('notas')<0&&almacenes.indexOf('marcadores')<0&&almacenes.indexOf('documentos')>=0,'la base pasa a la versión 5 sin los almacenes de las lecciones',almacenes);
+  r.igual((await claves(p)).length+(await p.evaluate(function(){return localStorage.getItem('aprende-tecnologia:avance')===null?0:1})),0,'y se borran sus claves en localStorage (apuntes y avance)');
 
   /* Una página llega a IndexedDB y otra pestaña se entera */
   const p2=await p.context().newPage();
   await p2.goto(base+'ayuda.html');await listo(p2,400);
   await p.bringToFront();
   await p.evaluate(function(){return AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-otra',titulo:'Cambio desde otra pestaña',contenido:{type:'doc',content:[]}})});
-  idb=await leerIDB(p,'documentos');
+  const idb=await leerIDB(p,'documentos');
   r.cumple(idb.some(function(d){return d.id==='d-otra'&&d.editado>'2026-11'}),'una página llega a IndexedDB con su fecha');
   await p2.waitForTimeout(900);
   r.cumple(/Cambio desde otra pestaña/.test(await p2.textContent('#arbol .arb-pags')),'otra pestaña abierta ve la página nueva en su barra lateral');
@@ -58,15 +55,13 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   /* ---------- Tus datos y respaldo ---------- */
   await p.evaluate(function(){
     return Promise.all([
-      AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-respaldo',titulo:'Página de prueba',contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-1'},content:[{type:'text',text:'Hola'}]}]}}),
-      AT.datos.marcadores.guardar({id:'m-1',doc:'ram',bloque:'s-celda',texto:'Cómo guarda un bit la RAM'})
+      AT.datos.documentos.guardar({formato:1,tipo:'notas',id:'d-respaldo',titulo:'Página de prueba',contenido:{type:'doc',content:[{type:'paragraph',attrs:{id:'b-1'},content:[{type:'text',text:'Hola'}]}]}})
     ]);
   });
-  await p.evaluate(function(){localStorage.setItem('aprende-tecnologia:avance',JSON.stringify({ultima:'ram',lecciones:{ram:{total:9,leidas:{'s-que':'2026-11-01T00:00:00.000Z'}}}}))});
   await p.click('#sideDatos');await p.waitForTimeout(400);
   r.cumple(await p.evaluate(function(){return document.querySelector('dialog.tus-datos').open}),'«Tus datos» abre su ventana');
   const res=await p.textContent('#tdRes');
-  r.cumple(/Páginas\s*2/.test(res)&&/Bases de datos\s*0/.test(res)&&/Notas y marcadores de estudio\s*3/.test(res)&&/Espacio usado/.test(res)&&/Disponible/.test(res),'muestra cuántas páginas y bases hay (y lo de estudio que quedó), el espacio usado y el disponible',res);
+  r.cumple(/Páginas\s*2/.test(res)&&/Bases de datos\s*0/.test(res)&&!/estudio/.test(res)&&/Espacio usado/.test(res)&&/Disponible/.test(res),'muestra cuántas páginas y bases hay, el espacio usado y el disponible',res);
   r.cumple(/Usas .+ de los .+ que el navegador le reserva/.test(await p.textContent('#tdNotaEsp'))&&await p.isVisible('#tdBar'),'explica qué parte del espacio reservado se usa, con una barra');
   r.cumple(/Todavía no has descargado/.test(await p.textContent('#tdUlt')),'avisa que aún no hay respaldo');
   r.cumple((await p.textContent('#tdProt')).length>10,'explica si el navegador protege los datos');
@@ -76,8 +71,8 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   const archivo=path.join(os.tmpdir(),'onelearn-prueba-respaldo.json');
   await descarga.saveAs(archivo);
   const datos=JSON.parse(fs.readFileSync(archivo,'utf8'));
-  r.cumple(datos.app==='OneBook'&&datos.formato===1&&datos.documentos.length===2&&datos.notas.length===2&&datos.marcadores.length===1&&datos.avance.lecciones.ram,
-    'el respaldo trae páginas y también lo de estudio: notas, marcadores y avance',{docs:datos.documentos.length,notas:datos.notas.length});
+  r.cumple(datos.app==='OneBook'&&datos.formato===1&&datos.documentos.length===2&&!('notas' in datos)&&!('marcadores' in datos)&&!('avance' in datos),
+    'el respaldo trae las páginas (y ya nada de las lecciones)',{docs:datos.documentos.length,claves:Object.keys(datos)});
   await p.waitForTimeout(200);
   r.cumple(/Listo/.test(await p.textContent('#tdMsg'))&&/hoy/.test(await p.textContent('#tdUlt')),'confirma la descarga y recuerda la fecha');
   await p.keyboard.press('Escape');await p.waitForTimeout(200);
@@ -93,15 +88,9 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   await revisar(n,r,'ventana Tus datos en celular');
   await n.setInputFiles('#tdArchivo',archivo);
   await n.waitForFunction(function(){return /Se recuperaron|No había/.test(document.getElementById('tdMsg').textContent)});
-  r.cumple(/2 páginas y 3 notas y marcadores de estudio/.test(await n.textContent('#tdMsg')),'importar cuenta lo recuperado',await n.textContent('#tdMsg'));
-  const rec=await n.evaluate(function(){
-    return Promise.all([AT.datos.documentos.todos(),AT.datos.notas.todas(),AT.datos.marcadores.todos()]).then(function(x){
-      const av=JSON.parse(localStorage.getItem('aprende-tecnologia:avance')||'{}');
-      return {docs:x[0].map(function(d){return d.id}).sort(),notas:x[1].map(function(d){return d.id+':'+d.texto}).sort(),marc:x[2].length,avance:!!(av.lecciones&&av.lecciones.ram)};
-    });
-  });
-  r.cumple(rec.docs.join()==='d-local,d-otra,d-respaldo'&&rec.notas.join('|')==='cpu:Nota de CPU sin fecha|ram:Escrito justo antes de cerrar'&&rec.marc===1&&rec.avance,
-    'se recuperan las páginas y lo de estudio (notas, marcadores y avance), y se conserva lo que ya había',rec);
+  r.cumple(/Se recuperaron 2 páginas\./.test(await n.textContent('#tdMsg')),'importar cuenta lo recuperado',await n.textContent('#tdMsg'));
+  const rec=await n.evaluate(function(){return AT.datos.documentos.todos().then(function(x){return {docs:x.map(function(d){return d.id}).sort()}})});
+  r.cumple(rec.docs.join()==='d-local,d-otra,d-respaldo','se recuperan las páginas y se conserva lo que ya había',rec);
   /* Importar dos veces no duplica ni pisa */
   await n.setInputFiles('#tdArchivo',archivo);
   await n.waitForFunction(function(){return /No había/.test(document.getElementById('tdMsg').textContent)});
@@ -120,7 +109,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   const raro=await n.evaluate(function(){
     return AT.datos.importar({app:'OneLearn',formato:1,documentos:[{id:'../x',contenido:{type:'doc'}},{id:'d-ok',titulo:'ok',contenido:{type:'doc',content:[]}},{id:'d-sin'}],notas:[{id:'ram',texto:5},{id:'x y',texto:'a'}],marcadores:'no'});
   });
-  r.cumple(raro.documentos===1&&raro.notas===0&&raro.marcadores===0,'solo entra lo que tiene forma válida',raro);
+  r.cumple(raro.documentos===1&&!('notas' in raro),'solo entra lo que tiene forma válida (y nada de las lecciones)',raro);
   const futuro=await n.evaluate(function(){return AT.datos.importar({app:'OneLearn',formato:9}).then(function(){return 'aceptado'},function(e){return e.message})});
   r.cumple(/más nueva/.test(futuro),'un respaldo de una versión más nueva se rechaza con una explicación',futuro);
   r.cumple(n.errores.length===0,'sin errores en celular',n.errores);

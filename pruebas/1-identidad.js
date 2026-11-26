@@ -21,19 +21,19 @@ prueba('Hito 1 · Identidad, tamaños en rem y ajustes',async function({browser,
     await cerrar(p);
   }
 
-  /* Migración de las claves de la versión anterior; las notas de antes (de las lecciones) se conservan en tus datos */
-  const p=await pagina(browser,{local:{'aprende-tecnologia:tema':'dark','aprende-tecnologia:barra':'cerrada','aprende-tecnologia:apuntes:ram':'mis apuntes viejos'}});
+  /* Migración de las claves de la versión anterior; lo que guardaban las lecciones (apuntes, avance) se borra */
+  const p=await pagina(browser,{local:{'aprende-tecnologia:tema':'dark','aprende-tecnologia:barra':'cerrada','aprende-tecnologia:apuntes:ram':'mis apuntes viejos','aprende-tecnologia:avance':'{}'}});
   await p.goto(base+'inicio.html');await listo(p);
   await p.waitForTimeout(300);
-  const m=await p.evaluate(function(){return AT.datos.notas.todas().then(function(l){return {
+  const m=await p.evaluate(function(){return {
     tema:document.documentElement.dataset.theme,colapsada:document.documentElement.classList.contains('side-collapsed'),
     nueva:JSON.parse(localStorage.getItem('aprende-tecnologia:ajustes')||'{}'),vieja:localStorage.getItem('aprende-tecnologia:tema'),
-    apuntes:(l.filter(function(n){return n.id==='ram'})[0]||{}).texto}})});
+    lecciones:localStorage.getItem('aprende-tecnologia:apuntes:ram')===null&&localStorage.getItem('aprende-tecnologia:avance')===null}});
   r.igual(m.tema,'dark','migración: el tema oscuro guardado se aplica');
   r.cumple(m.colapsada,'migración: la barra lateral sigue cerrada');
   r.igual(m.nueva.tema,'dark','migración: se guarda en la clave nueva');
   r.igual(m.vieja,null,'migración: la clave vieja se borra');
-  r.igual(m.apuntes,'mis apuntes viejos','migración: los apuntes de antes se conservan en tus datos');
+  r.cumple(m.lecciones,'lo que guardaban las lecciones (apuntes, avance) se borra');
   await p.click('#menuBtn');
   await p.click('#aaBtn');await p.click('#lectura .seg[data-k="tema"] button[data-v="auto"]');
   await p.reload();await listo(p);

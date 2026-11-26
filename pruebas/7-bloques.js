@@ -1,6 +1,5 @@
 /* Hito 2.1: formato de bloques. La Ayuda y tus páginas se dibujan desde su JSON con el mismo código (bloques.js);
-   el dibujo no ejecuta código del documento, y los bloques de estudio que se separaron de OneBook se ven como
-   «legado» (con su texto) sin romper la página. */
+   el dibujo no ejecuta código del documento, y un tipo de bloque desconocido se ignora sin romper la página. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
@@ -30,7 +29,7 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
   r.cumple(top>=0&&top<120,'el índice lleva a la sección',top);
   r.cumple(p.errores.length===0,'la Ayuda, sin errores',p.errores);
 
-  /* Dibujar un documento con todos los tipos de bloque, con datos peligrosos y con lo de estudio que ya no existe */
+  /* Dibujar un documento con todos los tipos de bloque, con datos peligrosos y con un tipo desconocido */
   const res=await p.evaluate(function(){
     const T=function(t,m){const o={type:'text',text:t};if(m)o.marks=m;return o};
     const P=function(){return {type:'paragraph',content:[].slice.call(arguments)}};
@@ -40,7 +39,7 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
       contenido:{type:'doc',content:[
         {type:'heading',attrs:{id:'b-uno',level:2},content:[T('Primera')]},
         {type:'paragraph',attrs:{id:'b-p'},content:[T('negrita',[{type:'bold'}]),T(' '),T('enlace',[{type:'link',attrs:{href:'javascript:__hackeado=true'}}]),T(' '),T('web',[{type:'link',attrs:{href:'https://example.com'}}]),
-          {type:'hardBreak'},T('<b>no es html</b>'),T(' '),{type:'referencia',attrs:{fuente:'f-1',pagina:'12'}},T(' '),{type:'cita',attrs:{href:'lecciones/ram.html#s-que',texto:'Qué es la RAM'}}]},
+          {type:'hardBreak'},T('<b>no es html</b>'),T(' '),{type:'cita',attrs:{href:'documento.html?id=d-otra',texto:'Otra página'}}]},
         {type:'callout',attrs:{id:'b-c',variante:'aviso'},content:[P(T('Cuidado'))]},
         {type:'taskList',attrs:{id:'b-t'},content:[{type:'taskItem',attrs:{checked:true},content:[P(T('hecha'))]},{type:'taskItem',attrs:{checked:false},content:[P(T('pendiente'))]}]},
         {type:'codeBlock',attrs:{id:'b-code'},content:[T('<script>__hackeado=true</script>')]},
@@ -48,8 +47,6 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
         {type:'table',attrs:{id:'b-tab'},content:[{type:'tableRow',content:[{type:'tableHeader',content:[P(T('A'))]},{type:'tableHeader',content:[P(T('B'))]}]},{type:'tableRow',content:[{type:'tableCell',content:[P(T('1'))]},{type:'tableCell',content:[P(T('2'))]}]}]},
         {type:'desplegable',attrs:{id:'b-d'},content:[{type:'desplegableTitulo',content:[T('¿Pregunta?')]},{type:'desplegableCuerpo',content:[P(T('Respuesta'))]}]},
         {type:'columnas',attrs:{id:'b-col'},content:[{type:'columna',content:[P(T('Uno',[{type:'bold'}])),P(T('texto'))]},{type:'columna',content:[P(T('Dos'))]}]},
-        {type:'laboratorio',attrs:{id:'b-lab',nombre:'llena-ram',titulo:'Llena tu RAM'}},
-        {type:'repaso',attrs:{id:'b-rep',preguntas:[{q:'¿Cuánto es 2+2?',o:['4','5'],a:0,e:'Suma.'}]}},
         {type:'bloque-desconocido',attrs:{id:'b-x'}},
         {type:'resumen',attrs:{id:'b-res'},content:[{type:'bulletList',content:[{type:'listItem',content:[P(T('idea'))]}]}]},
         {type:'paragraph',attrs:{id:'javascript:mal'},content:[T('id raro')]}
@@ -66,8 +63,6 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
       codigo:q('#b-code code').textContent,scripts:host.querySelectorAll('script').length,
       thead:host.querySelectorAll('#b-tab thead th').length,tbody:host.querySelectorAll('#b-tab tbody td').length,
       det:q('#b-d summary span').textContent,cols:host.querySelectorAll('#b-col>div').length,
-      lab:q('#b-lab')&&q('#b-lab').className+' · '+q('#b-lab').textContent,rep:q('#b-rep')&&q('#b-rep').className+' · '+q('#b-rep').textContent,
-      enLinea:Array.from(host.querySelectorAll('#b-p .legado-l')).map(function(s){return s.textContent}),
       citaRam:q('#b-p .cita')&&q('#b-p .cita').tagName,
       desconocido:!!q('#b-x'),props:q('.props').textContent,idRaro:!!host.querySelector('[id^="javascript"]'),
       palabras:AT.bloques.palabras(doc),texto2:AT.bloques.texto(doc),valido:AT.bloques.valido(doc),invalido:AT.bloques.valido({id:'x'}),
@@ -84,11 +79,7 @@ prueba('Hito 2.1 · Formato de bloques',async function({browser,base,r}){
   r.igual(res.tareas,'1/2','las listas de tareas marcan las hechas');
   r.cumple(res.thead===2&&res.tbody===2,'la primera fila de títulos va en el encabezado de la tabla',res);
   r.cumple(res.det==='¿Pregunta?'&&res.cols===2,'desplegables y columnas se dibujan',res);
-  r.cumple(/^legado · Laboratorio: ya no está en OneBook/.test(res.lab)&&/Llena tu RAM/.test(res.lab),'un laboratorio (de las lecciones) se ve como legado, con su nombre',res.lab);
-  r.cumple(/^legado · Preguntas de repaso: ya no está en OneBook/.test(res.rep)&&/Cuánto es 2\+2/.test(res.rep),'las preguntas de repaso se ven como legado, con su texto',res.rep);
-  r.igual(res.enLinea.join(' | '),'Cita bibliográfica','una cita bibliográfica dentro del texto se ve como legado en línea');
-  r.igual(res.citaRam,'SPAN','una cita a una lección que ya no existe queda como texto, sin enlace');
-  r.cumple(/Cuánto es 2\+2/.test(res.texto2),'el texto de lo que ya no existe sigue contando (búsqueda y palabras)');
+  r.igual(res.citaRam,'A','una cita a otra página es un enlace');
   r.cumple(!res.desconocido,'un tipo de bloque desconocido se ignora sin romper la página');
   r.cumple(!res.idRaro,'un identificador con caracteres raros no se usa como ancla');
   r.cumple(/Área/.test(res.props)&&/Ventas/.test(res.props),'las propiedades del documento se muestran');

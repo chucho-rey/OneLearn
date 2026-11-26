@@ -7,11 +7,8 @@
               editar tu espacio)
    Desde «Tu espacio» (entrar.html?editar) se encienden o apagan módulos.
    Se guarda en localStorage (aprende-tecnologia:perfil):
-     {perfil:'negocio', modulos:[...], nombre, negocio:{nombre, giro, telefono}, creado:'AAAA-MM-DD', migrado, aviso}
-   - Los perfiles de antes (estudio y «Mis finanzas») se convierten solos en negocio y guardan aviso ('estudio' o
-     'personal'): el Inicio explica una vez que lo de estudio se separó y que sus datos siguen en este navegador.
-   - Quien ya usaba OneLearn (hay datos con el prefijo aprende-tecnologia: y no hay perfil) queda igual, con el
-     aviso 'estudio': no pierde nada de lo que tenía.
+     {perfil:'negocio', modulos:[...], nombre, negocio:{nombre, giro, telefono}, creado:'AAAA-MM-DD', migrado, ejemplo}
+   - Si ya hay datos con el prefijo aprende-tecnologia: y no hay un perfil válido, el espacio recibe uno de negocio.
    - Sin perfil, inicio.html manda a entrar.html («Crea tu empresa») antes de pintar, con lo que traiga la dirección;
      con perfil, entrar.html manda a inicio.html (salvo con ?editar, para cambiar el espacio).
    - En <html> pone las clases con-<módulo> o sin-<módulo> (base.css oculta .m-negocio y .m-rh).
@@ -27,8 +24,6 @@ var MODULOS={
 var PERFILES={
   negocio:{nombre:'Mi negocio',desc:'Corte de caja, fiado, gastos, notas de venta y surtido.',modulos:['negocio']}
 };
-/* Perfiles que ya no existen: se convierten en negocio y el Inicio lo explica una vez */
-var ANTES={estudio:1,personal:1};
 var GIROS=[['tienda','Tienda o comercio'],['comida','Comida'],['servicios','Servicios'],['catalogo','Ventas por catálogo o redes'],
   ['distribucion','Distribución o mayoreo'],['otro','Otro']];
 
@@ -36,25 +31,21 @@ function texto(v,max){return typeof v==='string'?v.replace(/\s+/g,' ').trim().sl
 function hoy(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 /* Solo entran campos conocidos y con forma válida (el perfil también llega de respaldos) */
 function limpiar(p){
-  if(!p||typeof p!=='object'||!(PERFILES[p.perfil]||ANTES[p.perfil]))return null;
+  if(!p||typeof p!=='object'||!PERFILES[p.perfil])return null;
   var mods=(Array.isArray(p.modulos)?p.modulos:['negocio']).filter(function(m,i,a){return MODULOS[m]&&a.indexOf(m)===i});
-  if(ANTES[p.perfil]&&mods.indexOf('negocio')<0)mods.unshift('negocio');
   var n=p.negocio&&typeof p.negocio==='object'?p.negocio:null,giros=GIROS.map(function(g){return g[0]});
-  var aviso=ANTES[p.perfil]?p.perfil:ANTES[p.aviso]?p.aviso:'';
   return {perfil:'negocio',modulos:mods,nombre:texto(p.nombre,60),
     negocio:{nombre:texto(n&&n.nombre,80),giro:n&&giros.indexOf(n.giro)>=0?n.giro:'otro',telefono:texto(n&&n.telefono,30).replace(/[^\d+()\s-]/g,'')},
-    creado:/^\d{4}-\d{2}-\d{2}$/.test(p.creado)?p.creado:hoy(),migrado:!!p.migrado,aviso:aviso,ejemplo:p.ejemplo===true};
+    creado:/^\d{4}-\d{2}-\d{2}$/.test(p.creado)?p.creado:hoy(),migrado:!!p.migrado,ejemplo:p.ejemplo===true};
 }
 function leer(){
   var crudo=null;
   try{crudo=JSON.parse(localStorage.getItem(CLAVE)||'null')}catch(e){}
   var p=limpiar(crudo);
-  /* Un perfil de antes (estudio o finanzas personales) se guarda ya convertido */
-  if(p&&crudo.perfil!==p.perfil)escribir(p);
   return p;
 }
 function escribir(p){try{localStorage.setItem(CLAVE,JSON.stringify(p));return true}catch(e){return false}}
-/* ¿Este navegador ya usaba OneLearn? (cualquier dato con el prefijo, salvo el perfil y las pestañas abiertas,
+/* ¿Este navegador ya tiene datos de OneBook? (cualquier dato con el prefijo, salvo el perfil y las pestañas abiertas,
    que el contenedor guarda antes de que exista el espacio) */
 function hayDatos(){
   try{
@@ -69,7 +60,7 @@ function hayDatos(){
 
 var perfil=leer();
 if(!perfil&&hayDatos()){
-  perfil=limpiar({perfil:'estudio',modulos:['negocio'],creado:hoy(),migrado:true});
+  perfil=limpiar({perfil:'negocio',modulos:['negocio'],creado:hoy(),migrado:true});
   escribir(perfil);
 }
 function clases(){
@@ -91,9 +82,6 @@ AT.perfil={
   /* El nombre para el saludo: el del negocio o el de la persona */
   nombre:function(){return perfil?(perfil.negocio&&perfil.negocio.nombre)||perfil.nombre:''},
   giro:function(){return perfil&&perfil.negocio?perfil.negocio.giro:''},
-  /* 'estudio' o 'personal' si este espacio venía de un perfil que ya no existe (el Inicio lo explica una vez) */
-  aviso:function(){return perfil&&perfil.aviso||''},
-  quitarAviso:function(){if(perfil&&perfil.aviso){perfil.aviso='';escribir(perfil)}},
   nombreGiro:function(g){var x=GIROS.filter(function(y){return y[0]===g})[0];return x?x[1]:''},
   limpiar:limpiar,
   /* Guarda el perfil (limpio). Devuelve el perfil guardado o null si no era válido */

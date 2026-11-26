@@ -107,7 +107,7 @@ function pintar(){
 }
 function cargar(){
   return D.documentos.todos().then(function(l){
-    paginas=l.filter(function(d){return D.acceso.sala(d)===ID&&D.acceso.puede(d,'ver')&&!(D.deEstudio&&D.deEstudio(d))})
+    paginas=l.filter(function(d){return D.acceso.sala(d)===ID&&D.acceso.puede(d,'ver')})
       .sort(function(a,b){return (b.editado||'')<(a.editado||'')?-1:(b.editado||'')>(a.editado||'')?1:0});
     pintar();
   });

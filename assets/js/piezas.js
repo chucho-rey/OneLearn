@@ -5,8 +5,6 @@
    - refCruzada: «Tabla 2» o el título de una sección; el número se actualiza solo (las imágenes no se numeran).
    Figuras y tablas llevan attrs.clave, única en todo el documento (la cuida el plugin de ids de editor.js):
    es el destino de las referencias cruzadas y el ancla al leer.
-   Las ecuaciones, las fórmulas y los índices de figuras o tablas se fueron con lo de estudio (bloques.js los
-   dibuja como legado y el editor los conserva tal cual).
    Agrega los nodos al editor (AT.editorExtensiones, AT.editorInsertar), su dibujo a bloques.js
    (AT.bloques.registrar) y su Markdown (AT.piezas.md). Se carga en documento.html después de editor.js. */
 (function(){

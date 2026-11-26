@@ -1,11 +1,8 @@
 /* OneBook: tus datos en este dispositivo.
-   Documentos, notas rápidas y marcadores viven en IndexedDB (base «onelearn»), que aguanta mucho más que
-   localStorage y después guardará imágenes y libros. El avance y los ajustes siguen en localStorage porque
-   son pequeños y se leen antes de pintar la página.
+   Las páginas, las plantillas, la papelera, las bases de datos y el historial viven en IndexedDB (base «onelearn»),
+   que aguanta mucho más que localStorage. Los ajustes, el perfil, la empresa y quién eres siguen en localStorage
+   porque son pequeños y se leen antes de pintar la página.
    - Si IndexedDB no está disponible (algunos modos privados), se usa localStorage como respaldo.
-   - Cada nota se escribe primero en localStorage (al instante, como diario) y después en IndexedDB; si la
-     página se cierra a la mitad, la próxima carga termina de guardarla. Así se pasaron también las notas
-     que ya existían: nada se pierde.
    - Otras pestañas se enteran de los cambios con BroadcastChannel.
    - Respaldo: exportar todo a un archivo JSON e importarlo después (combina; gana lo más reciente). Entran
      también tus plantillas; la papelera no.
@@ -21,18 +18,21 @@
      una sola vez cada uno); ver «Historial de versiones» más abajo. AT.datos.versiones.
    - Quién eres (AT.datos.yo), los permisos de cada página (doc.acceso, AT.datos.acceso) y quién tiene abierta
      cada página (AT.datos.presencia); ver «Quién eres, permisos…» más abajo.
-   - Lo de estudio que se separó de OneBook (notas de las lecciones, marcadores, avance, proyectos, ejercicios de
-     la terminal y las páginas de estudio) se sigue guardando y entra en el respaldo: nadie pierde nada.
-     AT.datos.deEstudio(doc) dice si una página es de estudio (las listas la esconden y se abre solo para leer).
+   - Versión 5 de la base: se quitaron los almacenes «notas» y «marcadores» (de cuando OneBook tenía lecciones);
+     también se borran las claves de entonces en localStorage (LIMPIAR).
    Expone AT.datos. Se carga después de base.js. */
 (function(){
 'use strict';
 var AT=window.AT;
 /* Versión 2 (fase F5): almacenes de plantillas y de la papelera. Versión 3 (fase F6): bases y filas (con índice
-   por base). Versión 4: historial de versiones (versiones con índice por página, y trozos). Lo demás no cambia */
-var NOMBRE='onelearn',VERSION_DB=4,ALMACENES=['documentos','notas','marcadores','plantillas','papelera','bases','filas','versiones','trozos'];
+   por base). Versión 4: historial de versiones (versiones con índice por página, y trozos). Versión 5: se quitan los
+   almacenes de las lecciones (notas y marcadores). Lo demás no cambia */
+var NOMBRE='onelearn',VERSION_DB=5,ALMACENES=['documentos','plantillas','papelera','bases','filas','versiones','trozos'],QUITADOS=['notas','marcadores'];
 var DIAS_PAPELERA=30;
-var PREF='aprende-tecnologia:',CLAVE_NOTA=PREF+'apuntes:',CLAVE_RESPALDO=PREF+'ultimo-respaldo';
+var PREF='aprende-tecnologia:',CLAVE_RESPALDO=PREF+'ultimo-respaldo';
+/* Lo que guardaban las lecciones (avance, proyectos, terminal, notas y marcadores): se borra al cargar */
+var LIMPIAR=/^aprende-tecnologia:(avance|proyectos|terminal|marcadores|apuntes:.*|db:notas|db:marcadores)$/;
+(function(){try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=String(localStorage.key(i));if(LIMPIAR.test(k))ks.push(k)}ks.forEach(function(k){localStorage.removeItem(k)})}catch(e){}})();
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
@@ -57,6 +57,7 @@ function abrirIDB(){
     r.onupgradeneeded=function(){
       var db=r.result;
       ALMACENES.forEach(function(a){if(!db.objectStoreNames.contains(a))db.createObjectStore(a,{keyPath:'id'})});
+      QUITADOS.forEach(function(a){if(db.objectStoreNames.contains(a))db.deleteObjectStore(a)});
       var f=r.transaction.objectStore('filas');
       if(!f.indexNames.contains('base'))f.createIndex('base','base',{unique:false});
       var v=r.transaction.objectStore('versiones');
@@ -185,31 +186,6 @@ function motorLocal(){
   };
 }
 
-/* ---------- Notas: diario en localStorage ---------- */
-/* Notas escritas en localStorage que aún no llegan a la base (o de antes de la fase 2) */
-function notasEnDiario(){
-  var out={};
-  try{
-    for(var i=0;i<localStorage.length;i++){
-      var k=localStorage.key(i),m=k&&k.indexOf(CLAVE_NOTA)===0&&k.slice(CLAVE_NOTA.length);
-      if(!m||m.indexOf(':')>=0)continue;
-      out[m]={id:m,texto:lsGet(k)||'',editado:lsGet(k+':editado')||''};
-    }
-  }catch(e){}
-  return out;
-}
-function quitarDelDiario(n){
-  var k=CLAVE_NOTA+n.id;
-  /* Solo si no cambió mientras se guardaba */
-  if((lsGet(k)||'')!==n.texto)return;
-  lsDel(k);lsDel(k+':editado');lsDel(k+':pendiente');
-}
-/* La versión más nueva de dos notas (una sin fecha pierde contra una con fecha) */
-function masNueva(a,b){
-  if(!a)return b;if(!b)return a;
-  return (b.editado||'')>(a.editado||'')?b:a;
-}
-
 /* ---------- Apertura ---------- */
 var motor=null;
 var listo=abrirIDB().then(motorIDB,function(e){
@@ -217,19 +193,6 @@ var listo=abrirIDB().then(motorIDB,function(e){
   return motorLocal();
 }).then(function(m){
   motor=m;
-  /* Pasa a la base las notas del diario */
-  var diario=notasEnDiario(),ids=Object.keys(diario);
-  if(!ids.length)return;
-  return Promise.all(ids.map(function(id){return m.leer('notas',id)})).then(function(actuales){
-    var poner=[];
-    ids.forEach(function(id,i){
-      var d=diario[id],a=actuales[i];
-      if(!a||masNueva(a,d)===d)poner.push(d);
-    });
-    return (poner.length?m.poner('notas',poner):Promise.resolve()).then(function(){
-      ids.forEach(function(id){quitarDelDiario(diario[id])});
-    });
-  });
 }).then(function(){return motor},function(e){
   if(window.console)console.error('OneBook: no se pudieron preparar tus datos',e);
   motor=motor||motorLocal();
@@ -239,48 +202,6 @@ var listo=abrirIDB().then(motorIDB,function(e){
 function conMotor(fn){return listo.then(fn)}
 
 /* ---------- API ---------- */
-var esperas={};
-var notas={
-  /* {id, texto, editado} o null */
-  leer:function(id){
-    return conMotor(function(m){return m.leer('notas',id)}).then(function(n){
-      var d=notasEnDiario()[id];
-      return masNueva(n||null,d||null);
-    });
-  },
-  todas:function(){
-    return conMotor(function(m){return m.todos('notas')}).then(function(lista){
-      var porId={};
-      lista.forEach(function(n){porId[n.id]=n});
-      var d=notasEnDiario();
-      Object.keys(d).forEach(function(id){porId[id]=masNueva(porId[id],d[id])});
-      return Object.keys(porId).map(function(id){return porId[id]});
-    });
-  },
-  /* Guarda al instante en el diario y, un momento después, en la base. Devuelve una promesa
-     que se cumple cuando la nota llegó a la base. */
-  guardar:function(id,texto){
-    var n={id:id,texto:String(texto),editado:ahora()};
-    lsSet(CLAVE_NOTA+id,n.texto);lsSet(CLAVE_NOTA+id+':editado',n.editado);
-    avisar({almacen:'notas',id:id});
-    clearTimeout(esperas[id]&&esperas[id].t);
-    var e=esperas[id]={};
-    e.p=new Promise(function(ok,no){
-      e.t=setTimeout(function(){
-        conMotor(function(m){return m.poner('notas',[n])}).then(function(){quitarDelDiario(n);ok(n)},no);
-      },250);
-    });
-    return e.p;
-  }
-};
-/* Al salir de la página, lo pendiente se intenta guardar ya (si no alcanza, queda en el diario) */
-addEventListener('pagehide',function(){
-  Object.keys(esperas).forEach(function(id){
-    var d=notasEnDiario()[id];
-    if(d&&motor)motor.poner('notas',[d]).then(function(){quitarDelDiario(d)},function(){});
-  });
-});
-
 function coleccion(nombre){
   return {
     todos:function(){return conMotor(function(m){return m.todos(nombre)})},
@@ -304,12 +225,11 @@ function coleccion(nombre){
 /* ---------- Respaldo ---------- */
 function leerJSON(k){try{return JSON.parse(lsGet(k)||'null')}catch(e){return null}}
 function exportar(){
-  return Promise.all([notas.todas(),conMotor(function(m){return m.todos('documentos')}),conMotor(function(m){return m.todos('marcadores')}),
-    conMotor(function(m){return m.todos('plantillas')}),conMotor(function(m){return m.todos('bases')}),conMotor(function(m){return m.todos('filas')})]).then(function(r){
+  return Promise.all([conMotor(function(m){return m.todos('documentos')}),conMotor(function(m){return m.todos('plantillas')}),
+    conMotor(function(m){return m.todos('bases')}),conMotor(function(m){return m.todos('filas')})]).then(function(r){
     return {
       app:'OneBook',formato:1,exportado:ahora(),
-      documentos:r[1],notas:r[0].filter(function(n){return n.texto&&n.texto.trim()}),marcadores:r[2],plantillas:r[3],bases:r[4],filas:r[5],
-      avance:leerJSON(PREF+'avance'),ajustes:leerJSON(PREF+'ajustes'),proyectos:leerJSON(PREF+'proyectos'),terminal:leerJSON(PREF+'terminal'),
+      documentos:r[0],plantillas:r[1],bases:r[2],filas:r[3],ajustes:leerJSON(PREF+'ajustes'),
       perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios'),yo:leerJSON(CLAVE_YO),empresa:leerJSON(PREF+'empresa')
     };
   });
@@ -332,7 +252,7 @@ function descargar(){
 function esObjeto(x){return !!x&&typeof x==='object'&&!Array.isArray(x)}
 function idValido(id){return typeof id==='string'&&/^[\w-]{1,80}$/.test(id)}
 /* Combina un respaldo con lo que hay: entra lo que no existe y lo que es más nuevo.
-   Devuelve {documentos, notas, marcadores, avance} con cuántas cosas entraron. */
+   Devuelve {documentos, plantillas, bases, filas…} con cuántas cosas entraron. */
 /* ---------- Bases unificadas (el proyecto anterior) ----------
    Su respaldo ({app:'bases-unificadas', state:{books:[{id, name, tables:[{id, name, cols, rows, vistas}]}]}}) se abre
    sin recapturar: cada libro es una página con una base de datos por tabla; las columnas conservan su id (las
@@ -404,7 +324,7 @@ function importarBasesUnificadas(d){
   return conMotor(function(m){return m.poner('bases',x.bases)}).then(function(){return x.filas.length?motor.poner('filas',x.filas):null})
     .then(function(){return motor.poner('documentos',x.documentos)}).then(function(){
       avisar({almacen:'*'});
-      return {documentos:x.documentos.length,bases:x.bases.length,filas:x.filas.length,notas:0,marcadores:0,plantillas:0,basesUnificadas:true,
+      return {documentos:x.documentos.length,bases:x.bases.length,filas:x.filas.length,plantillas:0,basesUnificadas:true,
         primero:x.documentos[0].id};
     });
 }
@@ -414,14 +334,11 @@ function importar(datos){
   if(!esObjeto(datos)||(datos.app!=='OneBook'&&datos.app!=='OneLearn')||typeof datos.formato!=='number')
     return Promise.reject(new Error('El archivo no es un respaldo de OneBook.'));
   if(datos.formato>1)return Promise.reject(new Error('Este respaldo es de una versión más nueva de OneBook. Actualiza la página e inténtalo otra vez.'));
-  var res={documentos:0,notas:0,marcadores:0,plantillas:0,bases:0,filas:0,avance:false,proyectos:false,terminal:false,perfil:false};
+  var res={documentos:0,plantillas:0,bases:0,filas:0,perfil:false};
   function lista(x){return Array.isArray(x)?x:[]}
   var docs=lista(datos.documentos).filter(function(d){
     return esObjeto(d)&&idValido(d.id)&&esObjeto(d.contenido)&&d.contenido.type==='doc'&&(d.contenido.content==null||Array.isArray(d.contenido.content));
   });
-  var ns=lista(datos.notas).filter(function(n){return esObjeto(n)&&idValido(n.id)&&typeof n.texto==='string'})
-    .map(function(n){return {id:n.id,texto:n.texto,editado:typeof n.editado==='string'?n.editado:''}});
-  var ms=lista(datos.marcadores).filter(function(x){return esObjeto(x)&&idValido(x.id)});
   var bss=lista(datos.bases).filter(function(x){return esObjeto(x)&&idValido(x.id)&&typeof x.nombre==='string'&&Array.isArray(x.columnas)&&x.columnas.length&&x.columnas.every(esObjeto)});
   var fls=lista(datos.filas).filter(function(x){return esObjeto(x)&&idValido(x.id)&&idValido(x.base)&&esObjeto(x.v)});
   var pls=lista(datos.plantillas).filter(function(x){
@@ -459,59 +376,10 @@ function importar(datos){
     lsSet(CLAVE_YO,JSON.stringify({id:r.id,nombre:limpio(r.nombre,60)||y.nombre,correo:correoValido(String(r.correo||''))?String(r.correo).toLowerCase():y.correo,creado:y.creado}));
     res.yo=true;
   }).then(function(){return combinar('documentos',docs,'documentos')})
-    .then(function(){return notas.todas()}).then(function(actuales){
-      var porId={};actuales.forEach(function(a){porId[a.id]=a});
-      var poner=ns.filter(function(e){var a=porId[e.id];return !a||(e.editado||'')>(a.editado||'')});
-      res.notas=poner.length;
-      return poner.length?motor.poner('notas',poner).then(function(){poner.forEach(function(n){if(lsGet(CLAVE_NOTA+n.id)!==null){lsDel(CLAVE_NOTA+n.id);lsDel(CLAVE_NOTA+n.id+':editado')}})}):null;
-    })
-    .then(function(){return combinar('marcadores',ms,'marcadores')})
     .then(function(){return combinar('plantillas',pls,'plantillas')})
     .then(function(){return combinar('bases',bss,'bases')})
     .then(function(){return combinar('filas',fls,'filas')})
     .then(function(){
-      /* Avance: se suman las secciones leídas; el resto se toma del más reciente */
-      var ent=datos.avance;
-      if(esObjeto(ent)&&esObjeto(ent.lecciones)){
-        var act=leerJSON(PREF+'avance')||{};
-        if(!esObjeto(act.lecciones))act.lecciones={};
-        Object.keys(ent.lecciones).forEach(function(id){
-          var e=ent.lecciones[id],a=act.lecciones[id];
-          if(!esObjeto(e)||!idValido(id))return;
-          if(!a){act.lecciones[id]=e;res.avance=true;return}
-          a.leidas=a.leidas||{};
-          Object.keys(e.leidas||{}).forEach(function(s){if(!a.leidas[s]){a.leidas[s]=e.leidas[s];res.avance=true}});
-          if(e.repaso&&(!a.repaso||(e.repaso.fecha||'')>(a.repaso.fecha||''))){a.repaso=e.repaso;res.avance=true}
-          if((e.visto||'')>(a.visto||'')){a.visto=e.visto;a.seccion=e.seccion;a.seccionTitulo=e.seccionTitulo}
-        });
-        if(!act.ultima||(ent.ultima&&act.lecciones[ent.ultima]&&!act.lecciones[act.ultima]))act.ultima=ent.ultima;
-        lsSet(PREF+'avance',JSON.stringify(act));
-      }
-      /* Proyectos: se suman las tareas hechas; el enlace y la fase, si aquí no hay */
-      if(esObjeto(datos.proyectos)){
-        var pa=leerJSON(PREF+'proyectos')||{};
-        Object.keys(datos.proyectos).forEach(function(id){
-          var e=datos.proyectos[id];
-          if(!idValido(id)||!esObjeto(e))return;
-          var a=esObjeto(pa[id])?pa[id]:(pa[id]={tareas:{}});
-          if(!esObjeto(a.tareas))a.tareas={};
-          if(esObjeto(e.tareas))Object.keys(e.tareas).forEach(function(t){if(idValido(t)&&!a.tareas[t]){a.tareas[t]=String(e.tareas[t]).slice(0,40);res.proyectos=true}});
-          if(!a.enlace&&typeof e.enlace==='string'&&/^https:\/\/\S+$/.test(e.enlace)){a.enlace=e.enlace.slice(0,300);res.proyectos=true}
-          if(!a.fase&&typeof e.fase==='string'&&/^f\d{1,2}$/.test(e.fase))a.fase=e.fase;
-        });
-        lsSet(PREF+'proyectos',JSON.stringify(pa));
-      }
-      /* Ejercicios de la terminal simulada: se suman los terminados */
-      if(esObjeto(datos.terminal)){
-        var ta=leerJSON(PREF+'terminal')||{};
-        Object.keys(datos.terminal).forEach(function(id){
-          var e=datos.terminal[id];
-          if(!idValido(id)||!esObjeto(e))return;
-          var a=esObjeto(ta[id])?ta[id]:(ta[id]={});
-          Object.keys(e).forEach(function(t){if(idValido(t)&&!a[t]){a[t]=String(e[t]).slice(0,40);res.terminal=true}});
-        });
-        lsSet(PREF+'terminal',JSON.stringify(ta));
-      }
       /* El perfil del espacio: solo si aquí todavía no hay uno (por ejemplo, al restaurar en «Crea tu empresa»).
          AT.perfil.guardar lo limpia: solo entran campos conocidos */
       if(esObjeto(datos.perfil)&&AT.perfil&&!AT.perfil.actual())res.perfil=!!AT.perfil.guardar(datos.perfil);
@@ -557,7 +425,7 @@ function espacio(){
    comparten lo que tienen igual, así que una versión nueva solo agrega lo que cambió. Cada versión se lee directo,
    sin cadena de cambios: si faltara un trozo, solo ese bloque sale con un aviso.
    Versión: {id, doc, fecha, motivo, nombre, titulo, meta (huella de lo que no es contenido: título, ícono,
-   propiedades, fuentes), bloques:[huellas], ids:[id de cada bloque], letras, cambios:{nuevos, quitados,
+   propiedades), bloques:[huellas], ids:[id de cada bloque], letras, cambios:{nuevos, quitados,
    cambiados, titulo} contra la anterior}. Motivos: auto, borrado (lo de antes de un borrado grande), restaurar
    (lo de antes de restaurar otra), importar (lo de antes de que un respaldo la reemplace) y nombre.
    Cuándo se guarda: al abrir una página que no tiene ninguna; mientras escribes, a lo más una cada 5 minutos;
@@ -567,7 +435,7 @@ function espacio(){
    6 meses; a lo más 100 automáticas por página. Los trozos que ya nadie usa se borran en la misma transacción que
    los revisa. Solo con IndexedDB; el respaldo no las lleva. */
 var VER={ventana:5*60e3,grandeBloques:3,grandeLetras:300,max:100};
-var FUERA_META=['id','contenido','editado','creado','favorito','anchoCompleto','autoria','eliminado','acceso','editadoPor'];
+var FUERA_META=['id','contenido','editado','creado','favorito','anchoCompleto','eliminado','acceso','editadoPor'];
 /* Huella de un texto: dos hashes de 32 bits (cyrb53) y su largo */
 function huella(s){
   var h1=0xdeadbeef^s.length,h2=0x41c6ce57^s.length;
@@ -1105,9 +973,6 @@ var papelera={
   DIAS:DIAS_PAPELERA
 };
 
-/* Páginas de estudio (de cuando OneBook tenía libretas, apuntes de clase y tesis) */
-var TIPOS_ESTUDIO={libreta:1,clase:1,libro:1,investigacion:1,tesis:1,guia:1,bitacora:1};
-function deEstudio(d){return !!(d&&TIPOS_ESTUDIO[d.tipo])}
 
 /* Borra todo lo de OneBook en este navegador: cada almacén de la base y las claves con el prefijo (lo usa
    «Crear mi empresa» para dejar la empresa de ejemplo). No borra la base misma: otras pestañas la tienen abierta. */
@@ -1128,10 +993,8 @@ function borrarTodo(){
 AT.datos={
   borrarTodo:borrarTodo,
   listo:listo,
-  deEstudio:deEstudio,
   motor:function(){return motor&&motor.tipo},
   documentos:docsCol,
-  marcadores:coleccion('marcadores'),
   plantillas:coleccion('plantillas'),
   papelera:papelera,
   bases:basesCol,
@@ -1143,7 +1006,6 @@ AT.datos={
   ponerYo:ponerYo,
   acceso:acceso,
   presencia:presencia,
-  notas:notas,
   exportar:exportar,
   descargar:descargar,
   importar:importar,
