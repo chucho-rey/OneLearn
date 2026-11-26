@@ -18,6 +18,9 @@
      una sola vez cada uno); ver «Historial de versiones» más abajo. AT.datos.versiones.
    - Quién eres (AT.datos.yo), los permisos de cada página (doc.acceso, AT.datos.acceso) y quién tiene abierta
      cada página (AT.datos.presencia); ver «Quién eres, permisos…» más abajo.
+   - Historial de las filas (versión 6): almacén «historial» ({id, base, fila, t, quien, tipo, cambios, titulo,
+     copia}); lo escribe bases.js al guardar o borrar filas y lo lee basedatos.js. No va en el respaldo. Se depura
+     una vez al día: lo de 90 días y, más allá, los últimos 50 cambios de cada fila. AT.datos.historial.
    - Versión 5 de la base: se quitaron los almacenes «notas» y «marcadores» (de cuando OneBook tenía lecciones);
      también se borran las claves de entonces en localStorage (LIMPIAR).
    Expone AT.datos. Se carga después de base.js. */
@@ -26,8 +29,9 @@
 var AT=window.AT;
 /* Versión 2 (fase F5): almacenes de plantillas y de la papelera. Versión 3 (fase F6): bases y filas (con índice
    por base). Versión 4: historial de versiones (versiones con índice por página, y trozos). Versión 5: se quitan los
-   almacenes de las lecciones (notas y marcadores). Lo demás no cambia */
-var NOMBRE='onelearn',VERSION_DB=5,ALMACENES=['documentos','plantillas','papelera','bases','filas','versiones','trozos'],QUITADOS=['notas','marcadores'];
+   almacenes de las lecciones (notas y marcadores). Versión 6: historial de las filas (índices por base y por fila).
+   Lo demás no cambia */
+var NOMBRE='onelearn',VERSION_DB=6,ALMACENES=['documentos','plantillas','papelera','bases','filas','versiones','trozos','historial'],QUITADOS=['notas','marcadores'];
 var DIAS_PAPELERA=30;
 var PREF='aprende-tecnologia:',CLAVE_RESPALDO=PREF+'ultimo-respaldo';
 /* Lo que guardaban las lecciones (avance, proyectos, terminal, notas y marcadores): se borra al cargar */
@@ -62,6 +66,9 @@ function abrirIDB(){
       if(!f.indexNames.contains('base'))f.createIndex('base','base',{unique:false});
       var v=r.transaction.objectStore('versiones');
       if(!v.indexNames.contains('doc'))v.createIndex('doc','doc',{unique:false});
+      var h=r.transaction.objectStore('historial');
+      if(!h.indexNames.contains('base'))h.createIndex('base','base',{unique:false});
+      if(!h.indexNames.contains('fila'))h.createIndex('fila','fila',{unique:false});
     };
     r.onsuccess=function(){
       var db=r.result;
@@ -919,9 +926,41 @@ filasCol.guardarVarias=function(lista){
 function borrarBase(id){
   return filasCol.deBase(id).then(function(fs){
     return Promise.all(fs.map(function(f){return conMotor(function(m){return m.borrar('filas',f.id)})}));
-  }).then(function(){return basesCol.borrar(id)}).then(function(){avisar({almacen:'filas',base:id,varias:true})});
+  }).then(function(){return basesCol.borrar(id)}).then(function(){return historial.borrarDeBase(id).catch(function(){})}).then(function(){avisar({almacen:'filas',base:id,varias:true})});
 }
 basesCol.borrarConFilas=borrarBase;
+
+/* ---------- Historial de las filas ---------- */
+var HIST_DIAS=90,HIST_MIN=50,CLAVE_DEPURADO=PREF+'historial-depurado';
+var historial={
+  DIAS:HIST_DIAS,MINIMO:HIST_MIN,
+  /* Guarda (o reemplaza, al juntar cambios seguidos) entradas */
+  poner:function(lista){
+    lista=(lista||[]).filter(Boolean);if(!lista.length)return Promise.resolve();
+    return conMotor(function(m){return m.poner('historial',JSON.parse(JSON.stringify(lista)))}).then(function(){
+      avisar({almacen:'historial',base:lista[0].base});
+    });
+  },
+  /* Lo de una fila o de una base, lo más reciente primero */
+  deFila:function(id){return conMotor(function(m){return m.porIndice('historial','fila',id)}).then(ordenar)},
+  deBase:function(id){return conMotor(function(m){return m.porIndice('historial','base',id)}).then(ordenar)},
+  quitar:function(ids){return conMotor(function(m){return m.borrarVarios('historial',ids)})},
+  borrarDeBase:function(id){
+    return historial.deBase(id).then(function(l){return l.length?conMotor(function(m){return m.borrarVarios('historial',l.map(function(x){return x.id}))}):null});
+  },
+  /* Lo de más de 90 días se borra, salvo los últimos 50 cambios de cada fila */
+  depurar:function(){
+    return conMotor(function(m){return m.todos('historial')}).then(function(l){
+      var limite=new Date(Date.now()-HIST_DIAS*864e5).toISOString(),porFila={},quitar=[];
+      ordenar(l).forEach(function(x){var n=porFila[x.fila]=(porFila[x.fila]||0)+1;if(n>HIST_MIN&&(x.t||'')<limite)quitar.push(x.id)});
+      lsSet(CLAVE_DEPURADO,ahora().slice(0,10));
+      return quitar.length?conMotor(function(m){return m.borrarVarios('historial',quitar)}).then(function(){return quitar.length}):0;
+    });
+  }
+};
+function ordenar(l){return (l||[]).slice().sort(function(a,b){return (b.t||'')<(a.t||'')?-1:(b.t||'')>(a.t||'')?1:0})}
+/* Una vez al día, un rato después de abrir */
+setTimeout(function(){if(lsGet(CLAVE_DEPURADO)!==ahora().slice(0,10))historial.depurar().catch(function(){})},8000);
 
 /* ---------- Papelera ---------- */
 var docsCol=coleccion('documentos'),papCol=coleccion('papelera');
@@ -999,6 +1038,7 @@ AT.datos={
   papelera:papelera,
   bases:basesCol,
   filas:filasCol,
+  historial:historial,
   versiones:versiones,
   yo:quienSoy,
   yoId:function(){return yo().id},
@@ -1014,6 +1054,7 @@ AT.datos={
   pedirPersistencia:pedirPersistencia,
   espacio:espacio,
   /* fn({almacen, id, borrado}, deOtraPestana) */
-  on:function(fn){oyentes.push(fn)}
+  /* Devuelve una función para dejar de escuchar */
+  on:function(fn){oyentes.push(fn);return function(){var i=oyentes.indexOf(fn);if(i>=0)oyentes.splice(i,1)}}
 };
 })();

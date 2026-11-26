@@ -35,6 +35,21 @@ function dialogo(clase,titulo,html){
    op: {base, vista, semilla, editable, alCambiar({base, vista}) para guardar el bloque}
    ===================================================================================== */
 /* Las bases que se están creando desde su semilla, por bloque (si el editor arma el bloque dos veces, se crea una sola) */
+/* ---------- Historial de las filas (lo anota bases.js; aquí se muestra) ---------- */
+function cuandoH(t){
+  var d=new Date(t),h=new Date();if(isNaN(d))return '';
+  var hora=d.toLocaleTimeString('es-MX',{hour:'numeric',minute:'2-digit'});
+  if(d.toDateString()===h.toDateString())return 'Hoy, '+hora;
+  var ay=new Date(h);ay.setDate(h.getDate()-1);
+  if(d.toDateString()===ay.toDateString())return 'Ayer, '+hora;
+  return d.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:d.getFullYear()===h.getFullYear()?undefined:'numeric'})+', '+hora;
+}
+/* El texto de un valor guardado de una columna (vacío, casilla, relación…) */
+function valorH(b,c,val){
+  if(val==null||val===''||(Array.isArray(val)&&!val.length))return 'vacío';
+  if(c.tipo==='casilla')return val?'Sí':'No';
+  try{var o={};o[c.id]=val;var t=B.texto(b,{id:'h-x',base:b.id,v:o},c);return t===''?String(val):String(t)}catch(e){return String(val)}
+}
 var CREANDO={};
 function montar(raiz,op){
   var b=null,vistaId=op.vista||'',busca='',deshacer=[],rehacer=[],quitar=null,vivo=true,esperaTexto={},antesTexto={};
@@ -270,12 +285,12 @@ function montar(raiz,op){
     return B.guardarBase(nueva).then(function(){pintar(foco===undefined?marca():foco)});
   }
   /* Guardar el valor de una celda */
-  function ponerValor(f,c,val,reg){
+  function ponerValor(f,c,val,reg,op){
     var antes=B.clonar(f),nf=B.clonar(f);
     if(val===''||val==null||(Array.isArray(val)&&!val.length)||val===false&&c.tipo!=='casilla')delete nf.v[c.id];else nf.v[c.id]=val;
     if(JSON.stringify(antes.v)===JSON.stringify(nf.v))return Promise.resolve(false);
     if(reg!==false)registrar({tipo:'filas',antes:[antes],despues:[B.clonar(nf)],que:'el cambio en '+c.nombre});
-    return B.guardarFila(nf).then(function(){return true});
+    return B.guardarFila(nf,op).then(function(){return true});
   }
   /* Lo calculado de la vista (sin volver a dibujar los campos donde escribes) */
   function refrescarCalculos(){
@@ -381,6 +396,7 @@ function montar(raiz,op){
       {t:'Nueva columna',i:'mas',f:function(){columna(null,boton)}},
       {t:'Deshacer',i:'deshacer',d:'Ctrl+Z',f:deshacerUno},
       {t:'Rehacer',i:'rehacer',d:'Ctrl+Y',f:rehacerUno},
+      {t:'Actividad',i:'historial',d:'Lo último que cambió y quién',f:function(){actividad(boton)}},
       {sep:true},
       {t:'Importar CSV',i:'datos',d:'De Excel o de otra app',f:function(){importarCSV(boton)}},
       {t:'Exportar CSV',i:'descargar',d:'Lo que se ve en esta vista',f:exportarCSV}
@@ -420,11 +436,59 @@ function montar(raiz,op){
     });
     abrirDlg(d,boton,'input');
   }
+  /* Una entrada del historial: quién y cuándo, y cada celda que cambió (de antes → después) */
+  function entradaHTML(e,enFicha){
+    var yo=AT.datos.yoId?AT.datos.yoId():'',quien=esc(e.quien&&e.quien.id&&e.quien.id===yo?'Tú':e.quien&&e.quien.nombre||'Alguien'),c0='<p class="bd-hq"><b>'+quien+'</b> <span>'+esc(cuandoH(e.t))+'</span></p>';
+    var existe=!!fila(e.fila),nom=existe?B.titulo(b,fila(e.fila))||'Sin nombre':e.titulo||'Sin nombre';
+    var cab=enFicha?'':'<p class="bd-hf">'+(existe?'<button type="button" class="bd-hab" data-ficha="'+esc(e.fila)+'">'+esc(nom)+'</button>':'<span>'+esc(nom)+'</span>')+'</p>';
+    if(e.tipo==='nueva')return '<li class="bd-he">'+cab+c0+'<p>Creó la fila.</p></li>';
+    if(e.tipo==='recuperada')return '<li class="bd-he">'+cab+c0+'<p>Recuperó la fila.</p></li>';
+    if(e.tipo==='borrada')return '<li class="bd-he">'+cab+c0+'<p>Eliminó la fila.</p>'+(ed&&!existe&&e.copia?'<button type="button" class="btn" data-recuperar="'+esc(e.id)+'">Recuperar fila</button>':'')+'</li>';
+    var cs=e.cambios||{};
+    return '<li class="bd-he">'+cab+c0+'<ul class="bd-hc">'+Object.keys(cs).map(function(k){
+      var c=B.col(b,k),ch=cs[k];
+      if(!c)return '<li><span class="bd-hn">Columna quitada</span></li>';
+      var a=valorH(b,c,ch.a),dd=valorH(b,c,ch.d);
+      return '<li><span class="bd-hn">'+esc(c.nombre)+':</span> <span class="bd-ha">'+esc(a)+'</span> <span aria-hidden="true">→</span><span class="vh"> cambió a </span> <span class="bd-hd">'+esc(dd)+'</span>'+
+        (enFicha&&ed&&!B.CALCULADO[c.tipo]?' <button type="button" class="bd-hv" data-volver="'+esc(e.id+'|'+k)+'" aria-label="Volver '+esc(c.nombre)+' a «'+esc(a)+'»">Volver a «'+esc(a.length>24?a.slice(0,24)+'…':a)+'»</button>':'')+'</li>';
+    }).join('')+'</ul></li>';
+  }
+  /* Actividad de la base: lo último que cambió, quién y cuándo, con filtro por persona y «Recuperar fila» */
+  function actividad(boton){
+    var d=dialogo('bd-act','Actividad de '+(b.nombre||'la base'),'<p class="hint">Lo último que cambió en esta base, quién y cuándo. Se guarda 90 días (y siempre los últimos 50 cambios de cada fila).</p>'+
+      '<label class="campo-l bd-actp"><span>Persona</span><select data-act-quien><option value="">Todas</option></select></label><div class="bd-act-c"><p class="hint">Cargando…</p></div>');
+    var quien='';
+    function pintarAct(){
+      AT.datos.historial.deBase(b.id).then(function(l){
+        var sel=$('[data-act-quien]',d),ps={};l.forEach(function(e){if(e.quien&&e.quien.id)ps[e.quien.id]=e.quien.nombre||'Alguien'});
+        sel.innerHTML='<option value="">Todas</option>'+Object.keys(ps).map(function(id){return '<option value="'+esc(id)+'"'+(id===quien?' selected':'')+'>'+esc(ps[id])+'</option>'}).join('');
+        var fl=l.filter(function(e){return !quien||(e.quien&&e.quien.id===quien)}).slice(0,100);
+        $('.bd-act-c',d).innerHTML=fl.length?'<ol class="bd-hl">'+fl.map(function(e){return entradaHTML(e,false)}).join('')+'</ol>':'<p class="hint">Todavía no hay cambios anotados'+(quien?' de esa persona':'')+'.</p>';
+      });
+    }
+    pintarAct();
+    d.addEventListener('change',function(e){if(e.target.hasAttribute('data-act-quien')){quien=e.target.value;pintarAct()}});
+    d.addEventListener('click',function(e){
+      var r=e.target.closest('[data-recuperar]');
+      if(r&&ed){
+        AT.datos.historial.deBase(b.id).then(function(l){
+          var en=l.filter(function(x){return x.id===r.getAttribute('data-recuperar')})[0];if(!en||!en.copia||fila(en.fila))return;
+          var nf={id:en.fila,base:b.id,v:B.clonar(en.copia.v||{}),orden:en.copia.orden||0};
+          B.guardarFila(nf,{motivo:'recuperada'}).then(function(){pintar();pintarAct();decir('Se recuperó «'+(B.titulo(b,nf)||'la fila')+'».');var x=$('[data-act-quien]',d);if(x)x.focus()});
+        });
+        return;
+      }
+      var f=e.target.closest('[data-ficha]');
+      if(f){var id=f.getAttribute('data-ficha');d.close();setTimeout(function(){ficha(id,null)},0)}
+    });
+    abrirDlg(d,boton,'[data-act-quien]');
+  }
   /* La ficha de una fila: todos sus campos y lo que se relaciona con ella */
   function ficha(fid,boton,nueva){
     var f=fila(fid);if(!f)return;
     var d=dialogo('bd-ficha',B.titulo(b,f)||'Fila nueva','<div class="bd-ficha-c"></div>'+
       '<div class="bd-rel"></div>'+
+      '<section class="bd-hist" aria-labelledby="bdHistT"><h3 class="bd-rel-t" id="bdHistT">Historial</h3><div class="bd-hist-c"><p class="hint">Cargando…</p></div></section>'+
       (ed?'<div class="td-bt bd-ficha-b"><button class="btn danger" type="button" data-borrar>Eliminar fila</button><button class="btn pri" type="button" data-cerrar>Listo</button></div>':''));
     function pintarFicha(){
       var ff=fila(fid);if(!ff){d.close();return}
@@ -434,6 +498,20 @@ function montar(raiz,op){
       $('h2',d).textContent=B.titulo(b,ff)||'Sin nombre';
     }
     pintarFicha();
+    /* El historial de la fila: quién cambió qué y cuándo; «Volver a…» regresa el valor de antes */
+    var verTodo=false;
+    function pintarHist(){
+      AT.datos.historial.deFila(fid).then(function(l){
+        var cont=$('.bd-hist-c',d);if(!cont)return;
+        if(!l.length){cont.innerHTML='<p class="hint">Todavía no hay cambios anotados en esta fila.</p>';return}
+        var muestra=verTodo?l:l.slice(0,10);
+        cont.innerHTML='<ol class="bd-hl">'+muestra.map(function(e){return entradaHTML(e,true)}).join('')+'</ol>'+
+          (l.length>muestra.length?'<button type="button" class="btn" data-hist-mas>Ver los '+l.length+' cambios</button>':'');
+      });
+    }
+    pintarHist();
+    var quitarOyente=AT.datos.on(function(cm){if(cm.almacen==='historial'&&document.contains(d))pintarHist()});
+    d.addEventListener('close',function(){if(typeof quitarOyente==='function')quitarOyente()});
     /* Filas de otras bases que apuntan a esta */
     B.todas().then(function(bs){
       var pr=bs.filter(function(x){return x.columnas.some(function(c){return c.tipo==='relacion'&&c.base===b.id})}).map(function(x){return B.cargar(x.id)});
@@ -454,6 +532,17 @@ function montar(raiz,op){
       ponerValor(ff,c,val).then(function(){pintarFicha();pintar();var x=document.getElementById(m);if(x)x.focus()});
     });
     d.addEventListener('click',function(e){
+      if(e.target.closest('[data-hist-mas]')){verTodo=true;pintarHist();return}
+      var vu=e.target.closest('[data-volver]');
+      if(vu&&ed){
+        var e0=vu.getAttribute('data-volver').split('|'),cc=B.col(b,e0[1]),ff0=fila(fid);if(!cc||!ff0)return;
+        AT.datos.historial.deFila(fid).then(function(l){
+          var en=l.filter(function(x){return x.id===e0[0]})[0],ch=en&&en.cambios&&en.cambios[cc.id];if(!ch)return;
+          ponerValor(fila(fid),cc,ch.a,undefined,{juntar:false}).then(function(){pintarFicha();pintar();decir(cc.nombre+' volvió a «'+valorH(b,cc,ch.a)+'».');
+            var x=d.querySelector('[data-hist-mas],[data-volver]')||$('h2',d);if(x&&x.focus)x.focus()});
+        });
+        return;
+      }
       var t=e.target.closest('[data-multi]');if(t){multiple(fila(fid),B.col(b,t.getAttribute('data-c')),t);return}
       if(e.target.closest('[data-borrar]')){
         var ff=fila(fid);

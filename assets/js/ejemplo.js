@@ -174,7 +174,8 @@ function armar(){
   }).then(function(pb){
     var c=B.col(pb,'p-cat');if(c){c.opciones=CATS.slice();return B.guardarBase(pb)}
   }).then(function(){
-    return B.guardarFilas([].concat(filasInventario(ids),filasCompras(ids.compras),filasGastos(ids.gastos),filasEquipo(ids)));
+    /* Sin historial: las filas del ejemplo no son cambios de nadie */
+    return B.guardarFilas([].concat(filasInventario(ids),filasCompras(ids.compras),filasGastos(ids.gastos),filasEquipo(ids)),{historial:false});
   }).then(function(){
     return PAGINAS.reduce(function(pr,x){
       return pr.then(function(){

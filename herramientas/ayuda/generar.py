@@ -244,6 +244,13 @@ c+=herramienta('nucleo','bases','Bases de datos',
   'Toca el cuadrito de la izquierda de una fila para ver su ficha completa.',
   'Importa o descarga en CSV (por ejemplo, desde Excel) en «⋯» de la base.'],
  'Fórmulas: usa el nombre de otras columnas entre llaves, por ejemplo {Precio} * {Cantidad}, o SI({Existencias} < {Mínimo}; "Bajo"; "Bien"). También MAX, MIN, ENTERO, REDONDEAR y DIAS({Vence}).')
+c+=herramienta('nucleo','historialfilas','Historial de las filas',
+ 'Cada fila de una base guarda su historial: quién cambió qué celda, cuándo, y el valor de antes. Sirve para saber quién movió algo y para regresarlo.',
+ ['Abre la ficha de una fila (el cuadrito de su izquierda). Abajo, en **Historial**, está cada cambio: quién, cuándo y el valor de antes tachado junto al nuevo.',
+  'Para regresar un valor, pulsa **Volver a «…»** junto al cambio. Queda anotado como un cambio más.',
+  'Para ver todo lo que cambió en la base: «⋯» de la base → **Actividad**. Puedes ver solo lo de una persona con «Persona».',
+  'Si alguien eliminó una fila, en **Actividad** aparece «Eliminó la fila» con **Recuperar fila**: vuelve con todos sus valores.'],
+ 'Los cambios seguidos de la misma persona en la misma fila (a menos de 2 minutos) se juntan en uno, y lo que escribes enseguida en una fila nueva cuenta como parte de crearla. Se guarda 90 días y siempre los últimos 50 cambios de cada fila. Vive en este navegador: no va en el respaldo.')
 c+=herramienta('nucleo','colores','Color según el valor',
  'Pinta las celdas de una columna según lo que dicen: en rojo lo vencido, en verde lo pagado.',
  ['En el encabezado de la columna, abre su menú y elige «Color según el valor».',

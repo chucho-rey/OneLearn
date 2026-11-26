@@ -21,6 +21,12 @@
    múltiple lista, casilla verdadero o falso, relación el id de la fila. Los cálculos no se guardan.
    Además: filtrar, buscar, ordenar, agrupar, totales al pie, CSV (leer con tipos detectados, $1,250.50 y día/mes/año;
    escribir) y la semilla de una base (para plantillas, duplicar y crearla al abrir la página).
+   Historial de las filas: guardarFila, guardarFilas y borrarFila anotan en AT.datos.historial qué celdas cambiaron
+   (valor de antes y de después), quién y cuándo; también las filas nuevas, borradas (con su copia, para
+   recuperarlas) y recuperadas. Los cambios seguidos de la misma persona en la misma fila, a menos de 2 minutos del
+   anterior, se juntan en una sola entrada. op.historial === false no anota (la empresa de ejemplo); op.juntar ===
+   false no junta (volver a un valor). Lo que se escribe enseguida en una fila nueva es parte de su creación.
+   AT.bases.HISTORIAL.juntar (ms) cambia la ventana (las pruebas la usan).
    Las bases se leen una vez y quedan en memoria; los cambios se guardan al momento y se avisan con AT.bases.on (y
    entre pestañas con AT.datos). Expone AT.bases. Se carga después de datos.js. */
 (function(){
@@ -93,31 +99,86 @@ function normal(b){
 }
 function vistaNueva(nombre,tipo){return {id:nuevoId('v'),nombre:nombre||'Tabla',tipo:tipo||'tabla',q:'',f:{col:'',op:'contiene',val:''},s:{col:'',dir:1},s2:{col:'',dir:1},ocultas:[]}}
 
+/* ---------- Historial de las filas ---------- */
+/* juntar: cuánto tiempo (ms) se juntan los cambios seguidos; las pruebas lo cambian */
+var HISTORIAL={juntar:2*60*1000},ultimo={};
+function quienSoy(){
+  var y=AT.datos&&AT.datos.yo?AT.datos.yo():{},p=AT.empresa&&AT.empresa.existe&&AT.empresa.existe()&&AT.empresa.activa?AT.empresa.activa():null;
+  return {id:y.id||'',nombre:(p&&p.nombre)||y.nombre||''};
+}
+function igual(a,b){return JSON.stringify(a===undefined?null:a)===JSON.stringify(b===undefined?null:b)}
+function sinUndef(x){return x===undefined?null:clonar(x)}
+function diferencias(antes,despues){
+  var c={},ks={};antes=antes||{};despues=despues||{};
+  Object.keys(antes).concat(Object.keys(despues)).forEach(function(k){ks[k]=1});
+  Object.keys(ks).forEach(function(k){if(!igual(antes[k],despues[k]))c[k]={a:sinUndef(antes[k]),d:sinUndef(despues[k])}});
+  return c;
+}
+function tituloDe(f){var b=BASES[f.base];if(!b||!b.columnas.length)return '';try{return titulo(b,f)}catch(e){return ''}}
+/* La entrada de una fila que se guarda (prev: como estaba; null si es nueva). Devuelve la entrada a guardar,
+   {quitar:id} si un cambio juntado volvió a como estaba, o null */
+function anotar(prev,f,op){
+  var q=quienSoy(),t=new Date().toISOString();
+  if(!prev){
+    var n={id:nuevoId('h'),base:f.base,fila:f.id,t:t,quien:q,tipo:op&&op.motivo==='recuperada'?'recuperada':'nueva',titulo:tituloDe(f)};
+    if(n.tipo==='nueva')ultimo[f.id]=n;
+    return n;
+  }
+  var c=diferencias(prev.v,f.v);if(!Object.keys(c).length)return null;
+  var u=ultimo[f.id],cerca=!(op&&op.juntar===false)&&u&&u.quien.id===q.id&&Date.parse(t)-Date.parse(u.t)<HISTORIAL.juntar;
+  /* Lo que se escribe enseguida en una fila nueva es parte de su creación */
+  if(cerca&&u.tipo==='nueva'){u.t=t;u.titulo=tituloDe(f);return u}
+  if(cerca&&u.tipo==='cambio'){
+    Object.keys(c).forEach(function(k){if(u.cambios[k])u.cambios[k].d=c[k].d;else u.cambios[k]=c[k];if(igual(u.cambios[k].a,u.cambios[k].d))delete u.cambios[k]});
+    u.t=t;u.titulo=tituloDe(f);
+    if(!Object.keys(u.cambios).length){delete ultimo[f.id];return {quitar:u.id}}
+    return u;
+  }
+  var e={id:nuevoId('h'),base:f.base,fila:f.id,t:t,quien:q,tipo:'cambio',cambios:c,titulo:tituloDe(f)};
+  ultimo[f.id]=e;
+  return e;
+}
+function guardarHistorial(lista){
+  var H=AT.datos&&AT.datos.historial;if(!H)return Promise.resolve();
+  var poner=lista.filter(function(x){return x&&!x.quitar}),quitar=lista.filter(function(x){return x&&x.quitar}).map(function(x){return x.quitar});
+  return Promise.all([H.poner(poner),quitar.length?H.quitar(quitar):null]).catch(function(e){if(window.console)console.warn('OneBook: no se pudo anotar el historial',e)});
+}
+
 /* ---------- Guardar ---------- */
 function guardarBase(b){
   BASES[b.id]=b;
   return AT.datos.bases.guardar(b).then(function(x){avisar({base:b.id,tipo:'base'});return x});
 }
-function guardarFila(f){
-  var l=FILAS[f.base]||(FILAS[f.base]=[]),i=l.map(function(x){return x.id}).indexOf(f.id);
+function guardarFila(f,op){
+  /* Si la base no estaba leída no se sabe cómo estaba la fila: no se anota */
+  var cargada=!!FILAS[f.base],l=FILAS[f.base]||(FILAS[f.base]=[]),i=l.map(function(x){return x.id}).indexOf(f.id);
+  var h=cargada&&!(op&&op.historial===false)?anotar(i<0?null:clonar(l[i]),f,op):null;
   if(i<0)l.push(f);else l[i]=f;
   version++;
-  return AT.datos.filas.guardar(f).then(function(x){avisar({base:f.base,tipo:'fila',id:f.id});return x});
+  return AT.datos.filas.guardar(f).then(function(x){return guardarHistorial([h]).then(function(){avisar({base:f.base,tipo:'fila',id:f.id});return x})});
 }
 function nuevaFila(bid,v){
   var l=filasDe(bid),orden=l.reduce(function(m,f){return Math.max(m,f.orden||0)},0)+1;
   return {id:nuevoId('f'),base:bid,v:v||{},orden:orden};
 }
-function borrarFila(f){
+function borrarFila(f,op){
+  var antes=filasDe(f.base).filter(function(x){return x.id===f.id})[0]||f;
   FILAS[f.base]=filasDe(f.base).filter(function(x){return x.id!==f.id});
-  version++;
-  return AT.datos.filas.borrar(f.id).then(function(){avisar({base:f.base,tipo:'fila',id:f.id,borrada:true})});
+  version++;delete ultimo[f.id];
+  var h=op&&op.historial===false?null:{id:nuevoId('h'),base:f.base,fila:f.id,t:new Date().toISOString(),quien:quienSoy(),tipo:'borrada',titulo:tituloDe(antes),
+    copia:{v:clonar(antes.v||{}),orden:antes.orden||0}};
+  return AT.datos.filas.borrar(f.id).then(function(){return guardarHistorial([h])}).then(function(){avisar({base:f.base,tipo:'fila',id:f.id,borrada:true})});
 }
-function guardarFilas(lista){
+function guardarFilas(lista,op){
   if(!lista.length)return Promise.resolve([]);
-  lista.forEach(function(f){var l=FILAS[f.base]||(FILAS[f.base]=[]),i=l.map(function(x){return x.id}).indexOf(f.id);if(i<0)l.push(f);else l[i]=f});
+  var hs=[];
+  lista.forEach(function(f){
+    var cargada=!!FILAS[f.base],l=FILAS[f.base]||(FILAS[f.base]=[]),i=l.map(function(x){return x.id}).indexOf(f.id);
+    if(cargada&&!(op&&op.historial===false))hs.push(anotar(i<0?null:clonar(l[i]),f,op));
+    if(i<0)l.push(f);else l[i]=f;
+  });
   version++;
-  return AT.datos.filas.guardarVarias(lista).then(function(x){avisar({base:lista[0].base,tipo:'filas'});return x});
+  return AT.datos.filas.guardarVarias(lista).then(function(x){return guardarHistorial(hs).then(function(){avisar({base:lista[0].base,tipo:'filas'});return x})});
 }
 /* Crea una base a partir de su semilla {nombre, columnas, vistas, filas:[{v}]} (de una plantilla o de duplicar) */
 function crear(semilla,doc){
@@ -555,7 +616,7 @@ if(AT.datos&&AT.datos.on)AT.datos.on(function(c,deOtra){
   else if(c.almacen==='*')Object.keys(BASES).forEach(function(id){recargar(id)});
 });
 
-AT.bases={TIPOS:TIPOS,CALCULADO:CALCULADO,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clonar:clonar,sinAcentos:sinAcentos,opciones:opciones,
+AT.bases={HISTORIAL:HISTORIAL,TIPOS:TIPOS,CALCULADO:CALCULADO,OPS:OPS,PIES:PIES,nuevoId:nuevoId,clonar:clonar,sinAcentos:sinAcentos,opciones:opciones,
   cargar:cargar,recargar:recargar,todas:todas,base:base,filas:filasDe,fila:filaPorId,col:colPorId,colPorNombre:colPorNombre,
   guardarBase:guardarBase,guardarFila:guardarFila,guardarFilas:guardarFilas,nuevaFila:nuevaFila,borrarFila:borrarFila,
   crear:crear,semillaDe:semillaDe,vistaNueva:vistaNueva,normal:normal,
