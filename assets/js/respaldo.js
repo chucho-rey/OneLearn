@@ -1,6 +1,6 @@
 /* OneBook: ventana «Tus datos».
    Explica dónde se guarda lo que escribes, cuánto espacio ocupa, si el navegador lo protege,
-   y permite descargar un respaldo e importarlo. Se abre desde «Tus datos» en la barra lateral.
+   y permite descargar un respaldo e importarlo, o eliminar todos los datos para empezar de cero. Se abre desde «Tus datos» en la barra lateral.
    También la ventana «Papelera» (fase F5): las páginas que eliminaste, para recuperarlas o borrarlas para siempre
    (se abre desde «Tus datos», desde «Papelera» al final de tus páginas o con cualquier [data-papelera]).
    «Importar respaldo» también abre un respaldo de Bases unificadas (cada libro, una página con sus bases).
@@ -49,6 +49,15 @@ function crear(){
       '<button class="btn" type="button" data-td="importar">Importar respaldo</button>'+
       '<input type="file" accept=".json,application/json" id="tdArchivo" hidden></div>'+
       '<p class="td-msg" id="tdMsg" role="status"></p>'+
+    '</div>'+
+    '<div class="td-sec td-borrar"><h3>Empezar de cero</h3>'+
+      '<p class="td-p">Borra de este navegador todas tus páginas, bases de datos, plantillas, la papelera, tu empresa y tus ajustes, para probar OneBook como la primera vez.</p>'+
+      '<div class="td-bt"><button class="btn danger" type="button" data-td="borrar">Eliminar todos los datos</button></div>'+
+      '<div class="td-conf" id="tdConf" hidden role="group" aria-labelledby="tdConfT">'+
+        '<p class="td-p" id="tdConfT"><b>¿Eliminar todo?</b> No se puede deshacer. Si quieres conservar algo, descarga antes un respaldo.</p>'+
+        '<div class="td-bt"><button class="btn danger" type="button" data-td="borrarSi">Sí, eliminar todo</button>'+
+        '<button class="btn" type="button" data-td="descargar">Descargar respaldo primero</button>'+
+        '<button class="btn" type="button" data-td="borrarNo">Cancelar</button></div></div>'+
     '</div>';
   document.body.appendChild(dlg);
   dlg.addEventListener('click',function(e){
@@ -65,6 +74,16 @@ function crear(){
       },function(){mensaje('No se pudo crear el respaldo. Inténtalo otra vez.',true)});
     }else if(a==='importar')$('#tdArchivo',dlg).click();
     else if(a==='proteger')AT.datos.pedirPersistencia().then(pintar);
+    else if(a==='borrar'){$('#tdConf',dlg).hidden=false;$('[data-td="borrarSi"]',dlg).focus()}
+    else if(a==='borrarNo'){$('#tdConf',dlg).hidden=true;$('[data-td="borrar"]',dlg).focus()}
+    else if(a==='borrarSi'){
+      if(b.getAttribute('aria-disabled')==='true')return;
+      b.setAttribute('aria-disabled','true');b.textContent='Eliminando…';
+      AT.datos.borrarTodo().then(function(){location.href=AT.rutas.raiz+'entrar.html'},function(){
+        b.removeAttribute('aria-disabled');b.textContent='Sí, eliminar todo';
+        mensaje('No se pudieron eliminar los datos. Cierra las otras pestañas de OneBook e inténtalo otra vez.',true);
+      });
+    }
     else if(a==='papelera'){cerrar();abrirPapelera()}
   });
   $('#tdArchivo',dlg).addEventListener('change',function(){
@@ -152,6 +171,7 @@ function abrir(){
   if(!dlg)crear();
   abridor=document.activeElement;
   mensaje('',false);
+  if($('#tdConf',dlg))$('#tdConf',dlg).hidden=true;
   pintar();
   if(AT.setNav)AT.setNav(false);
   dlg.showModal();
