@@ -1,9 +1,8 @@
 /* OneBook: el explorador de tus páginas, en el Inicio (sección «Tus páginas»). Como un explorador de archivos, con
    el estilo de OneBook:
-   - Ubicaciones a la izquierda: todas tus páginas, favoritas, recientes (7 días), compartidas, compartidas contigo y
-     solicitudes (las dos últimas solo si hay), por tipo (negocio, recursos humanos y otras) y la papelera. Las páginas
-     de estudio (que se separaron de OneBook) no salen en ninguna, solo en «De estudio», si quedan. En una pantalla
-     angosta van en una fila que se desliza.
+   - Ubicaciones: las elige la barra lateral («Tus páginas», barra.js; AT.ubicaciones es el modelo que comparten):
+     todas tus páginas, favoritas, recientes (7 días), compartidas, compartidas contigo, solicitudes, una sala o un tipo.
+     El explorador no tiene su propia columna; arriba dice dónde estás. inicio.html#ubic=<clave> abre una ubicación.
    - Columnas: nombre, modificado (y por quién), tipo, trabajando ahora (quién la tiene abierta y si edita o lee),
      permisos (tu permiso, quiénes tienen acceso y las solicitudes; abre «Personas y permisos») y tamaño. Se ordenan
      con su encabezado y se esconden con «Columnas». Vista de detalles o de tarjetas.
@@ -20,7 +19,7 @@ var raiz=$('#xp');if(!raiz||!D)return;
 var CLAVE='aprende-tecnologia:explorador';
 var COLS=[{k:'mod',t:'Modificado',orden:'modificado'},{k:'sala',t:'Sala',orden:'sala'},{k:'tipo',t:'Tipo',orden:'tipo'},{k:'ahora',t:'Trabajando ahora'},
   {k:'perm',t:'Permisos',orden:'permisos'},{k:'tam',t:'Tamaño',orden:'tamano'}];
-var CATS=[['negocio','Negocio','caja'],['rh','Recursos humanos','users'],['general','Otras','notas'],['estudio','De estudio (solo lectura)','libreta']];
+var U=AT.ubicaciones;
 var DIA=864e5;
 function sinAcentos(t){return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
 function leerEst(){
@@ -32,38 +31,15 @@ var est=leerEst(),docs=[],lista=[],sel={},q='',activo='',vacio='',enPapelera=0;
 function guardarEst(){try{localStorage.setItem(CLAVE,JSON.stringify(est))}catch(e){}}
 function visible(k){return est.ocultas.indexOf(k)<0}
 
-/* ---------- Lo que se sabe de cada página ---------- */
+/* ---------- Lo que se sabe de cada página (lo común viene de AT.ubicaciones) ---------- */
 function info(d){
-  var deEstudio=!!(D.deEstudio&&D.deEstudio(d));
-  var t=deEstudio?{nombre:'Página de estudio',icono:'libreta',cat:'estudio'}:AT.tiposDoc&&AT.tiposDoc[d.tipo]||{nombre:'Documento',icono:'page',cat:'general'};
-  var tam=0;try{tam=JSON.stringify(d).length}catch(e){}
-  var admin=A?A.puede(d,'compartir'):true,gente=A?A.personas(d):[];
-  /* Salas (E3): la sala de la página ('sa-…' o 'privado') y su nombre */
-  var sala=A&&A.sala?A.sala(d):'',so=sala&&sala!=='privado'&&AT.empresa?AT.empresa.sala(sala):null;
-  return {d:d,id:d.id,titulo:d.titulo||'Sin título',tipo:t,cat:CATS.some(function(c){return c[0]===t.cat})?t.cat:'general',
-    rol:A?A.rol(d):'dueno',gente:gente,pend:admin&&A?A.pendientes(d):[],admin:admin,editar:A?A.puede(d,'editar'):true,
-    contigo:gente.some(function(p){return p.tu&&p.rol!=='dueno'}),sala:sala,salaNombre:sala==='privado'?'Privado':so?(so.tipo==='general'?'General':so.nombre):'',
-    tam:tam,editado:d.editado||d.creado||''};
+  var x=U.info(d),tam=0;try{tam=JSON.stringify(d).length}catch(e){}
+  var so=x.sala&&x.sala!=='privado'&&AT.empresa?AT.empresa.sala(x.sala):null;
+  x.rol=A?A.rol(d):'dueno';x.editar=A?A.puede(d,'editar'):true;x.tam=tam;
+  x.salaNombre=x.sala==='privado'?'Privado':so?(so.tipo==='general'?'General':so.nombre):'';
+  return x;
 }
-/* Las páginas de estudio solo salen en «De estudio» */
-var UBIC=[
-  {k:'todas',t:'Todas tus páginas',i:'notas',f:function(x){return x.cat!=='estudio'}},
-  {k:'favoritas',t:'Favoritas',i:'estrella',f:function(x){return x.cat!=='estudio'&&!!x.d.favorito}},
-  {k:'recientes',t:'Recientes',i:'historial',f:function(x){return x.cat!=='estudio'&&Date.now()-Date.parse(x.editado)<7*DIA}},
-  {k:'compartidas',t:'Compartidas',i:'users',f:function(x){return x.cat!=='estudio'&&x.gente.length>1}},
-  {k:'contigo',t:'Compartidas contigo',i:'enlace',f:function(x){return x.cat!=='estudio'&&x.contigo},siHay:true},
-  {k:'solicitudes',t:'Solicitudes',i:'aviso',f:function(x){return x.cat!=='estudio'&&x.pend.length>0},siHay:true}
-];
-function ubicDe(k){
-  var u=UBIC.filter(function(x){return x.k===k})[0];
-  if(u)return u;
-  /* Una sala o Privado */
-  var sm=/^sala:(sa-[\w-]+|privado)$/.exec(k);
-  if(sm){var so=sm[1]==='privado'?{nombre:'Privado'}:AT.empresa&&AT.empresa.sala(sm[1]);
-    if(so)return {k:k,t:sm[1]==='privado'?'Privado':so.tipo==='general'?'General':so.nombre,i:sm[1]==='privado'?'candado':'deptos',sala:sm[1],f:function(x){return x.cat!=='estudio'&&x.sala===sm[1]}}}
-  var c=/^cat:(\w+)$/.exec(k),cc=c&&CATS.filter(function(x){return x[0]===c[1]})[0];
-  return cc?{k:k,t:cc[1],i:cc[2],f:function(x){return x.cat===cc[0]}}:UBIC[0];
-}
+function ubicDe(k){return U.de(k)}
 
 /* ---------- Formatos ---------- */
 function fecha(t){
@@ -120,7 +96,6 @@ raiz.innerHTML='<div class="xp-barra" role="toolbar" aria-label="Tus páginas" a
     '<button type="button" class="btn xp-cols" id="xpCols" aria-haspopup="true" aria-expanded="false">'+ico('tabla')+'Columnas</button>'+
   '</div>'+
   '<div class="xp-cuerpo">'+
-    '<nav class="xp-nav" id="xpNav" aria-label="Ubicaciones de tus páginas"></nav>'+
     '<div class="xp-main">'+
       '<p class="xp-ruta" id="xpRuta"></p>'+
       '<div class="xp-lista" id="xpLista"></div>'+
@@ -128,29 +103,6 @@ raiz.innerHTML='<div class="xp-barra" role="toolbar" aria-label="Tus páginas" a
     '</div>'+
   '</div>';
 var lst=$('#xpLista',raiz),inQ=$('#xpQ',raiz);
-
-/* ---------- Ubicaciones ---------- */
-function cuenta(f){return docs.filter(f).length}
-function pintarNav(){
-  var h='<ul class="xp-ul">'+UBIC.map(function(u){
-    var n=cuenta(u.f);
-    if(u.siHay&&!n&&est.ubic!==u.k)return '';
-    return '<li><button type="button" class="xp-u'+(u.k==='solicitudes'&&n?' xp-u-aviso':'')+'" data-ubic="'+u.k+'"'+(est.ubic===u.k?' aria-current="true"':'')+'>'+ico(u.i)+'<span>'+esc(u.t)+'</span><em>'+n+'</em></button></li>';
-  }).join('')+'</ul>';
-  /* Las salas que ves y Privado */
-  var salas=AT.empresa&&AT.empresa.existe()?AT.empresa.salas():[];
-  if(salas.length)h+='<p class="xp-nav-h">Salas</p><ul class="xp-ul">'+salas.map(function(s){
-    var k='sala:'+s.id;
-    return '<li><button type="button" class="xp-u" data-ubic="'+esc(k)+'"'+(est.ubic===k?' aria-current="true"':'')+'><i class="xp-dot emp-dot c-'+esc(s.color)+'" aria-hidden="true"></i><span>'+esc(s.tipo==='general'?'General':s.nombre)+'</span><em>'+cuenta(function(x){return x.sala===s.id})+'</em></button></li>';
-  }).join('')+'<li><button type="button" class="xp-u" data-ubic="sala:privado"'+(est.ubic==='sala:privado'?' aria-current="true"':'')+'>'+ico('candado')+'<span>Privado</span><em>'+cuenta(function(x){return x.sala==='privado'})+'</em></button></li></ul>';
-  var cats=CATS.filter(function(c){return cuenta(function(x){return x.cat===c[0]})||est.ubic==='cat:'+c[0]});
-  if(cats.length>1)h+='<p class="xp-nav-h">Por tipo</p><ul class="xp-ul">'+cats.map(function(c){
-    var k='cat:'+c[0];
-    return '<li><button type="button" class="xp-u" data-ubic="'+k+'"'+(est.ubic===k?' aria-current="true"':'')+'>'+ico(c[2])+'<span>'+esc(c[1])+'</span><em>'+cuenta(function(x){return x.cat===c[0]})+'</em></button></li>';
-  }).join('')+'</ul>';
-  h+='<ul class="xp-ul xp-ul-pie"><li><button type="button" class="xp-u" data-papelera>'+ico('basura')+'<span>Papelera</span><em>'+enPapelera+'</em></button></li></ul>';
-  $('#xpNav',raiz).innerHTML=h;
-}
 
 /* ---------- La lista ---------- */
 function ahoraHTML(id){
@@ -238,7 +190,7 @@ function pintarEstado(){
   if(s)$('#xpSelN',raiz).textContent=s+(s===1?' seleccionada':' seleccionadas');
   $$('[data-vista]',raiz).forEach(function(v){v.setAttribute('aria-pressed',String(v.getAttribute('data-vista')===est.vista))});
 }
-function pintar(){pintarNav();pintarLista()}
+function pintar(){pintarLista()}
 /* Solo la columna «Trabajando ahora» (cambia cada pocos segundos) */
 function pintarAhora(){$$('[data-ahora]',lst).forEach(function(c){c.innerHTML=ahoraHTML(c.getAttribute('data-ahora'))})}
 
@@ -438,7 +390,7 @@ function papelera(l){
 raiz.addEventListener('click',function(e){
   var t=e.target;
   var u=t.closest('[data-ubic]');
-  if(u){est.ubic=u.getAttribute('data-ubic');guardarEst();sel={};activo='';salaActual();pintar();var b=$('[data-ubic="'+u.getAttribute('data-ubic')+'"]',raiz);if(b)b.focus();return}
+  if(u){irA(u.getAttribute('data-ubic'));return}
   var o=t.closest('[data-orden]');
   if(o){var c=o.getAttribute('data-orden');est.orden=est.orden.col===c?{col:c,dir:-est.orden.dir}:{col:c,dir:c==='modificado'||c==='tamano'?-1:1};guardarEst();pintarLista();return}
   var v=t.closest('[data-vista]');
@@ -508,13 +460,8 @@ inQ.addEventListener('keydown',function(e){
 });
 
 /* ---------- Datos que cambian ---------- */
-function contarPapelera(){
-  if(!D.papelera)return;
-  D.papelera.todos().then(function(l){if(l.length!==enPapelera){enPapelera=l.length;pintarNav()}},function(){});
-}
 D.on(function(c){
   if(c.almacen==='presencia')pintarAhora();
-  else if(c.almacen==='papelera'||c.almacen==='*')contarPapelera();
   else if(c.almacen==='yo')pintarLista();
 });
 /* La presencia se vence sola: se revisa cada 20 segundos */
@@ -522,17 +469,29 @@ setInterval(pintarAhora,20e3);
 
 /* En una sala (o en Privado), «Nuevo» crea la página ahí (crear.js lee AT.salaActual) */
 function salaActual(){var u=ubicDe(est.ubic);AT.salaActual=u.sala||''}
+/* Cambiar de ubicación (desde la barra lateral o la dirección): la barra marca la nueva */
+function irA(k){
+  est.ubic=ubicDe(k).k;guardarEst();sel={};activo='';salaActual();pintar();
+  if(AT.barraUbicacion)AT.barraUbicacion(est.ubic);
+}
+/* inicio.html#ubic=favoritas (la barra lateral desde otra página) */
+var mh=/^#ubic=(.+)$/.exec(location.hash);
+if(mh){try{est.ubic=ubicDe(decodeURIComponent(mh[1])).k;guardarEst()}catch(e){}try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
 salaActual();
 AT.explorador={
-  /* inicio.js le pasa tus páginas (sin las de «Mi negocio» y «Tu equipo») y el texto para cuando no hay ninguna */
+  /* inicio.js le pasa tus páginas y el texto para cuando no hay ninguna (AT.ubicaciones deja las que cuentan) */
   datos:function(l,op){
     /* Solo las páginas que puedes ver (con salas, las de las salas donde estás, las tuyas y las compartidas contigo) */
-    docs=(l||[]).filter(function(d){return !A||A.puede(d,'ver')}).map(info);vacio=op&&op.vacio||'Todavía no tienes páginas.';
+    docs=U.paginas(l).map(info);vacio=op&&op.vacio||'Todavía no tienes páginas.';
     var ids={};docs.forEach(function(x){ids[x.id]=1});
     Object.keys(sel).forEach(function(id){if(!ids[id])delete sel[id]});
-    pintar();contarPapelera();
+    pintar();
   },
+  ir:irA,
+  ubicacion:function(){return est.ubic},
   estado:function(){return JSON.parse(JSON.stringify(est))},
   lista:function(){return lista.map(function(x){return x.id})}
 };
+/* La barra lateral pudo dibujarse antes que el explorador: se le avisa dónde está */
+if(AT.barraUbicacion)AT.barraUbicacion(est.ubic);
 })();

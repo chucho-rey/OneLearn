@@ -135,11 +135,11 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   const fv=(await docs(p)).filter(function(d){return d.id===ventaId})[0];
   r.cumple(await p.getAttribute('#docFav','aria-pressed')==='true'&&fv.fav&&fv.editado===antes,'marcarla favorita se guarda sin cambiar la fecha de edición',fv);
   await p.click('#menuBtn');await p.waitForTimeout(700);
-  r.cumple(await p.evaluate(function(){var a=document.querySelector('#docsLista li a.doc');return !!a&&/Nota de venta V-001/.test(a.textContent)&&!!a.querySelector('.doc-est')}),'en la barra lateral, las favoritas van primero, con su estrella');
+  r.cumple(await p.evaluate(function(){var a=document.querySelector('#arbol .arb-pags li a.doc');return !!a&&/Nota de venta V-001/.test(a.textContent)&&!!a.querySelector('.doc-est')}),'en la barra lateral, las favoritas van primero, con su estrella');
   await p.keyboard.press('Escape');
   await p.goto(base+'inicio.html');await listo(p);
   r.cumple(await p.evaluate(function(){
-      var n=document.querySelector('#xpNav [data-ubic="favoritas"] em'),f=[].filter.call(document.querySelectorAll('#xpLista [data-fila]'),function(r){return /Nota de venta V-001/.test(r.textContent)})[0];
+      var n=document.querySelector('#arbol [data-ubic="favoritas"] em'),f=[].filter.call(document.querySelectorAll('#xpLista [data-fila]'),function(r){return /Nota de venta V-001/.test(r.textContent)})[0];
       return !!n&&n.textContent==='1'&&!!f&&!!f.querySelector('.xp-fav');
     }),'en el Inicio, el explorador marca la favorita con su estrella y la cuenta en «Favoritas»');
   /* «Prepara tu negocio» se marca solo */
@@ -158,8 +158,8 @@ prueba('Plantillas, favoritas y papelera',async function({browser,base,r}){
   await Promise.all([p.waitForURL(/inicio\.html/),p.click('[data-el="si"]')]);await listo(p,400);
   r.cumple(/«Nota de venta V-001» se movió a la papelera/.test(await p.textContent('#avisoApp'))&&!(await docs(p)).some(function(d){return d.id===ventaId}),'sale de tus páginas y el Inicio lo avisa');
   await p.click('#menuBtn');await p.waitForTimeout(700);
-  r.cumple(/Papelera\s*1/.test(await p.textContent('#docsLista .doc-pap')),'al final de tus páginas aparece la papelera con cuántas tiene');
-  await p.click('#docsLista .doc-pap');await p.waitForSelector('dialog.pap-dlg[open]');
+  r.cumple(/Papelera\s*1/.test(await p.textContent('#arbol .doc-pap')),'al final de tus páginas aparece la papelera con cuántas tiene');
+  await p.click('#arbol .doc-pap');await p.waitForSelector('dialog.pap-dlg[open]');
   r.cumple(/Nota de venta V-001/.test(await p.textContent('#papL'))&&/se borra en 30 días/.test(await p.textContent('#papL'))&&await p.evaluate(function(){return document.activeElement.getAttribute('data-pap')==='restaurar'}),
     'la papelera lista la página con los días que le quedan; el foco en «Recuperar»');
   await revisar(p,r,'papelera en celular');

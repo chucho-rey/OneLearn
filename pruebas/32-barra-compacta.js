@@ -17,7 +17,7 @@ prueba('Barra lateral compacta',async function({browser,base,r}){
   const a=await ancho();
   r.cumple(a>=48&&a<=64,'contraída, la barra queda angosta (solo iconos)',a);
   r.cumple(await p.isVisible('#sideCrear')&&await p.isVisible('#sideBuscar')&&await p.isVisible('#sideDatos'),'se ven los iconos de Crear, Buscar y Tus datos');
-  r.cumple(await p.isHidden('#docsLista'),'tus páginas se esconden en la barra compacta');
+  r.cumple(await p.isHidden('#arbol'),'tus páginas se esconden en la barra compacta');
   const nombre=await p.evaluate(function(){var b=document.getElementById('sideCrear');var s=b.querySelector('span');return {w:s.getBoundingClientRect().width,t:b.textContent.trim()}});
   r.cumple(nombre.w<=1&&nombre.t==='Crear','el nombre no se ve pero sigue para lectores de pantalla',nombre);
   r.igual(await p.getAttribute('#sideBtn','aria-label'),'Expandir barra lateral','el botón dice «Expandir»');
@@ -59,7 +59,7 @@ prueba('Barra lateral compacta',async function({browser,base,r}){
   await revisar(p,r,'Ayuda con la barra compacta');
   /* Expandir */
   await p.click('#sideBtn');await p.waitForTimeout(250);
-  r.cumple(await ancho()>200&&await p.isVisible('#docsLista'),'«Expandir» la deja como estaba');
+  r.cumple(await ancho()>200&&await p.isVisible('#arbol'),'«Expandir» la deja como estaba');
   r.igual(await p.evaluate(function(){return AT.ajustes.get('barra')}),'abierta','se guarda abierta');
   await cerrar(p);
 
@@ -68,7 +68,7 @@ prueba('Barra lateral compacta',async function({browser,base,r}){
   await c.goto(base+'inicio.html');await listo(c,400);
   r.cumple(await c.isHidden('#sideCrear'),'en celular la barra no se ve hasta abrir el menú');
   await c.click('#menuBtn');await c.waitForTimeout(350);
-  r.cumple(await c.isVisible('#sideCrear')&&await c.isVisible('#docsLista'),'al abrir el menú se ve completa, con tus páginas');
+  r.cumple(await c.isVisible('#sideCrear')&&await c.isVisible('#arbol'),'al abrir el menú se ve completa, con tus páginas');
   r.cumple(!(await c.evaluate(function(){var s=document.querySelector('#sideCrear span');return s.getBoundingClientRect().width<=1})),'con sus nombres');
   await revisar(c,r,'Menú en celular');
   await cerrar(c);

@@ -181,6 +181,34 @@ button{font-family:inherit;color:inherit}
 .side-ic-x{display:none}
 @media (max-width:899px){.side-ic-c{display:none}.side-ic-x{display:block}}
 .grp{font-family:var(--font-mono);font-size:0.6875rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2);padding:1rem 0.5rem 0.375rem}
+/* «Tus páginas» en la barra lateral, como un explorador (barra.js): ubicaciones, salas que se abren con sus páginas
+   colgadas de una línea del color de su departamento, por tipo y papelera. Las cuentas, con cifras tabulares. */
+.arb{display:flex;flex-direction:column;min-width:0}
+.arb-h{margin:1rem 0.5rem 0.25rem;font-family:var(--font-ui);font-size:0.8125rem;font-weight:600;letter-spacing:0;color:var(--fg-2)}
+.arb-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.arb .nv em{font-family:var(--font-ui);font-size:0.75rem;font-variant-numeric:tabular-nums;color:var(--fg-2)}
+.arb .nv.on em{color:var(--accent-ink)}
+.arb-aviso em{color:var(--warn-ink);font-weight:700}
+.arb-fila{display:flex;align-items:center;gap:0.125rem}
+.arb-fila>.nv{flex:1 1 auto;min-width:0}
+.arb-tg{display:grid;place-items:center;flex:none;width:1.5rem;height:1.75rem;padding:0;border:0;border-radius:0.25rem;background:transparent;color:var(--fg-2);cursor:pointer}
+.arb-tg:hover{background:var(--hover);color:var(--fg)}
+.arb-tg .ico{font-size:0.875rem;transform:rotate(180deg)}
+.arb-tg[aria-expanded="true"] .ico{transform:rotate(270deg)}
+@media (prefers-reduced-motion:no-preference){.arb-tg .ico{transition:transform .15s ease}}
+.arb-pags{list-style:none;margin:0.125rem 0 0.375rem 1.25rem;padding:0 0 0 0.375rem;border-left:2px solid var(--line-strong);display:flex;flex-direction:column;gap:1px}
+.arb-pags.arb-c-acento{border-left-color:var(--accent)}
+.arb-pags.arb-c-verde{border-left-color:var(--good)}
+.arb-pags.arb-c-morado{border-left-color:var(--c5)}
+.arb-pags.arb-c-ambar{border-left-color:var(--warn)}
+.arb-pags.arb-c-rojo{border-left-color:var(--bad)}
+.arb-pags.arb-c-gris{border-left-color:var(--c1)}
+.arb-pags .nv{min-height:1.875rem}
+.arb-nada{padding:0.25rem 0.5rem;font-size:0.8125rem;color:var(--fg-2)}
+.arb-mas{color:var(--accent-ink)}
+.arb-pie{margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid var(--line)}
+.arb .side-txt{margin-top:0.75rem}
+[data-contrast="high"] .arb-pags{border-left-width:3px}
 .nv{display:flex;align-items:center;gap:0.5rem;width:100%;min-height:2rem;padding:0.25rem 0.5rem;border:0;border-radius:0.375rem;background:transparent;font-size:0.875rem;text-align:left;color:var(--fg-2);text-decoration:none;cursor:pointer}
 .nv .ico{font-size:1rem}
 .nv.on{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}

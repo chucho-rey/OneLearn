@@ -52,7 +52,7 @@ prueba('Hito 2.2 · Guardado en tu dispositivo',async function({browser,base,r})
   idb=await leerIDB(p,'documentos');
   r.cumple(idb.some(function(d){return d.id==='d-otra'&&d.editado>'2026-11'}),'una página llega a IndexedDB con su fecha');
   await p2.waitForTimeout(900);
-  r.cumple(/Cambio desde otra pestaña/.test(await p2.textContent('#docsLista')),'otra pestaña abierta ve la página nueva en su barra lateral');
+  r.cumple(/Cambio desde otra pestaña/.test(await p2.textContent('#arbol .arb-pags')),'otra pestaña abierta ve la página nueva en su barra lateral');
   await p2.close();
 
   /* ---------- Tus datos y respaldo ---------- */

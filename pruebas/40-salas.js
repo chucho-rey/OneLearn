@@ -50,7 +50,7 @@ prueba('Salas por departamento',async function({browser,base,r}){
   await p.evaluate(function(){var e=JSON.parse(localStorage.getItem('aprende-tecnologia:empresa'));delete e.salas;localStorage.setItem('aprende-tecnologia:empresa',JSON.stringify(e))});
   await p.reload();await listo(p);
   r.igual(await p.evaluate(function(){return AT.empresa.salas().length}),3,'una empresa de antes de las salas recibe las suyas');
-  r.igual(await textos(p,'#salasLista .nv'),'General | Almacén | Ventas | Privado','la barra lateral lista las salas y Privado');
+  r.igual(await textos(p,'#salasLista .sala-nv > span'),'General | Almacén | Ventas | Privado','la barra lateral lista las salas y Privado');
 
   /* ---------- La página de una sala ---------- */
   await Promise.all([p.waitForURL(/sala\.html\?id=/),p.click('#salasLista a[href*="'+ids.sv+'"]')]);await listo(p);
@@ -84,19 +84,18 @@ prueba('Salas por departamento',async function({browser,base,r}){
   await p.evaluate(function(id){return AT.datos.documentos.leer(id).then(function(d){d.titulo='Metas de ventas';return AT.datos.documentos.guardar(d)})},pNotas);
   await p.evaluate(function(id){return AT.datos.documentos.leer(id).then(function(d){d.titulo='Mis pendientes';return AT.datos.documentos.guardar(d)})},pPriv);
   await p.goto(base+'inicio.html');await listo(p,500);await p.waitForSelector('#xpLista [data-fila]');
-  r.cumple(await p.isVisible('[data-ubic="sala:'+ids.sv+'"]')&&await p.textContent('[data-ubic="sala:'+ids.sv+'"] em')==='2'&&await p.textContent('[data-ubic="sala:privado"] em')==='1',
-    'el explorador tiene una ubicación por sala y Privado, con cuántas páginas hay');
-  await p.click('[data-ubic="sala:'+ids.sa+'"]');await p.waitForTimeout(200);
-  r.igual(await titulosExplorador(p),'Conteo de bodega','en la ubicación de una sala, solo sus páginas');
-  r.cumple(/Almacén/.test(await p.textContent('#xpLista td.xp-c-sala')),'y la columna «Sala» dice dónde está');
+  r.cumple(await p.textContent('#salasLista [data-sala="'+ids.sv+'"] .sala-nv em')==='2'&&await p.textContent('#salasLista [data-sala="privado"] .sala-nv em')==='1',
+    'la barra lateral dice cuántas páginas tiene cada sala y Privado');
+  await p.click('#salasLista [data-sala="'+ids.sa+'"] .arb-tg');await p.waitForTimeout(150);
+  r.igual(await textos(p,'#salasLista [data-sala="'+ids.sa+'"] .arb-pags a.doc > span'),'Conteo de bodega','al abrir una sala en la barra, sus páginas');
+  r.cumple(/Almacén/.test(await textos(p,'#xpLista td.xp-c-sala')),'y la columna «Sala» del explorador dice dónde está cada una');
   await revisar(p,r,'explorador con salas');
-  await p.click('[data-ubic="todas"]');await p.waitForTimeout(150);
   r.igual(await p.evaluate(function(){return AT.datos.documentos.leer('d-avisos').then(function(d){return (d.acceso?'con lista':'sin lista')+'|'+AT.datos.acceso.sala(d)})}),'sin lista|sa-general',
     'una página de antes (sin lista de acceso) cuenta como de la General');
 
   /* ---------- Carlos (miembro de Ventas) ---------- */
   await entrarComo(p,ids.carlos);
-  r.igual(await textos(p,'#salasLista .nv'),'General | Ventas | Privado','Carlos ve la General, Ventas y Privado');
+  r.igual(await textos(p,'#salasLista .sala-nv > span'),'General | Ventas | Privado','Carlos ve la General, Ventas y Privado');
   await p.waitForSelector('#xpLista [data-fila]');
   r.igual(await titulosExplorador(p),'Avisos para todos | Metas de ventas | Nota de venta V-001','su explorador solo tiene lo que puede ver');
   await p.keyboard.press('Control+k');await p.waitForSelector('#busQ');await p.fill('#busQ','bodega');await p.waitForTimeout(500);
@@ -149,7 +148,7 @@ prueba('Salas por departamento',async function({browser,base,r}){
   /* ---------- Carlos ahora ve Almacén (solo ve) y la sala nueva ---------- */
   await p.goto(base+'inicio.html');await listo(p);
   await entrarComo(p,ids.carlos);
-  r.igual(await textos(p,'#salasLista .nv'),'General | Almacén | Ventas | Proyecto sucursal | Privado','Carlos ya ve Almacén y la sala nueva');
+  r.igual(await textos(p,'#salasLista .sala-nv > span'),'General | Almacén | Ventas | Proyecto sucursal | Privado','Carlos ya ve Almacén y la sala nueva');
   await p.goto(base+'documento.html?id=d-bodega');await listo(p,500);
   r.igual(await p.textContent('#docEstado'),'Solo lectura','Almacén, solo para leer');
   await p.goto(base+'documento.html?id='+pProy);await listo(p,500);
