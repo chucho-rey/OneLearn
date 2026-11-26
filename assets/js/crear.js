@@ -35,6 +35,9 @@ var TIPOS=AT.tiposDoc={
   reporte:{nombre:'Reporte del mes',icono:'grafica',desc:'Ventas por producto y compras por proveedor del mes, contra el mes pasado, con gráficas. Crea uno cada mes.',listo:true,modulo:'negocio',cat:'negocio',trae:['Reportes']},
   inventario:{nombre:'Inventario',icono:'datos',desc:'Productos, entradas y salidas; las existencias se calculan solas, las ventas las descuentan y armas el pedido al proveedor.',listo:true,modulo:'negocio',cat:'negocio',trae:['Resumen del inventario','Productos','Entradas y salidas','Compras']},
   cajachica:{nombre:'Caja chica',icono:'caja',desc:'El efectivo que entra y los pagos que salen, con su saldo después de cada movimiento. Una por mes: empieza con el saldo del mes anterior.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos con saldo']},
+  cedis:{nombre:'Cedis: pedidos de sucursales',icono:'empresa',desc:'Tus sucursales te mandan su pedido con un enlace; ves el total por insumo, confirmas lo que surtes e imprimes las hojas de surtido.',listo:true,modulo:'negocio',cat:'negocio',trae:['Pedidos de sucursales','Insumos','Sucursales','Pedidos recibidos']},
+  /* La página del pedido de una sucursal: la crea la invitación de su Cedis (recibir.js); no sale en la galería */
+  pedidocedis:{nombre:'Pedido al Cedis',icono:'lista',desc:'El pedido de esta sucursal a su Cedis.',listo:true,modulo:'negocio',cat:'negocio',oculta:true},
   clientes:{nombre:'Clientes',icono:'users',desc:'Nombre, teléfono, qué compran y lo que hay que recordar; en tabla o en tarjetas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Base de datos']},
   lista:{nombre:'Lista de precios',icono:'tabla',desc:'Tus productos y servicios con su precio, para imprimir o compartir.',listo:true,modulo:'negocio',cat:'negocio',trae:['Tabla']},
   plan:{nombre:'Plan de negocio',icono:'idea',desc:'En una página: qué vendes, a quién, a cuánto, cuánto ganas y tus metas.',listo:true,modulo:'negocio',cat:'negocio',trae:['Precio de venta','Lista de tareas']},
@@ -49,7 +52,7 @@ var TIPOS=AT.tiposDoc={
   ptu:{nombre:'Reparto de utilidades (PTU)',icono:'reparto',desc:'El 10 % de la utilidad entre tu equipo: por días y por salario, con sus topes.',listo:true,modulo:'rh',cat:'rh',trae:['Reparto de utilidades']},
   calculadoras:{nombre:'Calculadoras de nómina',icono:'recibo',desc:'Recibo de nómina, vacaciones, aguinaldo y finiquito en una página, para hacer cuentas rápidas.',listo:true,modulo:'rh',cat:'rh',trae:['Recibo de nómina','Vacaciones','Aguinaldo','Finiquito']}
 };
-var ORDEN=['notas','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','cajachica','clientes','lista','plan','prestamo',
+var ORDEN=['notas','pendientes','corte','fiado','gastos','venta','precio','surtir','inventario','reporte','presupuesto','proveedores','cajachica','cedis','clientes','lista','plan','prestamo',
   'equipo','nominas','vacaciones','aguinaldos','finiquito','ptu','calculadoras','cotizacion','presentacion','blanco'];
 var CATS={negocio:'Para tu negocio',rh:'Recursos humanos',paquetes:'Paquetes por giro',mis:'Mis plantillas'};
 var CAT_MOD={negocio:'negocio',rh:'rh',paquetes:'negocio',mis:'nucleo'};
@@ -102,6 +105,10 @@ var SEMILLAS={
     {id:'k-monto',nombre:'Monto',tipo:'moneda',pie:'suma'},
     {id:'k-saldo',nombre:'Saldo',tipo:'saldo',inicial:0,monto:'k-monto',signo:'k-tipo',resta:'Egreso',por:'k-num'}],
     vistas:[vista('v-tabla','Movimientos','tabla',{s:{col:'k-num',dir:1},s2:{col:'',dir:1}}),vista('v-suc','Por sucursal','tabla',{s:{col:'k-num',dir:1},s2:{col:'',dir:1},agrupar:'k-suc'})],filas:[]}},
+  /* El Cedis (fase F8): sus bases con rol las crea cedis.js (las mismas en todas sus páginas) */
+  insumos:function(){return {rol:'insumos',nombre:'Insumos'}},
+  sucursales:function(){return {rol:'sucursales',nombre:'Sucursales'}},
+  pedidosCedis:function(){return {rol:'pedidos',nombre:'Pedidos recibidos'}},
   clientes:function(){return {nombre:'Clientes',columnas:[
     {id:'c-nombre',nombre:'Nombre',tipo:'texto'},
     {id:'c-tel',nombre:'Teléfono',tipo:'telefono'},
@@ -149,6 +156,17 @@ var PLANTILLAS={
   proveedores:function(){return {titulo:'Proveedores',props:[],contenido:[
     tabla(['Proveedor','Qué te surte','Teléfono','Día de visita'],3),
     H('Lo que les debes'),{type:'porpagar',attrs:{id:id(),titulo:'',cuentas:[]}},P()
+  ]}},
+  cedis:function(){return {titulo:'Pedidos de sucursales',props:[],contenido:[
+    P('Cada sucursal recibe su invitación (con su clave), llena su pedido y te lo manda con un enlace por WhatsApp o correo. Ábrelo y se suma aquí. Los insumos y las sucursales son de ejemplo: cámbialos por los tuyos.'),
+    {type:'cedis',attrs:{id:id()}},
+    H('Insumos'),P('Tu formato de pedido. Solo los activos llegan a las sucursales; el costo no.'),baseDatos(SEMILLAS.insumos()),
+    H('Sucursales'),baseDatos(SEMILLAS.sucursales()),
+    H('Pedidos recibidos'),baseDatos(SEMILLAS.pedidosCedis()),P()
+  ]}},
+  pedidocedis:function(x){x=x||{};return {titulo:'Pedido a '+(x.nombreCedis||'tu Cedis'),props:[],contenido:[
+    P('Escribe la cantidad de cada insumo y toca «Enviar al Cedis»: se arma un enlace firmado para mandarlo por WhatsApp o correo. Si cambias algo, vuelve a enviarlo: reemplaza al anterior.'),
+    {type:'pedidocedis',attrs:{id:id(),cedis:x.cedis||''}},P()
   ]}},
   cajachica:function(){
     var mes=new Date().toLocaleDateString('es-MX',{month:'long',year:'numeric'});
@@ -276,7 +294,7 @@ function conAcceso(doc,sala){
 function armar(tipo,extra){
   var t=TIPOS[tipo],pl=PLANTILLAS[tipo];
   if(!t||!pl)return null;
-  var base=Object.assign(pl(),extra||{}),ahora=new Date().toISOString();
+  var base=Object.assign(pl(extra),extra||{}),ahora=new Date().toISOString();
   var doc={formato:1,tipo:tipo,id:idDoc(),titulo:base.titulo,props:base.props,creado:ahora,editado:ahora,
     contenido:{type:'doc',content:base.contenido}};
   return conAcceso(doc,extra&&extra.sala);

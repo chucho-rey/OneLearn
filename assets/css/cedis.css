@@ -1,0 +1,113 @@
+/* OneBook: pedidos al Cedis (fase F8): el bloque del Cedis (.cd), el pedido de la sucursal (.pc), recibir.html (.rc),
+   la ventana para mandar un enlace y las hojas que se imprimen (#cdImprimir). */
+.cd,.pc{display:flex;flex-direction:column;gap:0.625rem;min-width:0}
+.cd-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;flex-wrap:wrap}
+.cd-cab>div{display:flex;flex-direction:column;min-width:0}
+.cd-nom{font-size:1.0625rem;overflow-wrap:anywhere}
+.cd-cab small{font-size:0.8125rem;color:var(--fg-2)}
+.cd .btn .ico,.pc .btn .ico,.cd-dlg .btn .ico,.rc .btn .ico{margin-right:0.375rem;vertical-align:-0.125em}
+.cd-barra,.pc-barra{display:flex;align-items:flex-end;gap:0.5rem 0.75rem;flex-wrap:wrap}
+.cd-fecha{display:flex;flex-direction:column;gap:0.25rem;font-size:0.8125rem;color:var(--fg-2)}
+.cd-fecha select{min-height:2.5rem;padding:0 0.5rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit;font-size:0.9375rem}
+.cd-res{margin:0;font-size:0.9375rem;max-width:none}
+.cd-msg{margin:0;font-size:0.8125rem;color:var(--fg-2);max-width:none}
+.cd-msg:empty{display:none}
+.cd-vacio{margin:0;padding:0.75rem;border:1px dashed var(--line-strong);border-radius:0.5rem;color:var(--fg-2);text-align:center;max-width:none}
+/* Sucursales */
+.cd-sucs{margin:0;padding:0;list-style:none;border:1px solid var(--line);border-radius:0.625rem;overflow:hidden}
+.cd-suc{display:flex;align-items:center;justify-content:space-between;gap:0.5rem 0.75rem;flex-wrap:wrap;padding:0.5rem 0.75rem;background:var(--bg)}
+.cd-suc+.cd-suc{border-top:1px solid var(--line)}
+.cd-suc-n{display:flex;align-items:center;gap:0.375rem 0.5rem;flex-wrap:wrap;min-width:0}
+.cd-suc-n b{overflow-wrap:anywhere}
+.cd-suc-b{display:flex;gap:0.375rem;flex-wrap:wrap}
+.cd-suc-b .btn{min-height:2.25rem;font-size:0.875rem}
+.cd-chip{display:inline-block;padding:0.0625rem 0.5rem;border-radius:1rem;font-size:0.75rem;font-weight:600;white-space:nowrap;background:var(--bg-soft);color:var(--fg-2)}
+.cd-chip.falta{background:var(--bg-soft);color:var(--fg-2)}
+.cd-chip.rec{background:var(--warn-bg);color:var(--warn-ink)}
+.cd-chip.conf{background:var(--accent-bg);color:var(--accent-ink)}
+.cd-chip.surtido{background:var(--good-bg);color:var(--good-ink)}
+.cd-chip.tarde,.cd-chip.viejo{background:var(--bad-bg);color:var(--bad-ink)}
+.cd-chip.sin{background:var(--pur-bg);color:var(--pur-ink)}
+/* Consolidado y tablas */
+.cd-con-h{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap}
+.cd-con-h h4{margin:0.5rem 0 0;font-size:1rem}
+.cd-tw{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:0.5rem}
+.cd-t{width:100%;border-collapse:collapse;font-size:0.875rem}
+.cd-t th,.cd-t td{padding:0.375rem 0.625rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;font-family:inherit;letter-spacing:normal;text-transform:none}
+.cd-t thead th{background:var(--bg-side);font-size:0.8125rem;font-weight:600;color:var(--fg-2);white-space:nowrap}
+.cd-t tbody th{font-size:inherit;font-weight:500;color:var(--fg);overflow-wrap:anywhere}
+.cd-t tbody tr:last-child>*{border-bottom:0}
+.cd-t .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cd-t .neg{color:var(--bad-ink);font-weight:600}
+.cd-cat th{background:var(--bg-soft);font-size:0.8125rem;font-weight:600;color:var(--fg)}
+.cd-0{color:var(--fg-2)}
+.cd-tconf input{width:100%;min-width:4.5rem;min-height:2.25rem;padding:0 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit}
+.cd-tconf input[type="number"]{max-width:6.5rem;text-align:right}
+.cd-tconf input[type="text"]{min-width:9rem}
+.cd-salidas{display:flex;gap:0.5rem;flex-wrap:wrap}
+/* Ventanas */
+.cd-dlg{max-width:min(46rem,calc(100vw - 1.5rem))}
+.cd-comp-b{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem}
+.cd-comp-b .btn{display:inline-flex;align-items:center;text-decoration:none}
+.cd-enlace{width:100%;font-family:var(--font-mono);font-size:0.8125rem}
+.cd-aviso{padding:0.5rem 0.75rem;border-radius:0.5rem;background:var(--warn-bg);color:var(--warn-ink)}
+.cd-msg-txt{padding:0.625rem 0.75rem;border-radius:0.5rem;background:var(--bg-soft);white-space:pre-wrap}
+.cd-dias{display:flex;flex-wrap:wrap;gap:0.25rem 1rem}
+
+/* ---------- El pedido de la sucursal ---------- */
+.pc-datos{display:flex;align-items:flex-end;gap:0.5rem 1rem;flex-wrap:wrap}
+.pc-datos .campo-l{margin:0}
+.pc-datos .hint{margin:0;flex:1 1 14rem}
+.pc-cat{margin:0.75rem 0 0;font-size:0.9375rem;color:var(--fg-2)}
+.pc-l{margin:0;padding:0;list-style:none;border:1px solid var(--line);border-radius:0.5rem;overflow:hidden}
+.pc-i{display:grid;grid-template-columns:minmax(0,1fr) 6.5rem;align-items:center;gap:0.25rem 0.75rem;padding:0.375rem 0.625rem;background:var(--bg)}
+.pc-i+.pc-i{border-top:1px solid var(--line)}
+.pc-i.con{background:var(--accent-bg)}
+.pc-i label{display:flex;flex-direction:column;min-width:0;cursor:pointer}
+.pc-i label b{font-weight:500;overflow-wrap:anywhere}
+.pc-i label small{font-size:0.75rem;color:var(--fg-2)}
+.pc-i input{width:100%;min-height:2.5rem;padding:0 0.5rem;border:1px solid var(--line-strong);border-radius:0.375rem;background:var(--bg);color:var(--fg);font:inherit;font-size:1rem;text-align:right;font-variant-numeric:tabular-nums}
+.pc-i input[aria-invalid="true"]{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.pc-v{text-align:right;font-variant-numeric:tabular-nums}
+.pc-err{grid-column:1/-1;font-size:0.8125rem;color:var(--bad-ink)}
+.pc-notas textarea{width:100%;padding:0.5rem;border:1px solid var(--line-strong);border-radius:0.5rem;background:var(--bg);color:var(--fg);font:inherit}
+.pc-res p{margin:0;max-width:none}
+.pc-n{font-weight:600}
+.pc-n .neg{color:var(--bad-ink)}
+.pc-est{font-size:0.875rem;color:var(--fg-2)}
+.pc-est.aviso{color:var(--warn-ink);font-weight:600}
+.pc-est.ok{color:var(--good-ink)}
+.pc-bt{display:flex;gap:0.5rem;flex-wrap:wrap}
+.pc-conf{display:flex;flex-direction:column;gap:0.375rem;padding:0.625rem 0.75rem;border:1px solid var(--line-strong);border-radius:0.625rem;background:var(--bg-side)}
+.pc-conf h4{margin:0;font-size:1rem}
+.pc-conf>p{margin:0;max-width:none}
+.pc-conf .neg{color:var(--bad-ink);font-weight:600}
+.pc-ok{color:var(--good-ink);font-weight:600}
+.pc-falta th,.pc-falta td{background:var(--bad-bg)}
+.pc-hist summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
+.pc-hist ul{margin:0.375rem 0 0;padding-left:1.25rem;font-size:0.875rem}
+
+/* ---------- recibir.html ---------- */
+.rc .rc-p{max-width:44rem}
+.rc-err{padding:0.625rem 0.75rem;border-radius:0.5rem;background:var(--bad-bg);color:var(--bad-ink);font-weight:500;max-width:44rem}
+.rc-aviso{padding:0.5rem 0.75rem;border-radius:0.5rem;background:var(--warn-bg);color:var(--warn-ink);max-width:44rem}
+.rc-pegar,.rc-esp{max-width:36rem}
+.rc-pegar textarea{width:100%;font-family:var(--font-mono);font-size:0.8125rem}
+.rc .cd-tw{max-width:44rem;margin:0.75rem 0}
+.rc .neg{color:var(--bad-ink);font-weight:600}
+
+/* ---------- Al imprimir: solo las hojas ---------- */
+#cdImprimir{display:none}
+.cd-hoja header h1{margin:0 0 0.25rem;font-size:1.25rem}
+.cd-hoja header p{margin:0 0 0.25rem}
+.cd-hoja .cd-t{margin-top:0.75rem}
+.cd-rev{text-align:center}
+.cd-firmas{display:flex;gap:2rem;flex-wrap:wrap;margin-top:2rem}
+.cd-notas{margin-top:0.75rem}
+@media print{
+  html.cd-imprimiendo body>*:not(#cdImprimir){display:none!important}
+  html.cd-imprimiendo #cdImprimir{display:block}
+  .cd-hoja{break-after:page;page-break-after:always}
+  .cd-hoja:last-child{break-after:auto;page-break-after:auto}
+  .cd-t th,.cd-t td{border-bottom:1px solid #999}
+}

@@ -242,7 +242,8 @@ function exportar(){
     return {
       app:'OneBook',formato:1,exportado:ahora(),
       documentos:r[0],plantillas:r[1],bases:r[2],filas:r[3],ajustes:leerJSON(PREF+'ajustes'),
-      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios'),yo:leerJSON(CLAVE_YO),empresa:leerJSON(PREF+'empresa')
+      perfil:leerJSON(PREF+'perfil'),folios:leerJSON(PREF+'folios'),yo:leerJSON(CLAVE_YO),empresa:leerJSON(PREF+'empresa'),
+      cedis:leerJSON(PREF+'cedis')
     };
   });
 }
@@ -406,6 +407,16 @@ function importar(datos){
           if(/^[A-Z]{1,4}$/.test(k)&&n>0&&n<1e6&&!(fo[k]>=n))fo[k]=n;
         });
         lsSet(PREF+'folios',JSON.stringify(fo));
+      }
+      /* El Cedis y las conexiones con un Cedis (fase F8, cedis.js): entra lo que aquí no hay (nunca se pisa una clave) */
+      if(esObjeto(datos.cedis)){
+        var cd=leerJSON(PREF+'cedis');if(!esObjeto(cd))cd={};
+        if(!esObjeto(cd.yo)&&esObjeto(datos.cedis.yo))cd.yo=datos.cedis.yo;
+        ['claves','conexiones'].forEach(function(k){
+          if(!esObjeto(datos.cedis[k]))return;if(!esObjeto(cd[k]))cd[k]={};
+          Object.keys(datos.cedis[k]).forEach(function(i){if(idValido(i)&&!cd[k][i]&&esObjeto(datos.cedis[k][i]))cd[k][i]=datos.cedis[k][i]});
+        });
+        lsSet(PREF+'cedis',JSON.stringify(cd));
       }
       /* Ajustes: solo si en este navegador no has cambiado ninguno */
       if(esObjeto(datos.ajustes)&&AT.ajustes&&AT.ajustes.esInicial()&&lsGet(PREF+'ajustes')===null){

@@ -133,7 +133,7 @@ AT.rutas={raiz:RAIZ,esInicio:ES_INICIO,pagina:PAGINA};
    tampoco «Crea tu empresa» (entrar.html) hasta que el espacio existe: si lo dejas a medias, vuelve a preguntar.
    El contenedor de pestañas (app.html) tampoco: la página que abre dentro ya lo marca. */
 if(PAGINA!=='bienvenida'&&PAGINA!=='entrar'&&PAGINA!=='pestanas'&&PAGINA!=='ejemplo'){try{localStorage.setItem('aprende-tecnologia:visita',new Date().toISOString().slice(0,10))}catch(e){}}
-var TITULOS={inicio:'Inicio',documento:'Documento',ayuda:'Ayuda',empresa:'Tu empresa',sala:'Sala'};
+var TITULOS={inicio:'Inicio',documento:'Documento',ayuda:'Ayuda',empresa:'Tu empresa',sala:'Sala',recibir:'Recibir un enlace'};
 /* {id, titulo} de la página y el grupo que va antes en la barra superior («Tus páginas / …») */
 AT.paginaActual={id:PAGINA||'pagina',titulo:TITULOS[PAGINA]||document.title};
 AT.grupoActual=PAGINA==='documento'?'Tus páginas':PAGINA==='ayuda'?'OneBook':PAGINA==='sala'?'Salas':'';
