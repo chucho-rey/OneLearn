@@ -1,26 +1,18 @@
-/* Páginas de bienvenida. index.html (negocios): la ve quien llega por primera vez; quien ya usa OneBook va directo a
-   su Inicio (inicio.html), salvo con ?conoce. Dibuja con bloques reales una página de ejemplo y un plan de pagos para
-   probar; verla y usarla no guarda nada, y «Guárdalo en tu espacio» lo convierte en un documento (con los datos
-   revisados). Precios: local gratis y la nube con precio estimado. Ya no hay bienvenida para estudiantes (lo de estudio
-   se separó de OneBook). Contraste y desbordes en celular, escritorio y las variantes de lectura. */
+/* Página de bienvenida para empresas (etapa E5). La ve quien llega por primera vez; quien ya usa OneBook va directo a su
+   Inicio (inicio.html), salvo con ?conoce. Portada para pymes con un Inicio de ejemplo dibujado, la empresa de ejemplo
+   para explorar (ejemplo.html; con una empresa ya creada, la nota lo dice), cómo se organiza, herramientas por área, la
+   calculadora de precio, precios (local gratis y la nube «Próximamente» sin cifra) y preguntas. Ver la página no guarda
+   nada. Ya no hay plan de pagos para probar ni bienvenida para estudiantes. Contraste y desbordes en celular,
+   escritorio y las variantes de lectura. */
 'use strict';
 const {prueba,pagina,cerrar,listo,revisar}=require('./lib');
 
 function nadaGuardado(p){
   return p.evaluate(function(){return !Object.keys(localStorage).some(function(k){return k.indexOf('aprende-tecnologia:')===0})});
 }
-function plan(p,sel){
-  return p.evaluate(function(s){
-    var b=document.querySelector(s);
-    return {k:[].map.call(b.querySelectorAll('.pg-k dd'),function(x){return x.textContent}).join(' | '),n:b.querySelectorAll('.pg-i').length,
-      primero:(b.querySelector('.pg-i .pg-m')||{}).textContent||'',ultimo:(b.querySelector('.pg-i:last-child .pg-m')||{}).textContent||'',
-      fechas:[].slice.call(b.querySelectorAll('.pg-i .pg-f'),0,3).map(function(x){return x.textContent}).join(' / '),
-      bloqueadas:b.querySelectorAll('.pg-i input:disabled').length};
-  },sel);
-}
 
-prueba('Páginas de bienvenida',async function({browser,base,r}){
-  /* ---------- Negocios: primera visita ---------- */
+prueba('Página de bienvenida para empresas',async function({browser,base,r}){
+  /* ---------- Primera visita ---------- */
   const p=await pagina(browser,{ancho:1280,alto:900,reducir:true,perfil:false});
   await p.goto(base);await listo(p,300);
   const v=await p.evaluate(function(){
@@ -28,37 +20,24 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
       doc:document.title,app:!!document.querySelector('.side,.topbar'),desc:document.querySelector('meta[name="description"]').content,
       marca:document.querySelector('.lp-cab .brand').textContent};
   });
-  r.cumple(/\/$/.test(v.url)&&v.h1===1&&v.titulo==='Tu negocio, en bloques.'&&/^OneBook/.test(v.doc)&&v.marca==='OneBook','quien llega por primera vez ve la bienvenida de OneBook para negocios',v);
+  r.cumple(/\/$/.test(v.url)&&v.h1===1&&v.titulo==='Tu empresa, en bloques.'&&/^OneBook/.test(v.doc)&&v.marca==='OneBook'&&/empresa/.test(v.desc),'quien llega por primera vez ve la bienvenida de OneBook para empresas',v);
   r.cumple(!v.app&&v.desc.length>80,'es una página propia, sin la barra de la app, con descripción para buscadores');
   r.igual(p.externos.length,0,'no pide nada a otros servidores');
   await p.keyboard.press('Tab');
   r.cumple(await p.evaluate(function(){var a=document.activeElement;return a.classList.contains('lp-saltar')&&a.getBoundingClientRect().top>=0}),'la primera tecla Tab muestra «Ir al contenido»');
+  r.cumple(/5 a 100 personas/.test(await p.textContent('.lp-eti'))&&(await p.$$('.lp-mini-salas li')).length===5&&(await p.$$('.lp-mini-k > div')).length===3,'la portada es para pymes y dibuja un Inicio con salas e indicadores');
 
-  /* La página de ejemplo está hecha con bloques reales */
-  const hoja=await p.evaluate(function(){
-    var h=document.getElementById('lpHoja');
-    return {aviso:!!h.querySelector('.callout.aviso'),tareas:h.querySelectorAll('ul.tareas li.tarea').length,hechas:h.querySelectorAll('li.tarea.hecha').length,
-      tabla:h.querySelectorAll('tbody tr').length,pg:!!h.querySelector('section.pg.pg-leer')};
+  /* La empresa de ejemplo, cómo se organiza y las herramientas por área */
+  const s=await p.evaluate(function(){
+    return {ej:[].map.call(document.querySelectorAll('a[data-ejemplo]'),function(a){return a.getAttribute('href')}),
+      nota:document.getElementById('lpEjNota').textContent,
+      pasos:[].map.call(document.querySelectorAll('#como .lp-pasos h3'),function(h){return h.textContent}).join(' | '),
+      areas:[].map.call(document.querySelectorAll('#areas h3'),function(h){return h.textContent}).join(' | ')};
   });
-  r.cumple(hoja.aviso&&hoja.tareas===3&&hoja.hechas===2&&hoja.tabla===3&&hoja.pg,'la página de ejemplo dibuja un aviso, una lista de tareas, un plan de pagos y una tabla',hoja);
-  const ej=await plan(p,'#lpHoja .pg');
-  const pagadosEj=new Date().getDate()>=15?4:3;
-  r.cumple(ej.k==='$18,000.00 | $'+(pagadosEj*1500).toLocaleString('en-US')+'.00 | $'+((12-pagadosEj)*1500).toLocaleString('en-US')+'.00 | '+pagadosEj+' de 12'&&ej.bloqueadas===12,
-    'el plan de ejemplo va al corriente (empezó hace tres meses) y no se puede marcar',ej);
+  r.cumple(s.ej.length===3&&s.ej.every(function(h){return h==='ejemplo.html'})&&/Crear mi empresa/.test(s.nota),'«Explora una empresa de ejemplo» abre ejemplo.html (tres veces) y dice cómo dejarla',s);
+  r.igual(s.pasos,'Crea tu empresa | Agrega a tu gente | Trabaja en salas | Arma tu Inicio','cómo se organiza: empresa, gente, salas e Inicio');
+  r.cumple(/Ventas/.test(s.areas)&&/Almacén/.test(s.areas)&&/Administración/.test(s.areas)&&/Recursos humanos/.test(s.areas),'herramientas por área',s.areas);
 
-  /* ---------- Pruébalo aquí ---------- */
-  let d=await plan(p,'#lpPlan .pg');
-  r.cumple(d.k==='$20,000.00 | $0.00 | $20,000.00 | 0 de 12'&&d.n===12&&d.primero==='$1,666.67'&&d.ultimo==='$1,666.63'&&d.bloqueadas===0,'al llegar ya muestra $20,000 en 12 pagos, y se pueden marcar',d);
-  await p.fill('#lpMonto','6000');await p.fill('#lpPagos','3');await p.selectOption('#lpFrec','quincenal');await p.fill('#lpInicio','2026-01-15');
-  await p.waitForTimeout(100);
-  d=await plan(p,'#lpPlan .pg');
-  r.cumple(d.n===3&&d.primero==='$2,000.00'&&/^15 ene\.? 2026 \/ 30 ene\.? 2026 \/ 15 feb\.? 2026$/.test(d.fechas),'al cambiar los datos se recalcula: 3 pagos quincenales de $2,000',d);
-  await p.check('#lpPlan [data-pago="1"]');await p.waitForTimeout(100);
-  d=await plan(p,'#lpPlan .pg');
-  r.cumple(d.k==='$6,000.00 | $2,000.00 | $4,000.00 | 1 de 3','marcar un pago lo descuenta de lo que falta',d);
-  r.cumple(await p.evaluate(function(){return document.activeElement&&document.activeElement.getAttribute('data-pago')==='1'}),'el foco se queda en la casilla que marcaste');
-  await p.waitForTimeout(900);
-  r.igual(await p.textContent('#lpVoz'),'3 pagos de $2,000.00. Te faltan $4,000.00.','un resumen corto se anuncia a los lectores de pantalla');
   /* ---------- ¿A cuánto lo vendo? (el bloque «Precio de venta») ---------- */
   function precio(){return p.evaluate(function(){return [].map.call(document.querySelectorAll('#lpPrecio .nb-k > div'),function(d){return d.querySelector('dt').textContent+': '+d.querySelector('dd').textContent}).join(' | ')})}
   r.igual(await precio(),'Precio de venta: $13.00 | Ganas por pieza: +$3.00 | Margen sobre el precio: 23.1 % | Ganancia sobre el costo: 30 %','la calculadora de precio llega lista: costo $10 y 30 % de ganancia');
@@ -67,54 +46,38 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   r.cumple(/^Precio de venta: \$31\.44 \| Ganas por pieza: \+\$6\.00/.test(await precio()),'con IVA y comisión de la tarjeta, sube el precio para que te queden $6',await precio());
   await p.check('#lpPrecio [data-k="modo"][value="precio"]');await p.fill('#lpPrecio [data-k="precio"]','22');await p.waitForTimeout(100);
   r.cumple(/Ganas por pieza: −\$1\.80/.test(await precio())&&await p.evaluate(function(){return !!document.querySelector('#lpPrecio .nb-mal .nb-d.neg')}),'con un precio que ya tienes dice la ganancia real; si pierdes, en rojo y con signo',await precio());
-  r.cumple(await nadaGuardado(p),'ver la página y probar el plan no guarda nada en el navegador');
-  await revisar(p,r,'bienvenida de negocios en escritorio');
+  r.cumple(await nadaGuardado(p),'ver la página y usar la calculadora no guarda nada en el navegador');
+  await revisar(p,r,'bienvenida en escritorio');
 
   /* Navegación, precios y preguntas */
   const enl=await p.evaluate(function(){
     return {nav:[].map.call(document.querySelectorAll('.lp-nav a'),function(a){return a.textContent+'→'+a.getAttribute('href')}).join(', '),
-      empieza:[].filter.call(document.querySelectorAll('a.btn'),function(a){return a.textContent==='Empieza gratis'}).every(function(a){return a.getAttribute('href')==='entrar.html?perfil=negocio'}),
+      crea:[].filter.call(document.querySelectorAll('a.btn'),function(a){return a.textContent==='Crea tu empresa'}).map(function(a){return a.getAttribute('href')}),
       planes:[].map.call(document.querySelectorAll('.lp-planes>li'),function(li){return li.querySelector('h3').firstChild.textContent.trim()+' '+li.querySelector('.lp-precio b').textContent}).join(' / '),
-      nota:/estimados/.test(document.querySelector('#precios').textContent),
-      faq:document.querySelectorAll('.lp-faq details').length,cfdi:/CFDI/.test(document.querySelector('.lp-faq').textContent)};
+      cifra:/\$\d/.test(document.querySelector('#precios').textContent),
+      faq:[].map.call(document.querySelectorAll('.lp-faq summary'),function(x){return x.textContent}).join(' | '),
+      pagos:!!document.querySelector('#lpForm,#lpPlan,#lpGuardar,#prueba'),contacto:/contacto|freelance/i.test(document.body.textContent)};
   });
-  r.igual(enl.nav,'Cómo funciona→#como, Precios→#precios, Entrar→inicio.html','la cabecera lleva a cómo funciona, precios y la app (ya no a estudiantes)');
+  r.igual(enl.nav,'Cómo funciona→#como, Herramientas→#areas, Precios→#precios, Entrar→inicio.html','la cabecera lleva a cómo funciona, herramientas, precios y la app');
   r.cumple(await p.evaluate(function(){return !document.querySelector('a[href*="estudiantes"],a[href*="lecciones/"],a[href*="acerca"],#lpTambien')}),'ninguna parte de la bienvenida lleva a lo de estudio');
-  r.cumple(enl.empieza,'«Empieza gratis» abre «Crea tu espacio» con el perfil de negocio');
-  r.cumple(enl.planes==='Local Gratis / Nube $99 / Equipo $199'&&enl.nota,'precios: local gratis y la nube con precio estimado',enl);
-  r.cumple(enl.faq>=5&&enl.cfdi,'preguntas frecuentes, incluida la factura (CFDI)');
-  await p.click('.lp-faq summary:has-text("¿Es gratis?")');
-  r.cumple(await p.isVisible('.lp-faq details[open] p'),'una pregunta se abre al tocarla');
+  r.cumple(enl.crea.length===3&&enl.crea.every(function(h){return h==='entrar.html'}),'«Crea tu empresa» abre «Crea tu empresa»',enl.crea);
+  r.cumple(enl.planes==='Local Gratis / Nube Por anunciar'&&!enl.cifra,'precios: local gratis y la nube «Próximamente», sin cifra',enl);
+  r.cumple(/varias personas/.test(enl.faq)&&/seguros/.test(enl.faq)&&/CFDI/.test(enl.faq)&&/nómina/.test(enl.faq)&&/Excel/.test(enl.faq),'preguntas de una empresa: varias personas, permisos, facturas, nómina y Excel',enl.faq);
+  r.cumple(!enl.pagos&&!enl.contacto,'sin el plan de pagos para probar, sin contacto ni freelance');
+  await p.click('.lp-faq summary:has-text("¿Los permisos son seguros?")');
+  r.cumple(/no son una protección/.test(await p.textContent('.lp-faq details[open] p')),'una pregunta se abre al tocarla y no promete de más');
 
-  /* ---------- Guárdalo en tu espacio ---------- */
-  await Promise.all([p.waitForURL(/entrar\.html\?perfil=negocio#guardar-pagos$/),p.click('#lpGuardar')]);await listo(p);
-  r.cumple(/Paso 1 de 3/.test(await p.textContent('#enPaso'))&&await p.isVisible('#enNegocio'),'primero se crea la empresa: empieza en «Tu empresa»');
+  /* ---------- Crea tu empresa ---------- */
+  await Promise.all([p.waitForURL(/entrar\.html$/),p.click('.lp-hero a.btn.pri')]);await listo(p);
+  r.cumple(/Paso 1 de 3/.test(await p.textContent('#enPaso'))&&await p.isVisible('#enNegocio'),'«Crea tu empresa» empieza con los datos de la empresa');
   await p.fill('#enNegocio','Mi tiendita');await p.fill('#enNombre','Rosa');await p.click('#enSig');await p.waitForTimeout(150);
   await p.click('#enSig');await p.waitForTimeout(150);
-  await Promise.all([p.waitForURL(/documento\.html\?id=/,{timeout:10000}),p.click('#enSig')]);await listo(p,500);
-  const g=await p.evaluate(function(){
-    var d=AT.docActual,b=d.contenido.content[0];
-    return {titulo:d.titulo,tipo:d.tipo,bloque:b.type,monto:b.attrs.monto,pagos:b.attrs.pagos,frec:b.attrs.frecuencia,inicio:b.attrs.inicio,
-      pagados:Object.keys(b.attrs.pagados).join(','),id:/^b-/.test(b.attrs.id),url:location.hash,
-      quedo:sessionStorage.getItem('onebook:pagos-bienvenida')};
-  });
-  r.cumple(g.titulo==='Mi plan de pagos'&&g.tipo==='notas'&&g.bloque==='pagos'&&g.monto==='6000'&&g.pagos==='3'&&g.frec==='quincenal'&&g.inicio==='2026-01-15'&&g.pagados==='1'&&g.id&&g.quedo===null,
-    '«Guárdalo en tu espacio»: al crear la empresa, se crea un documento con ese plan de pagos (y lo marcado) y se abre',g);
-  r.igual(await p.evaluate(function(){return AT.datos.documentos.todos().then(function(l){return l.length})}),5,'junto con las páginas sugeridas para empezar');
+  await Promise.all([p.waitForURL(/inicio\.html$/,{timeout:10000}),p.click('#enSig')]);await listo(p,300);
   await p.goto(base);await p.waitForURL(/inicio\.html$/);await listo(p);
   r.cumple(/inicio\.html$/.test(p.url())&&!!await p.$('#saludo'),'después, la raíz lleva directo al Inicio');
   await p.goto(base+'index.html?conoce');await listo(p);
   r.cumple(/index\.html\?conoce$/.test(p.url())&&!!await p.$('#lpTitulo'),'con ?conoce se puede volver a ver la bienvenida');
-  /* Lo que llega por sessionStorage se revisa: nada raro entra al documento */
-  await p.evaluate(function(){sessionStorage.setItem('onebook:pagos-bienvenida',JSON.stringify({titulo:'<img src=x onerror=alert(1)>',monto:'abc<script>',pagos:'99999',
-    frecuencia:'diaria',inicio:'ayer',modo:'raro',extra:'no',pagados:{'1':'2026-01-01','2':'<b>','x':'2026-01-01'}}))});
-  await Promise.all([p.waitForURL(/documento\.html\?id=/,{timeout:10000}),p.goto(base+'inicio.html#guardar-pagos')]);await listo(p,500);
-  const m=await p.evaluate(function(){
-    var a=AT.docActual.contenido.content[0].attrs;
-    return {a:Object.keys(a).sort().join(','),monto:a.monto,pagos:a.pagos,frec:a.frecuencia,inicio:a.inicio,modo:a.modo,pagados:JSON.stringify(a.pagados),img:!!document.querySelector('main img')};
-  });
-  r.cumple(m.monto===''&&m.pagos==='520'&&m.frec==='mensual'&&m.inicio===''&&m.modo==='plazos'&&m.pagados==='{"1":"2026-01-01"}'&&!/extra/.test(m.a)&&!m.img,
-    'un plan alterado en sessionStorage se limpia antes de guardarse',m);
+  r.cumple(/ventana privada/.test(await p.textContent('#lpEjNota')),'con una empresa ya creada, la nota dice que el ejemplo no la toca y sugiere una ventana privada');
   await cerrar(p);
 
   /* ---------- La página de estudiantes ya no existe ---------- */
@@ -126,9 +89,9 @@ prueba('Páginas de bienvenida',async function({browser,base,r}){
   /* ---------- Celular y variantes de lectura ---------- */
   const c=await pagina(browser,{ancho:390,alto:844,reducir:true,perfil:false});
   await c.goto(base);await listo(c,300);
-  await revisar(c,r,'bienvenida de negocios en celular');
+  await revisar(c,r,'bienvenida en celular');
   r.cumple(await c.evaluate(function(){var n=document.querySelector('.lp-nav'),b=n.querySelector('.btn');return getComputedStyle(n.querySelector('a:not(.btn)')).display==='none'&&b.getBoundingClientRect().height>=34}),'en celular la cabecera deja solo «Entrar», con buen tamaño para el dedo');
-  r.cumple(await c.evaluate(function(){var k=document.querySelector('#lpHoja .pg-k');return getComputedStyle(k).gridTemplateColumns.split(' ').length===2}),'en celular el resumen del plan va en dos columnas');
+  r.cumple(await c.evaluate(function(){var k=document.querySelector('.lp-mini-k');return getComputedStyle(k).gridTemplateColumns.split(' ').length===1}),'en celular las cifras del Inicio de ejemplo van una debajo de otra');
   await cerrar(c);
   for(const [nombre,aj,ancho,ruta] of [['oscuro',{tema:'dark'},1280,'index.html'],['alto contraste ×1.5 y OpenDyslexic',{contraste:'high',escala:1.5,fuente:'opendyslexic'},390,'index.html'],
     ['oscuro y alto contraste',{tema:'dark',contraste:'high'},900,'index.html']]){
