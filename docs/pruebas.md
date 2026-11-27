@@ -23,7 +23,7 @@ globalmente). Para correr la suite completa sin que tus cambios a medias la afec
 
 ## Cómo escribir una prueba nueva
 
-- Archivo `pruebas/N-nombre.js` con el siguiente número libre (hoy el último es 46). Empieza con un comentario que diga qué
+- Archivo `pruebas/N-nombre.js` con el siguiente número libre (hoy el último es 47). Empieza con un comentario que diga qué
   comprueba, en viñetas.
 - Usa `lib.js`: `prueba(nombre, async ({browser, base, r}) => …)`, `pagina(browser, {ancho, alto, reducir, ajustes,
   perfil, local, movil})`, `listo(p, ms)`, `revisar(p, r, etiqueta)` (desbordes, contraste y errores) y `cerrar(p)`.
@@ -77,6 +77,7 @@ globalmente). Para correr la suite completa sin que tus cambios a medias la afec
 | `44-caja-chica.js` | Caja chica: color con celda vacía, la plantilla y sus columnas, número consecutivo (no se escribe, no se reusa, numera lo que había), saldo acumulado (orden del número, no de la vista; saldo inicial en la franja; la caja siguiente lo arrastra) y «Eliminar todos los datos» con confirmación; celular oscuro y alto contraste |
 | `45-archivos-celular.js` | El Inicio en el celular: escritorio sin cambios; Páginas con carpetas y su cuenta, color de la sala, recientes, entrar a una carpeta (dirección, foco, ruta, páginas de la sala), orden, «+» en la sala, menú «⋯» y permisos, Atrás y el chip suben, buscar, barra lateral, abrir una página sin navegación inferior; secciones Inicio y Empresa, recordar la sección; variantes oscuro y alto contraste, ×1.5 OpenDyslexic y 320 px |
 | `46-cedis.js` | Pedidos al Cedis con dos navegadores: plantilla con ejemplos, ajustes, invitación (solo su sucursal, clave aparte), la sucursal sin espacio se conecta, mínimo y múltiplo, enviar y versión 2, recibir (repetido, viejo, firma alterada, otra sucursal), qué cambió, consolidado y quién falta, confirmar con faltante, la sucursal lo ve, surtido, hojas, lista de compra y CSV, formato actualizado, repetir el último pedido, cambiar clave, respaldo; celular y alto contraste |
+| `47-servidor-local.js` | El servidor de la oficina con dos dispositivos: qué sirve y qué no, la clave, conectar a un servidor vacío y empezar, recibir todo en otro dispositivo y elegir quién eres, la página que edita otro se abre para leer y «Editar aquí» la pasa, «Trabajando ahora» entre dispositivos, una fila en vivo, sin conexión y al volver, «Tus datos», «Eliminar todos los datos» no toca el servidor, reiniciar sin perder datos, gana el cambio más reciente, «Subir lo de este dispositivo» y que sin servidor no haga nada |
 | `lib.js` | Servidor, navegador, auditoría de contraste y utilidades compartidas |
 
-Al 27 de noviembre de 2026: 36 archivos y 2,168 comprobaciones, todas pasando.
+Al 27 de noviembre de 2026: 37 archivos y 2,217 comprobaciones, todas pasando.

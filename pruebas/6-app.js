@@ -5,7 +5,7 @@ const {prueba,pagina,cerrar,listo,revisar,RAIZ}=require('./lib');
 
 /* Archivos que el sitio necesita: todo, menos pruebas, herramientas de compilación, la configuración de Claude Code (.claude), documentación, licencias y el propio sw.js */
 function archivosDelSitio(){
-  const fuera=/^(\.git|\.claude|pruebas|herramientas|node_modules)(\/|$)|\.md$|\.txt$|^\.gitignore$|^sw\.js$/;
+  const fuera=/^(\.git|\.claude|pruebas|herramientas|servidor|docs|node_modules)(\/|$)|\.md$|\.txt$|^\.gitignore$|^sw\.js$/;
   const lista=[];
   (function recorrer(dir){
     fs.readdirSync(dir,{withFileTypes:true}).forEach(function(d){

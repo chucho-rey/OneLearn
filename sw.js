@@ -4,7 +4,7 @@
    Al agregar o quitar archivos del sitio, actualiza ARCHIVOS y sube VERSION.
    pruebas/6-app.js comprueba que ARCHIVOS incluya todo lo que el sitio necesita. */
 'use strict';
-const VERSION='onelearn-57';
+const VERSION='onelearn-58';
 const ARCHIVOS=[
   './',
   'index.html',
@@ -52,6 +52,7 @@ const ARCHIVOS=[
   'assets/js/cedis.js',
   'assets/js/pedidos.js',
   'assets/js/recibir.js',
+  'assets/js/sincro.js',
   'assets/js/respaldo.js',
   'assets/js/barra.js',
   'assets/js/lectura.js',
@@ -145,6 +146,8 @@ async function redPrimero(req){
 }
 self.addEventListener('fetch',function(e){
   const req=e.request;
-  if(req.method!=='GET'||new URL(req.url).origin!==self.location.origin)return;
+  const u=new URL(req.url);
+  /* Lo del servidor de la oficina (/api/) nunca se guarda: siempre va a la red */
+  if(req.method!=='GET'||u.origin!==self.location.origin||u.pathname.indexOf('/api/')>=0)return;
   e.respondWith(redPrimero(req));
 });

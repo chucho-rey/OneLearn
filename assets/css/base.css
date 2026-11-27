@@ -711,3 +711,20 @@ dialog.pe-dlg{width:min(28rem,calc(100vw - 2rem))}
 .ini-resp{margin:0.25rem 0 0.75rem;padding:0.75rem 1rem;border-radius:0.5rem;background:var(--warn-bg);color:var(--warn-ink)}
 .ini-resp p{margin:0 0 0.625rem;font-size:0.9375rem;max-width:none}
 .ini-resp-b{display:flex;flex-wrap:wrap;gap:0.5rem}
+
+/* ---------- Servidor de la oficina (sincro.js) ---------- */
+.sx-ind{display:inline-flex;align-items:center;gap:0.375rem;flex:none;height:2rem;margin-left:auto;padding:0 0.625rem;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg-2);font:inherit;font-size:0.8125rem;font-weight:500;cursor:pointer;white-space:nowrap}
+.sx-ind+.aa-btn{margin-left:0.375rem}
+.zen-btn~.sx-ind{margin-left:0.25rem}
+.sx-ind i{width:0.5rem;height:0.5rem;border-radius:50%;background:var(--c1)}
+.sx-ind.sx-ok i{background:var(--good)}
+.sx-ind.sx-sub i{background:var(--warn)}
+.sx-ind.sx-mal{border-color:var(--bad);color:var(--bad-ink)}
+.sx-ind.sx-mal i{background:var(--bad)}
+.sx-ind:hover{background:var(--hover)}
+@media (max-width:420px){.sx-ind span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.sx-ind{padding:0 0.625rem}}
+.sx-carga{position:fixed;inset:0;z-index:80;display:grid;place-content:center;gap:0.75rem;padding:1.5rem;background:var(--bg);text-align:center}
+.sx-carga p{margin:0 auto;max-width:28rem}
+.td-sx dl{display:grid;grid-template-columns:auto 1fr;gap:0.25rem 0.75rem;margin:0.5rem 0;font-size:0.9375rem}
+.td-sx dt{color:var(--fg-2)}
+.td-sx dd{margin:0;overflow-wrap:anywhere}
