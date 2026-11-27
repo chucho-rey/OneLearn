@@ -7,8 +7,9 @@ código. Lo demás está en `docs/` (ver «Dónde está cada cosa»).
 
 **OneBook** (antes OneLearn): espacio de trabajo de bloques y plantillas para **empresas mexicanas de 5 a 100 personas**
 (ventas, cobros, inventario, gastos, caja chica, recursos humanos, pedidos al Cedis, salas por departamento e Inicio
-armable). Sitio estático en español (es-MX), sin servidor: **todo se guarda en el navegador** (IndexedDB y
-localStorage). Se publica con GitHub Pages desde `main` en <https://chucho-rey.github.io/OneLearn/>.
+armable). Sitio estático en español (es-MX): **todo se guarda en el navegador** (IndexedDB y localStorage). Se publica
+con GitHub Pages desde `main` en <https://chucho-rey.github.io/OneLearn/>. Opcionalmente, una oficina corre su propio
+servidor local (`servidor/`, Node sin dependencias) y sus dispositivos se sincronizan con él (`docs/servidor-local.md`).
 
 ## Antes de empezar (siempre)
 
@@ -39,6 +40,8 @@ localStorage). Se publica con GitHub Pages desde `main` en <https://chucho-rey.g
   se sube con la suite completa pasando.** Nunca desactives ni borres una prueba para que pase.
 - **Privacidad:** nada de datos reales de personas o empresas en el repositorio (es público). Ejemplos inventados.
 - **No edites a mano** `assets/vendor/*.min.js` ni `ayuda.html`.
+- **Sincronización:** todo lo que se guarda pasa por `AT.datos` (o por las claves compartidas de localStorage: empresa,
+  perfil, folios y cedis) para que el servidor de la oficina lo reciba. No escribas IndexedDB por otro camino.
 
 ## Comandos
 
@@ -49,7 +52,7 @@ python3 -m http.server 8123 --bind 127.0.0.1      # y abre http://127.0.0.1:8123
 # Pruebas (Playwright, carpeta pruebas/)
 cd pruebas
 npm install && npx playwright install chromium     # la primera vez, en una máquina propia
-npm test                                           # todas: ~36 archivos, unos 8 minutos
+npm test                                           # todas: ~37 archivos, unos 8 minutos
 node todas.js 22 46                                # solo 22-*.js y 46-*.js
 DETALLE=1 node todas.js 46                         # muestra cada comprobación
 
@@ -92,6 +95,7 @@ a cada `node`. La suite completa tarda unos 8 minutos: córrela en segundo plano
 | `docs/arquitectura.md` | Cómo está hecho cada área, convenciones y las trampas conocidas. |
 | `docs/estructura.md` | Qué hace cada archivo, orden de los scripts, formato de bloques y lo que guarda cada cosa. |
 | `docs/pruebas.md` | Cómo funcionan las pruebas y qué cubre cada archivo. |
+| `docs/servidor-local.md` | Guía para instalar el servidor de la oficina (Mac, Windows, certificados y celulares). |
 | `docs/ias.md` | Para el usuario y las IA: cuándo usar cada IA, cómo pasarse el trabajo y los comandos para pedirlo. |
 | `.claude/skills/*/SKILL.md` | Procedimientos paso a paso (correr el sitio, retomar, cerrar una tarea, revisar una rama). Son Markdown normal: si tu herramienta no carga «skills», léelos como instrucciones. |
 | `CLAUDE.md` | Lo mismo que este archivo más lo propio de Claude Code. |

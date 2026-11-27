@@ -135,6 +135,38 @@ de venta liga conceptos a productos e `inventario.js` sincroniza sus movimientos
 - Prueba: `46-cedis.js` (dos navegadores: Cedis y sucursal). Pendiente: indicadores del Cedis en «Mi negocio» y
   descontar inventario al surtir. La etapa B (con servidor) va en F9.
 
+### Servidor de la oficina y sincronización (`servidor/servidor.js`, `assets/js/sincro.js`)
+
+- **Servidor** (Node sin paquetes; corre igual en Mac, Windows y Linux): sirve solo el sitio (páginas de la raíz,
+  `assets/`, el manifiesto y `sw.js`; no `servidor/`, `pruebas/` ni `docs/`), le agrega a cada HTML
+  `<meta name="onebook-servidor">` y manda «/» a `inicio.html`. https con el certificado de `servidor/certificado/`
+  (mkcert) o `--http` para probar. Datos en `servidor/datos/` (ignorada por git): `almacenes/<almacén>.json` =
+  `{id: {d, t, seq, por}}` (`d` null = borrado) y `estado.json` `{id, nombre, clave, seq}`; escritura atómica y respaldo
+  diario (14). API: `GET /api/estado`, `POST /api/conectar`, `GET|POST /api/cambios` (gana el `t` más reciente; los
+  rechazados vuelven con lo que hay), `POST /api/presencia`, `GET /api/eventos` (Server-Sent Events: `cambios`,
+  `presencia`). Clave de la oficina en `X-OneBook-Clave` (o `?clave=` en los eventos).
+- **sincro.js** solo actúa con la marca del servidor (en GitHub Pages no hace nada; `AT.sincro.hay` es false). Conecta el
+  dispositivo (clave y nombre; servidor vacío: empezar o «Subir lo de este dispositivo»; con datos: los recibe, con
+  `cfg.inicial` y recarga). Se comparten los almacenes `documentos`, `plantillas`, `papelera`, `bases`, `filas` e
+  `historial` (gancho `AT.datos.sincro.alCambiar` en datos.js, que envuelve los métodos de escritura del motor) y las claves
+  `empresa`, `perfil`, `folios` (se queda el mayor de cada prefijo) y `cedis` de localStorage (se intercepta
+  `Storage.prototype.setItem`). No se comparten `versiones`/`trozos`, quién eres, ajustes ni lo de cada pestaña.
+- **Cola** por pestaña (`aprende-tecnologia:sincro-cola:<pestaña>` = `{almacén|id: fecha}`); al subir se lee el valor
+  actual. Una sola pestaña sincroniza (Web Locks `onebook-sincro`); lo que llega se escribe con `AT.datos.sincro.aplicarRemoto`
+  (métodos originales del motor) y se anuncia como de otra pestaña (`remoto:true`), así bases.js, documento.js, el
+  explorador y la barra se actualizan solos. Lo pendiente de subir no se pisa con lo que baja. Estado en
+  `aprende-tecnologia:sincro-estado` (indicador `.sx-ind` en la barra superior y «Tus datos › Servidor de la oficina»).
+- **Presencia entre dispositivos:** sincro.js manda `AT.datos.presencia.locales()` y guarda la de todos en
+  `aprende-tecnologia:presencia-remota`; `presencia.todas()` suma las de otros dispositivos (`otroDispositivo`). En
+  documento.js, una página que otro dispositivo edita se abre para leer; si dos la editan, gana quien la editaba primero,
+  salvo que alguien la tome con «Editar aquí» (`sessionStorage onebook-tomar`, `toma` → `tomo` en el servidor: gana la
+  toma más reciente). Abierta para leer, se actualiza sola.
+- `AT.datos.borrarTodo()` pausa la sincronización: en un dispositivo conectado solo borra lo de ese dispositivo (y lo
+  desconecta). Prueba: `47-servidor-local.js` (arranca el servidor real con `fork`, dos dispositivos, sin conexión con
+  `setOffline`, reinicio del servidor).
+- Pendiente: «Tu empresa» se guarda completa (si dos la editan a la vez, gana la última); la conciliación del inventario
+  podría duplicar un movimiento si dos dispositivos abren el inventario con una venta a medio sincronizar.
+
 ### Recursos humanos (módulo `rh`)
 
 `nomina.js` con las cifras de 2026 en `AT.nomina.T` (**actualízalas cada año**); `rh.js` calculadoras; `equipo.js` bloques

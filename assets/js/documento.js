@@ -207,7 +207,7 @@ function ponerModo(m,enfocar,sinRecordar){
   if(bloqueado)pintarBloqueo();
   if(sinPermiso)pintarPermiso();
   /* Quién tiene abierta esta página y si la edita o la lee (el explorador del Inicio lo muestra) */
-  if(AT.datos.presencia&&doc)AT.datos.presencia.anunciar(ID,bloqueado||sinPermiso?'leer':m);
+  if(AT.datos.presencia&&doc){AT.datos.presencia.anunciar(ID,bloqueado||sinPermiso?'leer':m,tomaPendiente&&m==='editar');tomaPendiente=false}
   if(enfocar==='titulo'){var t=$('#docTitulo');if(t){t.focus();t.select()}}
   else if(enfocar==='cuerpo'&&ed)ed.enfocar('start');
   else if(enfocar)modoBtn.focus({preventScroll:true});
@@ -485,7 +485,12 @@ AT.datos.documentos.leer(ID).then(function(d){
   var ventana=/^#(historial|permisos)$/.exec(location.hash);
   if(agregar||ventana)try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
   var conAncla=!agregar&&!ventana&&location.hash.length>1;
-  ponerModo(sinPermiso?'leer':nuevo||agregar?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo&&!sinPermiso?'titulo':false,sinPermiso);
+  /* Servidor de la oficina: si otra persona ya la edita en su dispositivo, aquí se abre para leer (salvo que vengas de
+     «Editar aquí», que te la pasa) */
+  try{tomaPendiente=sessionStorage.getItem('onebook-tomar')===ID;if(tomaPendiente)sessionStorage.removeItem('onebook-tomar')}catch(e){}
+  var otro=!tomaPendiente&&!sinPermiso?editoresRemotos()[0]:null;
+  if(otro){bloqueado=true;bloqueoRemoto=otro;AT.docCambio=null;modoBtn.hidden=favBtn.hidden=true}
+  ponerModo(sinPermiso||otro?'leer':nuevo||agregar?'editar':conAncla?'leer':(modoGuardado()||'editar'),nuevo&&!sinPermiso&&!otro?'titulo':false,sinPermiso||!!otro);
   if(ventana)setTimeout(function(){if(ventana[1]==='historial'&&AT.versionesUI)AT.versionesUI.abrir(masBtn);else if(ventana[1]==='permisos'&&AT.permisos)AT.permisos.abrir(ID,masBtn)},0);
   if(agregar)document.dispatchEvent(new CustomEvent('onebook:agregar',{detail:{tipo:agregar[1]}}));
   ponerEstado(sinPermiso?'Solo lectura':'Guardado',sinPermiso?'':'ok');
@@ -555,7 +560,22 @@ AT.docVersiones={
    Al abrir un documento se avisa a las demás. La que ya lo tenía guarda lo pendiente y queda solo para leer,
    con un aviso y «Editar aquí» (que la vuelve la pestaña activa y deja a la otra para leer). La que lo acaba de
    abrir, si todavía no cambió nada, vuelve a leerlo cuando llega ese último guardado: así nada se pisa. */
-var YO=Math.random().toString(36).slice(2),bloqueado=false,abiertoEn=0,canalDoc=null;
+var YO=Math.random().toString(36).slice(2),bloqueado=false,abiertoEn=0,canalDoc=null,bloqueoRemoto=null,tomaPendiente=false;
+/* ---------- La misma página en dos dispositivos (servidor de la oficina, sincro.js) ----------
+   Gana quien la editaba primero; «Editar aquí» la toma (gana quien la tomó al último) y la otra persona queda para leer */
+function editoresRemotos(){
+  var P=AT.datos.presencia;if(!P||!P.remotas)return [];
+  return P.remotas().filter(function(e){return e.doc===ID&&e.modo==='editar'});
+}
+function ganaOtro(){
+  var otros=editoresRemotos();if(!otros.length)return null;
+  var mias=AT.datos.presencia.propias().filter(function(e){return e.doc===ID&&e.modo==='editar'});
+  if(!mias.length)return null;
+  var todos=otros.concat([mias[0]]),tomaron=todos.filter(function(e){return e.tomo});
+  var gana=tomaron.length?tomaron.sort(function(a,b){return b.desde-a.desde})[0]:todos.sort(function(a,b){return a.desde-b.desde})[0];
+  return gana===mias[0]?null:gana;
+}
+function quienTexto(e){return (e.quien&&e.quien.nombre||'Otra persona')+(e.nombre?' («'+e.nombre+'»)':'')}
 /* ---------- Permisos (datos.js: AT.datos.acceso; la ventana está en permisos.js) ----------
    Con «Solo puede ver» (o sin estar en la lista de una página de otra persona) la página se abre para leer, con un
    aviso y «Pedir permiso para editar». Si los permisos cambian en otra ventana, la página se ajusta. */
@@ -603,11 +623,23 @@ function avisarAbierto(){
 function pintarBloqueo(){
   var v=document.createElement('div');
   v.className='doc-bloqueo';v.setAttribute('role','status');
-  v.innerHTML='<p><b>Esta página también está abierta en otra pestaña.</b> Aquí queda solo para leer, para que no se pisen los cambios.</p>'+
+  var sigue=bloqueoRemoto&&editoresRemotos().length;
+  v.innerHTML=bloqueoRemoto?(sigue?'<p><b>'+esc(quienTexto(bloqueoRemoto))+' está editando esta página.</b> Aquí queda solo para leer y se actualiza sola, para que no se pisen los cambios.</p>':
+      '<p><b>Ya nadie más está editando esta página.</b> Puedes editarla aquí.</p>')+
+      '<button class="btn" type="button" id="docEditarAqui">'+(sigue?'Editar aquí (pasa a solo leer allá)':'Editar aquí')+'</button>':
+    '<p><b>Esta página también está abierta en otra pestaña.</b> Aquí queda solo para leer, para que no se pisen los cambios.</p>'+
     '<button class="btn" type="button" id="docEditarAqui">Editar aquí</button>';
   page.insertBefore(v,page.firstChild);
-  $('#docEditarAqui',v).addEventListener('click',function(){location.reload()});
+  $('#docEditarAqui',v).addEventListener('click',function(){try{sessionStorage.setItem('onebook-tomar',ID)}catch(e){}location.reload()});
 }
+/* Quién edita en los otros dispositivos cambió: si la tomó otra persona, aquí queda para leer */
+AT.datos.on(function(c){
+  if(c.almacen!=='presencia'||!doc||sinPermiso)return;
+  if(bloqueoRemoto){var b=$('.doc-bloqueo:not(.doc-permiso)');if(b){var ahora=editoresRemotos().length>0;if(ahora!==(b.getAttribute('data-sigue')==='1')){b.remove();pintarBloqueo();var n=$('.doc-bloqueo:not(.doc-permiso)');if(n)n.setAttribute('data-sigue',ahora?'1':'0')}}return}
+  if(bloqueado||modo!=='editar')return;
+  var g=ganaOtro();
+  if(g){bloqueoRemoto=g;bloquear();AT.aviso(quienTexto(g)+' abrió esta página para editarla. Aquí queda solo para leer.')}
+});
 function bloquear(){
   if(bloqueado||!doc)return;
   bloqueado=true;
@@ -624,13 +656,15 @@ if(canalDoc)canalDoc.onmessage=function(e){
   if(m&&m.tipo==='abierto'&&m.id===ID&&m.quien!==YO)bloquear();
 };
 /* Vuelve a leer el documento (después del último guardado de la otra pestaña) */
-function releer(){
+function releer(aunBloqueada){
   AT.datos.documentos.leer(ID).then(function(d){
-    if(!d||!d.contenido||pendiente||timer||bloqueado)return;
+    if(!d||!d.contenido||pendiente||timer||(bloqueado&&!aunBloqueada))return;
     if(ed){ed.destruir();ed=null}
+    var y=window.scrollY;
     doc=d;if(!doc.props)doc.props=[];
     AT.docActual=doc;pintarFav();pintarAncho();
-    titulo();ponerModo(modo,false,true);ponerEstado('Guardado','ok');
+    titulo();ponerModo(modo,false,true);if(!bloqueado)ponerEstado('Guardado','ok');
+    window.scrollTo(0,y);
   });
 }
 /* Otra pestaña cambió este documento */
@@ -639,9 +673,10 @@ AT.datos.on(function(c,deOtra){
      pudo cambiarlo */
   if(doc&&((c.almacen==='documentos'&&c.id===ID&&c.acceso)||c.almacen==='*')){revisarPermiso();if(c.almacen!=='*')return}
   if(!deOtra||!doc||c.almacen!=='documentos'||c.id!==ID)return;
-  if(c.borrado){AT.aviso('Este documento se eliminó en otra pestaña.');return}
-  if(bloqueado)return;
-  if(!pendiente&&!timer&&Date.now()-abiertoEn<5000){releer();return}
-  AT.aviso('Este documento cambió en otra pestaña.','Ver la versión nueva',function(){location.reload()});
+  if(c.borrado){AT.aviso(c.remoto?'Esta página se eliminó en otro dispositivo.':'Este documento se eliminó en otra pestaña.');return}
+  /* Solo para leer (o bloqueada): se actualiza sola */
+  if(bloqueado||(modo==='leer'&&!pendiente&&!timer)){releer(true);return}
+  if(!pendiente&&!timer&&Date.now()-abiertoEn<(c.remoto?15000:5000)){releer();return}
+  AT.aviso(c.remoto?'Esta página cambió en otro dispositivo.':'Este documento cambió en otra pestaña.','Ver la versión nueva',function(){location.reload()});
 });
 })();
