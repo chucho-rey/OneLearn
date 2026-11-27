@@ -50,6 +50,7 @@ assets/js/bases.js, basedatos.js  Motor y bloque de las bases de datos
 assets/js/inventario.js, factura.js, reporte.js, indicadores.js  Inventario, factura XML, reportes, indicadores
 assets/js/cedis.js, pedidos.js  Pedidos al Cedis: bases, claves, enlaces firmados y los bloques del Cedis y del pedido
 assets/js/recibir.js  La página que abre los enlaces del Cedis (recibir.html)
+assets/js/sincro.js   Sincronización con el servidor de la oficina: conectar, subir, bajar, presencia y el estado
 assets/js/nomina.js, rh.js, equipo.js  Recursos humanos: motor 2026, calculadoras y tu equipo
 assets/js/versiones.js  Ventana «Historial de versiones» (el motor está en datos.js)
 assets/js/exportar.js, imprimir.js, exportar-docx.js  Imprimir o exportar: PDF (Paged.js) y Word (docx)
@@ -64,6 +65,7 @@ assets/icons/         Ícono de OneBook (SVG y PNG de 32, 180, 192 y 512 px, y m
 assets/vendor/        tiptap.min.js, paged.min.js y docx.min.js (MIT; no se editan a mano)
 herramientas/         tiptap/ y exportar/ (cómo se compilan los vendor) y ayuda/generar.py (escribe ayuda.html)
 pruebas/              Pruebas automáticas con Playwright (ver docs/pruebas.md)
+servidor/             Servidor de la oficina (servidor.js), scripts para Windows y, sin subir a git, datos/ y certificado/
 docs/                 Esta documentación y el estado del trabajo (ESTADO.md)
 .claude/skills/       Procedimientos para agentes (correr el sitio, retomar, cerrar una tarea, revisar una rama)
 ```
@@ -71,7 +73,7 @@ docs/                 Esta documentación y el estado del trabajo (ESTADO.md)
 ## Orden de los scripts
 
 Los scripts son clásicos y comparten `window.AT`. Orden: `ajustes.js` y `perfil.js` (en el head), `base.js`, `datos.js`,
-`empresa.js`, `barra.js`, `persona.js`, `lectura.js`, `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de
+`sincro.js` (en las páginas de la app; no en `imprimir.html` ni `ejemplo.html`), `empresa.js`, `barra.js`, `persona.js`, `lectura.js`, `app.js`, `respaldo.js`, `crear.js`, `buscar.js` y después los de
 cada página (`entrar.html` e `imprimir.html` cargan `empresa.js` sin la barra).
 
 - `documento.html`: `bloques.js`, `vendor/tiptap.min.js`, `editor.js`, `piezas.js`, los bloques de negocio y de recursos
@@ -196,6 +198,14 @@ ejemplo (`AT.datos.borrarTodo`).
   un respaldo en JSON (importar combina: entra lo que no existe y lo más reciente; nunca borra). «Empezar de cero ›
   Eliminar todos los datos» (con confirmación y la opción de descargar antes un respaldo) borra todo del navegador y abre
   «Crea tu empresa».
+
+## Servidor de la oficina
+
+Una oficina puede correr `servidor/servidor.js` en un equipo siempre prendido (guía: `docs/servidor-local.md`). Cada
+dispositivo abre OneBook desde ahí, se conecta una vez con la clave de la oficina y se sincroniza: lo que cambia uno les
+llega a los demás en segundos, sin conexión se sigue trabajando y se sube al volver, una página que otro edita se abre
+para leer y se actualiza sola, y «Trabajando ahora» muestra a los demás dispositivos. Los datos del servidor se guardan en
+archivos con respaldo diario.
 
 ## App instalable y sin conexión
 

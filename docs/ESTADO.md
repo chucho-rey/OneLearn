@@ -15,6 +15,11 @@ Formato para tomar una: `- T-NN · Nombre — IA: <herramienta> · rama: ia/<her
 
 ## Siguiente (en orden)
 
+### T-08 · Prueba real del servidor de la oficina — prioridad alta (la hace el usuario; las IA corrigen)
+Primero la Mac mini de servidor con el Nothing Phone 2; después el PC de la oficina (Windows) con varias personas. Guía:
+`docs/servidor-local.md`. Cada fallo que aparezca va a «Encontrado» con cómo reproducirlo. Ojo: los scripts de Windows
+(`servidor/instalar-windows.ps1`) no se han probado en un Windows real.
+
 ### T-01 · Aviso de privacidad y términos de uso — prioridad alta, tamaño S
 Páginas `privacidad.html` y `terminos.html` para empresas: qué datos se guardan y dónde (hoy, solo en el navegador), qué
 se mide, cómo borrar todo (Tus datos › Eliminar todos los datos) y qué cambia con la nube (F9). Enlazadas desde «Tus
@@ -67,6 +72,8 @@ _(nada por ahora)_ Formato: `- AAAA-MM-DD · qué pasa, dónde y cómo reproduci
 
 ## Hecho recientemente
 
+- 2026-11-27 · Servidor de la oficina y sincronización entre dispositivos (rama `ia/claude/servidor-local`) — Claude.
+  Pendiente: T-08 (prueba real); «Tu empresa» se guarda completa (gana la última edición).
 - 2026-11-26 · F8 · Pedidos al Cedis, etapa A sin servidor (`a69d14d`) — Claude. Pendiente: T-05.
 - 2026-11-26 · Vista de archivos en el celular (`6f66a7a`) — Claude.
 - 2026-11-26 · Caja chica, número consecutivo, saldo acumulado y «Eliminar todos los datos» (`13a7cbb`) — Claude.

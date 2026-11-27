@@ -37,6 +37,7 @@ function crear(){
     '<button class="lec-x" type="button" data-td="cerrar" aria-label="Cerrar">'+ico('close')+'</button></div>'+
     '<p class="td-p">Lo que escribes en OneBook se guarda solo en este navegador, en este dispositivo. No se sube a ningún servidor.</p>'+
     '<div class="td-sec td-espacio" id="tdEspacio"></div>'+
+    '<div class="td-sec td-sx" id="tdSx" hidden></div>'+
     '<dl class="td-res" id="tdRes"></dl>'+
     '<div class="td-esp" id="tdEsp" hidden><div class="td-bar" aria-hidden="true"><i id="tdBar"></i></div>'+
       '<p class="td-p td-nota" id="tdNotaEsp"></p></div>'+
@@ -51,7 +52,7 @@ function crear(){
       '<p class="td-msg" id="tdMsg" role="status"></p>'+
     '</div>'+
     '<div class="td-sec td-borrar"><h3>Empezar de cero</h3>'+
-      '<p class="td-p">Borra de este navegador todas tus páginas, bases de datos, plantillas, la papelera, tu empresa y tus ajustes, para probar OneBook como la primera vez.</p>'+
+      '<p class="td-p">Borra de este navegador todas tus páginas, bases de datos, plantillas, la papelera, tu empresa y tus ajustes, para probar OneBook como la primera vez. Si este dispositivo está conectado al servidor de la oficina, solo se borra lo de aquí (y queda desconectado).</p>'+
       '<div class="td-bt"><button class="btn danger" type="button" data-td="borrar">Eliminar todos los datos</button></div>'+
       '<div class="td-conf" id="tdConf" hidden role="group" aria-labelledby="tdConfT">'+
         '<p class="td-p" id="tdConfT"><b>¿Eliminar todo?</b> No se puede deshacer. Si quieres conservar algo, descarga antes un respaldo.</p>'+
@@ -74,6 +75,12 @@ function crear(){
       },function(){mensaje('No se pudo crear el respaldo. Inténtalo otra vez.',true)});
     }else if(a==='importar')$('#tdArchivo',dlg).click();
     else if(a==='proteger')AT.datos.pedirPersistencia().then(pintar);
+    else if(a==='sxConectar'){cerrar();AT.sincro.conectar()}
+    else if(a==='sxAhora'){b.setAttribute('aria-disabled','true');AT.sincro.ahora().then(function(){b.removeAttribute('aria-disabled');pintarSx()})}
+    else if(a==='sxDesconectar'){
+      if(b.getAttribute('data-seguro')!=='1'){b.setAttribute('data-seguro','1');b.textContent='¿Seguro? Toca otra vez para desconectar';return}
+      AT.sincro.desconectar();
+    }
     else if(a==='borrar'){$('#tdConf',dlg).hidden=false;$('[data-td="borrarSi"]',dlg).focus()}
     else if(a==='borrarNo'){$('#tdConf',dlg).hidden=true;$('[data-td="borrar"]',dlg).focus()}
     else if(a==='borrarSi'){
@@ -134,8 +141,24 @@ function pintarEspacio(){
     '<div class="td-bt">'+(e?'<a class="btn" href="'+AT.rutas.raiz+'empresa.html">Tu empresa</a>':'')+
     (!e||E.esAdmin()?'<a class="btn" href="'+AT.rutas.raiz+'entrar.html?editar">Cambiar tu espacio</a>':'')+'</div>';
 }
+/* El servidor de la oficina (sincro.js): a qué está conectado este dispositivo y cómo va */
+function pintarSx(){
+  var c=$('#tdSx',dlg),S=AT.sincro;
+  if(!S||!S.hay){c.hidden=true;return}
+  c.hidden=false;
+  if(!S.conectado()){
+    c.innerHTML='<h3>Servidor de la oficina</h3><p class="td-p">Este OneBook viene del servidor de tu oficina, pero este dispositivo no está conectado: lo que hagas se queda aquí.</p>'+
+      '<div class="td-bt"><button class="btn pri" type="button" data-td="sxConectar">Conectar este dispositivo</button></div>';
+    return;
+  }
+  var e=S.estado(),x=S.texto();
+  c.innerHTML='<h3>Servidor de la oficina</h3><dl><dt>Servidor</dt><dd>'+esc(e.nombre||'—')+'</dd><dt>Este dispositivo</dt><dd>'+esc(e.dispositivo||'—')+'</dd>'+
+    '<dt>Estado</dt><dd>'+esc(x.l)+'</dd><dt>Última sincronización</dt><dd>'+(e.ultima?esc(new Date(e.ultima).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'})):'Todavía no')+'</dd></dl>'+
+    '<p class="td-p">Lo que haces aquí se guarda también en el servidor y llega a los demás dispositivos. «Eliminar todos los datos» solo borra lo de este dispositivo.</p>'+
+    '<div class="td-bt"><button class="btn" type="button" data-td="sxAhora">Sincronizar ahora</button><button class="btn danger" type="button" data-td="sxDesconectar">Desconectar este dispositivo</button></div>';
+}
 function pintar(){
-  pintarEspacio();
+  pintarEspacio();pintarSx();
   AT.datos.papelera.todos().then(function(l){
     $('#tdPap',dlg).innerHTML='<h3>Papelera</h3><p class="td-p">'+(l.length?plural(l.length,'página','páginas')+' en la papelera. Se borran solas a los '+AT.datos.papelera.DIAS+' días.':'La papelera está vacía.')+'</p>'+
       (l.length?'<div class="td-bt"><button class="btn" type="button" data-td="papelera">Ver la papelera</button></div>':'');

@@ -198,13 +198,45 @@ function motorLocal(){
   };
 }
 
+/* ---------- Sincronización con el servidor de la oficina (sincro.js) ----------
+   Cada escritura en un almacén que se comparte avisa a sincro.js qué registros cambiaron (alCambiar); lo que llega
+   del servidor se escribe con los métodos originales (sin volver a avisar) y se anuncia como si viniera de otra
+   pestaña (deOtra), para que las páginas abiertas se actualicen. Las versiones de las páginas no se comparten. */
+var SINCRO={almacenes:{documentos:1,plantillas:1,papelera:1,bases:1,filas:1,historial:1},oyentes:[],pausa:false,crudo:null};
+function anotarCambio(a,ids){
+  if(SINCRO.pausa||!SINCRO.almacenes[a]||!ids.length)return;
+  SINCRO.oyentes.forEach(function(fn){try{fn(a,ids)}catch(e){if(window.console)console.error(e)}});
+}
+function envolver(m){
+  var c=SINCRO.crudo={};
+  ['poner','borrar','borrarVarios','actualizar','ponerVarios'].forEach(function(k){c[k]=m[k]});
+  m.poner=function(a,lista){return c.poner.call(m,a,lista).then(function(r){anotarCambio(a,lista.map(function(o){return o&&o.id}).filter(Boolean));return r})};
+  m.borrar=function(a,id){return c.borrar.call(m,a,id).then(function(r){anotarCambio(a,[id]);return r})};
+  m.borrarVarios=function(a,ids){return c.borrarVarios.call(m,a,ids).then(function(r){anotarCambio(a,ids.slice());return r})};
+  m.actualizar=function(a,id,fn){return c.actualizar.call(m,a,id,fn).then(function(r){if(r)anotarCambio(a,[id]);return r})};
+  if(c.ponerVarios)m.ponerVarios=function(mapa){return c.ponerVarios.call(m,mapa).then(function(r){Object.keys(mapa).forEach(function(a){anotarCambio(a,mapa[a].map(function(o){return o&&o.id}).filter(Boolean))});return r})};
+}
+/* Escribe lo que llegó del servidor: ponen [registros], quitan [ids]. Avisa a esta pestaña (como de otra) y a las demás */
+function aplicarRemoto(a,ponen,quitan){
+  return listo.then(function(m){
+    var c=SINCRO.crudo||m;
+    return (ponen.length?c.poner.call(m,a,ponen):Promise.resolve()).then(function(){return quitan.length?c.borrarVarios.call(m,a,quitan):null});
+  }).then(function(){
+    var avisos=[];
+    if(a==='filas'||a==='historial'){var bs={};ponen.forEach(function(o){if(o.base)bs[o.base]=1});Object.keys(bs).forEach(function(b){avisos.push({almacen:a,base:b,remoto:true})});if(quitan.length||!avisos.length)avisos.push({almacen:a,remoto:true})}
+    else if(a==='documentos'||a==='bases'){ponen.forEach(function(o){avisos.push({almacen:a,id:o.id,remoto:true})});quitan.forEach(function(id){avisos.push({almacen:a,id:id,borrado:true,remoto:true})})}
+    else avisos.push({almacen:a,remoto:true});
+    avisos.forEach(function(x){avisar(x,true);if(canal)try{canal.postMessage(x)}catch(e){}});
+  });
+}
+
 /* ---------- Apertura ---------- */
 var motor=null;
 var listo=abrirIDB().then(motorIDB,function(e){
   if(window.console)console.warn('OneBook: IndexedDB no está disponible; se usa localStorage.',e&&e.message);
   return motorLocal();
 }).then(function(m){
-  motor=m;
+  motor=m;envolver(m);
 }).then(function(){return motor},function(e){
   if(window.console)console.error('OneBook: no se pudieron preparar tus datos',e);
   motor=motor||motorLocal();
@@ -897,15 +929,16 @@ function presVivas(m){var t=Date.now();Object.keys(m).forEach(function(k){if(!es
 function presLatido(){
   if(!presAnuncio)return;
   var m=presVivas(presLeer()),q=quienSoy();
-  m[PESTANA]={doc:presAnuncio.doc,modo:presAnuncio.modo,t:Date.now(),quien:{id:q.id,nombre:q.nombre}};
+  m[PESTANA]={doc:presAnuncio.doc,modo:presAnuncio.modo,t:Date.now(),quien:{id:q.id,nombre:q.nombre},toma:presAnuncio.toma||false};
+  presAnuncio.toma=false;
   lsSet(CLAVE_PRES,JSON.stringify(m));
   avisar({almacen:'presencia',doc:presAnuncio.doc});
 }
 var presencia={
   pestana:PESTANA,VIDA:VIDA_PRES,
   /* Esta pestaña tiene abierta la página doc, para editar o para leer */
-  anunciar:function(doc,modo){
-    presAnuncio=presUltimo={doc:doc,modo:modo==='editar'?'editar':'leer'};
+  anunciar:function(doc,modo,toma){
+    presAnuncio=presUltimo={doc:doc,modo:modo==='editar'?'editar':'leer',toma:!!toma};
     presLatido();
     if(!presTimer)presTimer=setInterval(presLatido,15e3);
   },
@@ -915,16 +948,29 @@ var presencia={
     var m=presLeer();delete m[PESTANA];lsSet(CLAVE_PRES,JSON.stringify(m));
     avisar({almacen:'presencia',doc:d});
   },
-  /* Quién tiene abierta cada página: {doc: [{quien, modo, pestanas, aqui}]} (editar gana a leer) */
+  /* Quién tiene abierta cada página: {doc: [{quien, modo, pestanas, aqui, otroDispositivo}]} (editar gana a leer).
+     Con el servidor de la oficina se suman las de los otros dispositivos (sincro.js las deja en presencia-remota) */
   todas:function(){
     var m=presVivas(presLeer()),out={};
-    Object.keys(m).forEach(function(k){
-      var e=m[k],l=out[e.doc]||(out[e.doc]=[]),q=e.quien||{},p=l.filter(function(x){return x.quien.id===q.id})[0];
-      if(!p){p={quien:{id:q.id||'',nombre:q.nombre||''},modo:'leer',pestanas:0,aqui:false};l.push(p)}
-      p.pestanas++;if(e.modo==='editar')p.modo='editar';if(k===PESTANA)p.aqui=true;
-    });
+    function sumar(doc,q,modo,aqui,otro){
+      var l=out[doc]||(out[doc]=[]),p=l.filter(function(x){return x.quien.id===q.id&&!!x.otroDispositivo===!!otro})[0];
+      if(!p){p={quien:{id:q.id||'',nombre:q.nombre||''},modo:'leer',pestanas:0,aqui:false};if(otro)p.otroDispositivo=true;l.push(p)}
+      p.pestanas++;if(modo==='editar')p.modo='editar';if(aqui)p.aqui=true;
+    }
+    Object.keys(m).forEach(function(k){var e=m[k];sumar(e.doc,e.quien||{},e.modo,k===PESTANA,false)});
+    presencia.remotas().forEach(function(e){sumar(e.doc,e.quien||{},e.modo,false,true)});
     return out;
   },
+  /* Lo que tiene abierto este navegador (todas sus pestañas): [{doc, modo}] */
+  locales:function(){var m=presVivas(presLeer());return Object.keys(m).map(function(k){return {doc:m[k].doc,modo:m[k].modo,toma:m[k].toma||false}})},
+  /* Lo de los otros dispositivos: [{dispositivo, nombre, quien, doc, modo, desde}] (las propias se quitan) */
+  remotas:function(){
+    var r=leerJSON(PREF+'presencia-remota');
+    if(!esObjeto(r)||!Array.isArray(r.lista)||!(Date.now()-r.t<60e3))return [];
+    return r.lista.filter(function(e){return e&&e.dispositivo!==r.yo});
+  },
+  /* La entrada de este dispositivo según el servidor (para saber desde cuándo edita) */
+  propias:function(){var r=leerJSON(PREF+'presencia-remota');return esObjeto(r)&&Array.isArray(r.lista)?r.lista.filter(function(e){return e&&e.dispositivo===r.yo}):[]},
   de:function(doc){return presencia.todas()[doc]||[]}
 };
 addEventListener('pagehide',function(){presencia.dejar()});
@@ -1040,6 +1086,8 @@ function bloquear(){
   });
 }
 function borrarTodo(){
+  /* Si este dispositivo está conectado al servidor, solo se borra lo de aquí: no se manda nada al servidor */
+  SINCRO.pausa=true;
   return conMotor(function(m){
     return ALMACENES.reduce(function(pr,a){
       return pr.then(function(){return m.claves(a).then(function(ids){return ids.length?m.borrarVarios(a,ids):null})});
@@ -1055,6 +1103,11 @@ function borrarTodo(){
 
 AT.datos={
   borrarTodo:borrarTodo,
+  /* Para sincro.js: alCambiar(fn(almacén, ids)), aplicarRemoto, leer y listar sin pasar por el aviso, pausar */
+  sincro:{almacenes:SINCRO.almacenes,alCambiar:function(fn){SINCRO.oyentes.push(fn)},aplicarRemoto:aplicarRemoto,
+    pausar:function(si){SINCRO.pausa=si!==false},pausado:function(){return SINCRO.pausa},
+    leer:function(a,id){return conMotor(function(m){return m.leer(a,id)})},todos:function(a){return conMotor(function(m){return m.todos(a)})},
+    avisar:function(c){avisar(c,true);if(canal)try{canal.postMessage(c)}catch(e){}}},
   listo:listo,
   motor:function(){return motor&&motor.tipo},
   documentos:docsCol,
