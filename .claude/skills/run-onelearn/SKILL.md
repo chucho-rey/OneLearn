@@ -9,8 +9,10 @@ sin ventana y ejecuta los comandos que recibe por stdin. Las rutas de abajo son 
 
 ## Requisitos
 
-No se instala nada. En este contenedor, Playwright y Chromium ya están instalados de forma global. Solo hay que
-anteponer `NODE_PATH=/opt/node-tools/node_modules` a cada comando de `node`.
+- **En el contenedor de Claude Code:** no se instala nada. Playwright y Chromium ya están instalados de forma global; solo
+  hay que anteponer `NODE_PATH=/opt/node-tools/node_modules` a cada comando de `node` (así están los ejemplos de abajo).
+- **En una máquina propia o en otra herramienta (ChatGPT, GLM…):** una vez, `cd pruebas && npm install && npx playwright
+  install chromium`; después cambia el prefijo por `NODE_PATH=$PWD/pruebas/node_modules` (desde la raíz del repositorio).
 
 ## Run (ruta del agente)
 
